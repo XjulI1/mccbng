@@ -1,0 +1,9 @@
+@import "src/styles/variables";
+
+.root-app {
+  padding-top: $header-height;
+
+  @media all and (min-width: 768px) {
+    margin-left: $left-panel-width;
+  }
+}

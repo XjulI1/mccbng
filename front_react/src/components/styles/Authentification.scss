@@ -1,0 +1,25 @@
+.authentification {
+  .buttons {
+    margin-top: 30px;
+    text-align: center;
+  }
+
+  button {
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-bottom: 40px;
+    font-size: 2rem;
+    width: 3.5rem;
+
+    &.cross {
+      font-size: 0.9rem;
+      width: 1.8rem;
+      margin-left: 0.5rem;
+    }
+  }
+
+  .secret-code {
+    text-align: center;
+    margin-left: 2rem;
+  }
+}

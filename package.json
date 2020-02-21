@@ -5,5 +5,9 @@
   "author": "Xavier Julien <xjulien@octo.com>",
   "license": "MIT",
   "private": true,
-  "workspaces": ["front_vue", "back_loopback"]
+  "workspaces": [
+    "front_vue",
+    "back_loopback",
+    "front_react"
+  ]
 }
