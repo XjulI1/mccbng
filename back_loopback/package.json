@@ -1,0 +1,43 @@
+{
+  "name": "mccbng_back_loopback",
+  "version": "1.0.0",
+  "main": "server/server.js",
+  "engines": {
+    "node": ">=12 <13"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "start": "node .",
+    "start:reload": "nodemon .",
+    "test": "echo 0",
+    "posttest": "npm run lint",
+    "deploy": "pm2 deploy pm2.json production --force"
+  },
+  "dependencies": {
+    "compression": "^1.0.3",
+    "cors": "^2.5.2",
+    "helmet": "^3.21.2",
+    "loopback": "^3.0.0",
+    "loopback-boot": "^2.6.5",
+    "loopback-component-explorer": "^5.0.0",
+    "loopback-connector-mysql": "^2.4.1",
+    "n26": "^1.5.3",
+    "pm2": "^4.2.3",
+    "request-promise": "^4.2.2",
+    "sequelize": "^3.30.2",
+    "serve-favicon": "^2.0.1",
+    "strong-error-handler": "^2.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-loopback": "^13.1.0",
+    "nodemon": "^2.0.2",
+    "nsp": "^3.2.1"
+  },
+  "repository": {
+    "type": "",
+    "url": ""
+  },
+  "license": "UNLICENSED",
+  "description": "mccb_loopback"
+}
