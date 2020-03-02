@@ -8,3 +8,4 @@ selenium-debug.log
 package-lock.json
 tests/e2e/reports/
 .idea/
+**/.env
