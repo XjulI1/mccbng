@@ -1,5 +1,6 @@
 import React from 'react'
 import { Redirect, Route } from 'react-router-dom'
+import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 
 import routes from './routes'
@@ -53,4 +54,10 @@ class App extends React.Component {
   }
 }
 
-export default App
+const mapStateToProps = state => ({
+  userToken: state.User.token
+})
+
+export default connect(
+  mapStateToProps
+)(App)

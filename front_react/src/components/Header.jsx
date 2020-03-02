@@ -1,6 +1,6 @@
 import React from 'react'
 
-import Currency from '../containers/Currency'
+import Currency from '../components/Currency'
 
 import './styles/Header.scss'
 

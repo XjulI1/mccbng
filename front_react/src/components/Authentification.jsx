@@ -1,10 +1,13 @@
 import React from 'react'
-import { getTokenCookie, getUserIDCookie, auth, saveCookies, checkUserAuthentification } from '../services/auth'
 import PropTypes from 'prop-types'
 import { Redirect } from 'react-router-dom'
+import { connect } from 'react-redux'
+
+import { saveUserToken, saveUserInformations } from '../store/User/action'
+import { getTokenCookie, getUserIDCookie, auth, saveCookies, checkUserAuthentification } from '../services/auth'
+import { fetchUser } from '../services/user'
 
 import './styles/Authentification.scss'
-import { fetchUser } from '../services/user'
 
 class Authentification extends React.Component {
   static propTypes = {
@@ -112,4 +115,22 @@ class Authentification extends React.Component {
   }
 }
 
-export default Authentification
+const mapStateToProps = state => ({
+  userToken: state.User.token
+})
+
+const mapDispatchToProps = dispatch => {
+  return {
+    saveUserToken: token => {
+      dispatch(saveUserToken(token))
+    },
+    saveUserInfos: userInfos => {
+      dispatch(saveUserInformations(userInfos))
+    }
+  }
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Authentification)

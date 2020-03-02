@@ -1,6 +1,6 @@
 import React from 'react'
 
-import Authentification from '../containers/Authentification'
+import Authentification from '../components/Authentification'
 
 import './styles/Login.scss'
 
