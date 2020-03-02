@@ -1,5 +1,4 @@
 import axios from 'axios/index'
-import config from '@/config'
 
 export default {
   state: {
@@ -32,7 +31,7 @@ export default {
         limit: 35
       }
 
-      axios.get(config.API_URL + '/api/Operations', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/Operations', {
         params: {
           access_token: context.rootState.user.token,
           filter
@@ -43,7 +42,7 @@ export default {
     },
 
     updateOperation: function (context, operation) {
-      axios.patch(config.API_URL + '/api/Operations', operation, {
+      axios.patch(process.env.VUE_APP_API_URL + '/api/Operations', operation, {
         params: {
           access_token: context.rootState.user.token
         }
@@ -53,7 +52,7 @@ export default {
     },
 
     deleteOperation (context, operation) {
-      axios.delete(config.API_URL + '/api/Operations/' + operation.IDop, {
+      axios.delete(process.env.VUE_APP_API_URL + '/api/Operations/' + operation.IDop, {
         params: {
           access_token: context.rootState.user.token
         }
@@ -71,7 +70,7 @@ export default {
         order: 'DernierDateOpRecu ASC, NomOpRecu ASC'
       }
 
-      axios.get(config.API_URL + '/api/OperationRecurrentes', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/OperationRecurrentes', {
         params: {
           access_token: context.rootState.user.token,
           filter
@@ -95,7 +94,7 @@ export default {
         limit: 30
       }
 
-      axios.get(config.API_URL + '/api/Operations', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/Operations', {
         params: {
           access_token: context.rootState.user.token,
           filter

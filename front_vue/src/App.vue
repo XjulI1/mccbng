@@ -15,7 +15,6 @@
 
 <script>
   import axios from 'axios'
-  import config from '@/config'
 
   import Navbar from '@/components/Navbar'
   import CompteList from '@/components/CompteList'
@@ -35,7 +34,7 @@
       if (userToken === null) {
         this.$router.push('/login')
       } else {
-        axios.get(config.API_URL + '/api/users/' + userID + '/exists', {
+        axios.get(process.env.VUE_APP_API_URL + '/api/users/' + userID + '/exists', {
           params: {
             access_token: userToken
           }

@@ -1,7 +1,6 @@
 import Vue from 'vue'
 
 import axios from 'axios/index'
-import config from '@/config'
 
 export default {
   state: {
@@ -44,7 +43,7 @@ export default {
   },
   actions: {
     fetchSumByUserByMonth (context) {
-      axios.get(config.API_URL + '/api/Operations/sumByUserByMonth', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumByUserByMonth', {
         params: {
           access_token: context.rootState.user.token,
           userID: this.state.user.id,
@@ -56,7 +55,7 @@ export default {
       })
 
       this.getters.availableCompte.forEach((account) => {
-        axios.get(config.API_URL + '/api/Operations/sumByUserByMonth', {
+        axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumByUserByMonth', {
           params: {
             access_token: context.rootState.user.token,
             userID: this.state.user.id,
@@ -76,7 +75,7 @@ export default {
     fetchSumCategoriesByUserByMonth (context) {
       context.dispatch('fetchCategoryList')
 
-      axios.get(config.API_URL + '/api/Operations/sumCategoriesByUserByMonth', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumCategoriesByUserByMonth', {
         params: {
           access_token: context.rootState.user.token,
           userID: this.state.user.id,

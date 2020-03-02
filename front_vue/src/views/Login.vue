@@ -17,7 +17,6 @@
 
 <script>
   import axios from 'axios'
-  import config from '@/config'
 
   export default {
     name: 'Login',
@@ -25,7 +24,7 @@
     watch: {
       code (value) {
         if (value.length === 6) {
-          axios.post(config.API_URL + '/api/users/login', {
+          axios.post(process.env.VUE_APP_API_URL + '/api/users/login', {
             code: value
           }).then((response) => {
             if (response.status === 200) {

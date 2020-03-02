@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios/index'
-import config from '@/config'
 
 import User from './user.js'
 import Category from './category.js'
@@ -134,7 +133,7 @@ export default new Vuex.Store({
     },
 
     fetchActiveAccount (context, accountID) {
-      axios.get(config.API_URL + '/api/Comptes/' + accountID, {
+      axios.get(process.env.VUE_APP_API_URL + '/api/Comptes/' + accountID, {
         params: {
           access_token: context.rootState.user.token
         }
@@ -149,7 +148,7 @@ export default new Vuex.Store({
     fetchAccountList (context) {
       const filter = { where: { IDuser: this.state.user.id, visible: true }, order: 'NomCompte ASC' }
 
-      axios.get(config.API_URL + '/api/Comptes', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/Comptes', {
         params: {
           access_token: context.rootState.user.token,
           filter
@@ -162,7 +161,7 @@ export default new Vuex.Store({
     },
 
     fetchSumForACompte (context) {
-      axios.get(config.API_URL + '/api/Operations/sumForACompte', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumForACompte', {
         params: {
           access_token: context.rootState.user.token,
           id: this.state.activeAccount.IDcompte
@@ -174,7 +173,7 @@ export default new Vuex.Store({
     },
 
     sumAllCompteForUser (context) {
-      axios.get(config.API_URL + '/api/Operations/sumAllCompteForUser', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumAllCompteForUser', {
         params: {
           access_token: context.rootState.user.token,
           userID: this.state.user.id
@@ -185,7 +184,7 @@ export default new Vuex.Store({
     },
 
     generateRecurringOperations (context) {
-      axios.post(config.API_URL + '/api/OperationRecurrentes/autoGeneration?access_token=' + context.rootState.user.token, {
+      axios.post(process.env.VUE_APP_API_URL + '/api/OperationRecurrentes/autoGeneration?access_token=' + context.rootState.user.token, {
         userID: this.state.user.id
       })
     }

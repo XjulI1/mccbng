@@ -1,5 +1,4 @@
 import axios from 'axios/index'
-import config from '@/config'
 
 export default {
   state: {
@@ -25,7 +24,7 @@ export default {
   },
   actions: {
     fetchUser (context, userID) {
-      return axios.get(config.API_URL + '/api/users/' + userID, {
+      return axios.get(process.env.VUE_APP_API_URL + '/api/users/' + userID, {
         params: {
           access_token: context.state.token
         }

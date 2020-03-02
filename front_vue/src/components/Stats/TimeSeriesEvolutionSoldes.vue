@@ -7,7 +7,6 @@
   import Highcharts from 'highcharts'
   import { mapState } from 'vuex'
   import axios from 'axios/index'
-  import config from '@/config'
 
   export default {
     name: 'TimeSeriesEvolutionSoldes',
@@ -18,7 +17,7 @@
 
     watch: {
       userID (value) {
-        axios.get(config.API_URL + '/api/stats/evolutionSolde', {
+        axios.get(process.env.VUE_APP_API_URL + '/api/stats/evolutionSolde', {
           params: {
             access_token: this.$store.state.user.token,
             userID: value

@@ -1,5 +1,4 @@
 import axios from 'axios/index'
-import config from '@/config'
 
 export default {
   state: {
@@ -26,7 +25,7 @@ export default {
       if (this.state.category.list.length < 5) {
         const filter = { where: { or: [{ IDuser: this.state.user.id }, { IDuser: 0 }] }, order: 'Nom ASC' }
 
-        axios.get(config.API_URL + '/api/Categories', {
+        axios.get(process.env.VUE_APP_API_URL + '/api/Categories', {
           params: {
             access_token: context.rootState.user.token,
             filter
