@@ -5,8 +5,6 @@ const boot = require('loopback-boot');
 
 const app = module.exports = loopback();
 
-const n26 = require('../common/daemon/n26');
-
 app.start = function() {
   // start the web server
   return app.listen(function() {
@@ -16,11 +14,6 @@ app.start = function() {
     if (app.get('loopback-component-explorer')) {
       const explorerPath = app.get('loopback-component-explorer').mountPath;
       console.log('Browse your REST API at %s%s', baseUrl, explorerPath);
-    }
-
-    /* N26 daemon disable because auth failed */
-    if (process.env.NODE_ENV === 'production') {
-    //   n26.startDaemon();
     }
   });
 };
