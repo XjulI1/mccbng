@@ -4,5 +4,13 @@ module.exports = {
     workboxOptions: {
       skipWaiting: true
     }
+  },
+
+  css: {
+    loaderOptions: {
+      sass: {
+        prependData: ' @import "../front_global/styles/variables.scss";'
+      }
+    }
   }
 }

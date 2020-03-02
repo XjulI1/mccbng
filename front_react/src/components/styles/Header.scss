@@ -1,4 +1,4 @@
-@import "src/styles/variables";
+@import '../front_global/styles/variables';
 
 .app-header {
     height: calc(#{$header-height} - 10px);

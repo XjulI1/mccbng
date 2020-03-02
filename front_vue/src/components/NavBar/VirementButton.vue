@@ -16,8 +16,6 @@
 </script>
 
 <style lang="scss" scoped>
-  @import '@/global.scss';
-
   button {
     width: 19%;
     height: $navbar-height;

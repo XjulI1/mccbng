@@ -16,8 +16,6 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss" scoped>
-  @import '@/global.scss';
-
   @media screen and (max-width: 767px) {
     .home {
       margin-bottom: $navbar-height;

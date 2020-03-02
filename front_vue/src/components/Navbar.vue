@@ -22,8 +22,6 @@
 </script>
 
 <style lang="scss" scoped>
-  @import '@/global.scss';
-
   .navbar {
     padding: 0;
 

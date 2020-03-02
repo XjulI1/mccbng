@@ -55,14 +55,12 @@
 </script>
 
 <style lang="scss" scoped>
-  @import '@/global.scss';
-
   .no-total {
     display: none
   }
 
   .account-header {
-    height: $header-account-height;
+    height: $header-height;
     width: 100%;
     background-color: rgba(200, 200, 200, 0.9);
     position: fixed;
