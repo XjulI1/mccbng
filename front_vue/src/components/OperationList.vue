@@ -1,13 +1,12 @@
 <template>
   <div class="operation-list">
-    <operation v-for="operation in operationsOfActiveAccount"
-               v-bind:key="'operation-' + operation.IDop"
-               v-if="operation.IDop"
-               :operation="operation"/>
+    <operation v-for="operation in operationsList"
+               :key="'operation-' + operation.IDop"
+               v-bind="{operation}"/>
 
-    <operation-recurrente v-else-if="operation.IDopRecu"
-                          v-bind:key="'operation-recu-' + operation.IDopRecu"
-                          :operation="operation"
+    <operation-recurrente v-for="operation in operationsRecurrenteList"
+                          :key="'operation-recu-' + operation.IDopRecu"
+                          v-bind="{operation}"
                           recurr="true"/>
 
     <categories-drop-zone/>
@@ -24,7 +23,22 @@
     name: 'OperationList',
     components: { CategoriesDropZone, OperationRecurrente, Operation },
 
-    computed: mapGetters(['operationsOfActiveAccount'])
+    computed: {
+      ...mapGetters(['operationsOfActiveAccount']),
+      operationsList () {
+        if (this.operationsOfActiveAccount[0] && this.operationsOfActiveAccount[0].IDop !== undefined) {
+          return this.operationsOfActiveAccount
+        }
+        return []
+      },
+
+      operationsRecurrenteList () {
+        if (this.operationsOfActiveAccount[0] && this.operationsOfActiveAccount[0].IDopRecu !== undefined) {
+          return this.operationsOfActiveAccount
+        }
+        return []
+      }
+    }
   }
 </script>
 

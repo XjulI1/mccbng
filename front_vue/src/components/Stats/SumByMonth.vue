@@ -18,8 +18,8 @@
       Total ce mois : <b>{{$store.state.stats.negativeMonth}}{{$store.state.currency}}</b>
     </div>
 
-    <div v-for="(accountTotal, IDcompte) in $store.state.stats.negativeByAccount" v-bind:key="IDcompte"
-         v-if="accountTotal">
+    <div v-for="(accountTotal, IDcompte) in negativeByAccountFilter"
+         :key="IDcompte">
       {{$store.getters.getAccountName(IDcompte)[0].NomCompte}} :
       <b>{{accountTotal}} {{$store.state.currency}}</b>
       <div class="parjour">
@@ -31,12 +31,16 @@
 </template>
 
 <script>
-  import { mapGetters } from 'vuex'
+  import { mapGetters, mapState } from 'vuex'
 
   export default {
     name: 'SumByMonth',
 
     computed: {
+      ...mapState({
+        negativeByAccount: state => state.stats.negativeByAccount
+      }),
+
       ...mapGetters(['availableCompte']),
 
       currentYear: {
@@ -55,6 +59,18 @@
         set (value) {
           this.$store.dispatch('changeStatsCurrentMonth', value)
         }
+      },
+
+      negativeByAccountFilter () {
+        const filterArray = {}
+
+        Object.keys(this.negativeByAccount).forEach((key) => {
+          if (this.negativeByAccount[key] !== undefined && this.negativeByAccount[key] !== null) {
+            filterArray[key] = this.negativeByAccount[key]
+          }
+        })
+
+        return filterArray
       }
     },
 
