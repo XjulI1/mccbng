@@ -1,8 +1,7 @@
 import axios from 'axios'
-import config from '../config'
 
 export const fetchUser = (userID, userToken) => {
-  return axios.get(config().API_URL + '/api/users/' + userID, {
+  return axios.get(process.env.REACT_APP_API_URL + '/api/users/' + userID, {
     params: {
       access_token: userToken
     }

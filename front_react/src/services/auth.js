@@ -1,5 +1,4 @@
 import axios from 'axios'
-import config from '../config'
 import Cookies from 'universal-cookie'
 
 const COOKIE_TOKEN = 'userToken'
@@ -18,7 +17,7 @@ export const getUserIDCookie = () => {
 }
 
 export const auth = (value) => {
-  return axios.post(config().API_URL + '/api/users/login', {
+  return axios.post(process.env.REACT_APP_API_URL + '/api/users/login', {
     code: value
   }).then((response) => {
     if (response.status === 200) {
@@ -41,7 +40,7 @@ export const saveCookies = ({ userToken, userID, ttl }) => {
 }
 
 export const checkUserAuthentification = ({ userToken, userID }) => {
-  return axios.get(config().API_URL + '/api/users/' + userID + '/exists', {
+  return axios.get(process.env.REACT_APP_API_URL + '/api/users/' + userID + '/exists', {
     params: {
       access_token: userToken
     }
