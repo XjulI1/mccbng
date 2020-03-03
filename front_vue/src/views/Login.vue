@@ -1,9 +1,9 @@
 <template>
-  <div class="login">
-    <h5>
-      Taper votre code d'accès :
-    </h5>
-    <br>
+  <div class="login-page">
+    <h2>Authentification</h2>
+
+    <h4>Tapez votre code d'accès</h4>
+
     <div class="buttons">
       <button v-for="value in buttonList" :key="value" :value="value" @click="addNumber">{{value}}</button>
     </div>
@@ -62,7 +62,7 @@
 </script>
 
 <style lang="scss" scoped>
-  .login {
+  .login-page {
     text-align: center;
   }
 

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "dev": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
@@ -19,6 +19,7 @@
     "core-js": "^3.6.4",
     "highcharts": "^7.0.3",
     "mccbng_services": "link:./front_global/services/",
+    "mccbng_styles": "link:./front_global/styles",
     "register-service-worker": "^1.0.0",
     "vue": "^2.5.16",
     "vue-router": "^3.0.1",

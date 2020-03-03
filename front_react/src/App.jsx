@@ -8,7 +8,7 @@ import routes from './routes'
 import Header from './components/Header'
 import LeftPanel from './components/LeftPanel'
 
-import './styles/App.scss'
+import 'mccbng_styles/App.scss'
 
 class App extends React.Component {
   static propTypes = {
@@ -38,18 +38,22 @@ class App extends React.Component {
 
     return <div className='root-app'>
       <Header/>
-      <LeftPanel/>
-      {
-        routes.map((route) => (
-          <Route
-            exact
-            key={`route-${route.name}`}
-            path={route.path}
-            component={route.component}
-          />
-        ))
-      }
-      {redirectAuth}
+      <div className="container-flex">
+        <LeftPanel/>
+        <div className="right-panel">
+          {
+            routes.map((route) => (
+              <Route
+                exact
+                key={`route-${route.name}`}
+                path={route.path}
+                component={route.component}
+              />
+            ))
+          }
+        </div>
+        {redirectAuth}
+      </div>
     </div>
   }
 }

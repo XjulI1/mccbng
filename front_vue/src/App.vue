@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" class="root-app">
     <account-header/>
     <div class="container-flex">
       <div class="left-panel" :class="{'mask-panel' : !$store.state.display.account_list}">
@@ -20,6 +20,10 @@
   import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes'
   import NewVersion from './components/NewVersion'
   import { checkUserAuthentification, getTokenCookie, getUserIDCookie } from 'mccbng_services/auth'
+
+  import 'mccbng_styles/index.scss'
+  import 'mccbng_styles/App.scss'
+  import 'mccbng_styles/LeftPanel.scss'
 
   export default {
     name: 'App',
@@ -48,12 +52,8 @@
 </script>
 
 <style lang="scss">
-  #app {
-    font-family: 'Avenir', Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    color: #2c3e50;
-    margin-top: $header-height;
+  .left-panel {
+    display: block;
   }
 
   .row {
@@ -66,33 +66,7 @@
     padding: 0 !important
   }
 
-  .left-panel {
-    margin-top: 5px;
-    width: 35%;
-  }
-
-  .right-panel {
-    margin-top: 5px;
-    width: 65%;
-  }
-
-  .container-flex {
-    display: flex;
-  }
-
   @media screen and (max-width: 767px) {
-    .left-panel {
-      margin-top: 0;
-      background-color: rgba(242, 242, 242, 0.95);
-      width: 100%;
-      padding-top: 3px;
-      margin-bottom: $navbar-height;
-    }
-
-    .right-panel {
-      width: 100%;
-    }
-
     .right-panel.mask-panel {
       display: none;
     }

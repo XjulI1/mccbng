@@ -8,7 +8,7 @@ import * as serviceWorker from './serviceWorker'
 import App from './App'
 import store from './store'
 
-import './styles/index.scss'
+import 'mccbng_styles/index.scss'
 
 ReactDOM.render(
   <BrowserRouter>

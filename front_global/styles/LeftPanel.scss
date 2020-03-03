@@ -1,0 +1,18 @@
+@import './variables';
+
+.left-panel {
+  display: none;
+
+  @media all and (min-width: $desktop_BP_min_width) {
+    display: block;
+    width: $left-panel-width;
+  }
+
+  @media screen and (max-width: $mobile_BP_max_width) {
+    margin-top: 0;
+    background-color: rgba(242, 242, 242, 0.95);
+    width: 100%;
+    padding-top: 3px;
+    margin-bottom: $navbar-height;
+  }
+}
