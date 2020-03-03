@@ -39,8 +39,8 @@ export const saveCookies = ({ userToken, userID, ttl }) => {
   cookie.set(COOKIE_USER_ID, userID, { maxAge: ttl })
 }
 
-export const checkUserAuthentification = ({ userToken, userID }) => {
-  return axios.get(process.env.REACT_APP_API_URL + '/api/users/' + userID + '/exists', {
+export const checkUserAuthentification = ({ userToken, userID, api_url }) => {
+  return axios.get(api_url + '/api/users/' + userID + '/exists', {
     params: {
       access_token: userToken
     }
