@@ -121,9 +121,6 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    initialState () {
-    },
-
     fetchUserByIDAndActiveAccount (context, userID) {
       this.dispatch('fetchUser', userID)
         .then(() => {

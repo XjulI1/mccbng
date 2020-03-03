@@ -8,6 +8,7 @@
   "workspaces": [
     "front_vue",
     "back_loopback",
-    "front_react"
+    "front_react",
+    "front_global/services"
   ]
 }

@@ -14,43 +14,35 @@
 </template>
 
 <script>
-  import axios from 'axios'
-
   import Navbar from '@/components/Navbar'
   import CompteList from '@/components/CompteList'
   import AccountHeader from '@/components/AccountHeader'
   import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes'
   import NewVersion from './components/NewVersion'
+  import { checkUserAuthentification } from 'mccbng_services/auth'
 
   export default {
     name: 'App',
 
     components: { NewVersion, TimeSeriesEvolutionSoldes, CompteList, AccountHeader, Navbar },
 
-    beforeCreate () {
+    beforeMount () {
       const userToken = this.$cookies.get('userToken')
       const userID = this.$cookies.get('userID')
 
       if (userToken === null) {
         this.$router.push('/login')
       } else {
-        axios.get(process.env.VUE_APP_API_URL + '/api/users/' + userID + '/exists', {
-          params: {
-            access_token: userToken
-          }
-        }).then(() => {
-          this.$store.dispatch('saveUserToken', userToken)
-          this.$store.dispatch('fetchUserByIDAndActiveAccount', userID)
-        }).catch((err) => {
-          if (err.response.status === 401) {
-            this.$router.push('/login')
-          }
-        })
+        return checkUserAuthentification({ userToken, userID, api_url: process.env.VUE_APP_API_URL })
+          .then((isExist) => {
+            if (isExist) {
+              this.$store.dispatch('saveUserToken', userToken)
+              this.$store.dispatch('fetchUserByIDAndActiveAccount', userID)
+            } else {
+              this.$router.push('/login')
+            }
+          })
       }
-    },
-
-    created () {
-      this.$store.dispatch('initialState')
     }
   }
 </script>

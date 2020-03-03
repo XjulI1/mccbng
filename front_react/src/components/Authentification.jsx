@@ -4,8 +4,8 @@ import { Redirect } from 'react-router-dom'
 import { connect } from 'react-redux'
 
 import { saveUserToken, saveUserInformations } from '../store/User/action'
-import { getTokenCookie, getUserIDCookie, auth, saveCookies, checkUserAuthentification } from '../../../front_global/services/auth'
-import { fetchUser } from '../../../front_global/services/user'
+import { getTokenCookie, getUserIDCookie, auth, saveCookies, checkUserAuthentification } from 'mccbng_services/auth'
+import { fetchUser } from 'mccbng_services/user'
 
 import './styles/Authentification.scss'
 
@@ -60,7 +60,8 @@ class Authentification extends React.Component {
     if (token !== undefined) {
       const isConnected = await checkUserAuthentification({
         userToken: token,
-        userID: getUserIDCookie()
+        userID: getUserIDCookie(),
+        api_url: process.env.REACT_APP_API_URL
       })
 
       if (isConnected) {
