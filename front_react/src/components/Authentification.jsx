@@ -4,8 +4,8 @@ import { Redirect } from 'react-router-dom'
 import { connect } from 'react-redux'
 
 import { saveUserToken, saveUserInformations } from '../store/User/action'
-import { getTokenCookie, getUserIDCookie, auth, saveCookies, checkUserAuthentification } from '../services/auth'
-import { fetchUser } from '../services/user'
+import { getTokenCookie, getUserIDCookie, auth, saveCookies, checkUserAuthentification } from '../../../front_global/services/auth'
+import { fetchUser } from '../../../front_global/services/user'
 
 import './styles/Authentification.scss'
 

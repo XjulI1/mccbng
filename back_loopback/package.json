@@ -2,6 +2,7 @@
   "name": "mccbng_back_loopback",
   "version": "1.0.0",
   "main": "server/server.js",
+  "license": "MIT",
   "engines": {
     "node": ">=12 <13"
   },
@@ -38,6 +39,5 @@
     "type": "",
     "url": ""
   },
-  "license": "UNLICENSED",
   "description": "mccb_loopback"
 }

@@ -2,6 +2,7 @@
   "name": "mccbng_front_react",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
