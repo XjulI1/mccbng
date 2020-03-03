@@ -19,7 +19,7 @@
   import AccountHeader from '@/components/AccountHeader'
   import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes'
   import NewVersion from './components/NewVersion'
-  import { checkUserAuthentification } from 'mccbng_services/auth'
+  import { checkUserAuthentification, getTokenCookie, getUserIDCookie } from 'mccbng_services/auth'
 
   export default {
     name: 'App',
@@ -27,8 +27,8 @@
     components: { NewVersion, TimeSeriesEvolutionSoldes, CompteList, AccountHeader, Navbar },
 
     beforeMount () {
-      const userToken = this.$cookies.get('userToken')
-      const userID = this.$cookies.get('userID')
+      const userToken = getTokenCookie()
+      const userID = getUserIDCookie()
 
       if (userToken === null) {
         this.$router.push('/login')

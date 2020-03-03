@@ -16,8 +16,8 @@ export const getUserIDCookie = () => {
   return cookie.get(COOKIE_USER_ID)
 }
 
-export const auth = (value) => {
-  return axios.post(process.env.REACT_APP_API_URL + '/api/users/login', {
+export const auth = (value, api_url) => {
+  return axios.post(api_url + '/api/users/login', {
     code: value
   }).then((response) => {
     if (response.status === 200) {

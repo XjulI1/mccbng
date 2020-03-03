@@ -1,8 +1,8 @@
 {
-  "name": "mccbng_services",
+  "name": "mccbng_styles",
   "version": "1.0.0",
-  "description": "All services of external access for React and Vue mccbng fronts",
-  "main": "index.js",
+  "description": "All SCSS styles for React and Vue mccbng fronts",
+  "main": "variables.scss",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

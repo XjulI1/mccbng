@@ -16,7 +16,7 @@
 </template>
 
 <script>
-  import axios from 'axios'
+  import { auth, saveCookies } from 'mccbng_services/auth'
 
   export default {
     name: 'Login',
@@ -24,19 +24,15 @@
     watch: {
       code (value) {
         if (value.length === 6) {
-          axios.post(process.env.VUE_APP_API_URL + '/api/users/login', {
-            code: value
-          }).then((response) => {
-            if (response.status === 200) {
-              this.$store.dispatch('saveUserToken', response.data.id)
-              this.$store.dispatch('fetchUserByIDAndActiveAccount', response.data.userId)
+          auth(value, process.env.VUE_APP_API_URL)
+            .then(({ userToken, ttl, userID }) => {
+              this.$store.dispatch('saveUserToken', userToken)
+              this.$store.dispatch('fetchUserByIDAndActiveAccount', userID)
 
-              this.$cookies.set('userToken', response.data.id, response.data.ttl)
-              this.$cookies.set('userID', response.data.userId, response.data.ttl)
+              saveCookies({ userToken, userID, ttl })
 
               this.$router.push('/')
-            }
-          })
+            })
         }
       }
     },

@@ -37,7 +37,7 @@ class Authentification extends React.Component {
   }
 
   authentification = code => {
-    auth(code)
+    auth(code, process.env.REACT_APP_API_URL)
       .then(async (authValues) => {
         saveCookies(authValues)
 
