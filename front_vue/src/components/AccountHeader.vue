@@ -3,7 +3,9 @@
     <div class="container">
       <div class="row">
         <div class="col-2">
-          <search-button/>
+          <button class="btn btn-info search-button" v-on:click="searchOperation">
+            <font-awesome-icon icon="search"/>
+          </button>
         </div>
         <div class="col-8 account-info">
           <div>
@@ -16,7 +18,9 @@
           </div>
         </div>
         <div class="col-2">
-          <charts-button/>
+          <button class="btn btn-secondary chart-button" v-on:click="goToStats">
+            <font-awesome-icon icon="chart-pie"/>
+          </button>
         </div>
       </div>
     </div>
@@ -26,14 +30,10 @@
 <script>
   import { mapState } from 'vuex'
 
-  import SearchButton from './AccountHeader/SearchButton'
-  import ChartsButton from './AccountHeader/ChartsButton'
-
   import 'mccbng_styles/components/Header.scss'
 
   export default {
     name: 'AccountHeader',
-    components: { ChartsButton, SearchButton },
 
     computed: {
       ...mapState({ activeAccount: 'activeAccount' }),
@@ -52,6 +52,16 @@
       return {
         nomCompte: ''
       }
+    },
+
+    methods: {
+      goToStats () {
+        this.$router.push('stats')
+      },
+
+      searchOperation () {
+        this.$router.push('search')
+      }
     }
   }
 </script>
@@ -64,5 +74,13 @@
 
   .col-2 {
     padding: 0
+  }
+
+  button.chart-button,
+  button.search-button {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+    line-height: 1.1rem;
   }
 </style>
