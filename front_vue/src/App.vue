@@ -23,7 +23,7 @@
 
   import 'mccbng_styles/index.scss'
   import 'mccbng_styles/App.scss'
-  import 'mccbng_styles/LeftPanel.scss'
+  import 'mccbng_styles/components/LeftPanel.scss'
 
   export default {
     name: 'App',

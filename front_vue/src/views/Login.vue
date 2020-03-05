@@ -1,22 +1,26 @@
 <template>
   <div class="login-page">
-    <h2>Authentification</h2>
+    <h3>Authentification</h3>
 
-    <h4>Tapez votre code d'accès</h4>
-
-    <div class="buttons">
-      <button v-for="value in buttonList" :key="value" :value="value" @click="addNumber">{{value}}</button>
-    </div>
+    <h5>Tapez votre code d'accès</h5>
     <br>
-    <div>
-      <span class="maskCode" v-for="(c, i) in code" :key="c + i">*</span>
-      <button class="cross" v-if="code.length > 0" @click="crossDelete">X</button>
+    <div class="authentification">
+      <button v-for="value in buttonList" :key="value" :value="value" @click="addNumber">{{value}}</button>
+      <br>
+      <div>
+        <span class="mask-code" v-for="(c, i) in code" :key="c + i">*</span>
+        <button class="cross" v-if="code.length > 0" @click="crossDelete">X</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
   import { auth, saveCookies } from 'mccbng_services/auth'
+  import randomListNumber from 'mccbng_helpers/randomListNumber'
+
+  import 'mccbng_styles/routes/Login.scss'
+  import 'mccbng_styles/components/Authentification.scss'
 
   export default {
     name: 'Login',
@@ -39,14 +43,9 @@
 
     data () {
       return {
-        buttonList: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => {
-          return 0.5 - Math.random()
-        }),
+        buttonList: randomListNumber(),
         code: ''
       }
-    },
-
-    created () {
     },
 
     methods: {
@@ -60,22 +59,3 @@
     }
   }
 </script>
-
-<style lang="scss" scoped>
-  .login-page {
-    text-align: center;
-  }
-
-  button {
-    margin-left: 20px;
-    margin-right: 20px;
-    margin-bottom: 40px;
-    font-size: 2rem;
-    width: 3.5rem;
-
-    &.cross {
-      font-size: 0.9rem;
-      width: 1.8rem;
-    }
-  }
-</style>

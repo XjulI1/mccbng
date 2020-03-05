@@ -16,6 +16,9 @@ module.exports = {
     'import/no-extraneous-dependencies': 'off'
   },
   parserOptions: {
-    parser: 'babel-eslint'
+    parser: 'babel-eslint',
+    ecmaFeatures: {
+      "modules": true
+    }
   }
 }

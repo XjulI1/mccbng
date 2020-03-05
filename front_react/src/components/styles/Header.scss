@@ -1,15 +1,15 @@
 @import '../front_global/styles/variables';
 
 .app-header {
-    height: calc(#{$header-height} - 10px);
-    width: 100%;
-    background-color: rgba(200, 200, 200, 0.9);
-    position: fixed;
-    top: 0;
-    left: 0;
-    text-align: center;
-    padding-top: 10px;
-    z-index: 100;
+  height: calc(#{$header-height} - 10px);
+  width: 100%;
+  background-color: rgba(200, 200, 200, 0.9);
+  position: fixed;
+  top: 0;
+  left: 0;
+  text-align: center;
+  padding-top: 10px;
+  z-index: 100;
 
-    font-size: 1.1rem;
+  font-size: 1.1rem;
 }

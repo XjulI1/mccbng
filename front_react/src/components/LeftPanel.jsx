@@ -1,6 +1,6 @@
 import React from 'react'
 
-import 'mccbng_styles/LeftPanel.scss'
+import 'mccbng_styles/components/LeftPanel.scss'
 
 function LeftPanel () {
   return (

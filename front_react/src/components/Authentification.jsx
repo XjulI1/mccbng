@@ -6,8 +6,9 @@ import { connect } from 'react-redux'
 import { saveUserToken, saveUserInformations } from '../store/User/action'
 import { getTokenCookie, getUserIDCookie, auth, saveCookies, checkUserAuthentification } from 'mccbng_services/auth'
 import { fetchUser } from 'mccbng_services/user'
+import randomListNumber from 'mccbng_helpers/randomListNumber'
 
-import './styles/Authentification.scss'
+import 'mccbng_styles/components/Authentification.scss'
 
 class Authentification extends React.Component {
   static propTypes = {
@@ -20,9 +21,7 @@ class Authentification extends React.Component {
     super(props)
 
     this.state = {
-      buttonList: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => {
-        return 0.5 - Math.random()
-      }),
+      buttonList: randomListNumber(),
       code: '',
       autoAuthProgress: true
     }

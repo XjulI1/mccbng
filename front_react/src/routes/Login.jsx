@@ -2,7 +2,7 @@ import React from 'react'
 
 import Authentification from '../components/Authentification'
 
-import './styles/Login.scss'
+import 'mccbng_styles/routes/Login.scss'
 
 class Login extends React.Component {
   render () {
