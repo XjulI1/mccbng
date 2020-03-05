@@ -1,4 +1,4 @@
-import axios from 'axios/index'
+import { fetchUser } from 'mccbng_services/user'
 
 export default {
   state: {
@@ -24,13 +24,10 @@ export default {
   },
   actions: {
     fetchUser (context, userID) {
-      return axios.get(process.env.VUE_APP_API_URL + '/api/users/' + userID, {
-        params: {
-          access_token: context.state.token
-        }
-      }).then((response) => {
-        context.commit('setUser', response.data)
-      })
+      return fetchUser(userID, context.state.token, process.env.VUE_APP_API_URL)
+        .then((response) => {
+          context.commit('setUser', response)
+        })
     },
     saveUserToken (context, token) {
       context.commit('setToken', token)

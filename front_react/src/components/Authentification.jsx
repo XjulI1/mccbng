@@ -49,7 +49,7 @@ class Authentification extends React.Component {
   }
 
   userInformations = async (userToken) => {
-    this.props.saveUserInfos(await fetchUser(getUserIDCookie(), userToken))
+    this.props.saveUserInfos(await fetchUser(getUserIDCookie(), userToken, process.env.REACT_APP_API_URL))
     this.props.saveUserToken(userToken)
   }
 
