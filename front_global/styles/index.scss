@@ -36,3 +36,7 @@ button {
   background-color: #a2abb3;
   border: 1px solid transparent;
 }
+
+*, ::before, ::after {
+  box-sizing: border-box;
+}

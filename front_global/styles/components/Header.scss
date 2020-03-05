@@ -1,7 +1,7 @@
-@import '../front_global/styles/variables';
+@import '../variables';
 
 .app-header {
-  height: calc(#{$header-height} - 10px);
+  height: $header-height;
   width: 100%;
   background-color: rgba(200, 200, 200, 0.9);
   position: fixed;
@@ -12,4 +12,14 @@
   z-index: 100;
 
   font-size: 1.1rem;
+}
+
+.account-info {
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 0;
+}
+
+.no-total {
+  display: none
 }

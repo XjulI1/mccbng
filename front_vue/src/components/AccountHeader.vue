@@ -1,5 +1,5 @@
 <template>
-  <div class="account-header">
+  <div class="app-header">
     <div class="container">
       <div class="row">
         <div class="col-2">
@@ -29,6 +29,8 @@
   import SearchButton from './AccountHeader/SearchButton'
   import ChartsButton from './AccountHeader/ChartsButton'
 
+  import 'mccbng_styles/components/Header.scss'
+
   export default {
     name: 'AccountHeader',
     components: { ChartsButton, SearchButton },
@@ -55,34 +57,12 @@
 </script>
 
 <style lang="scss" scoped>
-  .no-total {
-    display: none
+  .container {
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
-  .account-header {
-    height: $header-height;
-    width: 100%;
-    background-color: rgba(200, 200, 200, 0.9);
-    position: fixed;
-    top: 0;
-    left: 0;
-    text-align: center;
-    padding-top: 10px;
-    z-index: 100;
-
-    .container {
-      margin-left: auto !important;
-      margin-right: auto !important;
-    }
-
-    .col-2 {
-      padding: 0
-    }
-
-    .account-info {
-      font-weight: bold;
-      font-size: 1.1rem;
-      padding: 0;
-    }
+  .col-2 {
+    padding: 0
   }
 </style>

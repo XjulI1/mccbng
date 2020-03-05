@@ -1,14 +1,13 @@
 import React from 'react'
 
-import Currency from '../components/Currency'
-
-import './styles/Header.scss'
+import 'mccbng_styles/components/Header.scss'
 
 function Header () {
   return (
     <header className="app-header">
-      Header
-      <Currency/>
+      <div>
+        Header
+      </div>
     </header>
   )
 }
