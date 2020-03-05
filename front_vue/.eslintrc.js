@@ -18,7 +18,7 @@ module.exports = {
   parserOptions: {
     parser: 'babel-eslint',
     ecmaFeatures: {
-      "modules": true
+      modules: true
     }
   }
 }
