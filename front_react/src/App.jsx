@@ -9,6 +9,7 @@ import Header from './components/Header'
 import LeftPanel from './components/LeftPanel'
 
 import 'mccbng_styles/App.scss'
+import NavBar from './components/NavBar'
 
 class App extends React.Component {
   static propTypes = {
@@ -54,6 +55,7 @@ class App extends React.Component {
         </div>
         {redirectAuth}
       </div>
+      <NavBar/>
     </div>
   }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar btn-group" role="group">
+  <div class="nav-bar btn-group" role="group">
     <button class="btn btn-warning all-account-button" v-on:click="openAllAccount">
       <font-awesome-icon icon="list"/>
     </button>
@@ -19,6 +19,8 @@
 </template>
 
 <script>
+  import 'mccbng_styles/components/NavBar.scss'
+
   export default {
     name: 'navbar',
 
@@ -50,40 +52,3 @@
     }
   }
 </script>
-
-<style lang="scss" scoped>
-  .navbar {
-    padding: 0;
-    height: $navbar-height;
-    width: $left-panel-width;
-    background-color: white;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    display: inline;
-    text-align: center;
-    z-index: 100;
-
-    @media screen and (max-width: 768px) {
-      width: 100%;
-    }
-
-    &.btn-group {
-      .all-account-button, .virement-button, .operation-recurrente-button, .params-button {
-        width: 19%;
-        height: $navbar-height;
-        font-size: 1.2rem;
-        line-height: 1.1rem;
-        font-weight: 600;
-      }
-
-      .new-operation-button {
-        width: 24%;
-        height: $navbar-height;
-        font-size: 1.3rem;
-        line-height: 1.1rem;
-        font-weight: 600;
-      }
-    }
-  }
-</style>

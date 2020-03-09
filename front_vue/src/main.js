@@ -8,7 +8,7 @@ import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
-import FontAwesome from './fontawesome'
+import FontAwesome from 'mccbng_helpers/fontawesome'
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 

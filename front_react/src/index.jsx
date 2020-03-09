@@ -5,10 +5,14 @@ import { Provider } from 'react-redux'
 
 import * as serviceWorker from './serviceWorker'
 
+import FontAwesome from 'mccbng_helpers/fontawesome'
+
 import App from './App'
 import store from './store'
 
 import 'mccbng_styles/index.scss'
+
+FontAwesome.load()
 
 ReactDOM.render(
   <BrowserRouter>

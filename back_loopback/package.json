@@ -8,6 +8,7 @@
   },
   "scripts": {
     "lint": "eslint .",
+    "dev": "node .",
     "start": "node .",
     "start:reload": "nodemon .",
     "test": "echo 0",

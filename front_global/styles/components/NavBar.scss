@@ -1,0 +1,44 @@
+@import '../variables.scss';
+@import './btn-colors.scss';
+
+.nav-bar {
+  padding: 0;
+  height: $navbar-height;
+  width: $left-panel-width;
+  background-color: white;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  display: inline;
+  text-align: center;
+  z-index: 100;
+
+  @media screen and (max-width: $mobile_BP_max_width) {
+    width: 100%;
+  }
+
+
+  &.btn-group {
+    position: fixed;
+
+    .btn {
+      border-radius: 0;
+    }
+
+    .all-account-button, .virement-button, .operation-recurrente-button, .params-button {
+      width: 19%;
+      height: $navbar-height;
+      font-size: 1.2rem;
+      line-height: 1.1rem;
+      font-weight: 600;
+    }
+
+    .new-operation-button {
+      width: 24%;
+      height: $navbar-height;
+      font-size: 1.2rem;
+      line-height: 1.1rem;
+      font-weight: 600;
+    }
+  }
+}
