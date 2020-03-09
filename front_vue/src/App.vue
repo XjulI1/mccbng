@@ -19,7 +19,6 @@
   import AccountHeader from '@/components/AccountHeader'
   import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes'
   import NewVersion from './components/NewVersion'
-  import { checkUserAuthentification, getTokenCookie, getUserIDCookie } from 'mccbng_services/auth'
 
   import 'mccbng_styles/index.scss'
   import 'mccbng_styles/App.scss'
@@ -30,23 +29,8 @@
 
     components: { NewVersion, TimeSeriesEvolutionSoldes, CompteList, AccountHeader, Navbar },
 
-    beforeMount () {
-      const userToken = getTokenCookie()
-      const userID = getUserIDCookie()
-
-      if (userToken === null) {
-        this.$router.push('/login')
-      } else {
-        return checkUserAuthentification({ userToken, userID, api_url: process.env.VUE_APP_API_URL })
-          .then((isExist) => {
-            if (isExist) {
-              this.$store.dispatch('saveUserToken', userToken)
-              this.$store.dispatch('fetchUserByIDAndActiveAccount', userID)
-            } else {
-              this.$router.push('/login')
-            }
-          })
-      }
+    beforeCreate () {
+      this.$router.push('/login')
     }
   }
 </script>

@@ -1,7 +1,7 @@
 <template>
   <div class="operation container">
     <div class="row">
-      <div class="col-9" :class="css.category">
+      <div class="col-9">
         <label>
           {{operation.NomOpRecu}}
           <br>
@@ -24,16 +24,10 @@
       return {
         dateOperation: new Date(this.operation.DernierDateOpRecu).toLocaleDateString(),
         css: {
-          category: this.operation.IDcat === 0 ? 'noCategory' : '',
           montant: this.operation.MontantOpRecu > 0 ? 'montantIn' : 'montantOut'
         }
       }
-    },
-
-    created () {
-    },
-
-    methods: {}
+    }
   }
 </script>
 
@@ -48,9 +42,5 @@
 
   .montantOut {
     color: red
-  }
-
-  .noCategory {
-    color: grey;
   }
 </style>

@@ -26,12 +26,12 @@ module.exports = function(Operation) {
   Operation.sumAllCompteForUser = function(UserID, cb) {
     const sqlChecked = 'SELECT IDCompte, SUM(MontantOp) as TotalChecked ' +
       'FROM Operation NATURAL JOIN Compte ' +
-      'WHERE IDuser = ' + UserID + ' AND CheckOp = true ' +
+      'WHERE IDuser = ' + UserID + ' AND CheckOp = true AND Compte.visible = 1 ' +
       'GROUP BY IDCompte';
 
     const sqlNotChecked = 'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked ' +
       'FROM Operation NATURAL JOIN Compte  ' +
-      'WHERE IDuser = ' + UserID + ' AND CheckOp = false ' +
+      'WHERE IDuser = ' + UserID + ' AND CheckOp = false AND Compte.visible = 1 ' +
       'GROUP BY IDCompte';
 
     Operation.dataSource.connector.executeSQL(sqlChecked, [], [], (err, data) => {

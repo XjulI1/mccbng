@@ -4,7 +4,10 @@
 
     <h5>Tapez votre code d'accès</h5>
     <br>
-    <div class="authentification">
+    <div class="authentification" v-if="autoAuthProgress">
+      Authentification automatique ...
+    </div>
+    <div class="authentification" v-else>
       <button v-for="value in buttonList" :key="value" :value="value" @click="addNumber">{{value}}</button>
       <br>
       <div>
@@ -16,7 +19,7 @@
 </template>
 
 <script>
-  import { auth, saveCookies } from 'mccbng_services/auth'
+  import { auth, checkUserAuthentification, getTokenCookie, getUserIDCookie, saveCookies } from 'mccbng_services/auth'
   import randomListNumber from 'mccbng_helpers/randomListNumber'
 
   import 'mccbng_styles/routes/Login.scss'
@@ -30,12 +33,7 @@
         if (value.length === 6) {
           auth(value, process.env.VUE_APP_API_URL)
             .then(({ userToken, ttl, userID }) => {
-              this.$store.dispatch('saveUserToken', userToken)
-              this.$store.dispatch('fetchUserByIDAndActiveAccount', userID)
-
-              saveCookies({ userToken, userID, ttl })
-
-              this.$router.push('/')
+              this.endAuthentification({ userToken, ttl, userID })
             })
         }
       }
@@ -43,9 +41,24 @@
 
     data () {
       return {
+        autoAuthProgress: true,
         buttonList: randomListNumber(),
         code: ''
       }
+    },
+
+    beforeCreate () {
+      const userToken = getTokenCookie()
+      const userID = getUserIDCookie()
+
+      checkUserAuthentification({ userToken, userID, api_url: process.env.VUE_APP_API_URL })
+        .then((isExist) => {
+          if (isExist) {
+            this.endAuthentification({ userID, userToken })
+          } else {
+            this.autoAuthProgress = false
+          }
+        })
     },
 
     methods: {
@@ -55,6 +68,17 @@
 
       crossDelete () {
         this.code = ''
+      },
+
+      endAuthentification ({ userToken, userID, ttl }) {
+        this.$store.dispatch('saveUserToken', userToken)
+        this.$store.dispatch('fetchUserByIDAndgenerateRecurringOp', userID)
+
+        if (ttl) {
+          saveCookies({ userToken, userID, ttl })
+        }
+
+        this.$router.go(-1)
       }
     }
   }

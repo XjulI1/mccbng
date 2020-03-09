@@ -7,7 +7,7 @@ import NewOperation from '@/views/RouteOverTheContent/NewOperation'
 import EditOperation from '@/views/RouteOverTheContent/EditOperation'
 import Search from '@/views/RouteOverTheContent/Search'
 
-import RecurrOperation from '@/views/RecurrOperation'
+import OperationsRecurrentes from '@/views/OperationsRecurrentes'
 
 import Stats from '@/views/Stats'
 import Login from '@/views/Login'
@@ -36,7 +36,7 @@ export default new Router({
   }, {
     path: '/recurrOperation',
     name: 'Opérations récurrentes',
-    component: RecurrOperation,
+    component: OperationsRecurrentes,
     meta: {
       disabledTotalHeader: true
     }

@@ -121,10 +121,9 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    fetchUserByIDAndActiveAccount (context, userID) {
+    fetchUserByIDAndgenerateRecurringOp (context, userID) {
       this.dispatch('fetchUser', userID)
         .then(() => {
-          this.dispatch('fetchActiveAccount', this.state.user.favoris)
           this.dispatch('generateRecurringOperations')
         })
     },
