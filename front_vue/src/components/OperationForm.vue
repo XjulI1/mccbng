@@ -29,9 +29,26 @@
 </template>
 
 <script>
+  import { mapState } from 'vuex'
+
   export default {
     name: 'OperationForm',
-    props: ['operation'],
+
+    props: {
+      operation: {
+        type: Object,
+        default: () => {
+          return {
+            NomOp: '',
+            MontantOp: 0,
+            DateOp: new Date(),
+            CheckOp: false,
+            IDcompte: undefined,
+            IDcat: 0
+          }
+        }
+      }
+    },
 
     data () {
       return {
@@ -39,8 +56,19 @@
       }
     },
 
+    computed: mapState({
+      activeAccountID: state => state.activeAccount.IDcompte
+    }),
+
+    watch: {
+      activeAccountID (value) {
+        this.operation.IDcompte = value
+      }
+    },
+
     mounted () {
       this.$el.querySelector('#operation-name').focus()
+      this.operation.IDcompte = this.activeAccountID
     },
 
     created () {

@@ -3,12 +3,8 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 import Home from '@/views/Home.vue'
-import NewOperation from '@/views/RouteOverTheContent/NewOperation'
-import EditOperation from '@/views/RouteOverTheContent/EditOperation'
-import Search from '@/views/RouteOverTheContent/Search'
-
+import RouteOverTheContent from '@/views/RouteOverTheContent'
 import OperationsRecurrentes from '@/views/OperationsRecurrentes'
-
 import Stats from '@/views/Stats'
 import Login from '@/views/Login'
 import Config from '@/views/Config'
@@ -23,15 +19,24 @@ export default new Router({
     children: [{
       path: '/newOperation',
       name: 'Nouvelle opération',
-      component: NewOperation
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'operation-form'
+      }
     }, {
       path: '/editOperation/:id',
       name: 'Edition opération',
-      component: EditOperation
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'operation-form'
+      }
     }, {
       path: '/search',
       name: 'Search',
-      component: Search
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'search'
+      }
     }]
   }, {
     path: '/recurrOperation',

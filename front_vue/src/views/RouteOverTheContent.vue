@@ -8,19 +8,31 @@
 </template>
 
 <script>
-  import OperationForm from './OperationForm'
-  import Search from './Search'
+  import OperationForm from '@/components//OperationForm'
+  import Search from '@/components/Search'
 
   export default {
     name: 'RouteOverTheContent',
 
     components: { OperationForm, Search },
 
-    props: ['componentName', 'params'],
+    props: {
+      componentName: {
+        type: String
+      }
+    },
+
+    data () {
+      return {
+        params: {
+          operation: this.$route.params.id ? this.$store.getters.operationFromCurrentList(this.$route.params.id) : undefined
+        }
+      }
+    },
 
     methods: {
       returnToHome (event) {
-        if (event.srcElement.className === 'route-other-the-content') {
+        if (event.target.className === 'route-other-the-content') {
           this.$router.push('/')
         }
       }
