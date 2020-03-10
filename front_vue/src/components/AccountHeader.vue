@@ -1,28 +1,24 @@
 <template>
   <div class="app-header">
-    <div class="container">
-      <div class="row">
-        <div class="col-2">
-          <button class="btn btn-info search-button" v-on:click="searchOperation">
-            <font-awesome-icon icon="search"/>
-          </button>
-        </div>
-        <div class="col-8 account-info">
-          <div>
-            {{activeAccount.NomCompte}}
-          </div>
-          <div :class="{'no-total' : disabledTotal}">
-            {{(activeAccount.soldeNotChecked || 0).toLocaleString()}} {{currency}} -
-            [{{(activeAccount.soldeChecked || 0).toLocaleString()}}
-            {{currency}}]
-          </div>
-        </div>
-        <div class="col-2">
-          <button class="btn btn-secondary chart-button" v-on:click="goToStats">
-            <font-awesome-icon icon="chart-pie"/>
-          </button>
-        </div>
+    <div>
+      <button class="btn btn-info search-button" v-on:click="searchOperation">
+        <font-awesome-icon icon="search"/>
+      </button>
+    </div>
+    <div class="account-info">
+      <div>
+        {{activeAccount.NomCompte}}
       </div>
+      <div :class="{'no-total' : disabledTotal}">
+        {{(activeAccount.soldeNotChecked || 0).toLocaleString()}} {{currency}} -
+        [{{(activeAccount.soldeChecked || 0).toLocaleString()}}
+        {{currency}}]
+      </div>
+    </div>
+    <div>
+      <button class="btn btn-secondary chart-button" v-on:click="goToStats">
+        <font-awesome-icon icon="chart-pie"/>
+      </button>
     </div>
   </div>
 </template>
@@ -55,20 +51,24 @@
 </script>
 
 <style lang="scss" scoped>
-  .container {
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
+  .app-header {
+    display: flex;
+    justify-content: space-between;
 
-  .col-2 {
-    padding: 0
-  }
+    padding-left: 10px;
+    padding-right: 10px;
 
-  button.chart-button,
-  button.search-button {
-    width: 50px;
-    height: 50px;
-    font-size: 1.2rem;
-    line-height: 1.1rem;
+    @media all and (min-width: $desktop_BP_min_width) {
+      padding-left: 15%;
+      padding-right: 15%;
+    }
+
+    button.chart-button,
+    button.search-button {
+      width: 50px;
+      height: 50px;
+      font-size: 1.2rem;
+      line-height: 1.1rem;
+    }
   }
 </style>
