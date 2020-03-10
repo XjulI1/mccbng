@@ -72,7 +72,7 @@
 
       endAuthentification ({ userToken, userID, ttl }) {
         this.$store.dispatch('saveUserToken', userToken)
-        this.$store.dispatch('fetchUserByIDAndgenerateRecurringOp', userID)
+        this.$store.dispatch('fetchUserByIDAndGenerateRecurringOp', userID)
 
         if (ttl) {
           saveCookies({ userToken, userID, ttl })

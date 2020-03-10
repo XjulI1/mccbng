@@ -10,6 +10,7 @@ body {
   min-height: 100%;
   position: relative;
   color: #2c3e50;
+  line-height: 1.5rem;
 }
 
 code {
@@ -19,4 +20,11 @@ code {
 
 *, ::before, ::after {
   box-sizing: border-box;
+}
+
+hr {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }

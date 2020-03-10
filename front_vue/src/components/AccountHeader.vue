@@ -9,12 +9,12 @@
         </div>
         <div class="col-8 account-info">
           <div>
-            {{nomCompte}}
+            {{activeAccount.NomCompte}}
           </div>
           <div :class="{'no-total' : disabledTotal}">
-            {{($store.state.activeAccount.soldeNotChecked || 0).toLocaleString()}} {{$store.state.currency}} -
-            [{{($store.state.activeAccount.soldeChecked || 0).toLocaleString()}}
-            {{$store.state.currency}}]
+            {{(activeAccount.soldeNotChecked || 0).toLocaleString()}} {{currency}} -
+            [{{(activeAccount.soldeChecked || 0).toLocaleString()}}
+            {{currency}}]
           </div>
         </div>
         <div class="col-2">
@@ -36,21 +36,9 @@
     name: 'AccountHeader',
 
     computed: {
-      ...mapState({ activeAccount: 'activeAccount' }),
+      ...mapState({ activeAccount: 'activeAccount', currency: 'currency' }),
       disabledTotal () {
         return this.$route.meta.disabledTotalHeader === undefined ? false : this.$route.meta.disabledTotalHeader
-      }
-    },
-
-    watch: {
-      activeAccount (value) {
-        this.nomCompte = value.NomCompte
-      }
-    },
-
-    data () {
-      return {
-        nomCompte: ''
       }
     },
 

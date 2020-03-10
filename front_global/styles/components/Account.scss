@@ -1,0 +1,65 @@
+.account-informations {
+  padding-top: 5px;
+  padding-bottom: 5px;
+
+  display: flex;
+  flex-wrap: wrap;
+
+  &.cursor-pointer {
+    cursor: pointer;
+  }
+
+  .account-name {
+    width: 67%;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    svg {
+      margin-right: 5px;
+    }
+  }
+
+  .account-solde {
+    text-align: right;
+    width: 33%;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .bold-title {
+    font-weight: bold;
+  }
+
+  .soldeIn {
+    color: green;
+  }
+
+  .soldeWarning {
+    color: orange;
+  }
+
+  .soldeOut {
+    color: red;
+    font-weight: bold;
+  }
+
+  .warning-infos {
+    text-align: right;
+    font-size: 0.7rem;
+    font-weight: bold;
+  }
+
+  .col-8 {
+    padding-left: 10px;
+  }
+
+  .col-4, .col-12 {
+    padding: 0 10px 0 0;
+  }
+
+  .icon-fa {
+    font-size: 0.7rem;
+    color: grey;
+    margin-bottom: 0.1rem;
+  }
+}

@@ -8,6 +8,18 @@ import Operation from './operation.js'
 import Dispay from './display'
 import Stats from './stats'
 
+import { fetchAccountList, sumAllCompteForUser } from 'mccbng_services/compte'
+import {
+  initialState,
+  createBaseSoldeIntoEachAccount,
+  setSumAllAccountForUser,
+  filterBloquedAccounts as bloquedCompte,
+  filterAvailableAccounts as availableCompte,
+  filterPorteFeuilleAccount as porteFeuilleCompte,
+  totalAvailable,
+  totalGlobal
+} from 'mccbng_store/compte'
+
 Vue.use(Vuex)
 
 export default new Vuex.Store({
@@ -18,51 +30,15 @@ export default new Vuex.Store({
     display: Dispay,
     stats: Stats
   },
-  state: {
-    activeAccount: {},
-    accountList: [],
-    currency: '€'
-  },
+
+  state: initialState,
+
   getters: {
-    bloquedCompte (state) {
-      return state.accountList.filter((account) => {
-        if (account.bloque) {
-          return account
-        }
-      })
-    },
-
-    availableCompte (state) {
-      return state.accountList.filter((account) => {
-        if (!account.bloque && !account.porte_feuille) {
-          return account
-        }
-      })
-    },
-
-    porteFeuilleCompte (state) {
-      return state.accountList.filter((account) => {
-        if (account.porte_feuille) {
-          return account
-        }
-      })
-    },
-
-    totalAvailable (state, getters) {
-      const availableAndPorteFeuilleAccounts = getters.availableCompte.concat(getters.porteFeuilleCompte)
-
-      return availableAndPorteFeuilleAccounts.reduce((acc, account) => {
-        acc += account.solde
-        return Math.round(acc * 100) / 100
-      }, 0)
-    },
-
-    totalGlobal (state, getters) {
-      return getters.bloquedCompte.reduce((acc, account) => {
-        acc += account.solde
-        return Math.round(acc * 100) / 100
-      }, getters.totalAvailable)
-    },
+    bloquedCompte,
+    availableCompte,
+    porteFeuilleCompte,
+    totalAvailable,
+    totalGlobal,
 
     getAccountName (state) {
       return (IDcompte) => {
@@ -74,6 +50,7 @@ export default new Vuex.Store({
       }
     }
   },
+
   mutations: {
     setActiveAccount (state, activeAccount) {
       state.activeAccount = activeAccount
@@ -98,30 +75,16 @@ export default new Vuex.Store({
     },
 
     setAccountList (state, accountList) {
-      state.accountList = accountList
-
-      state.accountList.map((account) => {
-        account.base_solde = account.solde
-      })
+      state.accountList = createBaseSoldeIntoEachAccount(accountList)
     },
 
     setSumAllCompteForUser (state, sumList) {
-      state.accountList.forEach((account, index) => {
-        const sum = sumList.filter(sum => sum.IDCompte === account.IDcompte)
-
-        if (sum[0]) {
-          const account = state.accountList[index]
-
-          account.base_solde += sum[0].TotalChecked + (sum[0].TotalNotChecked || 0)
-          account.base_solde = Math.round(account.base_solde * 100) / 100
-
-          account.solde = account.base_solde
-        }
-      })
+      state.accountList = setSumAllAccountForUser(state.accountList, sumList)
     }
   },
+
   actions: {
-    fetchUserByIDAndgenerateRecurringOp (context, userID) {
+    fetchUserByIDAndGenerateRecurringOp (context, userID) {
       this.dispatch('fetchUser', userID)
         .then(() => {
           this.dispatch('generateRecurringOperations')
@@ -141,21 +104,6 @@ export default new Vuex.Store({
       })
     },
 
-    fetchAccountList (context) {
-      const filter = { where: { IDuser: this.state.user.id, visible: true }, order: 'NomCompte ASC' }
-
-      axios.get(process.env.VUE_APP_API_URL + '/api/Comptes', {
-        params: {
-          access_token: context.rootState.user.token,
-          filter
-        }
-      }).then((response) => {
-        context.commit('setAccountList', response.data)
-
-        this.dispatch('sumAllCompteForUser')
-      })
-    },
-
     fetchSumForACompte (context) {
       axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumForACompte', {
         params: {
@@ -168,15 +116,20 @@ export default new Vuex.Store({
       })
     },
 
-    sumAllCompteForUser (context) {
-      axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumAllCompteForUser', {
-        params: {
-          access_token: context.rootState.user.token,
-          userID: this.state.user.id
-        }
-      }).then((response) => {
-        context.commit('setSumAllCompteForUser', response.data.results)
-      })
+    fetchAccountList (context) {
+      const userID = this.state.user.id
+      const userToken = context.rootState.user.token
+      const APIURL = process.env.VUE_APP_API_URL
+
+      fetchAccountList(userID, userToken, APIURL)
+        .then((accountList) => {
+          context.commit('setAccountList', accountList)
+
+          return sumAllCompteForUser(userID, userToken, APIURL)
+        })
+        .then((sumList) => {
+          context.commit('setSumAllCompteForUser', sumList)
+        })
     },
 
     generateRecurringOperations (context) {

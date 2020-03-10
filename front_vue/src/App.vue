@@ -3,13 +3,13 @@
     <account-header/>
     <div class="container-flex">
       <div class="left-panel" :class="{'mask-panel' : !$store.state.display.account_list}">
-        <compte-list/>
+        <CompteList/>
         <TimeSeriesEvolutionSoldes/>
       </div>
       <router-view class="right-panel" :class="{'mask-panel' : $store.state.display.account_list}"></router-view>
     </div>
-    <navbar/>
-    <new-version/>
+    <Navbar/>
+    <NewVersion/>
   </div>
 </template>
 
