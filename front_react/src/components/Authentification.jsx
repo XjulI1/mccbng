@@ -12,6 +12,7 @@ import 'mccbng_styles/components/Authentification.scss'
 
 class Authentification extends React.Component {
   static propTypes = {
+    goBackUrl: PropTypes.string.isRequired,
     userToken: PropTypes.string,
     saveUserToken: PropTypes.func.isRequired,
     saveUserInfos: PropTypes.func.isRequired
@@ -85,14 +86,14 @@ class Authentification extends React.Component {
     let buttons = null
 
     if (this.props.userToken !== null) {
-      return <Redirect to='/'/>
+      return <Redirect to={this.props.goBackUrl}/>
     }
 
     if (this.state.code.length > 0) {
       secretCode =
         <div className="secret-code">
           {'*'.repeat(this.state.code.length)}
-          <button className="cross" onClick={this.resetCode}>X</button>
+          <button className="btn btn-secondary cross" onClick={this.resetCode}>X</button>
         </div>
     }
 
@@ -100,11 +101,12 @@ class Authentification extends React.Component {
       buttons = <div className="buttons">
         {
           this.state.buttonList.map(button =>
-            <button key={button} value={button} onClick={this.addCodeValue}>{button}</button>
+            <button className='btn btn-secondary' key={button} value={button} onClick={this.addCodeValue}>{button}</button>
           )
         }
       </div>
     } else {
+      secretCode = null
       buttons = <div>Authentification automatique ...</div>
     }
 

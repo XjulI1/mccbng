@@ -1,12 +1,8 @@
 import { fetchUser } from 'mccbng_services/user'
+import { initialState } from 'mccbng_store/user'
 
 export default {
-  state: {
-    id: undefined,
-    favoris: undefined,
-    warningTotal: undefined,
-    token: undefined
-  },
+  state: initialState,
   getters: {
     userID (state) {
       return state.id

@@ -9,7 +9,8 @@ import {
   faPlus,
   faRetweet,
   faSearch,
-  faTimesCircle
+  faTimesCircle,
+  faRedo
 } from '@fortawesome/free-solid-svg-icons'
 
 export default {
@@ -24,7 +25,8 @@ export default {
       faPlus,
       faRetweet,
       faSearch,
-      faTimesCircle
+      faTimesCircle,
+      faRedo
     })
   }
 }

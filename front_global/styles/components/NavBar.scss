@@ -17,6 +17,11 @@
     width: 100%;
   }
 
+  a {
+    svg {
+      margin-top: 4px;
+    }
+  }
 
   &.btn-group {
     position: fixed;

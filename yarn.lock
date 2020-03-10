@@ -9430,14 +9430,20 @@ map-visit@^1.0.0:
     object-visit "^1.0.0"
 
 "mccbng_helpers@link:front_global/helpers":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 "mccbng_services@link:front_global/services":
   version "1.0.0"
   dependencies:
     axios "^0.19.2"
     universal-cookie "^4.0.3"
+
+"mccbng_store@link:./front_react/front_global/store":
+  version "0.0.0"
+
+"mccbng_store@link:./front_vue/front_global/store":
+  version "0.0.0"
+  uid ""
 
 "mccbng_styles@link:front_global/styles":
   version "1.0.0"

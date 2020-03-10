@@ -1,11 +1,5 @@
 import { SAVE_USER_TOKEN, SAVE_USER_INFOS } from './action'
-
-const initialState = {
-  token: null,
-  id: null,
-  favoris: null,
-  warningTotal: null
-}
+import { initialState } from 'mccbng_store/user'
 
 const saveUserToken = function (state, token) {
   return { ...state, ...{ token: token } }

@@ -1,27 +1,20 @@
 <template>
-  <div>
-    <a href="/">Reload App</a>
+  <div class="config">
+    <a class="btn btn-info" href="/">
+      <font-awesome-icon icon="redo"/>
+      Reload App
+    </a>
   </div>
 </template>
 
 <script>
+  import 'mccbng_styles/routes/Config.scss'
+
   export default {
     name: 'Config',
-    data () {
-      return {}
-    },
 
     created () {
       this.$store.commit('setActiveAccount', { NomCompte: 'Configurations' })
-    },
-
-    methods: {}
+    }
   }
 </script>
-
-<style scoped>
-  a {
-    margin-left: 10px;
-    font-size: 1.2rem;
-  }
-</style>

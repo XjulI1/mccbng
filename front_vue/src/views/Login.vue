@@ -8,11 +8,11 @@
       Authentification automatique ...
     </div>
     <div class="authentification" v-else>
-      <button v-for="value in buttonList" :key="value" :value="value" @click="addNumber">{{value}}</button>
+      <button class="btn btn-secondary" v-for="value in buttonList" :key="value" :value="value" @click="addNumber">{{value}}</button>
       <br>
       <div>
         <span class="mask-code" v-for="(c, i) in code" :key="c + i">*</span>
-        <button class="cross" v-if="code.length > 0" @click="crossDelete">X</button>
+        <button class="btn btn-secondary cross" v-if="code.length > 0" @click="crossDelete">X</button>
       </div>
     </div>
   </div>

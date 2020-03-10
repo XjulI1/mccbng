@@ -20,7 +20,8 @@ class App extends React.Component {
     super(props)
 
     this.state = {
-      isConnected: false
+      isConnected: false,
+      goBackUrl: window.location.toString().split(window.location.origin)[1]
     }
   }
 
@@ -34,7 +35,10 @@ class App extends React.Component {
     let redirectAuth = null
 
     if (!this.state.isConnected) {
-      redirectAuth = <Redirect to='/login'/>
+      redirectAuth = <Redirect to={{
+        pathname: '/login',
+        state: { referrer: this.state.goBackUrl }
+      }}/>
     }
 
     return <div className='root-app'>

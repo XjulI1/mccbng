@@ -11,7 +11,7 @@ class Login extends React.Component {
 
       <h4>Tapez votre code d'accès</h4>
 
-      <Authentification/>
+      <Authentification goBackUrl={this.props.location.state ? this.props.location.state.referrer : '/'}/>
     </div>
   }
 }

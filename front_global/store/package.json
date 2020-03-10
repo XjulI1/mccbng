@@ -1,0 +1,12 @@
+{
+  "name": "mccbng_store",
+  "version": "1.0.0",
+  "description": "Global store informations for React and Vue mccbng fronts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Xavier JULIEN",
+  "license": "MIT",
+  "dependencies": {}
+}

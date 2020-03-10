@@ -10,6 +10,8 @@
     "back_loopback",
     "front_react",
     "front_global/services",
-    "front_global/styles"
+    "front_global/styles",
+    "front_global/helpers",
+    "front_global/store"
   ]
 }

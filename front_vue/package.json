@@ -20,6 +20,7 @@
     "highcharts": "^7.0.3",
     "mccbng_helpers": "link:../front_global/helpers/",
     "mccbng_services": "link:../front_global/services/",
+    "mccbng_store": "link:./front_global/store/",
     "mccbng_styles": "link:../front_global/styles/",
     "register-service-worker": "^1.0.0",
     "vue": "^2.5.16",
