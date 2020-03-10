@@ -1,12 +1,12 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import Home from '@/views/Home.vue'
-import RouteOverTheContent from '@/views/RouteOverTheContent'
-import OperationsRecurrentes from '@/views/OperationsRecurrentes'
-import Stats from '@/views/Stats'
-import Login from '@/views/Login'
-import Config from '@/views/Config'
+const Home = () => import(/* webpackChunkName: "home" */ './views/Home.vue')
+const Stats = () => import(/* webpackChunkName: "stats" */ './views/Stats.vue')
+const Login = () => import(/* webpackChunkName: "login" */ './views/Login.vue')
+const Config = () => import(/* webpackChunkName: "config" */ './views/Config.vue')
+const OperationsRecurrentes = () => import(/* webpackChunkName: "operecur" */ './views/OperationsRecurrentes.vue')
+const RouteOverTheContent = () => import(/* webpackChunkName: "othercontent" */ './views/RouteOverTheContent.vue')
 
 Vue.use(Router)
 

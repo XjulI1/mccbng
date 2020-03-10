@@ -1,13 +1,13 @@
 <template>
   <div class="account-informations" :class="classPointer" @click="getAccountDetails">
-    <div class="col-8" :class="classBoldTitle">
+    <div class="account-name" :class="classBoldTitle">
       <font-awesome-icon :icon="fa_icon" class="icon-fa" v-if="fa_icon"/>
       {{accountInformations.NomCompte}}
     </div>
-    <div class="col-4 account-solde" :class="soldeColor">
+    <div class="account-solde" :class="soldeColor">
       {{accountInformations.solde.toLocaleString()}} {{$store.state.currency}}
     </div>
-    <div class="col-12 warning-infos" :class="soldeColor" v-if="warning">
+    <div class="warning-infos" :class="soldeColor" v-if="warning">
       {{(accountInformations.solde - warning).toLocaleString()}} {{$store.state.currency}}
     </div>
   </div>
