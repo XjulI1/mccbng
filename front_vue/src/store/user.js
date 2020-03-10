@@ -3,11 +3,13 @@ import { initialState } from 'mccbng_store/user'
 
 export default {
   state: initialState,
+
   getters: {
     userID (state) {
       return state.id
     }
   },
+
   mutations: {
     setUser (state, user) {
       state.id = user.id
@@ -18,6 +20,7 @@ export default {
       state.token = token
     }
   },
+
   actions: {
     fetchUser (context, userID) {
       return fetchUser(userID, context.state.token, process.env.VUE_APP_API_URL)
