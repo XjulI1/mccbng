@@ -24,10 +24,6 @@
       }
     },
 
-    data () {
-      return {}
-    },
-
     created () {
       if (this.$store.state.user.id) {
         this.$store.dispatch('fetchSumCategoriesByUserByMonth')
@@ -75,7 +71,3 @@
     }
   }
 </script>
-
-<style scoped>
-
-</style>
