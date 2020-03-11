@@ -44,6 +44,16 @@ export const totalGlobal = (_, { bloquedCompte, totalAvailable }) => {
   }, totalAvailable)
 }
 
+export const getAccount = ({ accountList }) => {
+  return (IDcompte) => {
+    return accountList.filter((account) => {
+      if (account.IDcompte === parseInt(IDcompte)) {
+        return account
+      }
+    })[0]
+  }
+}
+
 export const createBaseSoldeIntoEachAccount = (accountList) => {
   return accountList.map((account) => {
     account.base_solde = account.solde
@@ -71,9 +81,12 @@ export const setSumAllAccountForUser = (accountList, sumList) => {
 
 export default {
   initialState,
-  createBaseSoldeIntoEachAccount,
-  setSumAllAccountForUser,
   filterBloquedAccounts,
   filterAvailableAccounts,
-  filterPorteFeuilleAccount
+  filterPorteFeuilleAccount,
+  totalAvailable,
+  totalGlobal,
+  getAccount,
+  createBaseSoldeIntoEachAccount,
+  setSumAllAccountForUser
 }

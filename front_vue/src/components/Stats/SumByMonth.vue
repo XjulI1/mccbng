@@ -20,7 +20,7 @@
 
     <div v-for="(accountTotal, IDcompte) in negativeByAccountFilter"
          :key="IDcompte">
-      {{$store.getters.getAccountName(IDcompte)[0].NomCompte}} :
+      {{$store.getters.getAccount(IDcompte).NomCompte}} :
       <b>{{accountTotal}} {{$store.state.currency}}</b>
       <div class="parjour">
         par jour :

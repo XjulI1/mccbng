@@ -17,7 +17,8 @@ import {
   filterAvailableAccounts as availableCompte,
   filterPorteFeuilleAccount as porteFeuilleCompte,
   totalAvailable,
-  totalGlobal
+  totalGlobal,
+  getAccount
 } from 'mccbng_store/compte'
 
 Vue.use(Vuex)
@@ -39,16 +40,7 @@ export default new Vuex.Store({
     porteFeuilleCompte,
     totalAvailable,
     totalGlobal,
-
-    getAccountName (state) {
-      return (IDcompte) => {
-        return state.accountList.filter((account) => {
-          if (account.IDcompte === parseInt(IDcompte)) {
-            return account
-          }
-        })
-      }
-    }
+    getAccount
   },
 
   mutations: {
@@ -85,9 +77,9 @@ export default new Vuex.Store({
 
   actions: {
     fetchUserByIDAndGenerateRecurringOp (context, userID) {
-      this.dispatch('fetchUser', userID)
+      context.dispatch('fetchUser', userID)
         .then(() => {
-          this.dispatch('generateRecurringOperations')
+          context.dispatch('generateRecurringOperations')
         })
     },
 
@@ -99,17 +91,14 @@ export default new Vuex.Store({
       }).then((response) => {
         context.commit('setActiveAccount', response.data)
 
-        this.dispatch('fetchOperationsOfActiveAccount')
-        this.dispatch('fetchSumForACompte')
-      })
-    },
+        context.dispatch('fetchOperationsOfActiveAccount')
 
-    fetchSumForACompte (context) {
-      axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumForACompte', {
-        params: {
-          access_token: context.rootState.user.token,
-          id: this.state.activeAccount.IDcompte
-        }
+        return axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumForACompte', {
+          params: {
+            access_token: context.rootState.user.token,
+            id: context.state.activeAccount.IDcompte
+          }
+        })
       }).then((response) => {
         context.commit('setCheckedSolde', response.data.results.TotalChecked)
         context.commit('setNotCheckedSolde', response.data.results.TotalNotChecked)
@@ -117,7 +106,7 @@ export default new Vuex.Store({
     },
 
     fetchAccountList (context) {
-      const userID = this.state.user.id
+      const userID = context.state.user.id
       const userToken = context.rootState.user.token
       const APIURL = process.env.VUE_APP_API_URL
 
@@ -134,7 +123,7 @@ export default new Vuex.Store({
 
     generateRecurringOperations (context) {
       axios.post(process.env.VUE_APP_API_URL + '/api/OperationRecurrentes/autoGeneration?access_token=' + context.rootState.user.token, {
-        userID: this.state.user.id
+        userID: context.state.user.id
       })
     }
   }
