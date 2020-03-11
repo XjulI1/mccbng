@@ -21,14 +21,17 @@
     components: { CategoriesDropZone, Operation },
 
     watch: {
-      userFavoris () {
-        this.$store.dispatch('fetchActiveAccount', this.userFavoris)
+      accountList () {
+        if (this.operationsOfActiveAccount.length === 0) {
+          this.$store.dispatch('fetchActiveAccount', this.userFavoris)
+        }
       }
     },
 
     computed: {
       ...mapState({
-        userFavoris: state => state.user.favoris
+        userFavoris: state => state.user.favoris,
+        accountList: state => state.accountList
       }),
 
       ...mapGetters(['operationsOfActiveAccount']),

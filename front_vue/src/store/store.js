@@ -45,6 +45,8 @@ export default new Vuex.Store({
 
   mutations: {
     setActiveAccount (state, activeAccount) {
+      activeAccount.solde = activeAccount.base_solde
+
       state.activeAccount = activeAccount
     },
 
@@ -84,21 +86,15 @@ export default new Vuex.Store({
     },
 
     fetchActiveAccount (context, accountID) {
-      axios.get(process.env.VUE_APP_API_URL + '/api/Comptes/' + accountID, {
+      context.commit('setActiveAccount', context.getters.getAccount(accountID))
+
+      context.dispatch('fetchOperationsOfActiveAccount')
+
+      axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumForACompte', {
         params: {
-          access_token: context.rootState.user.token
+          access_token: context.rootState.user.token,
+          id: context.state.activeAccount.IDcompte
         }
-      }).then((response) => {
-        context.commit('setActiveAccount', response.data)
-
-        context.dispatch('fetchOperationsOfActiveAccount')
-
-        return axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumForACompte', {
-          params: {
-            access_token: context.rootState.user.token,
-            id: context.state.activeAccount.IDcompte
-          }
-        })
       }).then((response) => {
         context.commit('setCheckedSolde', response.data.results.TotalChecked)
         context.commit('setNotCheckedSolde', response.data.results.TotalNotChecked)

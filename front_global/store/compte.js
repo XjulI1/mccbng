@@ -46,11 +46,13 @@ export const totalGlobal = (_, { bloquedCompte, totalAvailable }) => {
 
 export const getAccount = ({ accountList }) => {
   return (IDcompte) => {
-    return accountList.filter((account) => {
-      if (account.IDcompte === parseInt(IDcompte)) {
-        return account
-      }
-    })[0]
+    return {
+      ...accountList.filter((account) => {
+        if (account.IDcompte === parseInt(IDcompte)) {
+          return account
+        }
+      })[0]
+    }
   }
 }
 
@@ -69,10 +71,8 @@ export const setSumAllAccountForUser = (accountList, sumList) => {
     if (sum[0]) {
       const account = accountList[index]
 
-      account.base_solde += sum[0].TotalChecked + (sum[0].TotalNotChecked || 0)
-      account.base_solde = Math.round(account.base_solde * 100) / 100
-
-      account.solde = account.base_solde
+      account.solde = account.base_solde + sum[0].TotalChecked + (sum[0].TotalNotChecked || 0)
+      account.solde = Math.round(account.solde * 100) / 100
     }
 
     return account
