@@ -56,6 +56,12 @@ export const getAccount = ({ accountList }) => {
   }
 }
 
+export const initActiveAccount = (activeAccount) => {
+  activeAccount.solde = activeAccount.base_solde
+
+  return activeAccount
+}
+
 export const createBaseSoldeIntoEachAccount = (accountList) => {
   return accountList.map((account) => {
     account.base_solde = account.solde
@@ -79,6 +85,12 @@ export const setSumAllAccountForUser = (accountList, sumList) => {
   })
 }
 
+export const calcActiveAccountCheckedSolde = (activeAccount, TotalChecked) => {
+  return {
+    ...activeAccount, soldeChecked: Math.round((activeAccount.solde + TotalChecked) * 100) / 100
+  }
+}
+
 export default {
   initialState,
   filterBloquedAccounts,
@@ -88,5 +100,6 @@ export default {
   totalGlobal,
   getAccount,
   createBaseSoldeIntoEachAccount,
-  setSumAllAccountForUser
+  setSumAllAccountForUser,
+  calcActiveAccountCheckedSolde
 }

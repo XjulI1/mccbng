@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-export const fetchAccountList = (userID, userToken, api_url) => {
+export const fetchAccountList = (userID, userToken, APIURL) => {
   const filter = { where: { IDuser: userID, visible: true }, order: 'NomCompte ASC' }
 
-  return axios.get(api_url + '/api/Comptes', {
+  return axios.get(APIURL + '/api/Comptes', {
     params: {
       access_token: userToken,
       filter
@@ -13,8 +13,8 @@ export const fetchAccountList = (userID, userToken, api_url) => {
   })
 }
 
-export const sumAllCompteForUser = (userID, userToken, api_url) => {
-  return axios.get(api_url + '/api/Operations/sumAllCompteForUser', {
+export const sumAllCompteForUser = (userID, userToken, APIURL) => {
+  return axios.get(APIURL + '/api/Operations/sumAllCompteForUser', {
     params: {
       access_token: userToken,
       userID
@@ -24,6 +24,19 @@ export const sumAllCompteForUser = (userID, userToken, api_url) => {
   })
 }
 
+export const sumForACompte = (userToken, IDcompte, APIURL) => {
+  return axios.get(APIURL + '/api/Operations/sumForACompte', {
+    params: {
+      access_token: userToken,
+      id: IDcompte
+    }
+  }).then((response) => {
+    return response.data.results
+  })
+}
+
 export default {
-  fetchAccountList
+  fetchAccountList,
+  sumAllCompteForUser,
+  sumForACompte
 }
