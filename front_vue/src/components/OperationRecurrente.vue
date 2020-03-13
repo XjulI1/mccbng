@@ -12,7 +12,7 @@
         class="col-3 center-text"
         :class="css.montant"
       >
-        {{ operation.MontantOpRecu.toLocaleString() }}{{ $store.state.currency }}
+        {{ operation.MontantOpRecu.toLocaleString() }}{{ $store.state.compte.currency }}
       </div>
     </div>
   </div>

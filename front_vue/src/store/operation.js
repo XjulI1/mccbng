@@ -26,7 +26,7 @@ export default {
   actions: {
     fetchOperationsOfActiveAccount (context) {
       const filter = {
-        where: { IDcompte: this.state.activeAccount.IDcompte },
+        where: { IDcompte: this.state.compte.activeAccount.IDcompte },
         order: 'CheckOp ASC, DateOp DESC',
         limit: 35
       }
@@ -84,7 +84,7 @@ export default {
     getSearchOperations (context, searchTerms) {
       const filter = {
         where: {
-          IDcompte: { inq: context.rootState.accountList.map((account) => account.IDcompte) },
+          IDcompte: { inq: context.rootState.compte.accountList.map((account) => account.IDcompte) },
           or: [
             { NomOp: { like: `%${searchTerms}%` } },
             { MontantOp: { like: `%${searchTerms}%` } }

@@ -33,7 +33,7 @@
     computed: {
       ...mapState({
         userFavoris: state => state.user.favoris,
-        accountList: state => state.accountList
+        accountList: state => state.compte.accountList
       }),
 
       ...mapGetters(['operationsOfActiveAccount']),

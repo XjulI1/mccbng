@@ -19,14 +19,14 @@
       class="account-solde"
       :class="soldeColor"
     >
-      {{ accountInformations.solde.toLocaleString() }} {{ $store.state.currency }}
+      {{ accountInformations.solde.toLocaleString() }} {{ $store.state.compte.currency }}
     </div>
     <div
       v-if="warning"
       class="warning-infos"
       :class="soldeColor"
     >
-      {{ (accountInformations.solde - warning).toLocaleString() }} {{ $store.state.currency }}
+      {{ (accountInformations.solde - warning).toLocaleString() }} {{ $store.state.compte.currency }}
     </div>
   </div>
 </template>

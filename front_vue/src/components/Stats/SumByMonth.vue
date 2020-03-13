@@ -25,7 +25,7 @@
     </div>
 
     <div class="total-month">
-      Total ce mois : <b>{{ $store.state.stats.negativeMonth }}{{ $store.state.currency }}</b>
+      Total ce mois : <b>{{ $store.state.stats.negativeMonth }}{{ $store.state.compte.currency }}</b>
     </div>
 
     <div
@@ -33,10 +33,10 @@
       :key="IDcompte"
     >
       {{ $store.getters.getAccount(IDcompte).NomCompte }} :
-      <b>{{ accountTotal }} {{ $store.state.currency }}</b>
+      <b>{{ accountTotal }} {{ $store.state.compte.currency }}</b>
       <div class="parjour">
         par jour :
-        {{ Math.round(accountTotal / numberDaysForCurrentMonth() * 100) / 100 }} {{ $store.state.currency }}
+        {{ Math.round(accountTotal / numberDaysForCurrentMonth() * 100) / 100 }} {{ $store.state.compte.currency }}
       </div>
     </div>
   </div>

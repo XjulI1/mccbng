@@ -2,10 +2,10 @@
   <div class="app-header">
     <div>
       <button
-        class="btn btn-info search-button"
-        @click="searchOperation"
+              class="btn btn-info search-button"
+              @click="searchOperation"
       >
-        <font-awesome-icon icon="search" />
+        <font-awesome-icon icon="search"/>
       </button>
     </div>
     <div class="account-info">
@@ -19,10 +19,10 @@
     </div>
     <div>
       <button
-        class="btn btn-secondary chart-button"
-        @click="goToStats"
+              class="btn btn-secondary chart-button"
+              @click="goToStats"
       >
-        <font-awesome-icon icon="chart-pie" />
+        <font-awesome-icon icon="chart-pie"/>
       </button>
     </div>
   </div>
@@ -37,7 +37,11 @@
     name: 'AccountHeader',
 
     computed: {
-      ...mapState({ activeAccount: 'activeAccount', currency: 'currency' }),
+      ...mapState({
+        activeAccount: state => state.compte.activeAccount,
+        currency: state => state.compte.currency
+      }),
+
       disabledTotal () {
         return this.$route.meta.disabledTotalHeader === undefined ? false : this.$route.meta.disabledTotalHeader
       }
