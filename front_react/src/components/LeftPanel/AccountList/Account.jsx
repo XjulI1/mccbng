@@ -29,10 +29,13 @@ class Account extends React.Component {
   }
 
   render () {
+
+    const faIcon = this.props.faIcon ? <FontAwesomeIcon icon={this.props.faIcon} className="icon-fa"/> : ''
+
     return (
       <div className='account-informations cursor-pointer'>
         <div className={'account-name ' + (this.props.boldTitle ? 'bold-title' : '')}>
-          <FontAwesomeIcon icon={this.props.faIcon} className="icon-fa"/>
+          {faIcon}
           {this.props.name}
         </div>
         <div className={'account-solde ' + this.soldeColor()}>
