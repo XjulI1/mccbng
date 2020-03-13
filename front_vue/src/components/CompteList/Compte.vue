@@ -1,14 +1,32 @@
 <template>
-  <div class="account-informations" :class="classPointer" @click="getAccountDetails">
-    <div class="account-name" :class="classBoldTitle">
-      <font-awesome-icon :icon="fa_icon" class="icon-fa" v-if="fa_icon"/>
-      {{accountInformations.NomCompte}}
+  <div
+    class="account-informations"
+    :class="classPointer"
+    @click="getAccountDetails"
+  >
+    <div
+      class="account-name"
+      :class="classBoldTitle"
+    >
+      <font-awesome-icon
+        v-if="fa_icon"
+        :icon="fa_icon"
+        class="icon-fa"
+      />
+      {{ accountInformations.NomCompte }}
     </div>
-    <div class="account-solde" :class="soldeColor">
-      {{accountInformations.solde.toLocaleString()}} {{$store.state.currency}}
+    <div
+      class="account-solde"
+      :class="soldeColor"
+    >
+      {{ accountInformations.solde.toLocaleString() }} {{ $store.state.currency }}
     </div>
-    <div class="warning-infos" :class="soldeColor" v-if="warning">
-      {{(accountInformations.solde - warning).toLocaleString()}} {{$store.state.currency}}
+    <div
+      v-if="warning"
+      class="warning-infos"
+      :class="soldeColor"
+    >
+      {{ (accountInformations.solde - warning).toLocaleString() }} {{ $store.state.currency }}
     </div>
   </div>
 </template>
@@ -20,17 +38,17 @@
     name: 'Compte',
     props: ['accountInformations', 'boldTitle', 'disableClick', 'noColor', 'warning', 'fa_icon'],
 
-    watch: {
-      'accountInformations.solde' () {
-        this.soldeColor = this.getSoldeColor()
-      }
-    },
-
     data () {
       return {
         soldeColor: this.getSoldeColor(),
         classBoldTitle: this.boldTitle ? 'bold-title' : '',
         classPointer: this.disableClick ? '' : 'cursor-pointer'
+      }
+    },
+
+    watch: {
+      'accountInformations.solde' () {
+        this.soldeColor = this.getSoldeColor()
       }
     },
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="evolutionSoldes"/>
+  <div class="evolutionSoldes" />
 </template>
 
 <script>

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <sum-by-month/>
-    <pie-by-categorie/>
+    <sum-by-month />
+    <pie-by-categorie />
   </div>
 </template>
 

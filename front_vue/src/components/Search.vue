@@ -1,8 +1,14 @@
 <template>
   <div>
-    <input ref="search-input" id="search-input" type="text" class="form-control" placeholder="Search terms"
-           v-model="searchTerms"
-           @keyup="search"/>
+    <input
+      id="search-input"
+      ref="search-input"
+      v-model="searchTerms"
+      type="text"
+      class="form-control"
+      placeholder="Search terms"
+      @keyup="search"
+    >
   </div>
 </template>
 

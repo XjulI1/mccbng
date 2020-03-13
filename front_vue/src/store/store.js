@@ -20,7 +20,7 @@ import {
   totalGlobal,
   getAccount,
   initActiveAccount,
-  calcActiveAccountCheckedSolde
+  calcActiveAccountBalances, updateSoldeInAccountList
 } from 'mccbng_store/compte'
 
 Vue.use(Vuex)
@@ -50,22 +50,10 @@ export default new Vuex.Store({
       state.activeAccount = initActiveAccount(activeAccount)
     },
 
-    setCheckedSolde (state, TotalChecked) {
-      state.activeAccount = calcActiveAccountCheckedSolde(state.activeAccount, TotalChecked)
-    },
+    setNewBalances (state, { TotalChecked, TotalNotChecked }) {
+      state.activeAccount = calcActiveAccountBalances(state.activeAccount, { TotalChecked, TotalNotChecked })
 
-    setNotCheckedSolde (state, TotalNotChecked) {
-      TotalNotChecked = parseFloat(TotalNotChecked || 0)
-      TotalNotChecked = Math.round((state.activeAccount.soldeChecked + TotalNotChecked) * 100) / 100
-
-      Vue.set(state.activeAccount, 'soldeNotChecked', TotalNotChecked)
-
-      state.accountList.find((account) => {
-        if (account.IDcompte === state.activeAccount.IDcompte) {
-          account.solde = TotalNotChecked
-          return account
-        }
-      })
+      state.accountList = updateSoldeInAccountList(state.accountList, state.activeAccount.IDcompte, state.activeAccount.soldeNotChecked)
     },
 
     setAccountList (state, accountList) {
@@ -95,8 +83,7 @@ export default new Vuex.Store({
 
       sumForACompte(context.state.user.token, context.state.activeAccount.IDcompte, process.env.VUE_APP_API_URL)
         .then(({ TotalChecked, TotalNotChecked }) => {
-          context.commit('setCheckedSolde', TotalChecked)
-          context.commit('setNotCheckedSolde', TotalNotChecked)
+          context.commit('setNewBalances', { TotalChecked, TotalNotChecked })
         })
     },
 

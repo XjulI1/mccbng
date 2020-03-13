@@ -1,9 +1,11 @@
 <template>
   <div>
-    <operation-recurrente v-for="operation in operationsRecurrenteList"
-                          :key="'operation-recu-' + operation.IDopRecu"
-                          v-bind="{operation}"
-                          recurr="true"/>
+    <operation-recurrente
+      v-for="operation in operationsRecurrenteList"
+      :key="'operation-recu-' + operation.IDopRecu"
+      v-bind="{operation}"
+      recurr="true"
+    />
   </div>
 </template>
 

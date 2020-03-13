@@ -1,15 +1,19 @@
 <template>
-  <div class="categories-drop-zone" :class="$store.state.display.categories_drop_zone ? 'display-zone' : ''">
+  <div
+    class="categories-drop-zone"
+    :class="$store.state.display.categories_drop_zone ? 'display-zone' : ''"
+  >
     <div class="category-container">
-      <draggable class="category"
-                 v-for="category in $store.state.category.list "
-                 :key="'category-' + category.IDcat"
-                 :data-id="category.IDcat"
-                 :group="{name: 'category', put: ['operation']}"
-                 @add="addNewOperation"
+      <draggable
+        v-for="category in $store.state.category.list "
+        :key="'category-' + category.IDcat"
+        class="category"
+        :data-id="category.IDcat"
+        :group="{name: 'category', put: ['operation']}"
+        @add="addNewOperation"
       >
         <div :class="$store.state.display.actual_drag_cat === category.IDcat ? 'actual-drag-cat' : ''">
-          <b v-html="category.Nom"></b>
+          <b v-html="category.Nom" />
         </div>
       </draggable>
     </div>

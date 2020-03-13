@@ -1,15 +1,24 @@
 <template>
-  <div id="app" class="root-app">
-    <account-header/>
+  <div
+    id="app"
+    class="root-app"
+  >
+    <account-header />
     <div class="container-flex">
-      <div class="left-panel" :class="{'mask-panel' : !$store.state.display.account_list}">
-        <CompteList/>
-        <TimeSeriesEvolutionSoldes/>
+      <div
+        class="left-panel"
+        :class="{'mask-panel' : !$store.state.display.account_list}"
+      >
+        <CompteList />
+        <TimeSeriesEvolutionSoldes />
       </div>
-      <router-view class="right-panel" :class="{'mask-panel' : $store.state.display.account_list}"></router-view>
+      <router-view
+        class="right-panel"
+        :class="{'mask-panel' : $store.state.display.account_list}"
+      />
     </div>
-    <Navbar/>
-    <NewVersion/>
+    <Navbar />
+    <NewVersion />
   </div>
 </template>
 

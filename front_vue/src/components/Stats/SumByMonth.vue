@@ -3,28 +3,40 @@
     <div class="selector-date">
       Mois :
       <select v-model="currentMonth">
-        <option v-for="month in listMonth" v-bind:key="'month-' + month" :value="month+1">{{month+1}}
+        <option
+          v-for="month in listMonth"
+          :key="'month-' + month"
+          :value="month+1"
+        >
+          {{ month+1 }}
         </option>
       </select>
 
       Année :
       <select v-model="currentYear">
-        <option v-for="year in listYear" v-bind:key="'year-' + year" :value="year">{{year}}
+        <option
+          v-for="year in listYear"
+          :key="'year-' + year"
+          :value="year"
+        >
+          {{ year }}
         </option>
       </select>
     </div>
 
     <div class="total-month">
-      Total ce mois : <b>{{$store.state.stats.negativeMonth}}{{$store.state.currency}}</b>
+      Total ce mois : <b>{{ $store.state.stats.negativeMonth }}{{ $store.state.currency }}</b>
     </div>
 
-    <div v-for="(accountTotal, IDcompte) in negativeByAccountFilter"
-         :key="IDcompte">
-      {{$store.getters.getAccount(IDcompte).NomCompte}} :
-      <b>{{accountTotal}} {{$store.state.currency}}</b>
+    <div
+      v-for="(accountTotal, IDcompte) in negativeByAccountFilter"
+      :key="IDcompte"
+    >
+      {{ $store.getters.getAccount(IDcompte).NomCompte }} :
+      <b>{{ accountTotal }} {{ $store.state.currency }}</b>
       <div class="parjour">
         par jour :
-        {{Math.round(accountTotal / numberDaysForCurrentMonth() * 100) / 100}} {{$store.state.currency}}
+        {{ Math.round(accountTotal / numberDaysForCurrentMonth() * 100) / 100 }} {{ $store.state.currency }}
       </div>
     </div>
   </div>

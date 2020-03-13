@@ -1,6 +1,9 @@
 <template>
-  <button class="btn btn-info disabled new-operation-button" v-on:click="getMoney">
-    <font-awesome-icon icon="money-bill-alt"/>
+  <button
+    class="btn btn-info disabled new-operation-button"
+    @click="getMoney"
+  >
+    <font-awesome-icon icon="money-bill-alt" />
   </button>
 </template>
 

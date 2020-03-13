@@ -1,23 +1,28 @@
 <template>
   <div class="app-header">
     <div>
-      <button class="btn btn-info search-button" v-on:click="searchOperation">
-        <font-awesome-icon icon="search"/>
+      <button
+        class="btn btn-info search-button"
+        @click="searchOperation"
+      >
+        <font-awesome-icon icon="search" />
       </button>
     </div>
     <div class="account-info">
       <div>
-        {{activeAccount.NomCompte}}
+        {{ activeAccount.NomCompte }}
       </div>
       <div :class="{'no-total' : disabledTotal}">
-        {{(activeAccount.soldeNotChecked || 0).toLocaleString()}} {{currency}} -
-        [{{(activeAccount.soldeChecked || 0).toLocaleString()}}
-        {{currency}}]
+        {{ (activeAccount.soldeNotChecked || 0).toLocaleString() }} {{ currency }} -
+        [{{ (activeAccount.soldeChecked || 0).toLocaleString() }} {{ currency }}]
       </div>
     </div>
     <div>
-      <button class="btn btn-secondary chart-button" v-on:click="goToStats">
-        <font-awesome-icon icon="chart-pie"/>
+      <button
+        class="btn btn-secondary chart-button"
+        @click="goToStats"
+      >
+        <font-awesome-icon icon="chart-pie" />
       </button>
     </div>
   </div>

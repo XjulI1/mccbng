@@ -3,13 +3,16 @@
     <div class="row">
       <div class="col-9">
         <label>
-          {{operation.NomOpRecu}}
+          {{ operation.NomOpRecu }}
           <br>
-          {{dateOperation}}
+          {{ dateOperation }}
         </label>
       </div>
-      <div class="col-3 center-text" :class="css.montant">
-        {{operation.MontantOpRecu.toLocaleString()}}{{$store.state.currency}}
+      <div
+        class="col-3 center-text"
+        :class="css.montant"
+      >
+        {{ operation.MontantOpRecu.toLocaleString() }}{{ $store.state.currency }}
       </div>
     </div>
   </div>

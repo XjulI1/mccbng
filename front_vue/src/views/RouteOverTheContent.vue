@@ -1,8 +1,16 @@
 <template>
-  <div class="route-other-the-content" @click="returnToHome">
+  <div
+    class="route-other-the-content"
+    @click="returnToHome"
+  >
     <div class="component-content">
-      <h3 class="title">{{$route.name}}</h3>
-      <component :is="componentName" v-bind="params"/>
+      <h3 class="title">
+        {{ $route.name }}
+      </h3>
+      <component
+        :is="componentName"
+        v-bind="params"
+      />
     </div>
   </div>
 </template>

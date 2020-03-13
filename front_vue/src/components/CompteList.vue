@@ -1,18 +1,38 @@
 <template>
   <div class="compte-list">
-    <compte :account-informations="account" v-for="account in $store.getters.availableCompte"
-            v-bind:key="'account-' + account.IDcompte" fa_icon="check"/>
+    <compte
+      v-for="account in availableCompte"
+      :key="'account-' + account.IDcompte"
+      :account-informations="account"
+      fa_icon="check"
+    />
     <hr>
-    <compte :account-informations="account" v-for="account in $store.getters.bloquedCompte"
-            v-bind:key="'account-' + account.IDcompte" fa_icon="times-circle"/>
+    <compte
+      v-for="account in bloquedCompte"
+      :key="'account-' + account.IDcompte"
+      :account-informations="account"
+      fa_icon="times-circle"
+    />
     <hr>
-    <compte :account-informations="account" v-for="account in $store.getters.porteFeuilleCompte"
-            v-bind:key="'account-' + account.IDcompte" fa_icon="money-bill"/>
+    <compte
+      v-for="account in porteFeuilleCompte"
+      :key="'account-' + account.IDcompte"
+      :account-informations="account"
+      fa_icon="money-bill"
+    />
     <hr>
-    <compte :account-informations="totalAccounts.available" :boldTitle="cssClasses.compteBoldTitle.boldTitle"
-            :disable-click="true" no-color="true"/>
-    <compte :account-informations="totalAccounts.all" :boldTitle="cssClasses.compteBoldTitle.boldTitle"
-            :disable-click="true" :warning="$store.state.user.warningTotal"/>
+    <compte
+      :account-informations="totalAccounts.available"
+      :bold-title="cssClasses.compteBoldTitle.boldTitle"
+      :disable-click="true"
+      no-color="true"
+    />
+    <compte
+      :account-informations="totalAccounts.all"
+      :bold-title="cssClasses.compteBoldTitle.boldTitle"
+      :disable-click="true"
+      :warning="$store.state.user.warningTotal"
+    />
   </div>
 </template>
 
@@ -25,7 +45,16 @@
     name: 'CompteList',
     components: { Compte },
 
-    computed: { ...mapGetters(['totalAvailable', 'totalGlobal', 'userID']) },
+    computed: {
+      ...mapGetters([
+        'totalAvailable',
+        'totalGlobal',
+        'userID',
+        'availableCompte',
+        'bloquedCompte',
+        'porteFeuilleCompte'
+      ])
+    },
 
     watch: {
       totalAvailable (value) {

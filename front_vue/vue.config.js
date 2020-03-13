@@ -12,5 +12,7 @@ module.exports = {
         prependData: ' @import "../front_global/styles/variables.scss";'
       }
     }
-  }
+  },
+
+  lintOnSave: false
 }

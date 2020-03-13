@@ -1,11 +1,13 @@
 <template>
   <div class="home">
-    <router-view/>
+    <router-view />
     <div class="operation-list">
-      <operation v-for="operation in operationsList"
-                 :key="'operation-' + operation.IDop"
-                 v-bind="{operation}"/>
-      <categories-drop-zone/>
+      <operation
+        v-for="operation in operationsList"
+        :key="'operation-' + operation.IDop"
+        v-bind="{operation}"
+      />
+      <categories-drop-zone />
     </div>
   </div>
 </template>

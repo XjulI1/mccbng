@@ -1,7 +1,10 @@
 <template>
   <div class="config">
-    <a class="btn btn-info" href="/">
-      <font-awesome-icon icon="redo"/>
+    <a
+      class="btn btn-info"
+      href="/"
+    >
+      <font-awesome-icon icon="redo" />
       Reload App
     </a>
   </div>

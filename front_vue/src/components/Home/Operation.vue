@@ -2,25 +2,43 @@
   <div class="operation container">
     <div class="row">
       <div class="col-1">
-        <input type="checkbox" :id="checkBoxID" v-model="operation.CheckOp" @change="updateCheckOp"/>
+        <input
+          :id="checkBoxID"
+          v-model="operation.CheckOp"
+          type="checkbox"
+          @change="updateCheckOp"
+        >
       </div>
-      <draggable class="col-7"
-                 :class="css.category"
-                 @start="startDrag"
-                 @end="endDrag"
-                 :group="{name: 'operation', pull: 'clone', put: ['false'] }"
-                 :data-idcat="operation.IDcat">
-        <label :for="checkBoxID" :data-id="operation.IDop">
-          {{operation.NomOp}}
+      <draggable
+        class="col-7"
+        :class="css.category"
+        :group="{name: 'operation', pull: 'clone', put: ['false'] }"
+        :data-idcat="operation.IDcat"
+        @start="startDrag"
+        @end="endDrag"
+      >
+        <label
+          :for="checkBoxID"
+          :data-id="operation.IDop"
+        >
+          {{ operation.NomOp }}
           <br>
-          {{dateOperation}}
+          {{ dateOperation }}
         </label>
       </draggable>
-      <div class="col-3 center-text" :class="css.montant">
-        {{operation.MontantOp.toLocaleString()}}{{$store.state.currency}}
+      <div
+        class="col-3 center-text"
+        :class="css.montant"
+      >
+        {{ operation.MontantOp.toLocaleString() }}{{ $store.state.currency }}
       </div>
       <div class="col-1">
-        <router-link :to="'/editOperation/' + operation.IDop" class="edit-operation">...</router-link>
+        <router-link
+          :to="'/editOperation/' + operation.IDop"
+          class="edit-operation"
+        >
+          ...
+        </router-link>
       </div>
     </div>
   </div>
@@ -31,22 +49,22 @@
 
   export default {
     name: 'Operation',
-    props: ['operation'],
 
     components: { draggable },
-
-    watch: {
-      operation () {
-        this.dateOperation = this.generateDataOperationVariables()
-        this.css = this.generateCssVariables()
-      }
-    },
+    props: ['operation'],
 
     data () {
       return {
         dateOperation: this.generateDataOperationVariables(),
         css: this.generateCssVariables(),
         checkBoxID: 'checkboxOperationID-' + this.operation.IDop
+      }
+    },
+
+    watch: {
+      operation () {
+        this.dateOperation = this.generateDataOperationVariables()
+        this.css = this.generateCssVariables()
       }
     },
 

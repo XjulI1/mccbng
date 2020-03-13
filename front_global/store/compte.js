@@ -85,10 +85,24 @@ export const setSumAllAccountForUser = (accountList, sumList) => {
   })
 }
 
-export const calcActiveAccountCheckedSolde = (activeAccount, TotalChecked) => {
+export const calcActiveAccountBalances = (activeAccount, { TotalChecked, TotalNotChecked }) => {
+  TotalChecked = parseFloat(TotalChecked || 0)
+  TotalNotChecked = parseFloat(TotalNotChecked || 0)
+
   return {
-    ...activeAccount, soldeChecked: Math.round((activeAccount.solde + TotalChecked) * 100) / 100
+    ...activeAccount,
+    soldeChecked: Math.round((activeAccount.solde + TotalChecked) * 100) / 100,
+    soldeNotChecked: Math.round((TotalChecked + TotalNotChecked) * 100) / 100
   }
+}
+
+export const updateSoldeInAccountList = (accountList, IDcompte, solde) => {
+  return accountList.map((account) => {
+    if (account.IDcompte === IDcompte) {
+      account.solde = solde
+    }
+    return account
+  })
 }
 
 export default {
@@ -101,5 +115,6 @@ export default {
   getAccount,
   createBaseSoldeIntoEachAccount,
   setSumAllAccountForUser,
-  calcActiveAccountCheckedSolde
+  calcActiveAccountBalances,
+  updateSoldeInAccountList
 }

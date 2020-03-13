@@ -4,15 +4,39 @@
 
     <h5>Tapez votre code d'accès</h5>
     <br>
-    <div class="authentification" v-if="autoAuthProgress">
+    <div
+      v-if="autoAuthProgress"
+      class="authentification"
+    >
       Authentification automatique ...
     </div>
-    <div class="authentification" v-else>
-      <button class="btn btn-secondary" v-for="value in buttonList" :key="value" :value="value" @click="addNumber">{{value}}</button>
+    <div
+      v-else
+      class="authentification"
+    >
+      <button
+        v-for="value in buttonList"
+        :key="value"
+        class="btn btn-secondary"
+        :value="value"
+        @click="addNumber"
+      >
+        {{ value }}
+      </button>
       <br>
       <div>
-        <span class="mask-code" v-for="(c, i) in code" :key="c + i">*</span>
-        <button class="btn btn-secondary cross" v-if="code.length > 0" @click="crossDelete">X</button>
+        <span
+          v-for="(c, i) in code"
+          :key="c + i"
+          class="mask-code"
+        >*</span>
+        <button
+          v-if="code.length > 0"
+          class="btn btn-secondary cross"
+          @click="crossDelete"
+        >
+          X
+        </button>
       </div>
     </div>
   </div>
@@ -28,6 +52,14 @@
   export default {
     name: 'Login',
 
+    data () {
+      return {
+        autoAuthProgress: true,
+        buttonList: randomListNumber(),
+        code: ''
+      }
+    },
+
     watch: {
       code (value) {
         if (value.length === 6) {
@@ -36,14 +68,6 @@
               this.endAuthentification({ userToken, ttl, userID })
             })
         }
-      }
-    },
-
-    data () {
-      return {
-        autoAuthProgress: true,
-        buttonList: randomListNumber(),
-        code: ''
       }
     },
 
