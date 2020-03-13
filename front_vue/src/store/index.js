@@ -6,7 +6,6 @@ import Category from './category'
 import Operation from './operation'
 import Dispay from './display'
 import Stats from './stats'
-
 import Compte from './compte'
 
 Vue.use(Vuex)
@@ -19,7 +18,5 @@ export default new Vuex.Store({
     display: Dispay,
     stats: Stats,
     compte: Compte
-  },
-
-  state: {}
+  }
 })
