@@ -54,5 +54,9 @@
   "Stats": {
     "dataSource": "mccb_mysql",
     "public": true
+  },
+  "byebye": {
+    "dataSource": "xju_mysql",
+    "public": true
   }
 }
