@@ -2,15 +2,10 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import './registerServiceWorker'
-import 'bootstrap/dist/css/bootstrap.css'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
-import FontAwesome from 'mccbng_helpers/fontawesome'
-
-Vue.component('font-awesome-icon', FontAwesomeIcon)
-
-FontAwesome.load()
+import './plugins/registerServiceWorker'
+import './plugins/bootstrap'
+import './plugins/fontawesome'
 
 Vue.config.productionTip = true
 
