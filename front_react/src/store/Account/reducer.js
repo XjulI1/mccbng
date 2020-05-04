@@ -1,8 +1,8 @@
 import { SAVE_ACCOUNT_LIST, SAVE_SUM_FOR_ALL_ACCOUNTS } from './action'
-import { initialState, createBaseSoldeIntoEachAccount, setSumAllAccountForUser } from 'mccbng_store/compte'
+import { initialState, setSumAllAccountForUser } from 'mccbng_store/compte'
 
 const saveAccountList = function (state, accountList) {
-  return { ...state, accountList: createBaseSoldeIntoEachAccount(accountList) }
+  return { ...state, accountList }
 }
 
 const saveSumForAllAccounts = function (state, sumList) {

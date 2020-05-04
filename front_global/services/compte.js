@@ -9,7 +9,13 @@ export const fetchAccountList = (userID, userToken, APIURL) => {
       filter
     }
   }).then((response) => {
-    return response.data
+    return response.data.map((account) => {
+      return {
+        ...account,
+        soldeNotChecked: 0,
+        soldeChecked: 0
+      }
+    })
   })
 }
 

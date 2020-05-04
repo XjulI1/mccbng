@@ -1,6 +1,5 @@
 import {
   initialState,
-  createBaseSoldeIntoEachAccount,
   setSumAllAccountForUser,
   filterBloquedAccounts as bloquedCompte,
   filterAvailableAccounts as availableCompte,
@@ -8,8 +7,8 @@ import {
   totalAvailable,
   totalGlobal,
   getAccount,
-  initActiveAccount,
-  calcActiveAccountBalances, updateSoldeInAccountList
+  calcActiveAccountBalances,
+  updateSoldeInAccountList
 } from 'mccbng_store/compte'
 
 import { generateRecurringOperations } from 'mccbng_services/operation'
@@ -29,7 +28,7 @@ export default {
 
   mutations: {
     setActiveAccount (state, activeAccount) {
-      state.activeAccount = initActiveAccount(activeAccount)
+      state.activeAccount = activeAccount
     },
 
     setNewBalances (state, { TotalChecked, TotalNotChecked }) {
@@ -39,7 +38,7 @@ export default {
     },
 
     setAccountList (state, accountList) {
-      state.accountList = createBaseSoldeIntoEachAccount(accountList)
+      state.accountList = accountList
     },
 
     setSumAllCompteForUser (state, sumList) {

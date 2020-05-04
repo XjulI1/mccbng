@@ -32,14 +32,14 @@ export const totalAvailable = (_, { availableCompte, porteFeuilleCompte }) => {
   const availableAndPorteFeuilleAccounts = availableCompte.concat(porteFeuilleCompte)
 
   return availableAndPorteFeuilleAccounts.reduce((acc, account) => {
-    acc += account.solde
+    acc += account.soldeNotChecked
     return Math.round(acc * 100) / 100
   }, 0)
 }
 
 export const totalGlobal = (_, { bloquedCompte, totalAvailable }) => {
   return bloquedCompte.reduce((acc, account) => {
-    acc += account.solde
+    acc += account.soldeNotChecked
     return Math.round(acc * 100) / 100
   }, totalAvailable)
 }
@@ -56,50 +56,36 @@ export const getAccount = ({ accountList }) => {
   }
 }
 
-export const initActiveAccount = (activeAccount) => {
-  activeAccount.solde = activeAccount.base_solde
-
-  return activeAccount
-}
-
-export const createBaseSoldeIntoEachAccount = (accountList) => {
-  return accountList.map((account) => {
-    account.base_solde = account.solde
-
-    return account
-  })
-}
-
-export const setSumAllAccountForUser = (accountList, sumList) => {
-  return accountList.map((account, index) => {
-    const sum = sumList.filter(sum => sum.IDCompte === account.IDcompte)
-
-    if (sum[0]) {
-      const account = accountList[index]
-
-      account.solde = account.base_solde + sum[0].TotalChecked + (sum[0].TotalNotChecked || 0)
-      account.solde = Math.round(account.solde * 100) / 100
-    }
-
-    return account
-  })
-}
-
 export const calcActiveAccountBalances = (activeAccount, { TotalChecked, TotalNotChecked }) => {
   TotalChecked = parseFloat(TotalChecked || 0)
   TotalNotChecked = parseFloat(TotalNotChecked || 0)
 
   return {
     ...activeAccount,
-    soldeChecked: Math.round((activeAccount.solde + TotalChecked) * 100) / 100,
+    soldeChecked: Math.round(TotalChecked * 100) / 100,
     soldeNotChecked: Math.round((TotalChecked + TotalNotChecked) * 100) / 100
   }
+}
+
+export const setSumAllAccountForUser = (accountList, sumList) => {
+  return accountList.map((account) => {
+    const sum = sumList.filter(sum => sum.IDCompte === account.IDcompte)
+
+    if (sum[0]) {
+      account = calcActiveAccountBalances(account, {
+        TotalChecked: sum[0].TotalChecked,
+        TotalNotChecked: sum[0].TotalNotChecked
+      })
+    }
+
+    return account
+  })
 }
 
 export const updateSoldeInAccountList = (accountList, IDcompte, solde) => {
   return accountList.map((account) => {
     if (account.IDcompte === IDcompte) {
-      account.solde = solde
+      account.soldeNotChecked = solde
     }
     return account
   })
@@ -113,7 +99,6 @@ export default {
   totalAvailable,
   totalGlobal,
   getAccount,
-  createBaseSoldeIntoEachAccount,
   setSumAllAccountForUser,
   calcActiveAccountBalances,
   updateSoldeInAccountList

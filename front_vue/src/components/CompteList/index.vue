@@ -1,43 +1,43 @@
 <template>
   <div class="compte-list">
     <compte
-      v-for="account in availableCompte"
-      :key="'account-' + account.IDcompte"
-      :account-informations="account"
-      fa_icon="check"
+            v-for="account in availableCompte"
+            :key="'account-' + account.IDcompte"
+            :account-informations="account"
+            fa_icon="check"
     />
     <hr>
     <compte
-      v-for="account in bloquedCompte"
-      :key="'account-' + account.IDcompte"
-      :account-informations="account"
-      fa_icon="times-circle"
+            v-for="account in bloquedCompte"
+            :key="'account-' + account.IDcompte"
+            :account-informations="account"
+            fa_icon="times-circle"
     />
     <hr>
     <compte
-      v-for="account in porteFeuilleCompte"
-      :key="'account-' + account.IDcompte"
-      :account-informations="account"
-      fa_icon="money-bill"
+            v-for="account in porteFeuilleCompte"
+            :key="'account-' + account.IDcompte"
+            :account-informations="account"
+            fa_icon="money-bill"
     />
     <hr>
     <compte
-      :account-informations="totalAccounts.available"
-      :bold-title="cssClasses.compteBoldTitle.boldTitle"
-      :disable-click="true"
-      no-color="true"
+            :account-informations="totalAccounts.available"
+            :bold-title="cssClasses.compteBoldTitle.boldTitle"
+            :disable-click="true"
+            no-color="true"
     />
     <compte
-      :account-informations="totalAccounts.all"
-      :bold-title="cssClasses.compteBoldTitle.boldTitle"
-      :disable-click="true"
-      :warning="$store.state.user.warningTotal"
+            :account-informations="totalAccounts.all"
+            :bold-title="cssClasses.compteBoldTitle.boldTitle"
+            :disable-click="true"
+            :warning="$store.state.user.warningTotal"
     />
   </div>
 </template>
 
 <script>
-  import Compte from './CompteList/Compte'
+  import Compte from './Compte'
 
   import { mapGetters } from 'vuex'
 
@@ -49,7 +49,6 @@
       ...mapGetters([
         'totalAvailable',
         'totalGlobal',
-        'userID',
         'availableCompte',
         'bloquedCompte',
         'porteFeuilleCompte'
@@ -60,19 +59,15 @@
       totalAvailable (value) {
         this.totalAccounts.available = {
           NomCompte: 'Total disponible',
-          solde: value
+          soldeNotChecked: value
         }
       },
 
       totalGlobal (value) {
         this.totalAccounts.all = {
           NomCompte: 'Total global',
-          solde: value
+          soldeNotChecked: value
         }
-      },
-
-      userID () {
-        this.$store.dispatch('fetchAccountList')
       }
     },
 

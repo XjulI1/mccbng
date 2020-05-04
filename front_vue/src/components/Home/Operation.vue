@@ -57,7 +57,7 @@
 
     data () {
       return {
-        dateOperation: this.generateDataOperationVariables(),
+        dateOperation: this.generateDateOperationVariables(),
         css: this.generateCssVariables(),
         checkBoxID: 'checkboxOperationID-' + this.operation.IDop
       }
@@ -65,7 +65,7 @@
 
     watch: {
       operation () {
-        this.dateOperation = this.generateDataOperationVariables()
+        this.dateOperation = this.generateDateOperationVariables()
         this.css = this.generateCssVariables()
       }
     },
@@ -78,7 +78,7 @@
         }
       },
 
-      generateDataOperationVariables () {
+      generateDateOperationVariables () {
         return new Date(this.operation.DateOp).toLocaleDateString()
       },
 

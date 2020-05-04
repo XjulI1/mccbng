@@ -19,14 +19,14 @@
       class="account-solde"
       :class="soldeColor"
     >
-      {{ accountInformations.solde.toLocaleString() }} {{ $store.state.compte.currency }}
+      {{ (accountInformations.soldeNotChecked || 0).toLocaleString() }} {{ $store.state.compte.currency }}
     </div>
     <div
       v-if="warning"
       class="warning-infos"
       :class="soldeColor"
     >
-      {{ (accountInformations.solde - warning).toLocaleString() }} {{ $store.state.compte.currency }}
+      {{ ((accountInformations.soldeNotChecked || 0) - warning).toLocaleString() }} {{ $store.state.compte.currency }}
     </div>
   </div>
 </template>
@@ -47,7 +47,7 @@
     },
 
     watch: {
-      'accountInformations.solde' () {
+      'accountInformations.soldeNotChecked' () {
         this.soldeColor = this.getSoldeColor()
       }
     },
@@ -69,11 +69,11 @@
           return ''
         }
 
-        if (this.accountInformations.solde < this.warning) {
+        if (this.accountInformations.soldeNotChecked < this.warning) {
           return 'soldeWarning'
         }
 
-        return this.accountInformations.solde >= 0 ? 'soldeIn' : 'soldeOut'
+        return this.accountInformations.soldeNotChecked >= 0 ? 'soldeIn' : 'soldeOut'
       }
     }
   }

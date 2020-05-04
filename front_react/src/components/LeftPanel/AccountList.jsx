@@ -36,7 +36,7 @@ class AccountList extends React.Component {
     const availableAccounts = filterAvailableAccounts(this.props).map(account => (
       <Account key={account.IDcompte}
                name={account.NomCompte}
-               solde={account.solde}
+               solde={account.soldeNotChecked}
                currency={this.props.currency}
                faIcon="check"
       />
@@ -45,7 +45,7 @@ class AccountList extends React.Component {
     const bloquedAccounts = filterBloquedAccounts(this.props).map(account => (
       <Account key={account.IDcompte}
                name={account.NomCompte}
-               solde={account.solde}
+               solde={account.soldeNotChecked}
                currency={this.props.currency}
                faIcon="times-circle"
       />
@@ -54,7 +54,7 @@ class AccountList extends React.Component {
     const porteFeuilleAccount = filterPorteFeuilleAccount(this.props).map(account => (
       <Account key={account.IDcompte}
                name={account.NomCompte}
-               solde={account.solde}
+               solde={account.soldeNotChecked}
                currency={this.props.currency}
                faIcon="money-bill"
       />

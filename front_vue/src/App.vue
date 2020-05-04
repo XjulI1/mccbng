@@ -1,24 +1,24 @@
 <template>
   <div
-    id="app"
-    class="root-app"
+          id="app"
+          class="root-app"
   >
-    <account-header />
+    <account-header/>
     <div class="container-flex">
       <div
-        class="left-panel"
-        :class="{'mask-panel' : !$store.state.display.account_list}"
+              class="left-panel"
+              :class="{'mask-panel' : !$store.state.display.account_list}"
       >
-        <CompteList />
-        <TimeSeriesEvolutionSoldes />
+        <CompteList/>
+        <TimeSeriesEvolutionSoldes/>
       </div>
       <router-view
-        class="right-panel"
-        :class="{'mask-panel' : $store.state.display.account_list}"
+              class="right-panel"
+              :class="{'mask-panel' : $store.state.display.account_list}"
       />
     </div>
-    <Navbar />
-    <NewVersion />
+    <Navbar/>
+    <NewVersion/>
   </div>
 </template>
 
@@ -32,11 +32,24 @@
   import 'mccbng_styles/index.scss'
   import 'mccbng_styles/App.scss'
   import 'mccbng_styles/components/LeftPanel.scss'
+  import { mapGetters } from 'vuex'
 
   export default {
     name: 'App',
 
     components: { NewVersion, TimeSeriesEvolutionSoldes, CompteList, AccountHeader, Navbar },
+
+    computed: {
+      ...mapGetters([
+        'userID'
+      ])
+    },
+
+    watch: {
+      userID () {
+        this.$store.dispatch('fetchAccountList')
+      }
+    },
 
     beforeCreate () {
       this.$router.push('/login')
