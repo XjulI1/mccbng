@@ -1,37 +1,37 @@
 <template>
   <div class="compte-list">
     <compte
-            v-for="account in availableCompte"
-            :key="'account-' + account.IDcompte"
-            :account-informations="account"
-            fa_icon="check"
+      v-for="account in availableCompte"
+      :key="'account-' + account.IDcompte"
+      :account-informations="account"
+      fa-icon="check"
     />
     <hr>
     <compte
-            v-for="account in bloquedCompte"
-            :key="'account-' + account.IDcompte"
-            :account-informations="account"
-            fa_icon="times-circle"
+      v-for="account in bloquedCompte"
+      :key="'account-' + account.IDcompte"
+      :account-informations="account"
+      fa-icon="times-circle"
     />
     <hr>
     <compte
-            v-for="account in porteFeuilleCompte"
-            :key="'account-' + account.IDcompte"
-            :account-informations="account"
-            fa_icon="money-bill"
+      v-for="account in porteFeuilleCompte"
+      :key="'account-' + account.IDcompte"
+      :account-informations="account"
+      fa-icon="money-bill"
     />
     <hr>
     <compte
-            :account-informations="totalAccounts.available"
-            :bold-title="cssClasses.compteBoldTitle.boldTitle"
-            :disable-click="true"
-            no-color="true"
+      :account-informations="totalAccounts.available"
+      :bold-title="cssClasses.compteBoldTitle.boldTitle"
+      :disable-click="true"
+      no-color="true"
     />
     <compte
-            :account-informations="totalAccounts.all"
-            :bold-title="cssClasses.compteBoldTitle.boldTitle"
-            :disable-click="true"
-            :warning="$store.state.user.warningTotal"
+      :account-informations="totalAccounts.all"
+      :bold-title="cssClasses.compteBoldTitle.boldTitle"
+      :disable-click="true"
+      :warning="$store.state.user.warningTotal"
     />
   </div>
 </template>
@@ -44,6 +44,24 @@
   export default {
     name: 'CompteList',
     components: { Compte },
+
+    data () {
+      return {
+        totalAccounts: {
+          available: {
+            NomCompte: 'Total disponible',
+            solde: 0
+          },
+          all: {
+            NomCompte: 'Total global',
+            solde: 0
+          }
+        },
+        cssClasses: {
+          compteBoldTitle: { boldTitle: true }
+        }
+      }
+    },
 
     computed: {
       ...mapGetters([
@@ -67,24 +85,6 @@
         this.totalAccounts.all = {
           NomCompte: 'Total global',
           soldeNotChecked: value
-        }
-      }
-    },
-
-    data () {
-      return {
-        totalAccounts: {
-          available: {
-            NomCompte: 'Total disponible',
-            solde: 0
-          },
-          all: {
-            NomCompte: 'Total global',
-            solde: 0
-          }
-        },
-        cssClasses: {
-          compteBoldTitle: { boldTitle: true }
         }
       }
     }

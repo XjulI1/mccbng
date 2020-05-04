@@ -48,6 +48,13 @@
   export default {
     name: 'SumByMonth',
 
+    data () {
+      return {
+        listMonth: [...Array(12).keys()],
+        listYear: [2017, 2018, 2019, 2020]
+      }
+    },
+
     computed: {
       ...mapState({
         negativeByAccount: state => state.stats.negativeByAccount
@@ -89,13 +96,6 @@
     watch: {
       availableCompte () {
         this.$store.dispatch('fetchSumByUserByMonth')
-      }
-    },
-
-    data () {
-      return {
-        listMonth: [...Array(12).keys()],
-        listYear: [2017, 2018, 2019, 2020]
       }
     },
 

@@ -26,7 +26,8 @@
 
     props: {
       componentName: {
-        type: String
+        type: String,
+        default: ''
       }
     },
 

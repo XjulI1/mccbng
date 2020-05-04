@@ -18,12 +18,6 @@
 
     components: { OperationRecurrente },
 
-    watch: {
-      userToken () {
-        this.$store.dispatch('fetchRecurrOperation')
-      }
-    },
-
     computed: {
       ...mapState({
         userToken: state => state.user.token
@@ -36,6 +30,12 @@
           return this.operationsOfActiveAccount
         }
         return []
+      }
+    },
+
+    watch: {
+      userToken () {
+        this.$store.dispatch('fetchRecurrOperation')
       }
     },
 

@@ -21,7 +21,14 @@
 <script>
   export default {
     name: 'OperationRecurrente',
-    props: ['operation'],
+
+    props: {
+      operation: {
+        type: Object,
+        default: () => {
+        }
+      }
+    },
 
     data () {
       return {

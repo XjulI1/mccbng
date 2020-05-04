@@ -13,7 +13,7 @@
         @add="addNewOperation"
       >
         <div :class="$store.state.display.actual_drag_cat === category.IDcat ? 'actual-drag-cat' : ''">
-          <b v-html="category.Nom" />
+          <b>{{ category.Nom }}</b>
         </div>
       </draggable>
     </div>

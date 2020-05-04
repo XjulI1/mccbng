@@ -1,13 +1,13 @@
 <template>
   <div class="home">
-    <router-view/>
+    <router-view />
     <div class="operation-list">
       <operation
-              v-for="operation in operationsList"
-              :key="'operation-' + operation.IDop"
-              v-bind="{operation, draggableActif}"
+        v-for="operation in operationsList"
+        :key="'operation-' + operation.IDop"
+        v-bind="{operation, draggableActif}"
       />
-      <categories-drop-zone v-if="draggableActif"/>
+      <categories-drop-zone v-if="draggableActif" />
     </div>
   </div>
 </template>
@@ -24,15 +24,7 @@
 
     data () {
       return {
-        draggableActif: false
-      }
-    },
-
-    watch: {
-      accountList () {
-        if (this.operationsOfActiveAccount.length === 0) {
-          this.$store.dispatch('fetchActiveAccount', this.userFavoris)
-        }
+        draggableActif: true
       }
     },
 
@@ -49,6 +41,14 @@
           return this.operationsOfActiveAccount
         }
         return []
+      }
+    },
+
+    watch: {
+      accountList () {
+        if (this.operationsOfActiveAccount.length === 0) {
+          this.$store.dispatch('fetchActiveAccount', this.userFavoris)
+        }
       }
     }
   }

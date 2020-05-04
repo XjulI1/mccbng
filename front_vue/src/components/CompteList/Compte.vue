@@ -9,8 +9,8 @@
       :class="classBoldTitle"
     >
       <font-awesome-icon
-        v-if="fa_icon"
-        :icon="fa_icon"
+        v-if="faIcon"
+        :icon="faIcon"
         class="icon-fa"
       />
       {{ accountInformations.NomCompte }}
@@ -36,7 +36,10 @@
 
   export default {
     name: 'Compte',
-    props: ['accountInformations', 'boldTitle', 'disableClick', 'noColor', 'warning', 'fa_icon'],
+
+    /* eslint-disable vue/require-prop-types */
+
+    props: ['accountInformations', 'boldTitle', 'disableClick', 'noColor', 'warning', 'faIcon'],
 
     data () {
       return {

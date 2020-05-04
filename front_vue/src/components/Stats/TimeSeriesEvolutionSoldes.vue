@@ -10,6 +10,13 @@
   export default {
     name: 'TimeSeriesEvolutionSoldes',
 
+    data () {
+      return {
+        total: [],
+        dispo: []
+      }
+    },
+
     computed: {
       ...mapState({ userID: state => state.user.id })
     },
@@ -37,13 +44,6 @@
             })
           this.buildChart()
         })
-      }
-    },
-
-    data () {
-      return {
-        total: [],
-        dispo: []
       }
     },
 

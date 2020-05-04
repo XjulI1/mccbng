@@ -1,29 +1,29 @@
 <template>
   <div
-          id="app"
-          class="root-app"
+    id="app"
+    class="root-app"
   >
-    <account-header/>
+    <account-header />
     <div class="container-flex">
       <div
-              class="left-panel"
-              :class="{'mask-panel' : !$store.state.display.account_list}"
+        class="left-panel"
+        :class="{'mask-panel' : !$store.state.display.account_list}"
       >
-        <CompteList/>
-        <TimeSeriesEvolutionSoldes/>
+        <CompteList />
+        <TimeSeriesEvolutionSoldes />
       </div>
       <router-view
-              class="right-panel"
-              :class="{'mask-panel' : $store.state.display.account_list}"
+        class="right-panel"
+        :class="{'mask-panel' : $store.state.display.account_list}"
       />
     </div>
-    <Navbar/>
-    <NewVersion/>
+    <NavBar />
+    <NewVersion />
   </div>
 </template>
 
 <script>
-  import Navbar from '@/components/Navbar'
+  import NavBar from '@/components/NavBar'
   import CompteList from '@/components/CompteList'
   import AccountHeader from '@/components/AccountHeader'
   import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes'
@@ -37,7 +37,7 @@
   export default {
     name: 'App',
 
-    components: { NewVersion, TimeSeriesEvolutionSoldes, CompteList, AccountHeader, Navbar },
+    components: { NewVersion, TimeSeriesEvolutionSoldes, CompteList, AccountHeader, NavBar },
 
     computed: {
       ...mapGetters([
