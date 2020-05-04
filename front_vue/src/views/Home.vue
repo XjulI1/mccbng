@@ -1,13 +1,13 @@
 <template>
   <div class="home">
-    <router-view />
+    <router-view/>
     <div class="operation-list">
       <operation
-        v-for="operation in operationsList"
-        :key="'operation-' + operation.IDop"
-        v-bind="{operation}"
+              v-for="operation in operationsList"
+              :key="'operation-' + operation.IDop"
+              v-bind="{operation, draggableActif}"
       />
-      <categories-drop-zone />
+      <categories-drop-zone v-if="draggableActif"/>
     </div>
   </div>
 </template>
@@ -21,6 +21,12 @@
     name: 'Home',
 
     components: { CategoriesDropZone, Operation },
+
+    data () {
+      return {
+        draggableActif: false
+      }
+    },
 
     watch: {
       accountList () {
