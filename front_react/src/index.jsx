@@ -3,16 +3,13 @@ import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'
 import { Provider } from 'react-redux'
 
-import * as serviceWorker from './serviceWorker'
-
-import FontAwesome from 'mccbng_helpers/fontawesome'
+import 'mccbng_styles/index.scss'
 
 import App from './App'
 import store from './store'
+import * as serviceWorker from './serviceWorker'
 
-import 'mccbng_styles/index.scss'
-
-FontAwesome.load()
+import './plugins/fontawesome'
 
 ReactDOM.render(
   <BrowserRouter>

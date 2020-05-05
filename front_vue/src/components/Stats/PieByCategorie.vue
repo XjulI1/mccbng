@@ -25,7 +25,7 @@
     },
 
     created () {
-      if (this.$store.state.user.id) {
+      if (this.userID) {
         this.$store.dispatch('fetchSumCategoriesByUserByMonth')
       }
     },

@@ -1,108 +1,61 @@
-import axios from 'axios/index'
+import { initialState, operationFromCurrentList } from 'mccbng_store/operation'
+import {
+  deleteOperation,
+  fetchOperationsForAccount,
+  fetchRecurrOperation,
+  fetchSearchOperations,
+  updateOperation
+} from 'mccbng_services/operation'
 
 export default {
-  state: {
-    operationsOfActiveAccount: []
-  },
+  state: initialState,
+
   getters: {
-    operationsOfActiveAccount (state) {
-      return state.operationsOfActiveAccount
-    },
-    operationFromCurrentList (state) {
-      return (operationID) => {
-        return state.operationsOfActiveAccount.filter((operation) => {
-          if (parseInt(operationID) === operation.IDop) {
-            return operation
-          }
-        })[0]
-      }
-    }
+    operationFromCurrentList
   },
+
   mutations: {
     setOperationsOfActiveAccount (state, operations) {
       state.operationsOfActiveAccount = operations
     }
   },
+
   actions: {
-    fetchOperationsOfActiveAccount (context) {
-      const filter = {
-        where: { IDcompte: this.state.compte.activeAccount.IDcompte },
-        order: 'CheckOp ASC, DateOp DESC',
-        limit: 35
-      }
-
-      axios.get(process.env.VUE_APP_API_URL + '/api/Operations', {
-        params: {
-          access_token: context.rootState.user.token,
-          filter
-        }
-      }).then((response) => {
-        context.commit('setOperationsOfActiveAccount', response.data)
-      })
-    },
-
-    updateOperation: function (context, operation) {
-      axios.patch(process.env.VUE_APP_API_URL + '/api/Operations', operation, {
-        params: {
-          access_token: context.rootState.user.token
-        }
-      }).then(() => {
-        this.dispatch('fetchActiveAccount', operation.IDcompte)
-      })
-    },
-
-    deleteOperation (context, operation) {
-      axios.delete(process.env.VUE_APP_API_URL + '/api/Operations/' + operation.IDop, {
-        params: {
-          access_token: context.rootState.user.token
-        }
-      }).then(() => {
-        this.dispatch('fetchActiveAccount', operation.IDcompte)
-      })
-    },
-
-    fetchRecurrOperation (context) {
-      context.commit('setOperationsOfActiveAccount', {})
-      context.commit('setActiveAccount', { NomCompte: 'Opérations récurrentes' })
-
-      const filter = {
-        where: {},
-        order: 'DernierDateOpRecu ASC, NomOpRecu ASC'
-      }
-
-      axios.get(process.env.VUE_APP_API_URL + '/api/OperationRecurrentes', {
-        params: {
-          access_token: context.rootState.user.token,
-          filter
-        }
-      })
-        .then((response) => {
-          context.commit('setOperationsOfActiveAccount', response.data)
+    fetchOperationsOfActiveAccount ({ rootState, commit }) {
+      fetchOperationsForAccount(rootState.compte.activeAccount.IDcompte, rootState.user.token, process.env.VUE_APP_API_URL)
+        .then((operations) => {
+          commit('setOperationsOfActiveAccount', operations)
         })
     },
 
-    getSearchOperations (context, searchTerms) {
-      const filter = {
-        where: {
-          IDcompte: { inq: context.rootState.compte.accountList.map((account) => account.IDcompte) },
-          or: [
-            { NomOp: { like: `%${searchTerms}%` } },
-            { MontantOp: { like: `%${searchTerms}%` } }
-          ]
-        },
-        order: 'DateOp DESC',
-        limit: 30
-      }
+    async updateOperation ({ dispatch, rootState }, operation) {
+      await updateOperation(operation, rootState.user.token, process.env.VUE_APP_API_URL)
 
-      axios.get(process.env.VUE_APP_API_URL + '/api/Operations', {
-        params: {
-          access_token: context.rootState.user.token,
-          filter
-        }
-      }).then((response) => {
-        context.commit('setActiveAccount', { NomCompte: 'Search' })
-        context.commit('setOperationsOfActiveAccount', response.data)
-      })
+      dispatch('fetchActiveAccount', operation.IDcompte)
+    },
+
+    async deleteOperation ({ dispatch, rootState }, operation) {
+      await deleteOperation(operation.IDop, rootState.user.token, process.env.VUE_APP_API_URL)
+
+      dispatch('fetchActiveAccount', operation.IDcompte)
+    },
+
+    fetchRecurrOperation ({ rootState, commit }) {
+      commit('setOperationsOfActiveAccount', {})
+      commit('setActiveAccount', { NomCompte: 'Opérations récurrentes' })
+
+      fetchRecurrOperation(rootState.user.token, process.env.VUE_APP_API_URL)
+        .then((operations) => {
+          commit('setOperationsOfActiveAccount', operations)
+        })
+    },
+
+    getSearchOperations ({ rootState, commit }, searchTerms) {
+      fetchSearchOperations(searchTerms, rootState.compte.accountList)
+        .then((operations) => {
+          commit('setActiveAccount', { NomCompte: 'Search' })
+          commit('setOperationsOfActiveAccount', operations)
+        })
     }
   }
 }

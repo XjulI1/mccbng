@@ -13,7 +13,7 @@
 </template>
 
 <script>
-  import { mapGetters, mapState } from 'vuex'
+  import { mapState } from 'vuex'
   import CategoriesDropZone from '../components/Home/CategoriesDropZone'
   import Operation from '../components/Home/Operation'
 
@@ -31,10 +31,9 @@
     computed: {
       ...mapState({
         userFavoris: state => state.user.favoris,
-        accountList: state => state.compte.accountList
+        accountList: state => state.compte.accountList,
+        operationsOfActiveAccount: state => state.operation.operationsOfActiveAccount
       }),
-
-      ...mapGetters(['operationsOfActiveAccount']),
 
       operationsList () {
         if (this.operationsOfActiveAccount[0] && this.operationsOfActiveAccount[0].IDop !== undefined) {

@@ -19,20 +19,21 @@
       class="account-solde"
       :class="soldeColor"
     >
-      {{ (accountInformations.soldeNotChecked || 0).toLocaleString() }} {{ $store.state.compte.currency }}
+      {{ (accountInformations.soldeNotChecked || 0).toLocaleString() }} {{ currency }}
     </div>
     <div
       v-if="warning"
       class="warning-infos"
       :class="soldeColor"
     >
-      {{ ((accountInformations.soldeNotChecked || 0) - warning).toLocaleString() }} {{ $store.state.compte.currency }}
+      {{ ((accountInformations.soldeNotChecked || 0) - warning).toLocaleString() }} {{ currency }}
     </div>
   </div>
 </template>
 
 <script>
   import 'mccbng_styles/components/Account.scss'
+  import { mapState } from 'vuex'
 
   export default {
     name: 'Compte',
@@ -48,6 +49,8 @@
         classPointer: this.disableClick ? '' : 'cursor-pointer'
       }
     },
+
+    computed: mapState({ currency: state => state.compte.currency }),
 
     watch: {
       'accountInformations.soldeNotChecked' () {

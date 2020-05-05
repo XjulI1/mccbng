@@ -10,6 +10,7 @@ export default {
     negativeByAccount: {},
     categoriesTotal: []
   },
+
   getters: {
     getCategoriesTotalForHighchartPie (state, getters) {
       return state.categoriesTotal.map((categorie) => {
@@ -20,6 +21,7 @@ export default {
       })
     }
   },
+
   mutations: {
     setNegativeMonth (state, sum) {
       state.negativeMonth = sum
@@ -41,6 +43,7 @@ export default {
       state.categoriesTotal = categoriesList
     }
   },
+
   actions: {
     fetchSumByUserByMonth (context) {
       axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumByUserByMonth', {

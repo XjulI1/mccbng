@@ -6,8 +6,8 @@
 </template>
 
 <script>
-  import SumByMonth from '../components/Stats/SumByMonth'
-  import PieByCategorie from '../components/Stats/PieByCategorie'
+  import SumByMonth from '@/components/Stats/SumByMonth'
+  import PieByCategorie from '@/components/Stats/PieByCategorie'
 
   export default {
     name: 'Stats',

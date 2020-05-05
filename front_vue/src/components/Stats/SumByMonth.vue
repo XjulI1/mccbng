@@ -4,9 +4,9 @@
       Mois :
       <select v-model="currentMonth">
         <option
-          v-for="month in listMonth"
-          :key="'month-' + month"
-          :value="month+1"
+                v-for="month in listMonth"
+                :key="'month-' + month"
+                :value="month+1"
         >
           {{ month+1 }}
         </option>
@@ -15,9 +15,9 @@
       Année :
       <select v-model="currentYear">
         <option
-          v-for="year in listYear"
-          :key="'year-' + year"
-          :value="year"
+                v-for="year in listYear"
+                :key="'year-' + year"
+                :value="year"
         >
           {{ year }}
         </option>
@@ -25,18 +25,18 @@
     </div>
 
     <div class="total-month">
-      Total ce mois : <b>{{ $store.state.stats.negativeMonth }}{{ $store.state.compte.currency }}</b>
+      Total ce mois : <b>{{ negativeMonth }}{{ currency }}</b>
     </div>
 
     <div
-      v-for="(accountTotal, IDcompte) in negativeByAccountFilter"
-      :key="IDcompte"
+            v-for="(accountTotal, IDcompte) in negativeByAccountFilter"
+            :key="IDcompte"
     >
-      {{ $store.getters.getAccount(IDcompte).NomCompte }} :
-      <b>{{ accountTotal }} {{ $store.state.compte.currency }}</b>
+      {{ getAccount(IDcompte).NomCompte }} :
+      <b>{{ accountTotal }} {{ currency }}</b>
       <div class="parjour">
         par jour :
-        {{ Math.round(accountTotal / numberDaysForCurrentMonth() * 100) / 100 }} {{ $store.state.compte.currency }}
+        {{ Math.round(accountTotal / numberDaysForCurrentMonth() * 100) / 100 }} {{ currency }}
       </div>
     </div>
   </div>
@@ -51,20 +51,25 @@
     data () {
       return {
         listMonth: [...Array(12).keys()],
-        listYear: [2017, 2018, 2019, 2020]
+        listYear: [...Array(((new Date()).getYear() + 1900) - 2016).keys()].map(key => key + 2017)
       }
     },
 
     computed: {
       ...mapState({
-        negativeByAccount: state => state.stats.negativeByAccount
+        negativeByAccount: state => state.stats.negativeByAccount,
+        negativeMonth: state => state.stats.negativeMonth,
+        currency: state => state.compte.currency,
+        storeCurrentYear: state => state.stats.currentYear,
+        storeCurrentMonth: state => state.stats.currentMonth,
+        userID: state => state.user.id
       }),
 
-      ...mapGetters(['availableCompte']),
+      ...mapGetters(['availableCompte', 'getAccount']),
 
       currentYear: {
         get () {
-          return this.$store.state.stats.currentYear
+          return this.storeCurrentYear
         },
         set (value) {
           this.$store.dispatch('changeStatsCurrentYear', value)
@@ -73,7 +78,7 @@
 
       currentMonth: {
         get () {
-          return this.$store.state.stats.currentMonth
+          return this.storeCurrentMonth
         },
         set (value) {
           this.$store.dispatch('changeStatsCurrentMonth', value)
@@ -100,7 +105,7 @@
     },
 
     created () {
-      if (this.$store.state.user.id) {
+      if (this.userID) {
         this.$store.dispatch('fetchSumByUserByMonth')
       }
     },

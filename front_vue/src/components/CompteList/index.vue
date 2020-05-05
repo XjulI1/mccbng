@@ -31,7 +31,7 @@
       :account-informations="totalAccounts.all"
       :bold-title="cssClasses.compteBoldTitle.boldTitle"
       :disable-click="true"
-      :warning="$store.state.user.warningTotal"
+      :warning="warningTotal"
     />
   </div>
 </template>
@@ -39,7 +39,7 @@
 <script>
   import Compte from './Compte'
 
-  import { mapGetters } from 'vuex'
+  import { mapGetters, mapState } from 'vuex'
 
   export default {
     name: 'CompteList',
@@ -64,6 +64,9 @@
     },
 
     computed: {
+      ...mapState({
+        warningTotal: state => state.user.warningTotal
+      }),
       ...mapGetters([
         'totalAvailable',
         'totalGlobal',

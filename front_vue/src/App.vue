@@ -1,28 +1,30 @@
 <template>
   <div
-    id="app"
-    class="root-app"
+          id="app"
+          class="root-app"
   >
-    <account-header />
+    <account-header/>
     <div class="container-flex">
       <div
-        class="left-panel"
-        :class="{'mask-panel' : !$store.state.display.account_list}"
+              class="left-panel"
+              :class="{'mask-panel' : !displayAccountList}"
       >
-        <CompteList />
-        <TimeSeriesEvolutionSoldes />
+        <CompteList/>
+        <TimeSeriesEvolutionSoldes/>
       </div>
       <router-view
-        class="right-panel"
-        :class="{'mask-panel' : $store.state.display.account_list}"
+              class="right-panel"
+              :class="{'mask-panel' : displayAccountList}"
       />
     </div>
-    <NavBar />
-    <NewVersion />
+    <NavBar/>
+    <NewVersion/>
   </div>
 </template>
 
 <script>
+  import { mapState } from 'vuex'
+
   import NavBar from '@/components/NavBar'
   import CompteList from '@/components/CompteList'
   import AccountHeader from '@/components/AccountHeader'
@@ -32,18 +34,16 @@
   import 'mccbng_styles/index.scss'
   import 'mccbng_styles/App.scss'
   import 'mccbng_styles/components/LeftPanel.scss'
-  import { mapGetters } from 'vuex'
 
   export default {
     name: 'App',
 
     components: { NewVersion, TimeSeriesEvolutionSoldes, CompteList, AccountHeader, NavBar },
 
-    computed: {
-      ...mapGetters([
-        'userID'
-      ])
-    },
+    computed: mapState({
+      userID: state => state.user.id,
+      displayAccountList: state => state.display.account_list
+    }),
 
     watch: {
       userID () {

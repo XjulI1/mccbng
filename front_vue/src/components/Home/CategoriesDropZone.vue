@@ -1,18 +1,18 @@
 <template>
   <div
-    class="categories-drop-zone"
-    :class="$store.state.display.categories_drop_zone ? 'display-zone' : ''"
+          class="categories-drop-zone"
+          :class="{'display-zone' : displayCategoriesDropZone}"
   >
     <div class="category-container">
       <draggable
-        v-for="category in $store.state.category.list "
-        :key="'category-' + category.IDcat"
-        class="category"
-        :data-id="category.IDcat"
-        :group="{name: 'category', put: ['operation']}"
-        @add="addNewOperation"
+              v-for="category in categoryList "
+              :key="'category-' + category.IDcat"
+              class="category"
+              :data-id="category.IDcat"
+              :group="{name: 'category', put: ['operation']}"
+              @add="addNewOperation"
       >
-        <div :class="$store.state.display.actual_drag_cat === category.IDcat ? 'actual-drag-cat' : ''">
+        <div :class="{'actual-drag-cat' : displayActualDragCat === category.IDcat}">
           <b>{{ category.Nom }}</b>
         </div>
       </draggable>
@@ -21,7 +21,7 @@
 </template>
 
 <script>
-  import { mapGetters } from 'vuex'
+  import { mapGetters, mapState } from 'vuex'
   import draggable from 'vuedraggable'
 
   export default {
@@ -29,7 +29,15 @@
 
     components: { draggable },
 
-    computed: { ...mapGetters(['userID']) },
+    computed: {
+      ...mapState({
+        userID: state => state.user.id,
+        categoryList: state => state.category.list,
+        displayCategoriesDropZone: state => state.display.categories_drop_zone,
+        displayActualDragCat: state => state.display.actual_drag_cat
+      }),
+      ...mapGetters(['operationFromCurrentList'])
+    },
 
     watch: {
       userID () {
@@ -42,7 +50,7 @@
         const categoryID = event.target.dataset.id
         const operationID = event.item.dataset.id
 
-        const operation = this.$store.getters.operationFromCurrentList(operationID)
+        const operation = this.operationFromCurrentList(operationID)
 
         operation.IDcat = categoryID
 

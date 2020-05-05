@@ -33,7 +33,6 @@ export default {
 
     setNewBalances (state, { TotalChecked, TotalNotChecked }) {
       state.activeAccount = calcActiveAccountBalances(state.activeAccount, { TotalChecked, TotalNotChecked })
-
       state.accountList = updateSoldeInAccountList(state.accountList, state.activeAccount.IDcompte, state.activeAccount.soldeNotChecked)
     },
 
@@ -47,10 +46,10 @@ export default {
   },
 
   actions: {
-    async fetchUserByIDAndGenerateRecurringOp (context, userID) {
-      await context.dispatch('fetchUser', userID)
+    async fetchUserByIDAndGenerateRecurringOp ({ dispatch }, userID) {
+      await dispatch('fetchUser', userID)
 
-      context.dispatch('generateRecurringOperations')
+      dispatch('generateRecurringOperations')
     },
 
     generateRecurringOperations ({ rootState }) {

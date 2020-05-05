@@ -10,8 +10,8 @@
 </template>
 
 <script>
-  import { mapGetters, mapState } from 'vuex'
-  import OperationRecurrente from '../components/OperationRecurrente'
+  import { mapState } from 'vuex'
+  import OperationRecurrente from '@/components/OperationRecurrente'
 
   export default {
     name: 'RecurrOperation',
@@ -20,10 +20,9 @@
 
     computed: {
       ...mapState({
-        userToken: state => state.user.token
+        userToken: state => state.user.token,
+        operationsOfActiveAccount: state => state.operation.operationsOfActiveAccount
       }),
-
-      ...mapGetters(['operationsOfActiveAccount']),
 
       operationsRecurrenteList () {
         if (this.operationsOfActiveAccount[0] && this.operationsOfActiveAccount[0].IDopRecu !== undefined) {

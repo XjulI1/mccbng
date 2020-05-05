@@ -5,7 +5,7 @@
 <script>
   import Highcharts from 'highcharts'
   import { mapState } from 'vuex'
-  import axios from 'axios/index'
+  import { fetchEvolutionSolde } from 'mccbng_services/stats'
 
   export default {
     name: 'TimeSeriesEvolutionSoldes',
@@ -18,32 +18,32 @@
     },
 
     computed: {
-      ...mapState({ userID: state => state.user.id })
+      ...mapState({
+        userID: state => state.user.id,
+        userToken: state => state.user.token
+      })
     },
 
     watch: {
       userID (value) {
-        axios.get(process.env.VUE_APP_API_URL + '/api/stats/evolutionSolde', {
-          params: {
-            access_token: this.$store.state.user.token,
-            userID: value
-          }
-        }).then((response) => {
-          let sum = response.data.results.soldeTotal
-          this.total = response.data.results.total
-            .map((data) => {
-              sum += data.montant
-              return [new Date(data.date), Math.round(sum * 100) / 100]
-            })
+        fetchEvolutionSolde(value, this.userToken, process.env.VUE_APP_API_URL)
+          .then((results) => {
+            let sum = results.soldeTotal
+            this.total = results.total
+              .map((data) => {
+                sum += data.montant
+                return [new Date(data.date), Math.round(sum * 100) / 100]
+              })
 
-          sum = response.data.results.soldeDispo
-          this.dispo = response.data.results.dispo
-            .map((data) => {
-              sum += data.montant
-              return [new Date(data.date), Math.round(sum * 100) / 100]
-            })
-          this.buildChart()
-        })
+            sum = results.soldeDispo
+            this.dispo = results.dispo
+              .map((data) => {
+                sum += data.montant
+                return [new Date(data.date), Math.round(sum * 100) / 100]
+              })
+
+            this.buildChart()
+          })
       }
     },
 

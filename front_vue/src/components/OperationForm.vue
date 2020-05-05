@@ -31,7 +31,7 @@
       class="form-control select-category"
     >
       <option
-        v-for="category in $store.state.category.list"
+        v-for="category in categoryList"
         :key="'category-' + category.IDcat"
         :value="category.IDcat"
       >
@@ -118,7 +118,8 @@
     },
 
     computed: mapState({
-      activeAccountID: state => state.compte.activeAccount.IDcompte
+      activeAccountID: state => state.compte.activeAccount.IDcompte,
+      categoryList: state => state.category.list
     }),
 
     watch: {

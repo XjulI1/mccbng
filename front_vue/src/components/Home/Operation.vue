@@ -3,24 +3,24 @@
     <div class="row">
       <div class="col-1">
         <input
-          :id="checkBoxID"
-          v-model="operation.CheckOp"
-          type="checkbox"
-          @change="updateCheckOp"
+                :id="checkBoxID"
+                v-model="operation.CheckOp"
+                type="checkbox"
+                @change="updateCheckOp"
         >
       </div>
       <draggable
-        v-if="draggableActif"
-        class="col-7"
-        :class="css.category"
-        :group="{name: 'operation', pull: 'clone', put: ['false'] }"
-        :data-idcat="operation.IDcat"
-        @start="startDrag"
-        @end="endDrag"
+              v-if="draggableActif"
+              class="col-7"
+              :class="css.category"
+              :group="{name: 'operation', pull: 'clone', put: ['false'] }"
+              :data-idcat="operation.IDcat"
+              @start="startDrag"
+              @end="endDrag"
       >
         <label
-          :for="checkBoxID"
-          :data-id="operation.IDop"
+                :for="checkBoxID"
+                :data-id="operation.IDop"
         >
           {{ operation.NomOp }}
           <br>
@@ -28,13 +28,13 @@
         </label>
       </draggable>
       <div
-        v-else
-        class="col-7"
-        :class="css.category"
+              v-else
+              class="col-7"
+              :class="css.category"
       >
         <label
-          :for="checkBoxID"
-          :data-id="operation.IDop"
+                :for="checkBoxID"
+                :data-id="operation.IDop"
         >
           {{ operation.NomOp }}
           <br>
@@ -42,15 +42,15 @@
         </label>
       </div>
       <div
-        class="col-3 center-text"
-        :class="css.montant"
+              class="col-3 center-text"
+              :class="css.montant"
       >
-        {{ operation.MontantOp.toLocaleString() }}{{ $store.state.compte.currency }}
+        {{ operation.MontantOp.toLocaleString() }}{{ currency }}
       </div>
       <div class="col-1">
         <router-link
-          :to="'/editOperation/' + operation.IDop"
-          class="edit-operation"
+                :to="'/editOperation/' + operation.IDop"
+                class="edit-operation"
         >
           ...
         </router-link>
@@ -61,6 +61,7 @@
 
 <script>
   import draggable from 'vuedraggable'
+  import { mapState } from 'vuex'
 
   export default {
     name: 'Operation',
@@ -86,6 +87,8 @@
         checkBoxID: 'checkboxOperationID-' + this.operation.IDop
       }
     },
+
+    computed: mapState({ currency: state => state.compte.currency }),
 
     watch: {
       operation () {

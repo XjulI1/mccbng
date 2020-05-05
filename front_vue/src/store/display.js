@@ -4,7 +4,7 @@ export default {
     categories_drop_zone: false,
     actual_drag_cat: undefined
   },
-  getters: {},
+
   mutations: {
     toggleAccountList (state, force) {
       state.account_list = force || !state.account_list
@@ -18,6 +18,7 @@ export default {
       state.actual_drag_cat = parseInt(IDcat)
     }
   },
+
   actions: {
     toggleAccountList (context, force) {
       context.commit('toggleAccountList', force)
