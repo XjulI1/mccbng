@@ -1,1 +1,1 @@
-import 'bootstrap/dist/css/bootstrap.css'
+import 'mccbng_styles/bootstrap.css'
