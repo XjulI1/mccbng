@@ -27,7 +27,7 @@
     watch: {
       userID (value) {
         fetchEvolutionSolde(value, this.userToken, process.env.VUE_APP_API_URL)
-          .then((results) => {
+          .then(({ results }) => {
             let sum = results.soldeTotal
             this.total = results.total
               .map((data) => {

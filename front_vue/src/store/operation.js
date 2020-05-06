@@ -51,7 +51,7 @@ export default {
     },
 
     getSearchOperations ({ rootState, commit }, searchTerms) {
-      fetchSearchOperations(searchTerms, rootState.compte.accountList)
+      fetchSearchOperations(searchTerms, rootState.compte.accountList, rootState.user.token, process.env.VUE_APP_API_URL)
         .then((operations) => {
           commit('setActiveAccount', { NomCompte: 'Search' })
           commit('setOperationsOfActiveAccount', operations)

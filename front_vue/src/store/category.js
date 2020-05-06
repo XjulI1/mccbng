@@ -16,8 +16,8 @@ export default {
 
   actions: {
     fetchCategoryList ({ state, rootState, commit }) {
-      if (state.category.list.length < 2) {
-        fetchCategoryList(rootState.user.id, rootState.user.token)
+      if (state.list.length < 2) {
+        fetchCategoryList(rootState.user.id, rootState.user.token, process.env.VUE_APP_API_URL)
           .then((categories) => {
             commit('setCategoryList', categories)
           })

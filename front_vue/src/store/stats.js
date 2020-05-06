@@ -15,7 +15,7 @@ export default {
     getCategoriesTotalForHighchartPie (state, getters) {
       return state.categoriesTotal.map((categorie) => {
         return {
-          name: getters.getCategoryName(categorie.IDcat)[0].Nom,
+          name: getters.getCategoryName(categorie.IDcat).Nom,
           y: categorie.TotalMonth * -1
         }
       })
