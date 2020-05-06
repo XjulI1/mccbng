@@ -36,7 +36,7 @@
       }),
 
       operationsList () {
-        if (this.operationsOfActiveAccount[0] && this.operationsOfActiveAccount[0].IDop !== undefined) {
+        if (this.operationsOfActiveAccount && this.operationsOfActiveAccount[0] && this.operationsOfActiveAccount[0].IDop !== undefined) {
           return this.operationsOfActiveAccount
         }
         return []
@@ -45,7 +45,7 @@
 
     watch: {
       accountList () {
-        if (this.operationsOfActiveAccount.length === 0) {
+        if (this.operationsOfActiveAccount === undefined) {
           this.$store.dispatch('fetchActiveAccount', this.userFavoris)
         }
       }

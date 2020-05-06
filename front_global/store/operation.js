@@ -1,5 +1,5 @@
 export const initialState = {
-  operationsOfActiveAccount: []
+  operationsOfActiveAccount: undefined
 }
 
 export const operationFromCurrentList = ({ operationsOfActiveAccount }) => {
