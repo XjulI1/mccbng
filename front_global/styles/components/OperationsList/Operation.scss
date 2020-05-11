@@ -1,0 +1,44 @@
+@import '../../variables';
+
+.operation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 55px;
+
+  @media all and (min-width: $desktop_BP_min_width) {
+    max-width: 600px;
+  }
+
+  @media screen and (max-width: $mobile_BP_max_width) {
+    max-width: 768px;
+  }
+
+  input[type=checkbox] {
+    margin: 15px;
+  }
+
+  .label {
+    flex-grow: 1;
+  }
+
+  .montant {
+    padding-right: 15px;
+
+    &.montantIn {
+      color: green;
+    }
+
+    &.montantOut {
+      color: red
+    }
+  }
+
+  .noCategory {
+    color: grey;
+  }
+
+  .edit-operation {
+    text-decoration: none;
+  }
+}

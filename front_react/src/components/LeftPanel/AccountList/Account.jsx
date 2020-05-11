@@ -39,7 +39,7 @@ class Account extends React.Component {
           {this.props.name}
         </div>
         <div className={'account-solde ' + this.soldeColor()}>
-          {this.props.solde} {this.props.currency}
+          {this.props.solde.toLocaleString()} {this.props.currency}
         </div>
       </div>
     )

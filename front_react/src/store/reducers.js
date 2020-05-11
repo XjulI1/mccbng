@@ -1,9 +1,11 @@
 import { combineReducers } from 'redux'
 
-import user from './User/reducer'
-import account from './Account/reducer'
+import User from './User/reducer'
+import Account from './Account/reducer'
+import Operation from './Operation/reducer'
 
 export default combineReducers({
-  User: user,
-  Account: account
+  User,
+  Account,
+  Operation
 })
