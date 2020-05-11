@@ -6,6 +6,7 @@ import store from './store'
 import './plugins/registerServiceWorker'
 import './plugins/bootstrap'
 import './plugins/fontawesome'
+import './plugins/vue2-touch-events'
 
 Vue.config.productionTip = true
 

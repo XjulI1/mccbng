@@ -1,5 +1,5 @@
 <template>
-  <div class="operation container">
+  <div class="container">
     <div class="row">
       <div class="col-9">
         <label>

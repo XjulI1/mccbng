@@ -4,10 +4,10 @@
     role="group"
   >
     <button
-      class="btn btn-warning all-account-button"
-      @click="openAllAccount"
+      class="btn btn-warning disabled retrait-button"
+      @click="getMoney"
     >
-      <font-awesome-icon icon="list" />
+      <font-awesome-icon icon="money-bill-alt" />
     </button>
     <button
       class="btn btn-success disabled virement-button"
@@ -50,11 +50,11 @@
     },
 
     methods: {
-      openAllAccount () {
-        this.$store.dispatch('toggleAccountList')
+      getMoney () {
       },
 
       addOperation () {
+        this.$store.dispatch('toggleAccountList', false)
         this.$router.push('/newOperation')
       },
 
@@ -62,10 +62,12 @@
       },
 
       getRecurrenteOp () {
+        this.$store.dispatch('toggleAccountList', false)
         this.$router.push('/recurrOperation')
       },
 
       changeParams () {
+        this.$store.dispatch('toggleAccountList', false)
         this.$router.push('/config')
       }
     }

@@ -24,7 +24,7 @@
 
     data () {
       return {
-        draggableActif: true
+        draggableActif: false
       }
     },
 

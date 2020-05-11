@@ -7,7 +7,7 @@ export default {
 
   mutations: {
     toggleAccountList (state, force) {
-      state.account_list = force || !state.account_list
+      state.account_list = typeof force === 'boolean' ? force : !state.account_list
     },
 
     toggleCategoriesDropZone (state) {

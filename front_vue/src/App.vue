@@ -4,17 +4,18 @@
           class="root-app"
   >
     <account-header/>
-    <div class="container-flex">
+    <div class="container-flex" >
       <div
               class="left-panel"
               :class="{'mask-panel' : !displayAccountList}"
       >
-        <CompteList/>
+        <CompteList v-touch:swipe.left="closeAccountList"/>
         <TimeSeriesEvolutionSoldes/>
       </div>
       <router-view
               class="right-panel"
               :class="{'mask-panel' : displayAccountList}"
+              v-touch:swipe.right="openAccountList"
       />
     </div>
     <NavBar/>
@@ -53,6 +54,16 @@
 
     beforeCreate () {
       this.$router.push('/login')
+    },
+
+    methods: {
+      openAccountList () {
+        this.$store.dispatch('toggleAccountList', true)
+      },
+
+      closeAccountList () {
+        this.$store.dispatch('toggleAccountList', false)
+      }
     }
   }
 </script>
@@ -72,13 +83,21 @@
     padding: 0 !important
   }
 
-  @media screen and (max-width: 767px) {
-    .right-panel.mask-panel {
-      display: none;
+  @media screen and (max-width: $mobile_BP_max_width) {
+    .left-panel {
+      z-index: 2;
+      position: absolute;
+      left: 0;
+      transition: 0.3s;
     }
 
     .left-panel.mask-panel {
-      display: none;
+      left: -100%;
+    }
+
+    .right-panel.mask-panel {
+      height: 100vh;
+      overflow-y: hidden;
     }
   }
 </style>

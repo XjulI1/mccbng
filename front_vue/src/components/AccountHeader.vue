@@ -49,6 +49,7 @@
 
     methods: {
       goToStats () {
+        this.$store.dispatch('toggleAccountList', false)
         this.$router.push('stats')
       },
 

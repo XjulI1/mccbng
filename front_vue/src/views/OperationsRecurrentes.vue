@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="margin-bottom: 40px">
     <operation-recurrente
       v-for="operation in operationsRecurrenteList"
       :key="'operation-recu-' + operation.IDopRecu"
