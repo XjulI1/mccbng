@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "docker:start:api": "cd back_loopback && yarn docker:pull && yarn docker:run",
-    "docker:start:front": "cd front_vue && yarn docker:pull && yarn docker:run"
+    "docker:start:front": "cd front_vue && yarn docker:pull && yarn docker:run",
+    "docker:start:front:staging": "cd front_vue && yarn docker:pull && yarn docker:run"
   }
 }
