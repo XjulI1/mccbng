@@ -18,7 +18,7 @@
     "@testing-library/user-event": "^7.1.2",
     "mccbng_helpers": "link:../front_global/helpers/",
     "mccbng_services": "link:../front_global/services/",
-    "mccbng_store": "link:./front_global/store/",
+    "mccbng_store": "link:../front_global/store/",
     "mccbng_styles": "link:../front_global/styles/",
     "node-sass": "^4.13.1",
     "react": "^16.12.0",
