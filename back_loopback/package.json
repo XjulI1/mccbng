@@ -14,8 +14,9 @@
     "test": "echo 0",
     "posttest": "npm run lint",
     "deploy": "pm2 deploy pm2.json production --force",
-    "docker:build": "docker build --rm -t xjuli1/mccbng_api . --no-cache",
-    "docker:run": "docker run -d --rm -p 3001:3001 --mount type=bind,source=/home/ubuntu/mccbng/back_loopback/server/datasources.json,target=/usr/src/app/server/datasources.json xjuli1/mccbng_api"
+    "docker:build": "docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_api . --no-cache --push",
+    "docker:run": "docker run -d --rm -p 3001:3001 --mount type=bind,source=/home/ubuntu/mccbng/back_loopback/server/datasources.json,target=/usr/src/app/server/datasources.json xjuli1/mccbng_api",
+    "docker:pull": "docker pull xjuli1/mccbng_api"
   },
   "dependencies": {
     "compression": "^1.0.3",

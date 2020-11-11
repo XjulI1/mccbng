@@ -15,7 +15,7 @@
     "front_global/store"
   ],
   "scripts": {
-    "docker:api:start": "cd back_loopback && yarn docker:build && yarn docker:run",
-    "docker:front:start": "cd front_vue && yarn docker:build && yarn docker:run"
+    "docker:start:api": "cd back_loopback && yarn docker:pull && yarn docker:run",
+    "docker:start:front": "cd front_vue && yarn docker:pull && yarn docker:run"
   }
 }

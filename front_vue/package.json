@@ -10,7 +10,8 @@
     "lint": "vue-cli-service lint",
     "test": "yarn test:unit && yarn test:e2e",
     "docker:build": "yarn install && yarn build && docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_front_vue . --no-cache --push",
-    "docker:run": "docker run -d --rm -p 3002:80 xjuli1/mccbng_front_vue"
+    "docker:run": "docker run -d --rm -p 3002:80 xjuli1/mccbng_front_vue",
+    "docker:pull": "docker pull xjuli1/mccbng_front_vue"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.0",
