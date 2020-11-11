@@ -13,7 +13,8 @@
     "docker:build:staging": "yarn install && yarn build --mode test && docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_front_vue:staging . --no-cache --push",
     "docker:run": "docker run -d --rm -p 3002:80 xjuli1/mccbng_front_vue",
     "docker:run:staging": "docker run -d --rm -p 3004:80 xjuli1/mccbng_front_vue:staging",
-    "docker:pull": "docker pull xjuli1/mccbng_front_vue"
+    "docker:pull": "docker pull xjuli1/mccbng_front_vue",
+    "docker:pull:staging": "docker pull xjuli1/mccbng_front_vue:staging"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.0",
