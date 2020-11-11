@@ -9,7 +9,7 @@
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
     "test": "yarn test:unit && yarn test:e2e",
-    "docker:build": "yarn install && yarn build && docker build -t xjuli1/mccbng_spa . --no-cache && docker rmi $(docker images -f \"dangling=true\" -q)",
+    "docker:build": "yarn install && yarn build && docker build --rm -t xjuli1/mccbng_spa . --no-cache",
     "docker:run": "docker run -d --rm -p 3002:80 xjuli1/mccbng_spa"
   },
   "dependencies": {
