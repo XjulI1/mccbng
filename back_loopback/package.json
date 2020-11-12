@@ -14,7 +14,8 @@
     "test": "echo 0",
     "posttest": "npm run lint",
     "deploy": "pm2 deploy pm2.json production --force",
-    "docker:build": "docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_api . --no-cache --push"
+    "docker:build": "docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_api . --no-cache --push",
+    "docker:build:staging": "docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_api:staging . --no-cache --push"
   },
   "dependencies": {
     "compression": "^1.0.3",
