@@ -102,7 +102,7 @@
           saveCookies({ userToken, userID, ttl })
         }
 
-        this.$router.go(-1)
+        this.$router.replace({ name: 'Home' })
       }
     }
   }

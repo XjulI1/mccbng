@@ -1,8 +1,8 @@
 'use strict';
 
-var dbm;
-var type;
-var seed;
+let dbm,
+  type,
+  seed;
 
 /**
   * We receive the dbmigrate dependency from dbmigrate initially.
@@ -17,7 +17,7 @@ exports.setup = function(options, seedLink) {
 exports.up = function(db) {
   return db.addColumn('Operation', 'amortissement', {
     type: 'smallint',
-    defaultValue: '0'
+    defaultValue: '0',
   });
 };
 
@@ -26,5 +26,5 @@ exports.down = function(db) {
 };
 
 exports._meta = {
-  "version": 1
+  'version': 1,
 };

@@ -1,16 +1,16 @@
 <template>
   <div
-          class="categories-drop-zone"
-          :class="{'display-zone' : displayCategoriesDropZone}"
+    class="categories-drop-zone"
+    :class="{'display-zone' : displayCategoriesDropZone}"
   >
     <div class="category-container">
       <draggable
-              v-for="category in categoryList "
-              :key="'category-' + category.IDcat"
-              class="category"
-              :data-id="category.IDcat"
-              :group="{name: 'category', put: ['operation']}"
-              @add="addNewOperation"
+        v-for="category in categoryList "
+        :key="'category-' + category.IDcat"
+        class="category"
+        :data-id="category.IDcat"
+        :group="{name: 'category', put: ['operation']}"
+        @add="addNewOperation"
       >
         <div :class="{'actual-drag-cat' : displayActualDragCat === category.IDcat}">
           <b>{{ category.Nom }}</b>

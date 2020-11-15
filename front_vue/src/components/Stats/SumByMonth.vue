@@ -4,9 +4,9 @@
       Mois :
       <select v-model="currentMonth">
         <option
-                v-for="month in listMonth"
-                :key="'month-' + month"
-                :value="month+1"
+          v-for="month in listMonth"
+          :key="'month-' + month"
+          :value="month+1"
         >
           {{ month+1 }}
         </option>
@@ -15,9 +15,9 @@
       Année :
       <select v-model="currentYear">
         <option
-                v-for="year in listYear"
-                :key="'year-' + year"
-                :value="year"
+          v-for="year in listYear"
+          :key="'year-' + year"
+          :value="year"
         >
           {{ year }}
         </option>
@@ -29,8 +29,8 @@
     </div>
 
     <div
-            v-for="(accountTotal, IDcompte) in negativeByAccountFilter"
-            :key="IDcompte"
+      v-for="(accountTotal, IDcompte) in negativeByAccountFilter"
+      :key="IDcompte"
     >
       {{ getAccount(IDcompte).NomCompte }} :
       <b>{{ accountTotal }} {{ currency }}</b>

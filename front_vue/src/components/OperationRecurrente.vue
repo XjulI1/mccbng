@@ -8,7 +8,10 @@
           {{ dateOperation }}
         </label>
       </div>
-      <div class="col-3 center-text" :class="css.montant">
+      <div
+        class="col-3 center-text"
+        :class="css.montant"
+      >
         {{ operation.MontantOpRecu.toLocaleString() }}{{ currency }}
       </div>
     </div>

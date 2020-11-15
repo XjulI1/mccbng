@@ -1,46 +1,53 @@
 <template>
   <div class="operation">
     <input
-            :id="checkBoxID"
-            v-model="operation.CheckOp"
-            type="checkbox"
-            @change="updateCheckOp"
+      :id="checkBoxID"
+      v-model="operation.CheckOp"
+      type="checkbox"
+      @change="updateCheckOp"
     >
     <draggable
-            v-if="draggableActif"
-            class="label"
-            :class="css.category"
-            :group="{name: 'operation', pull: 'clone', put: ['false'] }"
-            :data-idcat="operation.IDcat"
-            @start="startDrag"
-            @end="endDrag"
+      v-if="draggableActif"
+      class="label"
+      :class="css.category"
+      :group="{name: 'operation', pull: 'clone', put: ['false'] }"
+      :data-idcat="operation.IDcat"
+      @start="startDrag"
+      @end="endDrag"
     >
       <label
-              :for="checkBoxID"
-              :data-id="operation.IDop"
+        :for="checkBoxID"
+        :data-id="operation.IDop"
       >
         {{ operation.NomOp }}
         <br>
         {{ dateOperation }}
       </label>
     </draggable>
-    <div class="label" v-else :class="css.category">
+    <div
+      v-else
+      class="label"
+      :class="css.category"
+    >
       <label
-              :for="checkBoxID"
-              :data-id="operation.IDop"
+        :for="checkBoxID"
+        :data-id="operation.IDop"
       >
         {{ operation.NomOp }}
         <br>
         {{ dateOperation }}
       </label>
     </div>
-    <div class="montant" :class="css.montant">
+    <div
+      class="montant"
+      :class="css.montant"
+    >
       {{ operation.MontantOp.toLocaleString() }}{{ currency }}
     </div>
     <div>
       <router-link
-              :to="'/editOperation/' + operation.IDop"
-              class="edit-operation"
+        :to="'/editOperation/' + operation.IDop"
+        class="edit-operation"
       >
         ...
       </router-link>

@@ -1,25 +1,25 @@
 <template>
   <div
-          id="app"
-          class="root-app"
+    id="app"
+    class="root-app"
   >
-    <account-header/>
-    <div class="container-flex" >
+    <account-header />
+    <div class="container-flex">
       <div
-              class="left-panel"
-              :class="{'mask-panel' : !displayAccountList}"
+        class="left-panel"
+        :class="{'mask-panel' : !displayAccountList}"
       >
-        <CompteList v-touch:swipe.left="closeAccountList"/>
-        <TimeSeriesEvolutionSoldes/>
+        <CompteList v-touch:swipe.left="closeAccountList" />
+        <TimeSeriesEvolutionSoldes />
       </div>
       <router-view
-              class="right-panel"
-              :class="{'mask-panel' : displayAccountList}"
-              v-touch:swipe.right="openAccountList"
+        v-touch:swipe.right="openAccountList"
+        class="right-panel"
+        :class="{'mask-panel' : displayAccountList}"
       />
     </div>
-    <NavBar/>
-    <NewVersion/>
+    <NavBar />
+    <NewVersion />
   </div>
 </template>
 
