@@ -3772,7 +3772,7 @@ block-stream@*:
   dependencies:
     inherits "~2.0.0"
 
-bluebird@^3.1.1, bluebird@^3.2.1, bluebird@^3.3.4, bluebird@^3.4.6, bluebird@^3.5.0, bluebird@^3.5.1, bluebird@^3.5.5, bluebird@^3.7.2:
+bluebird@^3.1.1, bluebird@^3.2.1, bluebird@^3.3.4, bluebird@^3.4.6, bluebird@^3.5.0, bluebird@^3.5.5, bluebird@^3.7.2:
   version "3.7.2"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.2.tgz#9f229c15be272454ffa973ace0dbee79a1b0c36f"
   integrity sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==
@@ -10539,7 +10539,7 @@ moment-timezone@^0.5.4, moment-timezone@^0.5.x:
   dependencies:
     moment ">= 2.9.0"
 
-"moment@>= 2.9.0", moment@^2.11.2, moment@^2.13.0, moment@^2.20.1:
+"moment@>= 2.9.0", moment@^2.11.2, moment@^2.13.0:
   version "2.29.1"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
   integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
@@ -10666,16 +10666,6 @@ mz@^2.4.0:
     any-promise "^1.0.0"
     object-assign "^4.0.1"
     thenify-all "^1.0.0"
-
-n26@^1.5.3:
-  version "1.5.3"
-  resolved "https://registry.yarnpkg.com/n26/-/n26-1.5.3.tgz#54a262bf28aa72533c3308d7cb14ea1e6fadaa3f"
-  integrity sha512-Ky3Qqbul9mj+95wpkY9ZVPmaV6tosAuouTBGD6R8Dkydpru+vj4l7ksWzqrlUxwionI/OICxCZEwmQ/5MfVRPw==
-  dependencies:
-    bluebird "^3.5.1"
-    moment "^2.20.1"
-    request "^2.83.0"
-    request-promise "^4.2.2"
 
 nan@^2.12.1, nan@^2.13.2:
   version "2.14.2"
