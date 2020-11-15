@@ -42,7 +42,7 @@
       class="montant"
       :class="css.montant"
     >
-      {{ operation.MontantOp.toLocaleString() }}{{ currency }}
+      <Currency :amount="operation.MontantOp" />
     </div>
     <div>
       <router-link
@@ -57,15 +57,15 @@
 
 <script>
   import draggable from 'vuedraggable'
-  import { mapState } from 'vuex'
 
   import 'mccbng_styles/components/OperationsList/Operation.scss'
   import { checkBoxID, generateCssVariables, generateDateOperationVariables } from 'mccbng_helpers/components/Operation'
+  import Currency from '../Currency'
 
   export default {
     name: 'Operation',
 
-    components: { draggable },
+    components: { Currency, draggable },
 
     props: {
       operation: {
@@ -86,8 +86,6 @@
         checkBoxID: checkBoxID(this.operation.IDop)
       }
     },
-
-    computed: mapState({ currency: state => state.compte.currency }),
 
     watch: {
       operation () {

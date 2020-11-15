@@ -25,7 +25,10 @@
     </div>
 
     <div class="total-month">
-      Total ce mois : <b>{{ negativeMonth }}{{ currency }}</b>
+      Total ce mois :
+      <b>
+        <Currency :amount="negativeMonth" />
+      </b>
     </div>
 
     <div
@@ -33,10 +36,12 @@
       :key="IDcompte"
     >
       {{ getAccount(IDcompte).NomCompte }} :
-      <b>{{ accountTotal }} {{ currency }}</b>
+      <b>
+        <Currency :amount="accountTotal" />
+      </b>
       <div class="parjour">
         par jour :
-        {{ Math.round(accountTotal / numberDaysForCurrentMonth() * 100) / 100 }} {{ currency }}
+        <Currency :amount="Math.round(accountTotal / numberDaysForCurrentMonth() * 100) / 100" />
       </div>
     </div>
   </div>
@@ -44,10 +49,11 @@
 
 <script>
   import { mapGetters, mapState } from 'vuex'
+  import Currency from '../Currency'
 
   export default {
     name: 'SumByMonth',
-
+    components: { Currency },
     data () {
       return {
         listMonth: [...Array(12).keys()],
@@ -59,7 +65,6 @@
       ...mapState({
         negativeByAccount: state => state.stats.negativeByAccount,
         negativeMonth: state => state.stats.negativeMonth,
-        currency: state => state.compte.currency,
         storeCurrentYear: state => state.stats.currentYear,
         storeCurrentMonth: state => state.stats.currentMonth,
         userID: state => state.user.id

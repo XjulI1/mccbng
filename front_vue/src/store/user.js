@@ -1,5 +1,5 @@
 import { fetchUser } from 'mccbng_services/user'
-import { initialState } from 'mccbng_store/user'
+import { initialState, toggleMaskAmount } from 'mccbng_store/user'
 
 export default {
   state: initialState,
@@ -13,6 +13,10 @@ export default {
 
     setToken (state, token) {
       state.token = token
+    },
+
+    toggleMaskAmount (state) {
+      state.maskAmount = toggleMaskAmount(state.maskAmount)
     }
   },
 
@@ -26,6 +30,10 @@ export default {
 
     saveUserToken ({ commit }, token) {
       commit('setToken', token)
+    },
+
+    toggleMaskAmount ({commit}) {
+      commit('toggleMaskAmount')
     }
   }
 }

@@ -7,6 +7,12 @@
       <font-awesome-icon icon="redo" />
       Reload App
     </a>
+    <br>
+    <br>
+    <button @click="toggleAmount" class="btn btn-warning">
+      <font-awesome-icon icon="money-bill" />
+      Masquer les montants
+    </button>
   </div>
 </template>
 
@@ -18,6 +24,13 @@
 
     created () {
       this.$store.commit('setActiveAccount', { NomCompte: 'Configurations' })
+    },
+
+    methods: {
+      toggleAmount (event) {
+        this.$store.dispatch('toggleMaskAmount')
+        event.target.blur()
+      }
     }
   }
 </script>

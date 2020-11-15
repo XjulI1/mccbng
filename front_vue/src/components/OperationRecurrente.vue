@@ -12,18 +12,18 @@
         class="col-3 center-text"
         :class="css.montant"
       >
-        {{ operation.MontantOpRecu.toLocaleString() }}{{ currency }}
+        <Currency :amount="operation.MontantOpRecu" />
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  import { mapState } from 'vuex'
+  import Currency from './Currency'
 
   export default {
     name: 'OperationRecurrente',
-
+    components: { Currency },
     props: {
       operation: {
         type: Object,
@@ -39,11 +39,7 @@
           montant: this.operation.MontantOpRecu > 0 ? 'montantIn' : 'montantOut'
         }
       }
-    },
-
-    computed: mapState({
-      currency: state => state.compte.currency
-    })
+    }
   }
 </script>
 

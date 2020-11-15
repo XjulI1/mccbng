@@ -13,8 +13,8 @@
         {{ activeAccount.NomCompte }}
       </div>
       <div :class="{'no-total' : disabledTotal}">
-        {{ (activeAccount.soldeNotChecked || 0).toLocaleString() }} {{ currency }} -
-        [{{ (activeAccount.soldeChecked || 0).toLocaleString() }} {{ currency }}]
+        <Currency :amount="(activeAccount.soldeNotChecked || 0)" /> -
+        [<Currency :amount="(activeAccount.soldeChecked || 0)" />]
       </div>
     </div>
     <div>
@@ -32,14 +32,14 @@
   import { mapState } from 'vuex'
 
   import 'mccbng_styles/components/Header.scss'
+  import Currency from './Currency'
 
   export default {
     name: 'AccountHeader',
-
+    components: { Currency },
     computed: {
       ...mapState({
-        activeAccount: state => state.compte.activeAccount,
-        currency: state => state.compte.currency
+        activeAccount: state => state.compte.activeAccount
       }),
 
       disabledTotal () {
