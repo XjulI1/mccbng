@@ -8,7 +8,8 @@ import {
   totalGlobal,
   getAccount,
   calcActiveAccountBalances,
-  updateSoldeInAccountList
+  updateSoldeInAccountList,
+  visibleAccounts
 } from 'mccbng_store/compte'
 
 import { generateRecurringOperations } from 'mccbng_services/operation'
@@ -23,7 +24,8 @@ export default {
     porteFeuilleCompte,
     totalAvailable,
     totalGlobal,
-    getAccount
+    getAccount,
+    visibleAccounts
   },
 
   mutations: {

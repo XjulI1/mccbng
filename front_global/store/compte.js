@@ -4,24 +4,24 @@ export const initialState = {
   currency: '€'
 }
 
-export const filterBloquedAccounts = ({ accountList }) => {
-  return accountList.filter((account) => {
+export const filterBloquedAccounts = (_, { visibleAccounts }) => {
+  return visibleAccounts.filter((account) => {
     if (account.bloque) {
       return account
     }
   })
 }
 
-export const filterAvailableAccounts = ({ accountList }) => {
-  return accountList.filter((account) => {
+export const filterAvailableAccounts = (_, { visibleAccounts }) => {
+  return visibleAccounts.filter((account) => {
     if (!account.bloque && !account.porte_feuille) {
       return account
     }
   })
 }
 
-export const filterPorteFeuilleAccount = ({ accountList }) => {
-  return accountList.filter((account) => {
+export const filterPorteFeuilleAccount = (_, { visibleAccounts }) => {
+  return visibleAccounts.filter((account) => {
     if (account.porte_feuille) {
       return account
     }
@@ -54,6 +54,14 @@ export const getAccount = ({ accountList }) => {
       })[0]
     }
   }
+}
+
+export const visibleAccounts = ({ accountList }) => {
+  return accountList.filter((account) => {
+      if (account.visible) {
+        return account
+      }
+    })
 }
 
 export const calcActiveAccountBalances = (activeAccount, { TotalChecked, TotalNotChecked }) => {
@@ -101,5 +109,6 @@ export default {
   getAccount,
   setSumAllAccountForUser,
   calcActiveAccountBalances,
-  updateSoldeInAccountList
+  updateSoldeInAccountList,
+  visibleAccounts
 }
