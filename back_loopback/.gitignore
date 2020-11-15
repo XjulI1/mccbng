@@ -21,3 +21,4 @@ package-lock.json
 server/datasources.local.json
 server/datasources.json
 **/config/*
+database.json

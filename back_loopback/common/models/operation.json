@@ -34,6 +34,10 @@
     "IDcat": {
       "type": "number",
       "default": 0
+    },
+    "amortissement": {
+      "type": "boolean",
+      "default": false
     }
   },
   "validations": [],

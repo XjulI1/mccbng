@@ -23,11 +23,34 @@
 }
 ```
 
+- `database.json`
+```
+{
+  "defaultEnv": "test",
+  "test": {
+    "driver": "mysql",
+    "host": "localhost",
+    "user": "root",
+    "password": "root",
+    "database": "database-name",
+    "multipleStatements": true
+  },
+  "prod": {
+    "driver": "mysql",
+    "host": "localhost",
+    "user": "root",
+    "password": "root",
+    "database": "database-name",
+    "multipleStatements": true
+  },
+}
+```
+
 ## front_vue
 
 ### Config files
 
-- `.env` / `.env.production`
+- `.env` / `.env.test` / `.env.production`
 
 ```
 VUE_APP_API_URL=http://localhost:3001
