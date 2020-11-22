@@ -23,6 +23,10 @@
       "type": "number",
       "required": true
     },
+    "IDbanque": {
+      "type": "number",
+      "required": true
+    },
     "bloque": {
       "type": "boolean",
       "default": false
@@ -37,7 +41,13 @@
     }
   },
   "validations": [],
-  "relations": {},
+  "relations": {
+    "Banque": {
+      "type": "belongsTo",
+      "model": "Banque",
+      "foreignKey": "IDbanque"
+    }
+  },
   "acls": [
     {
       "accessType": "*",
