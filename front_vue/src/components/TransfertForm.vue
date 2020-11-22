@@ -113,7 +113,7 @@
       },
 
       updateOperation () {
-        const NomOp = this.operation.NomOp + ' (' + this.getAccount(this.operation.IDcompteDebit).NomCompte + ' -> ' + this.getAccount(this.operation.IDcompteCredit).NomCompte + ')';
+        const NomOp = this.operation.NomOp + ' (' + this.getAccount(this.operation.IDcompteDebit).NomCompte + ' -> ' + this.getAccount(this.operation.IDcompteCredit).NomCompte + ')'
         this.$store.dispatch('createTransfert', { ...this.operation, NomOp })
 
         this.resetOperationAttribut()
