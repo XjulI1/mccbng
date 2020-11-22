@@ -8,8 +8,13 @@
       class="account-name"
       :class="classBoldTitle"
     >
+      <img
+        v-if="imgID"
+        class="banque-img"
+        :src="`/img/banques/banque-${imgID}.png`"
+      >
       <font-awesome-icon
-        v-if="faIcon"
+        v-else-if="faIcon"
         :icon="faIcon"
         class="icon-fa"
       />
@@ -50,6 +55,12 @@
       }
     },
 
+    computed: {
+      imgID () {
+        return this.accountInformations.Banque ? this.accountInformations.Banque.IDbanque : 0
+      }
+    },
+
     watch: {
       'accountInformations.soldeNotChecked' () {
         this.soldeColor = this.getSoldeColor()
@@ -82,3 +93,9 @@
     }
   }
 </script>
+<style scoped>
+.banque-img {
+  width: 20px;
+  vertical-align: text-bottom;
+}
+</style>

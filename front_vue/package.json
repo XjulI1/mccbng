@@ -10,7 +10,9 @@
     "lint": "vue-cli-service lint",
     "test": "yarn test:unit && yarn test:e2e",
     "docker:build": "yarn install && yarn build && docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_front_vue . --no-cache --push",
-    "docker:build:staging": "yarn install && yarn build --mode test && docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_front_vue:staging . --no-cache --push"
+    "docker:deploy": "ssh ubuntu@${SERVER_IP} './mccbng/deploy_script/front_prod.sh'",
+    "docker:build:staging": "yarn install && yarn build --mode test && docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_front_vue:staging . --no-cache --push",
+    "docker:deploy:staging": "ssh ubuntu@${SERVER_IP} './mccbng/deploy_script/front_staging.sh'"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.0",
