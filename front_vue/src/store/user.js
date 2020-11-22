@@ -32,7 +32,7 @@ export default {
       commit('setToken', token)
     },
 
-    toggleMaskAmount ({commit}) {
+    toggleMaskAmount ({ commit }) {
       commit('toggleMaskAmount')
     }
   }

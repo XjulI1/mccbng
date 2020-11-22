@@ -1,7 +1,7 @@
 export const initialState = {
   activeAccount: {},
   accountList: [],
-  currency: '€'
+  currency: "€"
 }
 
 export const filterBloquedAccounts = (_, { visibleAccounts }) => {
@@ -46,22 +46,16 @@ export const totalGlobal = (_, { bloquedCompte, totalAvailable }) => {
 
 export const getAccount = ({ accountList }) => {
   return (IDcompte) => {
-    return {
-      ...accountList.filter((account) => {
-        if (account.IDcompte === parseInt(IDcompte)) {
-          return account
-        }
-      })[0]
-    }
+    return accountList.find(account => account.IDcompte === parseInt(IDcompte))
   }
 }
 
 export const visibleAccounts = ({ accountList }) => {
   return accountList.filter((account) => {
-      if (account.visible) {
-        return account
-      }
-    })
+    if (account.visible) {
+      return account
+    }
+  })
 }
 
 export const calcActiveAccountBalances = (activeAccount, { TotalChecked, TotalNotChecked }) => {

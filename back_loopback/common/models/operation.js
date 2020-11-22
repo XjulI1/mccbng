@@ -15,10 +15,10 @@ module.exports = function(Operation) {
       'GROUP BY IDCompte';
 
     Operation.dataSource.connector.executeSQL(sqlChecked, [], [], (err, data) => {
-      const checkedTotal = data;
+      const checkedTotal = data || [];
 
       Operation.dataSource.connector.executeSQL(sqlNotChecked, [], [], (err, data) => {
-        cb(null, Object.assign(checkedTotal[0] || {}, data[0] || {}));
+        cb(null, Object.assign(checkedTotal[0] || {}, data[0] || {}));
       });
     });
   };

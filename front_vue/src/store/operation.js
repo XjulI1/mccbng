@@ -40,6 +40,24 @@ export default {
       dispatch('fetchActiveAccount', operation.IDcompte)
     },
 
+    async createTransfert ({ dispatch, rootState }, operation) {
+      const positiveMontant = parseFloat(operation.MontantOp > 0 ? operation.MontantOp : operation.MontantOp * -1)
+
+      await updateOperation({
+        ...operation,
+        MontantOp: positiveMontant * -1,
+        IDcompte: operation.IDcompteDebit
+      }, rootState.user.token, process.env.VUE_APP_API_URL)
+
+      await updateOperation({
+        ...operation,
+        MontantOp: positiveMontant,
+        IDcompte: operation.IDcompteCredit
+      }, rootState.user.token, process.env.VUE_APP_API_URL)
+
+      dispatch('fetchActiveAccount', operation.IDcompteDebit)
+    },
+
     fetchRecurrOperation ({ rootState, commit }) {
       commit('setOperationsOfActiveAccount', {})
       commit('setActiveAccount', { NomCompte: 'Opérations récurrentes' })

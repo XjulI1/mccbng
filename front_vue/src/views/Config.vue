@@ -9,7 +9,10 @@
     </a>
     <br>
     <br>
-    <button @click="toggleAmount" class="btn btn-warning">
+    <button
+      class="btn btn-warning"
+      @click="toggleAmount"
+    >
       <font-awesome-icon icon="money-bill" />
       Masquer les montants
     </button>

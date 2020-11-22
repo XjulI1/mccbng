@@ -36,6 +36,13 @@ export default new Router({
       props: {
         componentName: 'search'
       }
+    }, {
+      path: '/transfert',
+      name: 'Virement',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'transfert-form'
+      }
     }]
   }, {
     path: '/recurrOperation',

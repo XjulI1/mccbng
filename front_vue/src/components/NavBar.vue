@@ -10,7 +10,7 @@
       <font-awesome-icon icon="money-bill-alt" />
     </button>
     <button
-      class="btn btn-success disabled virement-button"
+      class="btn btn-success virement-button"
       @click="doTransfert"
     >
       <font-awesome-icon icon="exchange-alt" />
@@ -59,6 +59,8 @@
       },
 
       doTransfert () {
+        this.$store.dispatch('toggleAccountList', false)
+        this.$router.push('/transfert')
       },
 
       getRecurrenteOp () {

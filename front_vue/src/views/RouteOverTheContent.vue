@@ -16,13 +16,14 @@
 </template>
 
 <script>
-  import OperationForm from '@/components//OperationForm'
+  import OperationForm from '@/components/OperationForm'
   import Search from '@/components/Search'
+  import TransfertForm from '@/components/TransfertForm'
 
   export default {
     name: 'RouteOverTheContent',
 
-    components: { OperationForm, Search },
+    components: { OperationForm, Search, TransfertForm },
 
     props: {
       componentName: {
