@@ -31,7 +31,7 @@
         class="form-control select-compte-debit"
       >
         <option
-          v-for="account in visibleAccounts"
+          v-for="account in accountsDebit"
           :key="'account-' + account.IDcompte"
           :value="account.IDcompte"
         >
@@ -46,7 +46,7 @@
         class="form-control select-compte-credit"
       >
         <option
-          v-for="account in visibleAccounts"
+          v-for="account in accountsCredit"
           :key="'account-' + account.IDcompte"
           :value="account.IDcompte"
         >
@@ -86,10 +86,23 @@
 
     computed: {
       ...mapState({
-        activeAccountID: state => state.compte.activeAccount.IDcompte,
-        categoryList: state => state.category.list
+        activeAccountID: state => state.compte.activeAccount.IDcompte
       }),
-      ...mapGetters(['visibleAccounts', 'getAccount'])
+      ...mapGetters(['visibleAccounts', 'getAccount']),
+      accountsDebit () {
+        return this.visibleAccounts.filter((account) => {
+          if (parseFloat(account.IDcompte) !== parseFloat(this.operation.IDcompteCredit)) {
+            return account
+          }
+        })
+      },
+      accountsCredit () {
+        return this.visibleAccounts.filter((account) => {
+          if (parseFloat(account.IDcompte) !== parseFloat(this.operation.IDcompteDebit)) {
+            return account
+          }
+        })
+      }
     },
 
     watch: {
@@ -134,21 +147,21 @@ input {
   margin-bottom: 15px;
 }
 
-.operation-form {
-  text-align: center
-}
+.transfert-form {
+  text-align: center;
 
-.debit-credit {
-  margin-bottom: 1.5rem;
+  .debit-credit {
+    margin-bottom: 1.5rem;
 
-  div {
-    width: 10%;
-    display: inline-block;
-  }
+    div {
+      width: 10%;
+      display: inline-block;
+    }
 
-  select {
-    display: inline-block;
-    width: 45%;
+    select {
+      display: inline-block;
+      width: 45%;
+    }
   }
 }
 </style>
