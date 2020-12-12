@@ -5,12 +5,14 @@
   >
     <button
       class="btn btn-warning retrait-button"
+      v-bind="{disabled}"
       @click="getMoney"
     >
       <font-awesome-icon icon="money-bill-alt" />
     </button>
     <button
       class="btn btn-success virement-button"
+      v-bind="{disabled}"
       @click="doTransfert"
     >
       <font-awesome-icon icon="exchange-alt" />
