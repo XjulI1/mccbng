@@ -71,15 +71,22 @@
   export default {
     name: 'OperationForm',
 
+    props: {
+      cash: {
+        type: Boolean,
+        default: false
+      }
+    },
+
     data () {
       return {
         operation: {
-          NomOp: 'Virement',
+          NomOp: this.$route.name,
           MontantOp: 0,
           DateOp: new Date(),
           IDcompteDebit: undefined,
           IDcompteCredit: undefined,
-          IDcat: 25
+          IDcat: this.cash ? 21 : 25
         }
       }
     },
@@ -88,17 +95,25 @@
       ...mapState({
         activeAccountID: state => state.compte.activeAccount.IDcompte
       }),
-      ...mapGetters(['visibleAccounts', 'getAccount']),
+      ...mapGetters(['visibleAccounts', 'porteFeuilleCompte', 'getAccount']),
       accountsDebit () {
         return this.visibleAccounts.filter((account) => {
-          if (parseFloat(account.IDcompte) !== parseFloat(this.operation.IDcompteCredit)) {
+          const IDcompte = parseFloat(account.IDcompte)
+          if (IDcompte !== parseFloat(this.operation.IDcompteCredit) && IDcompte !== parseFloat(this.porteFeuilleCompte[0].IDcompte)) {
             return account
           }
         })
       },
       accountsCredit () {
+        if(this.cash) {
+          this.operation.IDcompteCredit = this.porteFeuilleCompte[0].IDcompte
+          return this.porteFeuilleCompte
+        }
+
         return this.visibleAccounts.filter((account) => {
-          if (parseFloat(account.IDcompte) !== parseFloat(this.operation.IDcompteDebit)) {
+          const IDcompte = parseFloat(account.IDcompte)
+
+          if (parseFloat(account.IDcompte) !== parseFloat(this.operation.IDcompteDebit) && IDcompte !== parseFloat(this.porteFeuilleCompte[0].IDcompte)) {
             return account
           }
         })

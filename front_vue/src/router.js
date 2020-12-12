@@ -43,6 +43,13 @@ export default new Router({
       props: {
         componentName: 'transfert-form'
       }
+    }, {
+      path: '/retrait',
+      name: 'Retrait',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'transfert-form'
+      }
     }]
   }, {
     path: '/recurrOperation',

@@ -4,7 +4,7 @@
     role="group"
   >
     <button
-      class="btn btn-warning disabled retrait-button"
+      class="btn btn-warning retrait-button"
       @click="getMoney"
     >
       <font-awesome-icon icon="money-bill-alt" />
@@ -51,6 +51,8 @@
 
     methods: {
       getMoney () {
+        this.$store.dispatch('toggleAccountList', false)
+        this.$router.push('/retrait')
       },
 
       addOperation () {
