@@ -15,6 +15,6 @@
     "front_global/store"
   ],
   "scripts": {
-    "deploy:all": "ssh ubuntu@${SERVER_IP} './mccbng/deploy_script/all.sh'"
+    "deploy:all": "ssh ubuntu@${SERVER_IP} 'cd mccbng && ./deploy_script/all.sh'"
   }
 }
