@@ -1,17 +1,19 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
 
-import './plugins/registerServiceWorker'
-import './plugins/bootstrap'
-import './plugins/fontawesome'
-import './plugins/vue2-touch-events'
+import Vue2TouchEvents from 'vue2-touch-events'
+import fontawesome from './plugins/fontawesome'
 
-Vue.config.productionTip = true
+import './registerServiceWorker'
 
-new Vue({
-  router,
-  store,
-  render: h => h(App)
-}).$mount('#app')
+const app = createApp(App)
+
+app.use(store)
+app.use(router)
+app.use(Vue2TouchEvents)
+
+app.component('FontAwesomeIcon', fontawesome)
+
+app.mount('#app')

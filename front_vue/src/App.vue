@@ -35,6 +35,7 @@
   import 'mccbng_styles/index.scss'
   import 'mccbng_styles/App.scss'
   import 'mccbng_styles/components/LeftPanel.scss'
+  import 'mccbng_styles/bootstrap.css'
 
   export default {
     name: 'App',

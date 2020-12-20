@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import { createStore } from 'vuex'
 
 import User from './user'
 import Category from './category'
@@ -8,9 +7,7 @@ import Dispay from './display'
 import Stats from './stats'
 import Compte from './compte'
 
-Vue.use(Vuex)
-
-export default new Vuex.Store({
+export default createStore({
   modules: {
     user: User,
     category: Category,

@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const Home = () => import(/* webpackChunkName: "home" */ './views/Home.vue')
 const Stats = () => import(/* webpackChunkName: "stats" */ './views/Stats.vue')
@@ -8,9 +7,8 @@ const Config = () => import(/* webpackChunkName: "config" */ './views/Config.vue
 const OperationsRecurrentes = () => import(/* webpackChunkName: "operecur" */ './views/OperationsRecurrentes.vue')
 const RouteOverTheContent = () => import(/* webpackChunkName: "othercontent" */ './views/RouteOverTheContent.vue')
 
-Vue.use(Router)
-
-export default new Router({
+export default createRouter({
+  history: createWebHashHistory(),
   routes: [{
     path: '/',
     name: 'Home',

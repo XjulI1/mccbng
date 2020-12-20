@@ -105,7 +105,7 @@
         })
       },
       accountsCredit () {
-        if(this.cash) {
+        if (this.cash) {
           this.operation.IDcompteCredit = this.porteFeuilleCompte[0].IDcompte
           return this.porteFeuilleCompte
         }

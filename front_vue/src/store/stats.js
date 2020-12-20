@@ -1,5 +1,3 @@
-import Vue from 'vue'
-
 import axios from 'axios/index'
 
 export default {
@@ -7,7 +5,6 @@ export default {
     negativeMonth: 0,
     currentMonth: (new Date()).getMonth() + 1,
     currentYear: (new Date()).getFullYear(),
-    negativeByAccount: {},
     categoriesTotal: []
   },
 
@@ -25,10 +22,6 @@ export default {
   mutations: {
     setNegativeMonth (state, sum) {
       state.negativeMonth = sum
-    },
-
-    pushNewNegativeAccount (state, accountValues) {
-      Vue.set(state.negativeByAccount, accountValues.IDcompte, accountValues.total)
     },
 
     setCurrentYear (state, newYear) {
@@ -56,23 +49,6 @@ export default {
       }).then((response) => {
         context.commit('setNegativeMonth', response.data.results[0].MonthNegative)
       })
-
-      this.getters.availableCompte.forEach((account) => {
-        axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumByUserByMonth', {
-          params: {
-            access_token: context.rootState.user.token,
-            userID: this.state.user.id,
-            monthNumber: this.state.stats.currentMonth,
-            yearNumber: this.state.stats.currentYear,
-            IDCompte: account.IDcompte
-          }
-        }).then((response) => {
-          context.commit('pushNewNegativeAccount', {
-            IDcompte: account.IDcompte,
-            total: response.data.results[0].MonthNegative
-          })
-        })
-      })
     },
 
     fetchSumCategoriesByUserByMonth (context) {
@@ -93,14 +69,12 @@ export default {
     changeStatsCurrentYear (context, newYear) {
       context.commit('setCurrentYear', newYear)
 
-      context.dispatch('fetchSumByUserByMonth')
       context.dispatch('fetchSumCategoriesByUserByMonth')
     },
 
     changeStatsCurrentMonth (context, newMonth) {
       context.commit('setCurrentMonth', newMonth)
 
-      context.dispatch('fetchSumByUserByMonth')
       context.dispatch('fetchSumCategoriesByUserByMonth')
     }
   }

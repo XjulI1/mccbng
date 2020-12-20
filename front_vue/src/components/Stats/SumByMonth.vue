@@ -23,27 +23,12 @@
         </option>
       </select>
     </div>
-
-    <div class="total-month">
+    <h5 class="total-month">
       Total ce mois :
       <b>
         <Currency :amount="negativeMonth" />
       </b>
-    </div>
-
-    <div
-      v-for="(accountTotal, IDcompte) in negativeByAccountFilter"
-      :key="IDcompte"
-    >
-      {{ getAccount(IDcompte).NomCompte }} :
-      <b>
-        <Currency :amount="accountTotal" />
-      </b>
-      <div class="parjour">
-        par jour :
-        <Currency :amount="Math.round(accountTotal / numberDaysForCurrentMonth() * 100) / 100" />
-      </div>
-    </div>
+    </h5>
   </div>
 </template>
 
@@ -63,7 +48,6 @@
 
     computed: {
       ...mapState({
-        negativeByAccount: state => state.stats.negativeByAccount,
         negativeMonth: state => state.stats.negativeMonth,
         storeCurrentYear: state => state.stats.currentYear,
         storeCurrentMonth: state => state.stats.currentMonth,
@@ -88,18 +72,6 @@
         set (value) {
           this.$store.dispatch('changeStatsCurrentMonth', value)
         }
-      },
-
-      negativeByAccountFilter () {
-        const filterArray = {}
-
-        Object.keys(this.negativeByAccount).forEach((key) => {
-          if (this.negativeByAccount[key] !== undefined && this.negativeByAccount[key] !== null) {
-            filterArray[key] = this.negativeByAccount[key]
-          }
-        })
-
-        return filterArray
       }
     },
 
@@ -148,6 +120,7 @@
 
   .total-month {
     text-align: center;
+    margin-top: 20px;
     margin-bottom: 20px;
   }
 </style>
