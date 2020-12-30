@@ -69,12 +69,14 @@ export default {
     changeStatsCurrentYear (context, newYear) {
       context.commit('setCurrentYear', newYear)
 
+      context.dispatch('fetchSumByUserByMonth')
       context.dispatch('fetchSumCategoriesByUserByMonth')
     },
 
     changeStatsCurrentMonth (context, newMonth) {
       context.commit('setCurrentMonth', newMonth)
 
+      context.dispatch('fetchSumByUserByMonth')
       context.dispatch('fetchSumCategoriesByUserByMonth')
     }
   }

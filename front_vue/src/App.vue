@@ -50,6 +50,7 @@
     watch: {
       userID () {
         this.$store.dispatch('fetchAccountList')
+        this.$store.dispatch('fetchCategoryList')
       }
     },
 

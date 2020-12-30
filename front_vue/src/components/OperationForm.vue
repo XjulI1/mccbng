@@ -136,7 +136,6 @@
       this.operation = this.operationID ? this.$store.getters.operationFromCurrentList(this.operationID) : this.operation
       this.operation.DateOp = new Date(this.operation.DateOp).toISOString().split('T')[0]
       this.montantOpIsPositive = this.operation.MontantOp > 0
-      this.$store.dispatch('fetchCategoryList')
     },
 
     methods: {

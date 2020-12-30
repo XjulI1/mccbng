@@ -5,7 +5,7 @@
   >
     <div class="category-container">
       <draggable
-        v-for="category in categoryList "
+        v-for="category in categoryList"
         :key="'category-' + category.IDcat"
         class="category"
         :data-id="category.IDcat"
@@ -37,12 +37,6 @@
         displayActualDragCat: state => state.display.actual_drag_cat
       }),
       ...mapGetters(['operationFromCurrentList'])
-    },
-
-    watch: {
-      userID () {
-        this.$store.dispatch('fetchCategoryList')
-      }
     },
 
     methods: {
