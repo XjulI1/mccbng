@@ -35,7 +35,7 @@
     data () {
       return {
         params: {
-          operation: this.$route.params.id ? this.$store.getters.operationFromCurrentList(this.$route.params.id) : undefined,
+          operationID: this.$route.params.id,
           cash: this.$route.name.includes('Retrait')
         }
       }

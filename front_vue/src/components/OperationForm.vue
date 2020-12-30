@@ -96,24 +96,23 @@
     name: 'OperationForm',
 
     props: {
-      operation: {
-        type: Object,
-        default: () => {
-          return {
-            NomOp: '',
-            MontantOp: 0,
-            DateOp: new Date(),
-            CheckOp: false,
-            IDcompte: undefined,
-            IDcat: 0
-          }
-        }
+      operationID: {
+        type: String,
+        default: undefined
       }
     },
 
     data () {
       return {
-        montantOpIsPositive: false
+        montantOpIsPositive: false,
+        operation: {
+          NomOp: '',
+          MontantOp: 0,
+          DateOp: new Date(),
+          CheckOp: false,
+          IDcompte: undefined,
+          IDcat: 0
+        }
       }
     },
 
@@ -134,6 +133,7 @@
     },
 
     created () {
+      this.operation = this.operationID ? this.$store.getters.operationFromCurrentList(this.operationID) : this.operation
       this.operation.DateOp = new Date(this.operation.DateOp).toISOString().split('T')[0]
       this.montantOpIsPositive = this.operation.MontantOp > 0
       this.$store.dispatch('fetchCategoryList')
