@@ -40,11 +40,5 @@
       ]
     }
   },
-  "files": {},
-  "final": {
-    "loopback#urlNotFound": {}
-  },
-  "final:after": {
-    "strong-error-handler": {}
-  }
+  "files": {}
 }
