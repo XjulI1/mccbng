@@ -1,7 +1,7 @@
 {
   "name": "back_loopback_4",
-  "version": "0.0.1",
-  "description": "API Loopback 4",
+  "version": "1.0.0",
+  "description": "API mCcBng",
   "keywords": [
     "loopback-application",
     "loopback"
@@ -9,7 +9,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=10.16"
+    "node": ">=12"
   },
   "scripts": {
     "build": "lb-tsc",
@@ -40,7 +40,7 @@
     "type": "git",
     "url": ""
   },
-  "author": "Xavier JULIEN <xjulien@molotov.tv>",
+  "author": "Xavier JULIEN <xavijulien@gmail.com>",
   "license": "MIT",
   "files": [
     "README.md",
