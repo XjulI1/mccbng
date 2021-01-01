@@ -35,10 +35,6 @@
     "dataSource": "db",
     "public": false
   },
-  "Categorie": {
-    "dataSource": "mccb_mysql",
-    "public": true
-  },
   "Compte": {
     "dataSource": "mccb_mysql",
     "public": true
@@ -48,14 +44,6 @@
     "public": true
   },
   "OperationRecurrente": {
-    "dataSource": "mccb_mysql",
-    "public": true
-  },
-  "Stats": {
-    "dataSource": "mccb_mysql",
-    "public": true
-  },
-  "Banque": {
     "dataSource": "mccb_mysql",
     "public": true
   }
