@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import 'mccbng_styles/components/Account.scss'
+import { formatAmount } from "mccbng_helpers/format"
 
 class Account extends React.Component {
   static defaultProps = {
@@ -39,7 +40,7 @@ class Account extends React.Component {
           {this.props.name}
         </div>
         <div className={'account-solde ' + this.soldeColor()}>
-          {this.props.solde.toLocaleString()} {this.props.currency}
+          {formatAmount(this.props.solde)} {this.props.currency}
         </div>
       </div>
     )

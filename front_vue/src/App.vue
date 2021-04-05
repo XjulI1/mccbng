@@ -19,7 +19,6 @@
       />
     </div>
     <NavBar />
-    <NewVersion />
   </div>
 </template>
 
@@ -30,7 +29,6 @@
   import CompteList from '@/components/CompteList'
   import AccountHeader from '@/components/AccountHeader'
   import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes'
-  import NewVersion from './components/NewVersion'
 
   import 'mccbng_styles/index.scss'
   import 'mccbng_styles/App.scss'
@@ -40,7 +38,7 @@
   export default {
     name: 'App',
 
-    components: { NewVersion, TimeSeriesEvolutionSoldes, CompteList, AccountHeader, NavBar },
+    components: { TimeSeriesEvolutionSoldes, CompteList, AccountHeader, NavBar },
 
     computed: mapState({
       userID: state => state.user.id,

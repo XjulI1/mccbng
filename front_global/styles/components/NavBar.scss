@@ -15,6 +15,7 @@
 
   @media screen and (max-width: $mobile_BP_max_width) {
     width: 100%;
+    height: $navbar-height-mobile
   }
 
   a {
@@ -28,6 +29,10 @@
 
     .btn {
       border-radius: 0;
+
+      @media screen and (max-width: $mobile_BP_max_width) {
+        padding-bottom: 18px;
+      }
     }
 
     .retrait-button, .virement-button, .operation-recurrente-button, .params-button {
@@ -36,6 +41,10 @@
       font-size: 1.2rem;
       line-height: 1.1rem;
       font-weight: 600;
+
+      @media screen and (max-width: $mobile_BP_max_width) {
+        height: $navbar-height-mobile
+      }
     }
 
     .new-operation-button {
@@ -44,6 +53,10 @@
       font-size: 1.2rem;
       line-height: 1.1rem;
       font-weight: 600;
+
+      @media screen and (max-width: $mobile_BP_max_width) {
+        height: $navbar-height-mobile
+      }
     }
   }
 }

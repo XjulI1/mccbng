@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 import 'mccbng_styles/components/OperationsList/Operation.scss'
 
 import { checkBoxID, generateCssVariables, generateDateOperationVariables } from 'mccbng_helpers/components/Operation'
+import { formatAmount } from "mccbng_helpers/format"
 
 class Operation extends React.Component {
   static propTypes = {
@@ -36,7 +37,7 @@ class Operation extends React.Component {
       </div>
 
       <div className={this.state.css.montant + ' montant'}>
-        {operation.MontantOp.toLocaleString()}{currency}
+        {formatAmount(operation.MontantOp)}{currency}
       </div>
     </div>
   }

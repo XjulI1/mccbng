@@ -9,7 +9,6 @@ if (process.env.NODE_ENV === 'production') {
     cached () {
     },
     updated () {
-      document.querySelector('.new-version').style.display = 'block'
     },
     offline () {
     },

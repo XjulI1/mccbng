@@ -3,12 +3,13 @@
     class="currency"
     :class="{ 'mask' : mask }"
   >
-    {{ amount.toLocaleString() }} {{ currency }}
+    {{ formatAmount(amount) }} {{ currency }}
   </span>
 </template>
 
 <script>
   import { mapState } from 'vuex'
+  import { formatAmount } from "mccbng_helpers/format"
 
   export default {
     name: 'Currency',
@@ -25,6 +26,10 @@
         currency: state => state.compte.currency,
         mask: state => state.user.maskAmount
       })
+    },
+
+    methods: {
+      formatAmount
     }
   }
 </script>
