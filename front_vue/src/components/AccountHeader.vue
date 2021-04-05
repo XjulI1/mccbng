@@ -75,10 +75,11 @@
 
     button.chart-button,
     button.search-button {
-      width: 50px;
-      height: 50px;
+      margin-top: 3px;
+      width: 45px;
+      height: 45px;
       font-size: 1.2rem;
-      line-height: 1.1rem;
+      line-height: 1.0rem;
     }
   }
 </style>

@@ -10,7 +10,7 @@
   }
 
   .account-name {
-    width: 65%;
+    flex-grow: 1;
     padding-left: 10px;
     padding-right: 10px;
 
@@ -21,7 +21,6 @@
 
   .account-solde {
     text-align: right;
-    width: 35%;
     padding-left: 10px;
     padding-right: 10px;
   }
