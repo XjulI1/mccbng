@@ -35,10 +35,6 @@
     "dataSource": "db",
     "public": false
   },
-  "Compte": {
-    "dataSource": "mccb_mysql",
-    "public": true
-  },
   "Operation": {
     "dataSource": "mccb_mysql",
     "public": true
