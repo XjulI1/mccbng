@@ -1,7 +1,7 @@
 import axios from "axios"
 
 export const fetchAccountList = (userID, userToken, APIURL) => {
-  const filter = { include: [{ relation: "Banque" }], where: { IDuser: userID }, order: "NomCompte ASC" }
+  const filter = { include: [{ relation: "banque" }], where: { IDuser: userID }, order: "NomCompte ASC" }
 
   return axios.get(APIURL + "/api/comptes", {
     params: {

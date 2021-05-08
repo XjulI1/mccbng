@@ -17,9 +17,6 @@ export class Compte extends Entity {
   })
   IDcompte?: number;
 
-  @belongsTo(() => Banque)
-  IDbanque: number; // customized foreign key name
-
   @property({
     type: 'string',
     required: true,
@@ -56,6 +53,8 @@ export class Compte extends Entity {
   })
   visible?: boolean;
 
+  @belongsTo(() => Banque, {name: 'banque'})
+  IDbanque: number;
   // Define well-known properties here
 
   // Indexer property to allow additional data
