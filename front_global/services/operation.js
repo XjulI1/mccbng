@@ -7,7 +7,7 @@ export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
     limit: 35
   }
 
-  return axios.get(APIURL + '/api/Operations', {
+  return axios.get(APIURL + '/api/operations', {
     params: {
       access_token: userToken,
       filter: filters
@@ -18,7 +18,7 @@ export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
 }
 
 export const updateOperation = (operation, userToken, APIURL) => {
-  return axios.patch(APIURL + '/api/Operations', operation, {
+  return axios.patch(APIURL + '/api/operations', operation, {
     params: {
       access_token: userToken
     }
@@ -26,7 +26,7 @@ export const updateOperation = (operation, userToken, APIURL) => {
 }
 
 export const deleteOperation = (IDoperation, userToken, APIURL) => {
-  return axios.delete(APIURL + '/api/Operations/' + IDoperation, {
+  return axios.delete(APIURL + '/api/operations/' + IDoperation, {
     params: {
       access_token: userToken
     }
@@ -46,7 +46,7 @@ export const fetchSearchOperations = (searchTerms, accountList, userToken, APIUR
     limit: 20
   }
 
-  return axios.get(APIURL + '/api/Operations', {
+  return axios.get(APIURL + '/api/operations', {
     params: {
       access_token: userToken,
       filter

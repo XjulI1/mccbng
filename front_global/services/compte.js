@@ -20,24 +20,24 @@ export const fetchAccountList = (userID, userToken, APIURL) => {
 }
 
 export const sumAllCompteForUser = (userID, userToken, APIURL) => {
-  return axios.get(APIURL + "/api/Operations/sumAllCompteForUser", {
+  return axios.get(APIURL + "/api/operations/sumAllCompteForUser", {
     params: {
       access_token: userToken,
       userID
     }
   }).then((response) => {
-    return response.data.results
+    return response.data
   })
 }
 
 export const sumForACompte = (userToken, IDcompte, APIURL) => {
-  return axios.get(APIURL + "/api/Operations/sumForACompte", {
+  return axios.get(APIURL + "/api/operations/sumForACompte", {
     params: {
       access_token: userToken,
       id: IDcompte
     }
   }).then((response) => {
-    return response.data.results
+    return response.data
   })
 }
 
