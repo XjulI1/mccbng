@@ -34,9 +34,5 @@
   "Role": {
     "dataSource": "db",
     "public": false
-  },
-  "OperationRecurrente": {
-    "dataSource": "mccb_mysql",
-    "public": true
   }
 }

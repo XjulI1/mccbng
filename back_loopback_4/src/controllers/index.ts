@@ -5,3 +5,4 @@ export * from './stats.controller';
 export * from './compte.controller';
 export * from './compte-banque.controller';
 export * from './operation.controller';
+export * from './operation-recurrente.controller';
