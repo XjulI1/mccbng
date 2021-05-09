@@ -67,7 +67,7 @@ export const fetchRecurrOperation = (userToken, APIURL) => {
     order: 'DernierDateOpRecu ASC, NomOpRecu ASC'
   }
 
-  return axios.get(APIURL + '/api/OperationRecurrentes', {
+  return axios.get(APIURL + '/api/operation-recurrentes', {
     params: {
       access_token: userToken,
       filter
