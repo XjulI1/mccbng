@@ -170,4 +170,69 @@ export class OperationRecurrenteController {
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.operationRecurrenteRepository.deleteById(id);
   }
+
+  @post('/operation-recurrentes/auto-generation/{userID}', {
+    responses: {
+      '200': {
+        description: 'Operation Recurrente auto generation POST success',
+      },
+    },
+  })
+  async autoGeneration(
+    @param.path.number('userID') userID: number,
+  ): Promise<Object> {
+    const sqlGet = 'SELECT * FROM OperationRecurrente NATURAL JOIN Compte WHERE IDuser = ' + userID;
+    const sqlInsertNewOp = 'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat) VALUES ';
+    const sqlUpdateOpRec = 'UPDATE OperationRecurrente SET DernierDateOpRecu = "';
+    const millisecondDay = 24 * 60 * 60 * 1000;
+
+    const insertNewOpFromRec = async (opLastDate: any, opRec: any, list: any) => {
+      await this.operationRecurrenteRepository.execute(sqlInsertNewOp + `("${opRec.NomOpRecu}", ${opRec.MontantOpRecu}, "${opLastDate.toISOString().split('T')[0]}", ${opRec.IDcompte}, ${opRec.IDcat})`)
+
+      await this.operationRecurrenteRepository.execute(sqlUpdateOpRec + opLastDate.toISOString().split('T')[0] + `" WHERE IDopRecu = ${opRec.IDopRecu}`)
+
+      await goToNext(list);
+    };
+
+    const newOpFromRec = async (opRec: any, list: any) => {
+      const currentDate: any = new Date();
+      const opLastDate: any = new Date(opRec.DernierDateOpRecu);
+
+      opLastDate.setHours(12);
+
+      switch (opRec.Frequence) {
+        case 3:
+          if (currentDate - opLastDate > 15 * millisecondDay) {
+            opLastDate.setMonth(opLastDate.getMonth() + 1);
+
+            await insertNewOpFromRec(opLastDate, opRec, list);
+          } else {
+            await goToNext(list);
+          }
+          break;
+
+        case 7:
+          if (currentDate - opLastDate > 335 * millisecondDay) {
+            opLastDate.setFullYear(opLastDate.getFullYear() + 1);
+
+            await insertNewOpFromRec(opLastDate, opRec, list);
+          } else {
+            await goToNext(list);
+          }
+          break;
+      }
+    };
+
+    const goToNext = async (list: any) => {
+      if (list.length > 0) {
+        await newOpFromRec(list.pop(), list);
+      }
+    };
+
+    const data = await this.operationRecurrenteRepository.execute(sqlGet)
+
+    await newOpFromRec(data.pop(), data);
+
+    return {}
+  }
 }

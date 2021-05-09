@@ -57,9 +57,7 @@ export const fetchSearchOperations = (searchTerms, accountList, userToken, APIUR
 }
 
 export const generateRecurringOperations = (userID, userToken, APIURL) => {
-  axios.post(APIURL + '/api/OperationRecurrentes/autoGeneration?access_token=' + userToken, {
-    userID
-  })
+  axios.post(APIURL + '/api/operation-recurrentes/auto-generation/'+userID+'?access_token=' + userToken)
 }
 
 export const fetchRecurrOperation = (userToken, APIURL) => {
