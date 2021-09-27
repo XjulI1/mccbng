@@ -9,7 +9,16 @@ import {RestApplication} from '@loopback/rest';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
-import {Lb3AppBooterComponent} from '@loopback/booter-lb3app';
+
+
+import {AuthenticationComponent} from '@loopback/authentication';
+import {
+  JWTAuthenticationComponent,
+  SECURITY_SCHEME_SPEC,
+  UserServiceBindings,
+} from '@loopback/authentication-jwt';
+import {DbDataSource} from './datasources';
+
 
 export {ApplicationConfig};
 
@@ -31,6 +40,13 @@ export class ApiLoopbackApplication extends BootMixin(
     });
     this.component(RestExplorerComponent);
 
+    // Mount authentication system
+    this.component(AuthenticationComponent);
+    // Mount jwt component
+    this.component(JWTAuthenticationComponent);
+    // Bind datasource
+    this.dataSource(DbDataSource, UserServiceBindings.DATASOURCE_NAME);
+
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
     this.bootOptions = {
@@ -41,7 +57,5 @@ export class ApiLoopbackApplication extends BootMixin(
         nested: true,
       },
     };
-
-    this.component(Lb3AppBooterComponent);
   }
 }
