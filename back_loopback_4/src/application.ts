@@ -9,7 +9,8 @@ import {RestApplication} from '@loopback/rest';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
-
+import { MyUserService } from './services/user.service';
+import { UserRepository, UserCredentialsRepository } from './repositories';
 
 import {AuthenticationComponent} from '@loopback/authentication';
 import {
@@ -17,7 +18,7 @@ import {
   SECURITY_SCHEME_SPEC,
   UserServiceBindings,
 } from '@loopback/authentication-jwt';
-import {DbDataSource} from './datasources';
+import {MccbMysqlDataSource} from './datasources';
 
 
 export {ApplicationConfig};
@@ -44,8 +45,16 @@ export class ApiLoopbackApplication extends BootMixin(
     this.component(AuthenticationComponent);
     // Mount jwt component
     this.component(JWTAuthenticationComponent);
-    // Bind datasource
-    this.dataSource(DbDataSource, UserServiceBindings.DATASOURCE_NAME);
+
+    // Bind user service
+    this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService),
+    // Bind user and credentials repository
+    this.bind(UserServiceBindings.USER_REPOSITORY).toClass(
+      UserRepository,
+    ),
+    this.bind(UserServiceBindings.USER_CREDENTIALS_REPOSITORY).toClass(
+      UserCredentialsRepository,
+    ),
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here

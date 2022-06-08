@@ -2,7 +2,7 @@ import {Entity, model,hasOne, property} from '@loopback/repository';
 import {UserCredentials} from './user-credentials.model';
 @model({
   settings: {
-    strict: false,
+    strict: true,
     caseSensitiveEmail: true,
     hidden: ['verificationToken'],
     maxTTL: 31556926,
@@ -60,7 +60,7 @@ export class User extends Entity {
   @property({
     type: 'string',
   })
-  secret_key?: string;
+  secret_key: string;
 
   @property({
     type: 'boolean',

@@ -5,3 +5,4 @@ export * from './compte.model';
 export * from './operation.model';
 export * from './operation-recurrente.model';
 export * from './user.model';
+export * from './user-credentials.model';

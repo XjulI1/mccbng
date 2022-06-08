@@ -6,9 +6,7 @@
 import {authenticate, TokenService} from '@loopback/authentication';
 import {
   Credentials,
-  MyUserService,
   TokenServiceBindings,
-  UserRepository,
   UserServiceBindings,
 } from '@loopback/authentication-jwt';
 import {inject} from '@loopback/core';
@@ -25,7 +23,8 @@ import {genSalt, hash} from 'bcryptjs';
 import _ from 'lodash';
 
 import {User} from '../models';
-
+import { MyUserService } from '../services/user.service';
+import { UserRepository } from '../repositories';
 @model()
 export class NewUserRequest extends User {
   @property({

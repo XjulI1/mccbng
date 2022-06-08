@@ -7,7 +7,7 @@
   "private": true,
   "workspaces": [
     "front_vue",
-    "back_loopback",
+    "back_loopback_4",
     "front_react",
     "front_global/services",
     "front_global/styles",
