@@ -21,7 +21,7 @@ export class User extends Entity {
   @property({
     type: 'number',
   })
-  IDuser?: number;
+  IDuser: number;
 
   @property({
     type: 'string',
