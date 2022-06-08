@@ -5,9 +5,7 @@
 
 import {authenticate, TokenService} from '@loopback/authentication';
 import {
-  Credentials,
   TokenServiceBindings,
-  UserServiceBindings,
 } from '@loopback/authentication-jwt';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
@@ -23,8 +21,9 @@ import {genSalt, hash} from 'bcryptjs';
 import _ from 'lodash';
 
 import {User} from '../models';
-import { MyUserService } from '../services/user.service';
+import { MyUserService, Credentials } from '../services/user.service';
 import { UserRepository } from '../repositories';
+import { UserServiceBindings } from '../services/keys';
 @model()
 export class NewUserRequest extends User {
   @property({
@@ -36,15 +35,11 @@ export class NewUserRequest extends User {
 
 const CredentialsSchema: SchemaObject = {
   type: 'object',
-  required: ['email', 'password'],
+  required: ['code'],
   properties: {
-    email: {
+    code: {
       type: 'string',
-      format: 'email',
-    },
-    password: {
-      type: 'string',
-      minLength: 8,
+      length: 6
     },
   },
 };
@@ -77,7 +72,7 @@ export class UserController {
             schema: {
               type: 'object',
               properties: {
-                token: {
+                id: {
                   type: 'string',
                 },
               },
@@ -89,7 +84,7 @@ export class UserController {
   })
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
-  ): Promise<{token: string}> {
+  ): Promise<{id: string, userId: number}> {
     // ensure the user exists, and the password is correct
     const user = await this.userService.verifyCredentials(credentials);
     // convert a User object into a UserProfile object (reduced set of properties)
@@ -97,7 +92,7 @@ export class UserController {
 
     // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
-    return {token};
+    return {id: token, userId: user.IDuser};
   }
 
   @authenticate('jwt')
@@ -122,6 +117,7 @@ export class UserController {
     return currentUserProfile[securityId];
   }
 
+  @authenticate('jwt')
   @post('/signup', {
     responses: {
       '200': {

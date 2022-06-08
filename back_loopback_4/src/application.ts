@@ -16,10 +16,9 @@ import {AuthenticationComponent} from '@loopback/authentication';
 import {
   JWTAuthenticationComponent,
   SECURITY_SCHEME_SPEC,
-  UserServiceBindings,
 } from '@loopback/authentication-jwt';
 import {MccbMysqlDataSource} from './datasources';
-
+import {UserServiceBindings} from './services/keys'
 
 export {ApplicationConfig};
 
