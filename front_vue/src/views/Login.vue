@@ -94,13 +94,11 @@
         this.code = ''
       },
 
-      endAuthentification ({ userToken, userID, ttl }) {
+      endAuthentification ({ userToken, userID }) {
         this.$store.dispatch('saveUserToken', userToken)
         this.$store.dispatch('fetchUserByIDAndGenerateRecurringOp', userID)
 
-        if (ttl) {
-          saveCookies({ userToken, userID, ttl })
-        }
+        saveCookies({ userToken, userID })
 
         this.$router.replace({ name: 'Home' })
       }

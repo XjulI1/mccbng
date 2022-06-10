@@ -96,7 +96,7 @@ export class UserController {
   }
 
   @authenticate('jwt')
-  @get('/whoAmI', {
+  @get('/users/whoAmI', {
     responses: {
       '200': {
         description: 'Return current user',
@@ -113,8 +113,40 @@ export class UserController {
   async whoAmI(
     @inject(SecurityBindings.USER)
       currentUserProfile: UserProfile,
-  ): Promise<string> {
-    return currentUserProfile[securityId];
+  ): Promise<any> {
+    const {favoris, warningTotal, IDuser} = await this.userService.findUserById(currentUserProfile[securityId])
+    return {
+      favoris,
+      warningTotal,
+      IDuser
+    }
+    ;
+  }
+
+  @authenticate('jwt')
+  @get('/users/exists', {
+    responses: {
+      '200': {
+        description: 'Return if user token exist and is valid',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  })
+  async exists(
+    @inject(SecurityBindings.USER)
+      currentUserProfile: UserProfile,
+  ): Promise<boolean> {
+    try{
+      return Boolean(currentUserProfile[securityId])
+    } catch(_) {
+      return false
+    }
   }
 
   @authenticate('jwt')

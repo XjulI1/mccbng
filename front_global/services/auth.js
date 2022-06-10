@@ -35,14 +35,14 @@ export const auth = (value, api_url) => {
 export const saveCookies = ({ userToken, userID, ttl }) => {
   const cookie = new Cookies()
 
-  cookie.set(COOKIE_TOKEN, userToken, { maxAge: ttl })
-  cookie.set(COOKIE_USER_ID, userID, { maxAge: ttl })
+  cookie.set(COOKIE_TOKEN, userToken)
+  cookie.set(COOKIE_USER_ID, userID)
 }
 
-export const checkUserAuthentification = ({ userToken, userID, api_url }) => {
-  return axios.get(api_url + '/api/users/' + userID + '/exists', {
-    params: {
-      access_token: userToken
+export const checkUserAuthentification = ({ userToken, _, api_url }) => {
+  return axios.get(api_url + '/api/users/exists', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
     }
   }).then(() => {
     return true

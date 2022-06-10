@@ -6,10 +6,8 @@
 import {repository} from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
 import {securityId, UserProfile} from '@loopback/security';
-import {compare} from 'bcryptjs';
 import {User, UserWithRelations} from '../models';
 import {UserRepository} from '../repositories';
-import { UserService } from './interfaces/user.service';
 
 /**
  * A pre-defined type for user credentials. It assumes a user logs in
