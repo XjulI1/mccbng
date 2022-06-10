@@ -162,12 +162,12 @@
       },
 
       updateOperation () {
-        this.$store.dispatch('updateOperation', Object.assign({}, this.operation))
+        this.$store.dispatch('updateOperation', { ...this.operation, DateOp: new Date(this.operation.DateOp) })
 
         if (this.operation.IDop === undefined) {
           this.resetOperationAttribut()
         } else {
-          this.$router.push('/')
+          this.$router.push('/')  
         }
       },
 

@@ -26,6 +26,7 @@ export class Compte extends Entity {
   @property({
     type: 'number',
     required: true,
+    dataType: 'FLOAT'
   })
   solde: number;
 

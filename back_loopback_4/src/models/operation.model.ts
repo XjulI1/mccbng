@@ -25,6 +25,7 @@ export class Operation extends Entity {
   @property({
     type: 'number',
     required: true,
+    dataType: 'FLOAT'
   })
   MontantOp: number;
 

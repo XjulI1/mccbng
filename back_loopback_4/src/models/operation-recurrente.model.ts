@@ -25,6 +25,7 @@ export class OperationRecurrente extends Entity {
   @property({
     type: 'number',
     required: true,
+    dataType: 'FLOAT'
   })
   MontantOpRecu: number;
 
