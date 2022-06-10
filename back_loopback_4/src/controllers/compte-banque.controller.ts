@@ -11,7 +11,9 @@ import {
   Banque,
 } from '../models';
 import {CompteRepository} from '../repositories';
+import {authenticate} from '@loopback/authentication';
 
+@authenticate('jwt')
 export class CompteBanqueController {
   constructor(
     @repository(CompteRepository)

@@ -18,7 +18,9 @@ import {
 } from '@loopback/rest';
 import {Categorie} from '../models';
 import {CategorieRepository} from '../repositories';
+import {authenticate} from '@loopback/authentication';
 
+@authenticate('jwt')
 export class CategoriesController {
   constructor(
     @repository(CategorieRepository)

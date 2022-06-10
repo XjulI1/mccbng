@@ -18,7 +18,9 @@ import {
 } from '@loopback/rest';
 import {Operation} from '../models';
 import {OperationRepository} from '../repositories';
+import {authenticate} from '@loopback/authentication';
 
+@authenticate('jwt')
 export class OperationController {
   constructor(
     @repository(OperationRepository)

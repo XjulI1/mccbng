@@ -18,7 +18,9 @@ import {
 } from '@loopback/rest';
 import {OperationRecurrente} from '../models';
 import {OperationRecurrenteRepository} from '../repositories';
+import {authenticate} from '@loopback/authentication';
 
+@authenticate('jwt')
 export class OperationRecurrenteController {
   constructor(
     @repository(OperationRecurrenteRepository)

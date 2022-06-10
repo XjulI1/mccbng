@@ -1,16 +1,18 @@
 import axios from 'axios'
 
 export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
-  const filters = {
+  const filter = {
     where: { IDcompte },
     order: 'CheckOp ASC, DateOp DESC',
     limit: 35
   }
 
   return axios.get(APIURL + '/api/operations', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
-      filter: filters
+      filter
     }
   }).then((response) => {
     return response.data
@@ -18,17 +20,17 @@ export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
 }
 
 export const updateOperation = (operation, userToken, APIURL) => {
-  return axios.patch(APIURL + '/api/operations', operation, {
-    params: {
-      access_token: userToken
+  return axios.post(APIURL + '/api/operations', operation, {
+    headers: {
+      Authorization: 'Bearer ' + userToken
     }
   })
 }
 
 export const deleteOperation = (IDoperation, userToken, APIURL) => {
   return axios.delete(APIURL + '/api/operations/' + IDoperation, {
-    params: {
-      access_token: userToken
+    headers: {
+      Authorization: 'Bearer ' + userToken
     }
   })
 }
@@ -47,8 +49,10 @@ export const fetchSearchOperations = (searchTerms, accountList, userToken, APIUR
   }
 
   return axios.get(APIURL + '/api/operations', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
       filter
     }
   }).then((response) => {
@@ -57,7 +61,11 @@ export const fetchSearchOperations = (searchTerms, accountList, userToken, APIUR
 }
 
 export const generateRecurringOperations = (userID, userToken, APIURL) => {
-  axios.post(APIURL + '/api/operation-recurrentes/auto-generation/'+userID+'?access_token=' + userToken)
+  axios.post(APIURL + '/api/operation-recurrentes/auto-generation/'+userID, {}, {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    }
+  })
 }
 
 export const fetchRecurrOperation = (userToken, APIURL) => {
@@ -66,8 +74,10 @@ export const fetchRecurrOperation = (userToken, APIURL) => {
   }
 
   return axios.get(APIURL + '/api/operation-recurrentes', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
       filter
     }
   }).then((response) => {

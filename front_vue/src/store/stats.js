@@ -40,8 +40,10 @@ export default {
   actions: {
     fetchSumByUserByMonth (context) {
       axios.get(process.env.VUE_APP_API_URL + '/api/operations/sumByUserByMonth', {
+        headers: {
+          Authorization: 'Bearer ' + context.rootState.user.token
+        },
         params: {
-          access_token: context.rootState.user.token,
           userID: this.state.user.id,
           monthNumber: this.state.stats.currentMonth,
           yearNumber: this.state.stats.currentYear
@@ -55,8 +57,10 @@ export default {
       context.dispatch('fetchCategoryList')
 
       axios.get(process.env.VUE_APP_API_URL + '/api/operations/sumCategoriesByUserByMonth', {
+        headers: {
+          Authorization: 'Bearer ' + context.rootState.user.token
+        },
         params: {
-          access_token: context.rootState.user.token,
           userID: this.state.user.id,
           monthNumber: this.state.stats.currentMonth,
           yearNumber: this.state.stats.currentYear

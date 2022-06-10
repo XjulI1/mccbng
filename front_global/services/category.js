@@ -4,8 +4,10 @@ export const fetchCategoryList = (IDuser, userToken, APIURL) => {
   const filter = { where: { or: [{ IDuser }, { IDuser: 0 }] }, order: 'Nom ASC' }
 
   return axios.get(APIURL + '/api/categories', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
       filter
     }
   }).then((response) => {
