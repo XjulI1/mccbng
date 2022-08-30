@@ -1,5 +1,5 @@
 import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig} from '@loopback/core';
+import {ApplicationConfig, generateUniqueId} from '@loopback/core';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
@@ -17,8 +17,10 @@ import {
   JWTAuthenticationComponent,
   SECURITY_SCHEME_SPEC,
 } from '@loopback/authentication-jwt';
-import {MccbMysqlDataSource} from './datasources';
 import {UserServiceBindings} from './services/keys'
+import {
+  TokenServiceBindings,
+} from '@loopback/authentication-jwt';
 
 export {ApplicationConfig};
 
@@ -54,6 +56,7 @@ export class ApiLoopbackApplication extends BootMixin(
     this.bind(UserServiceBindings.USER_CREDENTIALS_REPOSITORY).toClass(
       UserCredentialsRepository,
     ),
+    this.bind(TokenServiceBindings.TOKEN_SECRET).to(generateUniqueId());
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
