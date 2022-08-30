@@ -8,7 +8,6 @@
   "workspaces": [
     "front_vue",
     "back_loopback_4",
-    "front_react",
     "front_global/services",
     "front_global/styles",
     "front_global/helpers",
