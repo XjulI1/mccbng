@@ -4,7 +4,7 @@
 
 ### Config files
 
-- `server/datasources.json`
+- `src/datasources/mccb-mysql.datasource.config.json`
 ```
 {
   "db": {
@@ -19,29 +19,6 @@
     "name": "db_name_connection_mysql",
     "user": "database_user_name",
     "connector": "mysql"
-  },
-}
-```
-
-- `database.json`
-```
-{
-  "defaultEnv": "test",
-  "test": {
-    "driver": "mysql",
-    "host": "localhost",
-    "user": "root",
-    "password": "root",
-    "database": "database-name",
-    "multipleStatements": true
-  },
-  "prod": {
-    "driver": "mysql",
-    "host": "localhost",
-    "user": "root",
-    "password": "root",
-    "database": "database-name",
-    "multipleStatements": true
   },
 }
 ```

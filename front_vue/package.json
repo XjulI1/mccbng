@@ -4,15 +4,18 @@
   "private": true,
   "scripts": {
     "build": "vue-cli-service build",
+    "build:staging": "vue-cli-service build --mode test",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
     "dev": "vue-cli-service serve",
-    "docker:build": "yarn install && yarn build && docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_front_vue . --no-cache --push",
-    "docker:build:staging": "yarn install && yarn build --mode test && docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_front_vue:staging . --no-cache --push",
-    "docker:deploy": "ssh ubuntu@${SERVER_IP} './mccbng/deploy_script/front_prod.sh'",
-    "docker:deploy:staging": "ssh ubuntu@${SERVER_IP} './mccbng/deploy_script/front_staging.sh'",
-    "test": "yarn test:unit && yarn test:e2e"
+    "test": "yarn test:unit && yarn test:e2e",
+    "docker:staging:build": "docker build -t dockregistry.xju.fr/mccbng/front:staging .",
+    "docker:staging:push": "docker push dockregistry.xju.fr/mccbng/front:staging",
+    "docker:latest:build": "docker build -t dockregistry.xju.fr/mccbng/front:latest .",
+    "docker:latest:push": "docker push dockregistry.xju.fr/mccbng/front:latest",
+    "docker:run": "docker run -p 3000:3000 -d front_vue"
+
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.0",
