@@ -20,11 +20,22 @@ export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
 }
 
 export const updateOperation = (operation, userToken, APIURL) => {
-  return axios.post(APIURL + '/api/operations', operation, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  })
+
+  if (operation.IDop) {
+    return axios.put(APIURL + '/api/operations/'+operation.IDop, {...operation, IDop: undefined}, {
+      headers: {
+        Authorization: 'Bearer ' + userToken
+      }
+    })
+  } else {
+    return axios.post(APIURL + '/api/operations/', {...operation, IDcompteCredit: undefined, IDcompteDebit: undefined}, {
+      headers: {
+        Authorization: 'Bearer ' + userToken
+      }
+    })
+  }
+
+
 }
 
 export const deleteOperation = (IDoperation, userToken, APIURL) => {
