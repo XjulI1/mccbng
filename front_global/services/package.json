@@ -9,7 +9,7 @@
   "author": "Xavier JULIEN",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.27.2",
     "universal-cookie": "^4.0.3"
   }
 }
