@@ -20,7 +20,7 @@
     "mccbng_services": "link:../front_global/services/",
     "mccbng_store": "link:../front_global/store/",
     "mccbng_styles": "link:../front_global/styles/",
-    "node-sass": "^4.13.1",
+    "node-sass": "^6",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-redux": "^7.1.3",
