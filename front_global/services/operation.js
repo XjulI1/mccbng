@@ -1,16 +1,18 @@
 import axios from 'axios'
 
 export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
-  const filters = {
+  const filter = {
     where: { IDcompte },
     order: 'CheckOp ASC, DateOp DESC',
     limit: 35
   }
 
-  return axios.get(APIURL + '/api/Operations', {
+  return axios.get(APIURL + '/api/operations', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
-      filter: filters
+      filter
     }
   }).then((response) => {
     return response.data
@@ -18,17 +20,28 @@ export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
 }
 
 export const updateOperation = (operation, userToken, APIURL) => {
-  return axios.patch(APIURL + '/api/Operations', operation, {
-    params: {
-      access_token: userToken
-    }
-  })
+
+  if (operation.IDop) {
+    return axios.put(APIURL + '/api/operations/'+operation.IDop, {...operation, IDop: undefined}, {
+      headers: {
+        Authorization: 'Bearer ' + userToken
+      }
+    })
+  } else {
+    return axios.post(APIURL + '/api/operations/', {...operation, IDcompteCredit: undefined, IDcompteDebit: undefined}, {
+      headers: {
+        Authorization: 'Bearer ' + userToken
+      }
+    })
+  }
+
+
 }
 
 export const deleteOperation = (IDoperation, userToken, APIURL) => {
-  return axios.delete(APIURL + '/api/Operations/' + IDoperation, {
-    params: {
-      access_token: userToken
+  return axios.delete(APIURL + '/api/operations/' + IDoperation, {
+    headers: {
+      Authorization: 'Bearer ' + userToken
     }
   })
 }
@@ -46,9 +59,11 @@ export const fetchSearchOperations = (searchTerms, accountList, userToken, APIUR
     limit: 20
   }
 
-  return axios.get(APIURL + '/api/Operations', {
+  return axios.get(APIURL + '/api/operations', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
       filter
     }
   }).then((response) => {
@@ -57,8 +72,10 @@ export const fetchSearchOperations = (searchTerms, accountList, userToken, APIUR
 }
 
 export const generateRecurringOperations = (userID, userToken, APIURL) => {
-  axios.post(APIURL + '/api/OperationRecurrentes/autoGeneration?access_token=' + userToken, {
-    userID
+  axios.post(APIURL + '/api/operation-recurrentes/auto-generation/'+userID, {}, {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    }
   })
 }
 
@@ -67,9 +84,11 @@ export const fetchRecurrOperation = (userToken, APIURL) => {
     order: 'DernierDateOpRecu ASC, NomOpRecu ASC'
   }
 
-  return axios.get(APIURL + '/api/OperationRecurrentes', {
+  return axios.get(APIURL + '/api/operation-recurrentes', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
       filter
     }
   }).then((response) => {

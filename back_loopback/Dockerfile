@@ -1,15 +1,28 @@
-FROM node:12-alpine
+# Check out https://hub.docker.com/_/node to select a new base image
+FROM node:16-slim
 
-WORKDIR /usr/src/app
+# Set to a non-root built-in user `node`
+USER node
 
-COPY package.json ./
+# Create app directory (with user `node`)
+RUN mkdir -p /home/node/app
 
-RUN yarn install --prod
+WORKDIR /home/node/app
 
-COPY . .
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY --chown=node package*.json ./
 
-EXPOSE 3001
+RUN yarn
 
-ENV NODE_ENV=production
+# Bundle app source code
+COPY --chown=node . .
 
+RUN yarn build
+
+# Bind to all network interfaces so that it can be mapped to the host OS
+ENV HOST=0.0.0.0 PORT=3000
+
+EXPOSE ${PORT}
 CMD [ "node", "." ]

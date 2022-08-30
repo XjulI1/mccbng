@@ -1,11 +1,13 @@
 import axios from "axios"
 
 export const fetchAccountList = (userID, userToken, APIURL) => {
-  const filter = { include: "Banque", where: { IDuser: userID }, order: "NomCompte ASC" }
+  const filter = { include: [{ relation: "banque" }], where: { IDuser: userID }, order: "NomCompte ASC" }
 
-  return axios.get(APIURL + "/api/Comptes", {
+  return axios.get(APIURL + "/api/comptes", {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
       filter
     }
   }).then((response) => {
@@ -20,24 +22,28 @@ export const fetchAccountList = (userID, userToken, APIURL) => {
 }
 
 export const sumAllCompteForUser = (userID, userToken, APIURL) => {
-  return axios.get(APIURL + "/api/Operations/sumAllCompteForUser", {
+  return axios.get(APIURL + "/api/operations/sumAllCompteForUser", {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
       userID
     }
   }).then((response) => {
-    return response.data.results
+    return response.data
   })
 }
 
 export const sumForACompte = (userToken, IDcompte, APIURL) => {
-  return axios.get(APIURL + "/api/Operations/sumForACompte", {
+  return axios.get(APIURL + "/api/operations/sumForACompte", {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
     params: {
-      access_token: userToken,
       id: IDcompte
     }
   }).then((response) => {
-    return response.data.results
+    return response.data
   })
 }
 

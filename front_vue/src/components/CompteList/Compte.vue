@@ -57,7 +57,7 @@
 
     computed: {
       imgID () {
-        return this.accountInformations.Banque ? this.accountInformations.Banque.IDbanque : 0
+        return this.accountInformations.banque ? this.accountInformations.banque.IDbanque : 0
       }
     },
 

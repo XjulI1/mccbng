@@ -39,30 +39,34 @@ export default {
 
   actions: {
     fetchSumByUserByMonth (context) {
-      axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumByUserByMonth', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/operations/sumByUserByMonth', {
+        headers: {
+          Authorization: 'Bearer ' + context.rootState.user.token
+        },
         params: {
-          access_token: context.rootState.user.token,
           userID: this.state.user.id,
           monthNumber: this.state.stats.currentMonth,
           yearNumber: this.state.stats.currentYear
         }
       }).then((response) => {
-        context.commit('setNegativeMonth', response.data.results[0].MonthNegative)
+        context.commit('setNegativeMonth', response.data[0].MonthNegative)
       })
     },
 
     fetchSumCategoriesByUserByMonth (context) {
       context.dispatch('fetchCategoryList')
 
-      axios.get(process.env.VUE_APP_API_URL + '/api/Operations/sumCategoriesByUserByMonth', {
+      axios.get(process.env.VUE_APP_API_URL + '/api/operations/sumCategoriesByUserByMonth', {
+        headers: {
+          Authorization: 'Bearer ' + context.rootState.user.token
+        },
         params: {
-          access_token: context.rootState.user.token,
           userID: this.state.user.id,
           monthNumber: this.state.stats.currentMonth,
           yearNumber: this.state.stats.currentYear
         }
       }).then((response) => {
-        context.commit('setCategoriesForMonth', response.data.results)
+        context.commit('setCategoriesForMonth', response.data)
       })
     },
 

@@ -1,12 +1,12 @@
 import axios from 'axios'
 
-export const fetchUser = (userID, userToken, api_url) => {
-  return axios.get(api_url + '/api/users/' + userID, {
-    params: {
-      access_token: userToken
+export const fetchUser = (_, userToken, api_url) => {
+  return axios.get(api_url + '/api/users/whoAmI', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
     }
   }).then((response) => {
-    return { id: response.data.id, favoris: response.data.favoris, warningTotal: response.data.warningTotal }
+    return { id: response.data.IDuser, favoris: response.data.favoris, warningTotal: response.data.warningTotal }
   }).catch((error) => {
     throw new Error(error)
   })

@@ -4,21 +4,24 @@
   "private": true,
   "scripts": {
     "build": "vue-cli-service build",
+    "build:staging": "vue-cli-service build --mode test",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
     "dev": "vue-cli-service serve",
-    "docker:build": "yarn install && yarn build && docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_front_vue . --no-cache --push",
-    "docker:build:staging": "yarn install && yarn build --mode test && docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --rm -t xjuli1/mccbng_front_vue:staging . --no-cache --push",
-    "docker:deploy": "ssh ubuntu@${SERVER_IP} './mccbng/deploy_script/front_prod.sh'",
-    "docker:deploy:staging": "ssh ubuntu@${SERVER_IP} './mccbng/deploy_script/front_staging.sh'",
-    "test": "yarn test:unit && yarn test:e2e"
+    "test": "yarn test:unit && yarn test:e2e",
+    "docker:staging:build": "docker build -t dockregistry.xju.fr/mccbng/front:staging .",
+    "docker:staging:push": "docker push dockregistry.xju.fr/mccbng/front:staging",
+    "docker:latest:build": "docker build -t dockregistry.xju.fr/mccbng/front:latest .",
+    "docker:latest:push": "docker push dockregistry.xju.fr/mccbng/front:latest",
+    "docker:run": "docker run -p 3000:3000 -d front_vue"
+
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.0",
     "@fortawesome/free-solid-svg-icons": "^5.1.0",
     "@fortawesome/vue-fontawesome": "^3.0.0-3",
-    "axios": "^0.19.2",
+    "axios": "^0.27.2",
     "core-js": "^3.6.5",
     "hammerjs": "^2.0.8",
     "highcharts": "^7.0.3",
@@ -53,14 +56,13 @@
     "eslint-plugin-standard": "^4.0.1",
     "eslint-plugin-vue": "^7.0.0-0",
     "lint-staged": "^10.0.7",
-    "node-sass": "^4.9.0",
-    "sass-loader": "^8.0.2",
+    "node-sass": "^6",
+    "sass-loader": "^10",
     "vue-template-compiler": "^2.5.16"
   },
   "browserslist": [
     "> 10%",
     "last 2 versions",
-    "not ie <= 8",
     "not dead"
   ],
   "_id": "mccbng_front_vue@1.0.0",
