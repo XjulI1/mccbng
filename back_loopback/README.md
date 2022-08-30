@@ -1,4 +1,4 @@
-# back_loopback_4
+# back_loopback
 
 This application is generated using [LoopBack 4 CLI](https://loopback.io/doc/en/lb4/Command-line-interface.html) with the
 [initial project layout](https://loopback.io/doc/en/lb4/Loopback-application-layout.html).
@@ -13,7 +13,7 @@ npm i -g @loopback/cli@2.21.0
 ```
 
 ```sh
-yarn install
+yarn
 ```
 
 ## Run the application
@@ -31,33 +31,33 @@ Open http://127.0.0.1:3000 in your browser.
 To incrementally build the project:
 
 ```sh
-yarn run build
+yarn build
 ```
 
 To force a full build by cleaning up cached artifacts:
 
 ```sh
-yarn run rebuild
+yarn rebuild
 ```
 
 ## Fix code style and formatting issues
 
 ```sh
-yarn run lint
+yarn lint
 ```
 
 To automatically fix such issues:
 
 ```sh
-yarn run lint:fix
+yarn lint:fix
 ```
 
 ## Other useful commands
 
-- `yarn run migrate`: Migrate database schemas for models
-- `yarn run openapi-spec`: Generate OpenAPI spec into a file
-- `yarn run docker:build`: Build a Docker image for this application
-- `yarn run docker:run`: Run this application inside a Docker container
+- `yarn migrate`: Migrate database schemas for models
+- `yarn openapi-spec`: Generate OpenAPI spec into a file
+- `yarn docker:build`: Build a Docker image for this application
+- `yarn docker:run`: Run this application inside a Docker container
 
 ## Tests
 
