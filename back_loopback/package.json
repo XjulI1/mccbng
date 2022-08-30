@@ -35,9 +35,11 @@
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
     "docker:staging:build": "docker build -t dockregistry.xju.fr/mccbng/api:staging .",
     "docker:staging:push": "docker push dockregistry.xju.fr/mccbng/api:staging",
-    "docker:latest:build": "docker build -t dockregistry.xju.fr/mccbng/api:latest .",
+    "docker:latest:build": "docker tag dockregistry.xju.fr/mccbng/api:staging dockregistry.xju.fr/mccbng/api:latest",
     "docker:latest:push": "docker push dockregistry.xju.fr/mccbng/api:latest",
-    "docker:run": "docker run -p 3000:3000 -d back_loopback"
+    "docker:run": "docker run -p 3000:3000 --name mccbng_api --rm --mount type=bind,source=/Users/xjulien/Git/Perso/mccbng/back_loopback/dist/datasources/mccb-mysql.datasource.config.json,target=/home/node/app/dist/datasources/mccb-mysql.datasource.config.json -d dockregistry.xju.fr/mccbng/api:staging",
+    "docker:inspect": "docker exec -it mccbng_api bash",
+    "docker:stop": "docker stop mccbng_api"
   },
   "repository": {
     "type": "git",

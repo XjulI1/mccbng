@@ -20,6 +20,8 @@ RUN yarn
 COPY --chown=node . .
 
 RUN yarn build
+RUN rm dist/datasources/*config.json
+RUN rm -rf src/*
 
 # Bind to all network interfaces so that it can be mapped to the host OS
 ENV HOST=0.0.0.0 PORT=3000
