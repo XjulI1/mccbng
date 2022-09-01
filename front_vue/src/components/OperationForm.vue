@@ -167,7 +167,7 @@
         if (this.operation.IDop === undefined) {
           this.resetOperationAttribut()
         } else {
-          this.$router.push('/')  
+          this.$router.push('/')
         }
       },
 

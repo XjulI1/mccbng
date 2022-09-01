@@ -9,7 +9,7 @@
 
 <script>
   import { mapState } from 'vuex'
-  import { formatAmount } from "mccbng_helpers/format"
+  import { formatAmount } from 'mccbng_helpers/format'
 
   export default {
     name: 'Currency',

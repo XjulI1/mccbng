@@ -11,3 +11,4 @@ tests/e2e/reports/
 **/.env*
 **/build
 back_loopback/pm2.json
+.yarn/

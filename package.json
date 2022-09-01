@@ -15,5 +15,6 @@
   ],
   "scripts": {
     "deploy:all": "ssh ubuntu@${SERVER_IP} 'cd mccbng && ./deploy_script/all.sh'"
-  }
+  },
+  "packageManager": "yarn@3.2.3"
 }
