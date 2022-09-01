@@ -24,7 +24,7 @@
     "axios": "^0.27.2",
     "core-js": "^3.6.5",
     "hammerjs": "^2.0.8",
-    "highcharts": "^7.0.3",
+    "highcharts": "^9.0.0",
     "mccbng_helpers": "link:../front_global/helpers/",
     "mccbng_services": "link:../front_global/services/",
     "mccbng_store": "link:../front_global/store/",
