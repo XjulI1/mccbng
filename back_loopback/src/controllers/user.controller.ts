@@ -37,7 +37,8 @@ const CredentialsSchema: SchemaObject = {
   properties: {
     code: {
       type: 'string',
-      length: 6,
+      maxLength: 6,
+      minLength: 6
     },
   },
 };
@@ -70,7 +71,7 @@ export class UserController {
             schema: {
               type: 'object',
               properties: {
-                id: {
+                code: {
                   type: 'string',
                 },
               },
