@@ -2,7 +2,7 @@
   "name": "mccbng",
   "version": "1.0.0",
   "repository": "git@github.com:XjulI1/mccbng.git",
-  "author": "Xavier Julien <xjulien@octo.com>",
+  "author": "Xavier JULIEN <xavijulien@gmail.com>",
   "license": "MIT",
   "private": true,
   "workspaces": [
@@ -13,8 +13,5 @@
     "front_global/helpers",
     "front_global/store"
   ],
-  "scripts": {
-    "deploy:all": "ssh ubuntu@${SERVER_IP} 'cd mccbng && ./deploy_script/all.sh'"
-  },
   "packageManager": "yarn@3.2.3"
 }
