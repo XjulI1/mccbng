@@ -9,7 +9,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=12"
+    "node": ">=16"
   },
   "scripts": {
     "build": "lb-tsc",
@@ -33,9 +33,9 @@
     "prestart": "yarn run rebuild",
     "start": "node -r source-map-support/register .",
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
-    "docker:staging:build": "docker build -t dockregistry.xju.fr/mccbng/api:staging .",
+    "docker:staging:build": "docker buildx build --platform linux/amd64 -t dockregistry.xju.fr/mccbng/api:staging .",
     "docker:staging:push": "docker push dockregistry.xju.fr/mccbng/api:staging",
-    "docker:latest:build": "docker tag dockregistry.xju.fr/mccbng/api:staging dockregistry.xju.fr/mccbng/api:latest",
+    "docker:latest:build": "docker buildx build --platform linux/amd64 -t dockregistry.xju.fr/mccbng/api:latest .",
     "docker:latest:push": "docker push dockregistry.xju.fr/mccbng/api:latest",
     "docker:run": "docker run -p 3000:3000 --name mccbng_api --rm --mount type=bind,source=/Users/xjulien/Git/Perso/mccbng/back_loopback/dist/datasources/mccb-mysql.datasource.config.json,target=/home/node/app/dist/datasources/mccb-mysql.datasource.config.json -d dockregistry.xju.fr/mccbng/api:staging",
     "docker:inspect": "docker exec -it mccbng_api bash",
