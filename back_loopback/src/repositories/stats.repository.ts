@@ -15,38 +15,54 @@ export class StatsRepository extends DefaultCrudRepository<
   }
 
   async evolutionSolde(userID: number): Promise<AnyObject> {
-    const querySoldeTotal = '' +
+    const querySoldeTotal =
+      '' +
       'SELECT ROUND(SUM(solde), 2) AS sum ' +
       'FROM Compte ' +
-      'WHERE IDuser = ' + userID;
+      'WHERE IDuser = ' +
+      userID;
 
-    const querySoldeDispo = '' +
+    const querySoldeDispo =
+      '' +
       'SELECT ROUND(SUM(solde), 2) AS sum ' +
       'FROM Compte ' +
-      'WHERE IDuser = ' + userID + ' AND bloque = 0';
+      'WHERE IDuser = ' +
+      userID +
+      ' AND bloque = 0';
 
-    const queryTotal = '' +
+    const queryTotal =
+      '' +
       'SELECT ROUND(SUM(MontantOp),2) AS montant, ' +
-      'DATE_FORMAT(DateOp, \'%Y-%m-%dT00:00:00.000Z\') AS date ' +
+      "DATE_FORMAT(DateOp, '%Y-%m-%dT00:00:00.000Z') AS date " +
       'FROM Operation NATURAL JOIN Compte ' +
-      'WHERE IDuser = ' + userID + ' ' +
+      'WHERE IDuser = ' +
+      userID +
+      ' ' +
       'GROUP BY date ' +
       'ORDER BY date ASC';
 
-    const queryDispo = '' +
+    const queryDispo =
+      '' +
       'SELECT ROUND(SUM(MontantOp),2) AS montant, ' +
-      'DATE_FORMAT(DateOp, \'%Y-%m-%dT00:00:00.000Z\') AS date ' +
+      "DATE_FORMAT(DateOp, '%Y-%m-%dT00:00:00.000Z') AS date " +
       'FROM Operation NATURAL JOIN Compte ' +
-      'WHERE IDuser = ' + userID + ' AND bloque = 0 ' +
+      'WHERE IDuser = ' +
+      userID +
+      ' AND bloque = 0 ' +
       'GROUP BY date ' +
       'ORDER BY date ASC';
 
-    const soldeTotal = this.execute(querySoldeTotal)
-    const soldeDispo = this.execute(querySoldeDispo)
-    const dataTotal = this.execute(queryTotal)
-    const dataDispo = this.execute(queryDispo)
+    const soldeTotal = this.execute(querySoldeTotal);
+    const soldeDispo = this.execute(querySoldeDispo);
+    const dataTotal = this.execute(queryTotal);
+    const dataDispo = this.execute(queryDispo);
 
-    const values = await Promise.all([soldeTotal, soldeDispo, dataTotal, dataDispo])
+    const values = await Promise.all([
+      soldeTotal,
+      soldeDispo,
+      dataTotal,
+      dataDispo,
+    ]);
 
     return {
       soldeTotal: values[0][0].sum,

@@ -1,5 +1,5 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
-import {Banque} from "./banque.model";
+import {Banque} from './banque.model';
 
 @model({
   settings: {
@@ -7,8 +7,8 @@ import {Banque} from "./banque.model";
     forceId: false,
     validateUpsert: true,
     plural: 'Comptes',
-    idInjection: false
-  }
+    idInjection: false,
+  },
 })
 export class Compte extends Entity {
   @property({
@@ -26,7 +26,7 @@ export class Compte extends Entity {
   @property({
     type: 'number',
     required: true,
-    dataType: 'FLOAT'
+    dataType: 'FLOAT',
   })
   solde: number;
 

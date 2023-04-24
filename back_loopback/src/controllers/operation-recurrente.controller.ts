@@ -24,14 +24,16 @@ import {authenticate} from '@loopback/authentication';
 export class OperationRecurrenteController {
   constructor(
     @repository(OperationRecurrenteRepository)
-    public operationRecurrenteRepository : OperationRecurrenteRepository,
+    public operationRecurrenteRepository: OperationRecurrenteRepository,
   ) {}
 
   @post('/operation-recurrentes', {
     responses: {
       '200': {
         description: 'OperationRecurrente model instance',
-        content: {'application/json': {schema: getModelSchemaRef(OperationRecurrente)}},
+        content: {
+          'application/json': {schema: getModelSchemaRef(OperationRecurrente)},
+        },
       },
     },
   })
@@ -73,7 +75,9 @@ export class OperationRecurrenteController {
           'application/json': {
             schema: {
               type: 'array',
-              items: getModelSchemaRef(OperationRecurrente, {includeRelations: true}),
+              items: getModelSchemaRef(OperationRecurrente, {
+                includeRelations: true,
+              }),
             },
           },
         },
@@ -105,7 +109,10 @@ export class OperationRecurrenteController {
     operationRecurrente: OperationRecurrente,
     @param.where(OperationRecurrente) where?: Where<OperationRecurrente>,
   ): Promise<Count> {
-    return this.operationRecurrenteRepository.updateAll(operationRecurrente, where);
+    return this.operationRecurrenteRepository.updateAll(
+      operationRecurrente,
+      where,
+    );
   }
 
   @get('/operation-recurrentes/{id}', {
@@ -114,7 +121,9 @@ export class OperationRecurrenteController {
         description: 'OperationRecurrente model instance',
         content: {
           'application/json': {
-            schema: getModelSchemaRef(OperationRecurrente, {includeRelations: true}),
+            schema: getModelSchemaRef(OperationRecurrente, {
+              includeRelations: true,
+            }),
           },
         },
       },
@@ -122,7 +131,8 @@ export class OperationRecurrenteController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(OperationRecurrente, {exclude: 'where'}) filter?: FilterExcludingWhere<OperationRecurrente>
+    @param.filter(OperationRecurrente, {exclude: 'where'})
+    filter?: FilterExcludingWhere<OperationRecurrente>,
   ): Promise<OperationRecurrente> {
     return this.operationRecurrenteRepository.findById(id, filter);
   }
@@ -145,7 +155,10 @@ export class OperationRecurrenteController {
     })
     operationRecurrente: OperationRecurrente,
   ): Promise<void> {
-    await this.operationRecurrenteRepository.updateById(id, operationRecurrente);
+    await this.operationRecurrenteRepository.updateById(
+      id,
+      operationRecurrente,
+    );
   }
 
   @put('/operation-recurrentes/{id}', {
@@ -159,7 +172,10 @@ export class OperationRecurrenteController {
     @param.path.number('id') id: number,
     @requestBody() operationRecurrente: OperationRecurrente,
   ): Promise<void> {
-    await this.operationRecurrenteRepository.replaceById(id, operationRecurrente);
+    await this.operationRecurrenteRepository.replaceById(
+      id,
+      operationRecurrente,
+    );
   }
 
   @del('/operation-recurrentes/{id}', {
@@ -183,15 +199,32 @@ export class OperationRecurrenteController {
   async autoGeneration(
     @param.path.number('userID') userID: number,
   ): Promise<Object> {
-    const sqlGet = 'SELECT * FROM OperationRecurrente NATURAL JOIN Compte WHERE IDuser = ' + userID;
-    const sqlInsertNewOp = 'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat) VALUES ';
-    const sqlUpdateOpRec = 'UPDATE OperationRecurrente SET DernierDateOpRecu = "';
+    const sqlGet =
+      'SELECT * FROM OperationRecurrente NATURAL JOIN Compte WHERE IDuser = ' +
+      userID;
+    const sqlInsertNewOp =
+      'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat) VALUES ';
+    const sqlUpdateOpRec =
+      'UPDATE OperationRecurrente SET DernierDateOpRecu = "';
     const millisecondDay = 24 * 60 * 60 * 1000;
 
-    const insertNewOpFromRec = async (opLastDate: any, opRec: any, list: any) => {
-      await this.operationRecurrenteRepository.execute(sqlInsertNewOp + `("${opRec.NomOpRecu}", ${opRec.MontantOpRecu}, "${opLastDate.toISOString().split('T')[0]}", ${opRec.IDcompte}, ${opRec.IDcat})`)
+    const insertNewOpFromRec = async (
+      opLastDate: any,
+      opRec: any,
+      list: any,
+    ) => {
+      await this.operationRecurrenteRepository.execute(
+        sqlInsertNewOp +
+          `("${opRec.NomOpRecu}", ${opRec.MontantOpRecu}, "${
+            opLastDate.toISOString().split('T')[0]
+          }", ${opRec.IDcompte}, ${opRec.IDcat})`,
+      );
 
-      await this.operationRecurrenteRepository.execute(sqlUpdateOpRec + opLastDate.toISOString().split('T')[0] + `" WHERE IDopRecu = ${opRec.IDopRecu}`)
+      await this.operationRecurrenteRepository.execute(
+        sqlUpdateOpRec +
+          opLastDate.toISOString().split('T')[0] +
+          `" WHERE IDopRecu = ${opRec.IDopRecu}`,
+      );
 
       await goToNext(list);
     };
@@ -231,10 +264,10 @@ export class OperationRecurrenteController {
       }
     };
 
-    const data = await this.operationRecurrenteRepository.execute(sqlGet)
+    const data = await this.operationRecurrenteRepository.execute(sqlGet);
 
     await newOpFromRec(data.pop(), data);
 
-    return {}
+    return {};
   }
 }

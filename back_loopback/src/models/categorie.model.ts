@@ -6,8 +6,8 @@ import {Entity, model, property} from '@loopback/repository';
     forceId: false,
     validateUpsert: true,
     plural: 'Categories',
-    idInjection: false
-  }
+    idInjection: false,
+  },
 })
 export class Categorie extends Entity {
   @property({

@@ -6,8 +6,8 @@ import {Entity, model, property} from '@loopback/repository';
     forceId: false,
     validateUpsert: true,
     plural: 'Operations',
-    idInjection: false
-  }
+    idInjection: false,
+  },
 })
 export class Operation extends Entity {
   @property({
@@ -25,7 +25,7 @@ export class Operation extends Entity {
   @property({
     type: 'number',
     required: true,
-    dataType: 'FLOAT'
+    dataType: 'FLOAT',
   })
   MontantOp: number;
 

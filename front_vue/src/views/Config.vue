@@ -16,6 +16,9 @@
       <font-awesome-icon icon="money-bill" />
       Masquer les montants
     </button>
+    <div class="api-url">
+      {{ apiURL }}
+    </div>
   </div>
 </template>
 
@@ -24,7 +27,11 @@
 
   export default {
     name: 'Config',
-
+    data() {
+      return {
+        apiURL: process.env.VUE_APP_API_URL
+      }
+    },
     created () {
       this.$store.commit('setActiveAccount', { NomCompte: 'Configurations' })
     },
@@ -37,3 +44,8 @@
     }
   }
 </script>
+<style scoped>
+.api-url {
+  margin-top: 20px;
+}
+</style>

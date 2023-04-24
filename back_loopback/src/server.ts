@@ -1,6 +1,6 @@
 import express from 'express';
 import {ApplicationConfig, ApiLoopbackApplication} from './application';
-import * as http from "http";
+import * as http from 'http';
 import {once} from 'events';
 
 export {ApplicationConfig};

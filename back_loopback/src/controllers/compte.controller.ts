@@ -24,7 +24,7 @@ import {authenticate} from '@loopback/authentication';
 export class CompteController {
   constructor(
     @repository(CompteRepository)
-    public compteRepository : CompteRepository,
+    public compteRepository: CompteRepository,
   ) {}
 
   @post('/comptes', {
@@ -59,9 +59,7 @@ export class CompteController {
       },
     },
   })
-  async count(
-    @param.where(Compte) where?: Where<Compte>,
-  ): Promise<Count> {
+  async count(@param.where(Compte) where?: Where<Compte>): Promise<Count> {
     return this.compteRepository.count(where);
   }
 
@@ -80,9 +78,7 @@ export class CompteController {
       },
     },
   })
-  async find(
-    @param.filter(Compte) filter?: Filter<Compte>,
-  ): Promise<Compte[]> {
+  async find(@param.filter(Compte) filter?: Filter<Compte>): Promise<Compte[]> {
     return this.compteRepository.find(filter);
   }
 
@@ -122,7 +118,8 @@ export class CompteController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Compte, {exclude: 'where'}) filter?: FilterExcludingWhere<Compte>
+    @param.filter(Compte, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Compte>,
   ): Promise<Compte> {
     return this.compteRepository.findById(id, filter);
   }

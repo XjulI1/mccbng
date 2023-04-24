@@ -10,14 +10,14 @@ import {
 
 import {Stats} from '../models';
 import {StatsRepository} from '../repositories';
-import {get, getModelSchemaRef, param} from "@loopback/rest";
+import {get, getModelSchemaRef, param} from '@loopback/rest';
 import {authenticate} from '@loopback/authentication';
 
 @authenticate('jwt')
 export class StatsController {
   constructor(
     @repository(StatsRepository)
-    public statsRepository : StatsRepository,
+    public statsRepository: StatsRepository,
   ) {}
 
   @get('/stats/evolutionSolde/{userID}', {

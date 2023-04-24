@@ -24,7 +24,7 @@ import {authenticate} from '@loopback/authentication';
 export class OperationController {
   constructor(
     @repository(OperationRepository)
-    public operationRepository : OperationRepository,
+    public operationRepository: OperationRepository,
   ) {}
 
   @post('/operations', {
@@ -122,7 +122,8 @@ export class OperationController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Operation, {exclude: 'where'}) filter?: FilterExcludingWhere<Operation>
+    @param.filter(Operation, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Operation>,
   ): Promise<Operation> {
     return this.operationRepository.findById(id, filter);
   }
@@ -187,28 +188,40 @@ export class OperationController {
   })
   async sumAllCompteForUser(
     @param.query.number('userID') UserID: number,
-    @param.filter(Operation) filter?: Filter<Operation>
+    @param.filter(Operation) filter?: Filter<Operation>,
   ): Promise<any> {
-    const sqlChecked = 'SELECT IDCompte, SUM(MontantOp) as TotalChecked ' +
+    const sqlChecked =
+      'SELECT IDCompte, SUM(MontantOp) as TotalChecked ' +
       'FROM Operation NATURAL JOIN Compte ' +
-      'WHERE IDuser = ' + UserID + ' AND CheckOp = true AND Compte.visible = 1 ' +
+      'WHERE IDuser = ' +
+      UserID +
+      ' AND CheckOp = true AND Compte.visible = 1 ' +
       'GROUP BY IDCompte';
 
-    const sqlNotChecked = 'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked ' +
+    const sqlNotChecked =
+      'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked ' +
       'FROM Operation NATURAL JOIN Compte  ' +
-      'WHERE IDuser = ' + UserID + ' AND CheckOp = false AND Compte.visible = 1 ' +
+      'WHERE IDuser = ' +
+      UserID +
+      ' AND CheckOp = false AND Compte.visible = 1 ' +
       'GROUP BY IDCompte';
 
-    let checkedTotal = await this.operationRepository.execute(sqlChecked)
-    const notCheckedTotal = await this.operationRepository.execute(sqlNotChecked)
+    let checkedTotal = await this.operationRepository.execute(sqlChecked);
+    const notCheckedTotal = await this.operationRepository.execute(
+      sqlNotChecked,
+    );
 
     checkedTotal = checkedTotal.map((objectCheck: any) => {
-      const filterCompte = notCheckedTotal.filter((object: any) => object.IDCompte === objectCheck.IDCompte);
+      const filterCompte = notCheckedTotal.filter(
+        (object: any) => object.IDCompte === objectCheck.IDCompte,
+      );
 
-      return Object.assign(objectCheck, {TotalNotChecked: (filterCompte[0] || 0)['TotalNotChecked']});
+      return Object.assign(objectCheck, {
+        TotalNotChecked: (filterCompte[0] || 0)['TotalNotChecked'],
+      });
     });
 
-    return checkedTotal
+    return checkedTotal;
   }
 
   @get('/operations/sumForACompte', {
@@ -225,22 +238,30 @@ export class OperationController {
   })
   async sumForACompte(
     @param.query.number('id') CompteID: number,
-    @param.filter(Operation) filter?: Filter<Operation>
+    @param.filter(Operation) filter?: Filter<Operation>,
   ): Promise<any> {
-    const sqlChecked = 'SELECT IDCompte, SUM(MontantOp) as TotalChecked ' +
+    const sqlChecked =
+      'SELECT IDCompte, SUM(MontantOp) as TotalChecked ' +
       'FROM Operation ' +
-      'WHERE IDcompte = ' + CompteID + ' AND CheckOp = true ' +
+      'WHERE IDcompte = ' +
+      CompteID +
+      ' AND CheckOp = true ' +
       'GROUP BY IDCompte';
 
-    const sqlNotChecked = 'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked ' +
+    const sqlNotChecked =
+      'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked ' +
       'FROM Operation ' +
-      'WHERE IDcompte = ' + CompteID + ' AND CheckOp = false ' +
+      'WHERE IDcompte = ' +
+      CompteID +
+      ' AND CheckOp = false ' +
       'GROUP BY IDCompte';
 
-    let checkedTotal = await this.operationRepository.execute(sqlChecked)
-    const notCheckedTotal = await this.operationRepository.execute(sqlNotChecked)
+    const checkedTotal = await this.operationRepository.execute(sqlChecked);
+    const notCheckedTotal = await this.operationRepository.execute(
+      sqlNotChecked,
+    );
 
-    return Object.assign(checkedTotal[0] || {}, notCheckedTotal[0] || {})
+    return Object.assign(checkedTotal[0] || {}, notCheckedTotal[0] || {});
   }
 
   @get('/operations/sumByUserByMonth', {
@@ -260,22 +281,31 @@ export class OperationController {
     @param.query.number('monthNumber') MonthNumber: number,
     @param.query.number('yearNumber') YearNumber: number,
     @param.query.number('IDCompte') IDCompte: number,
-    @param.filter(Operation) filter?: Filter<Operation>
+    @param.filter(Operation) filter?: Filter<Operation>,
   ): Promise<any> {
-    let SQLrequest = 'SELECT ROUND(SUM(MontantOp), 2) as MonthNegative ' +
+    let SQLrequest =
+      'SELECT ROUND(SUM(MontantOp), 2) as MonthNegative ' +
       'FROM Operation ' +
       'NATURAL JOIN Compte ' +
-      'WHERE MONTH(DateOp) = ' + MonthNumber + ' ' +
-      'AND YEAR(DateOp) = ' + YearNumber + ' ' +
-      'AND Compte.IDuser = ' + UserID + ' ' +
+      'WHERE MONTH(DateOp) = ' +
+      MonthNumber +
+      ' ' +
+      'AND YEAR(DateOp) = ' +
+      YearNumber +
+      ' ' +
+      'AND Compte.IDuser = ' +
+      UserID +
+      ' ' +
       'AND IDcat IN ' +
-      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ' + UserID + '))';
+      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ' +
+      UserID +
+      '))';
 
     if (IDCompte) {
       SQLrequest += 'AND IDCompte = ' + IDCompte;
     }
 
-    return await this.operationRepository.execute(SQLrequest)
+    return this.operationRepository.execute(SQLrequest);
   }
 
   @get('/operations/sumCategoriesByUserByMonth', {
@@ -294,18 +324,27 @@ export class OperationController {
     @param.query.number('userID') UserID: number,
     @param.query.number('monthNumber') MonthNumber: number,
     @param.query.number('yearNumber') YearNumber: number,
-    @param.filter(Operation) filter?: Filter<Operation>
+    @param.filter(Operation) filter?: Filter<Operation>,
   ): Promise<any> {
-    const SQLrequest = 'SELECT ROUND(SUM(MontantOp), 2) as TotalMonth, IDcat ' +
+    const SQLrequest =
+      'SELECT ROUND(SUM(MontantOp), 2) as TotalMonth, IDcat ' +
       'FROM Operation ' +
       'NATURAL JOIN Compte ' +
-      'WHERE MONTH(DateOp) = ' + MonthNumber + ' ' +
-      'AND YEAR(DateOp) = ' + YearNumber + ' ' +
-      'AND Compte.IDuser = ' + UserID + ' ' +
+      'WHERE MONTH(DateOp) = ' +
+      MonthNumber +
+      ' ' +
+      'AND YEAR(DateOp) = ' +
+      YearNumber +
+      ' ' +
+      'AND Compte.IDuser = ' +
+      UserID +
+      ' ' +
       'AND IDcat IN ' +
-      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ' + UserID + ')) ' +
+      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ' +
+      UserID +
+      ')) ' +
       'GROUP BY IDcat';
 
-    return await this.operationRepository.execute(SQLrequest)
+    return this.operationRepository.execute(SQLrequest);
   }
 }

@@ -6,8 +6,8 @@ import {Entity, model, property} from '@loopback/repository';
     forceId: false,
     validateUpsert: true,
     plural: 'OperationRecurrentes',
-    idInjection: false
-  }
+    idInjection: false,
+  },
 })
 export class OperationRecurrente extends Entity {
   @property({
@@ -25,7 +25,7 @@ export class OperationRecurrente extends Entity {
   @property({
     type: 'number',
     required: true,
-    dataType: 'FLOAT'
+    dataType: 'FLOAT',
   })
   MontantOpRecu: number;
 
@@ -86,4 +86,5 @@ export interface OperationRecurrenteRelations {
   // describe navigational properties here
 }
 
-export type OperationRecurrenteWithRelations = OperationRecurrente & OperationRecurrenteRelations;
+export type OperationRecurrenteWithRelations = OperationRecurrente &
+  OperationRecurrenteRelations;

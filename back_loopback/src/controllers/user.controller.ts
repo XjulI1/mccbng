@@ -4,9 +4,7 @@
 // License text available at https://opensource.org/licenses/MIT
 
 import {authenticate, TokenService} from '@loopback/authentication';
-import {
-  TokenServiceBindings,
-} from '@loopback/authentication-jwt';
+import {TokenServiceBindings} from '@loopback/authentication-jwt';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
 import {
@@ -21,9 +19,9 @@ import {genSalt, hash} from 'bcryptjs';
 import _ from 'lodash';
 
 import {User} from '../models';
-import { MyUserService, Credentials } from '../services/user.service';
-import { UserRepository } from '../repositories';
-import { UserServiceBindings } from '../services/keys';
+import {MyUserService, Credentials} from '../services/user.service';
+import {UserRepository} from '../repositories';
+import {UserServiceBindings} from '../services/keys';
 @model()
 export class NewUserRequest extends User {
   @property({
@@ -39,7 +37,7 @@ const CredentialsSchema: SchemaObject = {
   properties: {
     code: {
       type: 'string',
-      length: 6
+      length: 6,
     },
   },
 };
@@ -84,7 +82,7 @@ export class UserController {
   })
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
-  ): Promise<{id: string, userId: number}> {
+  ): Promise<{id: string; userId: number}> {
     // ensure the user exists, and the password is correct
     const user = await this.userService.verifyCredentials(credentials);
     // convert a User object into a UserProfile object (reduced set of properties)
@@ -112,15 +110,16 @@ export class UserController {
   })
   async whoAmI(
     @inject(SecurityBindings.USER)
-      currentUserProfile: UserProfile,
+    currentUserProfile: UserProfile,
   ): Promise<any> {
-    const {favoris, warningTotal, IDuser} = await this.userService.findUserById(currentUserProfile[securityId])
+    const {favoris, warningTotal, IDuser} = await this.userService.findUserById(
+      currentUserProfile[securityId],
+    );
     return {
       favoris,
       warningTotal,
-      IDuser
-    }
-    ;
+      IDuser,
+    };
   }
 
   @authenticate('jwt')
@@ -140,12 +139,12 @@ export class UserController {
   })
   async exists(
     @inject(SecurityBindings.USER)
-      currentUserProfile: UserProfile,
+    currentUserProfile: UserProfile,
   ): Promise<boolean> {
-    try{
-      return Boolean(currentUserProfile[securityId])
-    } catch(_) {
-      return false
+    try {
+      return Boolean(currentUserProfile[securityId]);
+    } catch (_) {
+      return false;
     }
   }
 
@@ -174,7 +173,7 @@ export class UserController {
         },
       },
     })
-      newUserRequest: NewUserRequest,
+    newUserRequest: NewUserRequest,
   ): Promise<User> {
     const password = await hash(newUserRequest.password, await genSalt());
     const savedUser = await this.userRepository.create(

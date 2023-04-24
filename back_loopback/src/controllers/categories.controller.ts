@@ -24,7 +24,7 @@ import {authenticate} from '@loopback/authentication';
 export class CategoriesController {
   constructor(
     @repository(CategorieRepository)
-    public categorieRepository : CategorieRepository,
+    public categorieRepository: CategorieRepository,
   ) {}
 
   @post('/categories', {
@@ -122,7 +122,8 @@ export class CategoriesController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Categorie, {exclude: 'where'}) filter?: FilterExcludingWhere<Categorie>
+    @param.filter(Categorie, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Categorie>,
   ): Promise<Categorie> {
     return this.categorieRepository.findById(id, filter);
   }
