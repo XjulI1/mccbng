@@ -7,11 +7,7 @@
   "private": true,
   "workspaces": [
     "front_vue",
-    "back_loopback",
-    "front_global/services",
-    "front_global/styles",
-    "front_global/helpers",
-    "front_global/store"
+    "back_loopback"
   ],
   "packageManager": "yarn@3.2.3"
 }

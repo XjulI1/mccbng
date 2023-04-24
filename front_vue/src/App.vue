@@ -30,10 +30,10 @@
   import AccountHeader from '@/components/AccountHeader'
   import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes'
 
-  import 'mccbng_styles/index.scss'
-  import 'mccbng_styles/App.scss'
-  import 'mccbng_styles/components/LeftPanel.scss'
-  import 'mccbng_styles/bootstrap.css'
+  import '@/styles/index.scss'
+  import '@/styles/App.scss'
+  import '@/styles/components/LeftPanel.scss'
+  import '@/styles/bootstrap.css'
 
   export default {
     name: 'App',

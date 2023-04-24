@@ -43,11 +43,11 @@
 </template>
 
 <script>
-  import { auth, checkUserAuthentification, getTokenCookie, getUserIDCookie, saveCookies } from 'mccbng_services/auth'
-  import randomListNumber from 'mccbng_helpers/randomListNumber'
+  import { auth, checkUserAuthentification, getTokenCookie, getUserIDCookie, saveCookies } from '@/services/auth'
+  import randomListNumber from '@/helpers/randomListNumber'
 
-  import 'mccbng_styles/routes/Login.scss'
-  import 'mccbng_styles/components/Authentification.scss'
+  import '@/styles/routes/Login.scss'
+  import '@/styles/components/Authentification.scss'
 
   export default {
     name: 'Login',

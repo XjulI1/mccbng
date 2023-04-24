@@ -5,7 +5,7 @@ import {
   fetchRecurrOperation,
   fetchSearchOperations,
   updateOperation
-} from 'mccbng_services/operation'
+} from '@/services/operation'
 
 export default {
   state: initialState,

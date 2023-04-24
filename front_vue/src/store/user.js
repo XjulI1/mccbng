@@ -1,4 +1,4 @@
-import { fetchUser } from 'mccbng_services/user'
+import { fetchUser } from '@/services/user'
 import { initialState, toggleMaskAmount } from 'mccbng_store/user'
 
 export default {

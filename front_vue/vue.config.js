@@ -9,7 +9,7 @@ module.exports = {
   css: {
     loaderOptions: {
       sass: {
-        additionalData: ' @import "../front_global/styles/variables.scss";'
+        additionalData: ' @import "./src/styles/variables.scss";'
       }
     }
   },

@@ -12,8 +12,8 @@ import {
   visibleAccounts
 } from 'mccbng_store/compte'
 
-import { generateRecurringOperations } from 'mccbng_services/operation'
-import { fetchAccountList, sumAllCompteForUser, sumForACompte } from 'mccbng_services/compte'
+import { generateRecurringOperations } from '@/services/operation'
+import { fetchAccountList, sumAllCompteForUser, sumForACompte } from '@/services/compte'
 
 export default {
   state: initialState,

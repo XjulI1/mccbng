@@ -58,8 +58,8 @@
 <script>
   import draggable from 'vuedraggable'
 
-  import 'mccbng_styles/components/OperationsList/Operation.scss'
-  import { checkBoxID, generateCssVariables, generateDateOperationVariables } from 'mccbng_helpers/components/Operation'
+  import '@/styles/components/OperationsList/Operation.scss'
+  import { checkBoxID, generateCssVariables, generateDateOperationVariables } from '@/helpers/components/Operation'
   import Currency from '../Currency'
 
   export default {

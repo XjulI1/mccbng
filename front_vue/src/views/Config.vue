@@ -23,7 +23,7 @@
 </template>
 
 <script>
-  import 'mccbng_styles/routes/Config.scss'
+  import '@/styles/routes/Config.scss'
 
   export default {
     name: 'Config',

@@ -37,7 +37,7 @@
 </template>
 
 <script>
-  import 'mccbng_styles/components/Account.scss'
+  import '@/styles/components/Account.scss'
   import Currency from '../Currency'
 
   export default {

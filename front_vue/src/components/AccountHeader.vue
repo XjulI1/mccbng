@@ -31,7 +31,7 @@
 <script>
   import { mapState } from 'vuex'
 
-  import 'mccbng_styles/components/Header.scss'
+  import '@/styles/components/Header.scss'
   import Currency from './Currency'
 
   export default {

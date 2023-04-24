@@ -40,7 +40,7 @@
 </template>
 
 <script>
-  import 'mccbng_styles/components/NavBar.scss'
+  import '@/styles/components/NavBar.scss'
 
   export default {
     name: 'Navbar',

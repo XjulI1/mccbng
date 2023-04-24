@@ -1,4 +1,4 @@
-import { fetchCategoryList } from 'mccbng_services/category'
+import { fetchCategoryList } from '@/services/category'
 import { initialState, getCategoryName } from 'mccbng_store/category'
 
 export default {

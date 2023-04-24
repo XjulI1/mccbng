@@ -5,7 +5,7 @@
 <script>
   import Highcharts from 'highcharts'
   import { mapState } from 'vuex'
-  import { fetchEvolutionSolde } from 'mccbng_services/stats'
+  import { fetchEvolutionSolde } from '@/services/stats'
 
   export default {
     name: 'TimeSeriesEvolutionSoldes',
