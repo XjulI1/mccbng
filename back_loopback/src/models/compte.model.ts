@@ -46,6 +46,12 @@ export class Compte extends Entity {
     type: 'boolean',
     default: false,
   })
+  retraite?: boolean;
+
+  @property({
+    type: 'boolean',
+    default: false,
+  })
   porte_feuille?: boolean;
 
   @property({

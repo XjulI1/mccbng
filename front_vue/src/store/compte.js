@@ -2,10 +2,12 @@ import {
   initialState,
   setSumAllAccountForUser,
   filterBloquedAccounts as bloquedCompte,
+  filterRetraiteAccounts as retraiteCompte,
   filterAvailableAccounts as availableCompte,
   filterPorteFeuilleAccount as porteFeuilleCompte,
   totalAvailable,
   totalGlobal,
+  totalRetraite,
   getAccount,
   calcActiveAccountBalances,
   updateSoldeInAccountList,
@@ -20,10 +22,12 @@ export default {
 
   getters: {
     bloquedCompte,
+    retraiteCompte,
     availableCompte,
     porteFeuilleCompte,
     totalAvailable,
     totalGlobal,
+    totalRetraite,
     getAccount,
     visibleAccounts
   },
