@@ -6,12 +6,19 @@ export const initialState = {
 
 export const filterBloquedAccounts = (_, { visibleAccounts }) => {
   return visibleAccounts.filter((account) => {
-    if (account.bloque) {
+    if (account.bloque && !account.retraite) {
       return account
     }
   })
 }
 
+export const filterRetraiteAccounts = (_, { visibleAccounts }) => {
+  return visibleAccounts.filter((account) => {
+    if (account.retraite) {
+      return account
+    }
+  })
+}
 export const filterAvailableAccounts = (_, { visibleAccounts }) => {
   return visibleAccounts.filter((account) => {
     if (!account.bloque && !account.porte_feuille) {
@@ -42,6 +49,13 @@ export const totalGlobal = (_, { bloquedCompte, totalAvailable }) => {
     acc += account.soldeNotChecked
     return Math.round(acc * 100) / 100
   }, totalAvailable)
+}
+
+export const totalRetraite = (_, { retraiteCompte }) => {
+  return retraiteCompte.reduce((acc, account) => {
+    acc += account.soldeNotChecked
+    return Math.round(acc * 100) / 100
+  }, 0)
 }
 
 export const getAccount = ({ accountList }) => {
@@ -98,8 +112,10 @@ export default {
   filterBloquedAccounts,
   filterAvailableAccounts,
   filterPorteFeuilleAccount,
+  filterRetraiteAccounts,
   totalAvailable,
   totalGlobal,
+  totalRetraite,
   getAccount,
   setSumAllAccountForUser,
   calcActiveAccountBalances,
