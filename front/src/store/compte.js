@@ -1,5 +1,4 @@
 import {
-  initialState,
   setSumAllAccountForUser,
   filterBloquedAccounts as bloquedCompte,
   filterRetraiteAccounts as retraiteCompte,
@@ -12,13 +11,17 @@ import {
   calcActiveAccountBalances,
   updateSoldeInAccountList,
   visibleAccounts
-} from './global/compte'
+} from './utils/compte'
 
 import { generateRecurringOperations } from '@/services/operation'
 import { fetchAccountList, sumAllCompteForUser, sumForACompte } from '@/services/compte'
 
 export default {
-  state: initialState,
+  state: {
+    activeAccount: {},
+    accountList: [],
+    currency: "€"
+  },
 
   getters: {
     bloquedCompte,

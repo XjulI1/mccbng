@@ -1,9 +1,3 @@
-export const initialState = {
-  activeAccount: {},
-  accountList: [],
-  currency: "€"
-}
-
 export const filterBloquedAccounts = (_, { visibleAccounts }) => {
   return visibleAccounts.filter((account) => {
     if (account.bloque && !account.retraite) {
