@@ -102,7 +102,6 @@ export const updateSoldeInAccountList = (accountList, IDcompte, solde) => {
 }
 
 export default {
-  initialState,
   filterBloquedAccounts,
   filterAvailableAccounts,
   filterPorteFeuilleAccount,
