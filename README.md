@@ -1,10 +1,11 @@
 # mccbng
 
-## back_loopback
+## back
 
 ### Config files
 
 - `src/datasources/mccb-mysql.datasource.config.json`
+
 ```
 {
   "db": {
@@ -23,7 +24,7 @@
 }
 ```
 
-## front_vue
+## front
 
 ### Config files
 

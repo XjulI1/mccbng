@@ -1,5 +1,5 @@
 import { fetchCategoryList } from '@/services/category'
-import { initialState, getCategoryName } from 'mccbng_store/category'
+import { initialState, getCategoryName } from './global/category'
 
 export default {
   state: initialState,
@@ -9,13 +9,13 @@ export default {
   },
 
   mutations: {
-    setCategoryList (state, list) {
+    setCategoryList(state, list) {
       state.list = list
     }
   },
 
   actions: {
-    fetchCategoryList ({ state, rootState, commit }) {
+    fetchCategoryList({ state, rootState, commit }) {
       if (state.list.length < 2) {
         fetchCategoryList(rootState.user.id, rootState.user.token, process.env.VUE_APP_API_URL)
           .then((categories) => {

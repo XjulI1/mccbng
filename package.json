@@ -6,8 +6,8 @@
   "license": "MIT",
   "private": true,
   "workspaces": [
-    "front_vue",
-    "back_loopback"
+    "front",
+    "back"
   ],
   "packageManager": "yarn@3.2.3"
 }
