@@ -43,7 +43,13 @@
 </template>
 
 <script>
-  import { auth, checkUserAuthentification, getTokenCookie, getUserIDCookie, saveCookies } from '@/services/auth'
+  import {
+    auth,
+    checkUserAuthentification,
+    getTokenCookie,
+    getUserIDCookie,
+    saveCookies
+  } from '@/services/auth'
   import randomListNumber from '@/helpers/randomListNumber'
 
   import '@/styles/routes/Login.scss'
@@ -63,10 +69,11 @@
     watch: {
       code (value) {
         if (value.length === 6) {
-          auth(value, process.env.VUE_APP_API_URL)
-            .then(({ userToken, ttl, userID }) => {
+          auth(value, process.env.VUE_APP_API_URL).then(
+            ({ userToken, ttl, userID }) => {
               this.endAuthentification({ userToken, ttl, userID })
-            })
+            }
+          )
         }
       }
     },
@@ -75,14 +82,17 @@
       const userToken = getTokenCookie()
       const userID = getUserIDCookie()
 
-      checkUserAuthentification({ userToken, userID, api_url: process.env.VUE_APP_API_URL })
-        .then((isExist) => {
-          if (isExist) {
-            this.endAuthentification({ userID, userToken })
-          } else {
-            this.autoAuthProgress = false
-          }
-        })
+      checkUserAuthentification({
+        userToken,
+        userID,
+        apiUrl: process.env.VUE_APP_API_URL
+      }).then((isExist) => {
+        if (isExist) {
+          this.endAuthentification({ userID, userToken })
+        } else {
+          this.autoAuthProgress = false
+        }
+      })
     },
 
     methods: {

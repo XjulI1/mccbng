@@ -16,8 +16,8 @@ export const getUserIDCookie = () => {
   return cookie.get(COOKIE_USER_ID)
 }
 
-export const auth = (value, api_url) => {
-  return axios.post(api_url + '/api/users/login', {
+export const auth = (value, apiUrl) => {
+  return axios.post(apiUrl + '/api/users/login', {
     code: value
   }).then((response) => {
     if (response.status === 200) {
@@ -39,8 +39,8 @@ export const saveCookies = ({ userToken, userID, ttl }) => {
   cookie.set(COOKIE_USER_ID, userID)
 }
 
-export const checkUserAuthentification = ({ userToken, _, api_url }) => {
-  return axios.get(api_url + '/api/users/exists', {
+export const checkUserAuthentification = ({ userToken, _, apiUrl }) => {
+  return axios.get(apiUrl + '/api/users/exists', {
     headers: {
       Authorization: 'Bearer ' + userToken
     }

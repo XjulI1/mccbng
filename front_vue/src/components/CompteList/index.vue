@@ -83,7 +83,7 @@
 
     computed: {
       ...mapState({
-        warningTotal: state => state.user.warningTotal
+        warningTotal: (state) => state.user.warningTotal
       }),
       ...mapGetters([
         'totalAvailable',
@@ -123,8 +123,8 @@
 
 <style>
 .hr-point {
-	height: none;
-	border: none;
-	border-top: 1px dashed rgba(0, 0, 0, 0.1);
+  height: none;
+  border: none;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
 }
 </style>

@@ -20,22 +20,19 @@ export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
 }
 
 export const updateOperation = (operation, userToken, APIURL) => {
-
   if (operation.IDop) {
-    return axios.put(APIURL + '/api/operations/'+operation.IDop, {...operation, IDop: undefined}, {
+    return axios.put(APIURL + '/api/operations/' + operation.IDop, { ...operation, IDop: undefined }, {
       headers: {
         Authorization: 'Bearer ' + userToken
       }
     })
   } else {
-    return axios.post(APIURL + '/api/operations/', {...operation, IDcompteCredit: undefined, IDcompteDebit: undefined}, {
+    return axios.post(APIURL + '/api/operations/', { ...operation, IDcompteCredit: undefined, IDcompteDebit: undefined }, {
       headers: {
         Authorization: 'Bearer ' + userToken
       }
     })
   }
-
-
 }
 
 export const deleteOperation = (IDoperation, userToken, APIURL) => {
@@ -72,7 +69,7 @@ export const fetchSearchOperations = (searchTerms, accountList, userToken, APIUR
 }
 
 export const generateRecurringOperations = (userID, userToken, APIURL) => {
-  axios.post(APIURL + '/api/operation-recurrentes/auto-generation/'+userID, {}, {
+  axios.post(APIURL + '/api/operation-recurrentes/auto-generation/' + userID, {}, {
     headers: {
       Authorization: 'Bearer ' + userToken
     }

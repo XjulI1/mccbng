@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-export const fetchUser = (_, userToken, api_url) => {
-  return axios.get(api_url + '/api/users/whoAmI', {
+export const fetchUser = (_, userToken, apiUrl) => {
+  return axios.get(apiUrl + '/api/users/whoAmI', {
     headers: {
       Authorization: 'Bearer ' + userToken
     }

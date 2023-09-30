@@ -10,7 +10,7 @@
       v-if="draggableActif"
       class="label"
       :class="css.category"
-      :group="{name: 'operation', pull: 'clone', put: ['false'] }"
+      :group="{ name: 'operation', pull: 'clone', put: ['false'] }"
       :data-idcat="operation.IDcat"
       @start="startDrag"
       @end="endDrag"
@@ -59,7 +59,11 @@
   import draggable from 'vuedraggable'
 
   import '@/styles/components/OperationsList/Operation.scss'
-  import { checkBoxID, generateCssVariables, generateDateOperationVariables } from '@/helpers/components/Operation'
+  import {
+    checkBoxID,
+    generateCssVariables,
+    generateDateOperationVariables
+  } from '@/helpers/components/Operation'
   import Currency from '../Currency'
 
   export default {
@@ -70,8 +74,7 @@
     props: {
       operation: {
         type: Object,
-        default: () => {
-        }
+        default: () => {}
       },
       draggableActif: {
         type: Boolean,
@@ -101,7 +104,10 @@
 
       startDrag (event) {
         this.$store.dispatch('toggleCategoriesDropZone')
-        this.$store.dispatch('actualDragCategory', event.srcElement.dataset.idcat)
+        this.$store.dispatch(
+          'actualDragCategory',
+          event.srcElement.dataset.idcat
+        )
       },
 
       endDrag () {
