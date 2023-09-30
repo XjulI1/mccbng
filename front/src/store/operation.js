@@ -1,4 +1,3 @@
-import { initialState, operationFromCurrentList } from './global/operation'
 import {
   deleteOperation,
   fetchOperationsForAccount,
@@ -8,10 +7,16 @@ import {
 } from '@/services/operation'
 
 export default {
-  state: initialState,
+  state: {
+    operationsOfActiveAccount: undefined
+  },
 
   getters: {
-    operationFromCurrentList
+    operationFromCurrentList({ operationsOfActiveAccount }) {
+      return (operationID) => {
+        return operationsOfActiveAccount.find(operation => parseInt(operationID) === operation.IDop)
+      }
+    }
   },
 
   mutations: {

@@ -1,11 +1,16 @@
 import { fetchCategoryList } from '@/services/category'
-import { initialState, getCategoryName } from './global/category'
 
 export default {
-  state: initialState,
+  state: {
+    list: []
+  },
 
   getters: {
-    getCategoryName
+    getCategoryName({ list }) {
+      return (IDcat) => {
+        return list.find(categorie => parseInt(categorie.IDcat) === parseInt(IDcat))
+      }
+    }
   },
 
   mutations: {

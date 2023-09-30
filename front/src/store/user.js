@@ -1,8 +1,13 @@
 import { fetchUser } from '@/services/user'
-import { initialState, toggleMaskAmount } from './global/user'
 
 export default {
-  state: initialState,
+  state: {
+    id: null,
+    favoris: null,
+    warningTotal: null,
+    token: null,
+    maskAmount: false
+  },
 
   mutations: {
     setUser(state, { id, favoris, warningTotal }) {
@@ -16,7 +21,7 @@ export default {
     },
 
     toggleMaskAmount(state) {
-      state.maskAmount = toggleMaskAmount(state.maskAmount)
+      state.maskAmount = !state.maskAmount
     }
   },
 
