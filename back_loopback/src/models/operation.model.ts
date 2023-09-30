@@ -39,7 +39,7 @@ export class Operation extends Entity {
     type: 'boolean',
     default: false,
   })
-  CheckOp?: boolean;
+  CheckOp: boolean;
 
   @property({
     type: 'number',
