@@ -15,11 +15,18 @@ export class StatsRepository extends DefaultCrudRepository<
   }
 
   async evolutionSolde(userID: number): Promise<AnyObject> {
-    const querySoldeTotal =
+    const querySoldeGlobal =
       '' +
       'SELECT ROUND(SUM(solde), 2) AS sum ' +
       'FROM Compte ' +
-      'WHERE IDuser = ' +
+      'WHERE retraite = 0 AND IDuser = ' +
+      userID;
+
+    const querySoldeRetraite =
+      '' +
+      'SELECT ROUND(SUM(solde), 2) AS sum ' +
+      'FROM Compte ' +
+      'WHERE retraite = 1 AND IDuser = ' +
       userID;
 
     const querySoldeDispo =
@@ -30,14 +37,25 @@ export class StatsRepository extends DefaultCrudRepository<
       userID +
       ' AND bloque = 0';
 
-    const queryTotal =
+    const queryGlobal =
       '' +
       'SELECT ROUND(SUM(MontantOp),2) AS montant, ' +
       "DATE_FORMAT(DateOp, '%Y-%m-%dT00:00:00.000Z') AS date " +
       'FROM Operation NATURAL JOIN Compte ' +
       'WHERE IDuser = ' +
       userID +
-      ' ' +
+      ' AND retraite = 0 ' +
+      'GROUP BY date ' +
+      'ORDER BY date ASC';
+
+    const queryRetraite =
+      '' +
+      'SELECT ROUND(SUM(MontantOp),2) AS montant, ' +
+      "DATE_FORMAT(DateOp, '%Y-%m-%dT00:00:00.000Z') AS date " +
+      'FROM Operation NATURAL JOIN Compte ' +
+      'WHERE IDuser = ' +
+      userID +
+      ' AND retraite = 1 ' +
       'GROUP BY date ' +
       'ORDER BY date ASC';
 
@@ -52,23 +70,30 @@ export class StatsRepository extends DefaultCrudRepository<
       'GROUP BY date ' +
       'ORDER BY date ASC';
 
-    const soldeTotal = this.execute(querySoldeTotal);
+    const soldeGlobal = this.execute(querySoldeGlobal);
+    const soldeRetraite = this.execute(querySoldeRetraite);
     const soldeDispo = this.execute(querySoldeDispo);
-    const dataTotal = this.execute(queryTotal);
+
+    const dataGlobal = this.execute(queryGlobal);
+    const dataRetraite = this.execute(queryRetraite);
     const dataDispo = this.execute(queryDispo);
 
     const values = await Promise.all([
-      soldeTotal,
+      soldeGlobal,
+      soldeRetraite,
       soldeDispo,
-      dataTotal,
+      dataGlobal,
+      dataRetraite,
       dataDispo,
     ]);
 
     return {
-      soldeTotal: values[0][0].sum,
-      soldeDispo: values[1][0].sum,
-      total: values[2],
-      dispo: values[3],
+      soldeGlobal: values[0][0].sum,
+      soldeRetraite: values[1][0].sum,
+      soldeDispo: values[2][0].sum,
+      global: values[3],
+      retraite: values[4],
+      dispo: values[5],
     };
   }
 }
