@@ -13,6 +13,7 @@ export class Categorie extends Entity {
   @property({
     type: 'number',
     id: true,
+    generated: true,
   })
   IDcat?: number;
 

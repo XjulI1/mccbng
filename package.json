@@ -8,6 +8,5 @@
   "workspaces": [
     "front",
     "back"
-  ],
-  "packageManager": "yarn@3.2.3"
+  ]
 }

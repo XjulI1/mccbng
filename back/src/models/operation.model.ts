@@ -13,6 +13,7 @@ export class Operation extends Entity {
   @property({
     type: 'number',
     id: true,
+    generated: true,
   })
   IDop?: number;
 

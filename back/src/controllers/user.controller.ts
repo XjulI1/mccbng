@@ -38,7 +38,7 @@ const CredentialsSchema: SchemaObject = {
     code: {
       type: 'string',
       maxLength: 6,
-      minLength: 6
+      minLength: 6,
     },
   },
 };

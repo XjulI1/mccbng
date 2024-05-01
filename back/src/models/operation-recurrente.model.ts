@@ -13,6 +13,7 @@ export class OperationRecurrente extends Entity {
   @property({
     type: 'number',
     id: true,
+    generated: true,
   })
   IDopRecu?: number;
 

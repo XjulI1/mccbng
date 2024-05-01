@@ -14,6 +14,7 @@ export class Compte extends Entity {
   @property({
     type: 'number',
     id: true,
+    generated: true,
   })
   IDcompte?: number;
 

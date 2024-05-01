@@ -1,5 +1,5 @@
 {
-  "name": "back",
+  "name": "@mccbng/back",
   "version": "1.0.0",
   "description": "API mCcBng",
   "keywords": [
@@ -9,7 +9,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "scripts": {
     "build": "lb-tsc",
@@ -54,25 +54,25 @@
     "!*/__tests__"
   ],
   "dependencies": {
-    "@loopback/authentication": "^9.0.10",
-    "@loopback/authentication-jwt": "^0.12.10",
-    "@loopback/boot": "^5.0.10",
-    "@loopback/core": "^4.0.10",
-    "@loopback/repository": "^5.1.5",
-    "@loopback/rest": "^12.0.10",
-    "@loopback/rest-explorer": "^5.0.10",
-    "@loopback/service-proxy": "^5.0.10",
+    "@loopback/authentication": "^11.0.1",
+    "@loopback/authentication-jwt": "^0.15.01",
+    "@loopback/boot": "^7.0.1",
+    "@loopback/core": "^6.0.1",
+    "@loopback/repository": "^7.0.1",
+    "@loopback/rest": "^14.0.1",
+    "@loopback/rest-explorer": "^7.0.1",
+    "@loopback/service-proxy": "^7.0.1",
     "compression": "^1.0.3",
     "cors": "^2.5.2",
     "express": "^4.17.1",
-    "loopback-connector-mysql": "^6.2.0",
+    "loopback-connector-mysql": "^7.0.9",
     "request-promise": "^4.2.2",
     "tslib": "^2.0.0"
   },
   "devDependencies": {
-    "@loopback/build": "^9.0.10",
-    "@loopback/eslint-config": "^13.0.10",
-    "@loopback/testlab": "^5.0.10",
+    "@loopback/build": "^11.0.1",
+    "@loopback/eslint-config": "^15.0.1",
+    "@loopback/testlab": "^7.0.1",
     "@types/express": "^4.17.9",
     "@types/node": "^14.18.42",
     "eslint": "^8.38.0",

@@ -13,6 +13,7 @@ export class Banque extends Entity {
   @property({
     type: 'number',
     id: true,
+    generated: true,
   })
   IDbanque?: number;
 

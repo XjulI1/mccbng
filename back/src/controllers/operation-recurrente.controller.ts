@@ -215,9 +215,12 @@ export class OperationRecurrenteController {
     ) => {
       await this.operationRecurrenteRepository.execute(
         sqlInsertNewOp +
-          `("${opRec.NomOpRecu}", ${opRec.MontantOpRecu}, "${
-            opLastDate.toISOString().split('T')[0]
-          }", ${opRec.IDcompte}, ${opRec.IDcat}), 0`,
+          `("${opRec.NomOpRecu}", 
+          ${opRec.MontantOpRecu}, 
+          "${opLastDate.toISOString().split('T')[0]}", 
+          ${opRec.IDcompte}, 
+          ${opRec.IDcat}, 
+          0)`,
       );
 
       await this.operationRecurrenteRepository.execute(
