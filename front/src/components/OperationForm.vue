@@ -39,16 +39,29 @@
       </option>
     </select>
     <div>
-      <input
-        id="OpCheck"
-        v-model="operation.CheckOp"
-        type="checkbox"
-        class="op-checkbox"
-      >
-      <label
-        class=""
-        for="OpCheck"
-      >Check</label>
+      <p>
+        <input
+          id="OpCheck"
+          v-model="operation.CheckOp"
+          type="checkbox"
+          class="op-checkbox"
+        >
+        <label
+          class=""
+          for="OpCheck"
+        >Check</label>
+
+        <input
+          id="Amortissement"
+          v-model="operation.amortissement"
+          type="checkbox"
+          class="op-checkbox"
+        >
+        <label
+          class=""
+          for="Amortissement"
+        >Amortissement</label>
+      </p>
     </div>
     <div
       class="btn-group debit-credit"
@@ -117,8 +130,8 @@
     },
 
     computed: mapState({
-      activeAccountID: state => state.compte.activeAccount.IDcompte,
-      categoryList: state => state.category.list
+      activeAccountID: (state) => state.compte.activeAccount.IDcompte,
+      categoryList: (state) => state.category.list
     }),
 
     watch: {
@@ -133,8 +146,12 @@
     },
 
     created () {
-      this.operation = this.operationID ? this.$store.getters.operationFromCurrentList(this.operationID) : this.operation
-      this.operation.DateOp = new Date(this.operation.DateOp).toISOString().split('T')[0]
+      this.operation = this.operationID
+        ? this.$store.getters.operationFromCurrentList(this.operationID)
+        : this.operation
+      this.operation.DateOp = new Date(this.operation.DateOp)
+        .toISOString()
+        .split('T')[0]
       this.montantOpIsPositive = this.operation.MontantOp > 0
     },
 
@@ -162,7 +179,10 @@
       },
 
       updateOperation () {
-        this.$store.dispatch('updateOperation', { ...this.operation, DateOp: new Date(this.operation.DateOp) })
+        this.$store.dispatch('updateOperation', {
+          ...this.operation,
+          DateOp: new Date(this.operation.DateOp)
+        })
 
         if (this.operation.IDop === undefined) {
           this.resetOperationAttribut()
@@ -189,37 +209,37 @@
 </script>
 
 <style scoped>
-  input {
-    width: 100%;
-    margin-top: 15px;
-    margin-bottom: 15px;
-  }
+input {
+  width: 100%;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
 
-  .operation-form {
-    text-align: center
-  }
+.operation-form {
+  text-align: center;
+}
 
-  .select-category {
-    width: 60%
-  }
+.select-category {
+  width: 60%;
+}
 
-  .op-checkbox {
-    width: 1.5rem
-  }
+.op-checkbox {
+  width: 1.5rem;
+}
 
-  .debit-credit {
-    margin-bottom: 1.5rem;
-  }
+.debit-credit {
+  margin-bottom: 1.5rem;
+}
 
-  .montant-positif {
-    color: green
-  }
+.montant-positif {
+  color: green;
+}
 
-  .montant-negatif {
-    color: red
-  }
+.montant-negatif {
+  color: red;
+}
 
-  .btn-delete {
-    text-align: right;
-  }
+.btn-delete {
+  text-align: right;
+}
 </style>

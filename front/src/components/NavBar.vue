@@ -4,22 +4,22 @@
     role="group"
   >
     <button
-      class="btn btn-warning retrait-button"
-      v-bind="{disabled}"
-      @click="getMoney"
-    >
-      <font-awesome-icon icon="money-bill-alt" />
-    </button>
-    <button
-      class="btn btn-success virement-button"
-      v-bind="{disabled}"
+      class="btn btn-warning virement-button"
+      v-bind="{ disabled }"
       @click="doTransfert"
     >
       <font-awesome-icon icon="exchange-alt" />
     </button>
     <button
+      class="btn btn-success amortissement-button"
+      v-bind="{ disabled: true }"
+      @click="getAmortissement"
+    >
+      <font-awesome-icon icon="history" />
+    </button>
+    <button
       class="btn btn-primary new-operation-button"
-      v-bind="{disabled}"
+      v-bind="{ disabled }"
       @click="addOperation"
     >
       <font-awesome-icon icon="plus" />
@@ -47,16 +47,13 @@
 
     computed: {
       disabled () {
-        return this.$route.meta.disabledTotalHeader === undefined ? false : this.$route.meta.disabledTotalHeader
+        return this.$route.meta.disabledTotalHeader === undefined
+          ? false
+          : this.$route.meta.disabledTotalHeader
       }
     },
 
     methods: {
-      getMoney () {
-        this.$store.dispatch('toggleAccountList', false)
-        this.$router.push('/retrait')
-      },
-
       addOperation () {
         this.$store.dispatch('toggleAccountList', false)
         this.$router.push('/newOperation')

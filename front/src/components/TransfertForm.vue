@@ -131,6 +131,12 @@
     watch: {
       activeAccountID (value) {
         this.operation.IDcompteDebit = value
+      },
+      cash (value) {
+        this.operation.IDcat = value ? 21 : 25
+      },
+      '$route.name' (value) {
+        this.operation.NomOp = value
       }
     },
 

@@ -11,7 +11,8 @@ import {
   faSearch,
   faTimesCircle,
   faRedo,
-  faMoneyBillAlt
+  faMoneyBillAlt,
+  faHistory
 } from '@fortawesome/free-solid-svg-icons'
 
 export default {
@@ -28,7 +29,8 @@ export default {
       faSearch,
       faTimesCircle,
       faRedo,
-      faMoneyBillAlt
+      faMoneyBillAlt,
+      faHistory
     })
   }
 }
