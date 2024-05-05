@@ -3,6 +3,8 @@ export const filterBloquedAccounts = (_, { visibleAccounts }) => {
     if (account.bloque && !account.retraite) {
       return account
     }
+
+    return undefined
   })
 }
 
@@ -11,6 +13,8 @@ export const filterRetraiteAccounts = (_, { visibleAccounts }) => {
     if (account.retraite) {
       return account
     }
+
+    return undefined
   })
 }
 export const filterAvailableAccounts = (_, { visibleAccounts }) => {
@@ -18,6 +22,8 @@ export const filterAvailableAccounts = (_, { visibleAccounts }) => {
     if (!account.bloque && !account.porte_feuille) {
       return account
     }
+
+    return undefined
   })
 }
 
@@ -26,6 +32,8 @@ export const filterPorteFeuilleAccount = (_, { visibleAccounts }) => {
     if (account.porte_feuille) {
       return account
     }
+
+    return undefined
   })
 }
 
@@ -63,6 +71,7 @@ export const visibleAccounts = ({ accountList }) => {
     if (account.visible) {
       return account
     }
+    return undefined
   })
 }
 

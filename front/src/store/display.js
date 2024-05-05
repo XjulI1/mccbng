@@ -1,35 +1,17 @@
 export default {
   state: {
-    account_list: false,
-    categories_drop_zone: false,
-    actual_drag_cat: undefined
+    account_list: false
   },
 
   mutations: {
     toggleAccountList (state, force) {
       state.account_list = typeof force === 'boolean' ? force : !state.account_list
-    },
-
-    toggleCategoriesDropZone (state) {
-      state.categories_drop_zone = !state.categories_drop_zone
-    },
-
-    setActualDragCategory (state, IDcat) {
-      state.actual_drag_cat = parseInt(IDcat)
     }
   },
 
   actions: {
     toggleAccountList (context, force) {
       context.commit('toggleAccountList', force)
-    },
-
-    toggleCategoriesDropZone (context) {
-      context.commit('toggleCategoriesDropZone')
-    },
-
-    actualDragCategory (context, IDcat) {
-      context.commit('setActualDragCategory', IDcat)
     }
   }
 }

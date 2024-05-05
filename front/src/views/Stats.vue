@@ -11,9 +11,7 @@
 
   export default {
     name: 'Stats',
-
     components: { PieByCategorie, SumByMonth },
-
     created () {
       this.$store.commit('setActiveAccount', { NomCompte: 'Stats' })
     }

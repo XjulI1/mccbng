@@ -2,30 +2,11 @@
   <div class="operation">
     <input
       :id="checkBoxID"
-      v-model="operation.CheckOp"
+      v-model="modelValue"
       type="checkbox"
       @change="updateCheckOp"
     >
-    <draggable
-      v-if="draggableActif"
-      class="label"
-      :class="css.category"
-      :group="{ name: 'operation', pull: 'clone', put: ['false'] }"
-      :data-idcat="operation.IDcat"
-      @start="startDrag"
-      @end="endDrag"
-    >
-      <label
-        :for="checkBoxID"
-        :data-id="operation.IDop"
-      >
-        {{ operation.NomOp }}
-        <br>
-        {{ dateOperation }}
-      </label>
-    </draggable>
     <div
-      v-else
       class="label"
       :class="css.category"
     >
@@ -56,8 +37,6 @@
 </template>
 
 <script>
-  import draggable from 'vuedraggable'
-
   import '@/styles/components/OperationsList/Operation.scss'
   import {
     checkBoxID,
@@ -69,16 +48,12 @@
   export default {
     name: 'Operation',
 
-    components: { Currency, draggable },
+    components: { Currency },
 
     props: {
       operation: {
         type: Object,
         default: () => {}
-      },
-      draggableActif: {
-        type: Boolean,
-        default: false
       }
     },
 
@@ -87,6 +62,14 @@
         dateOperation: generateDateOperationVariables(this.operation),
         css: generateCssVariables(this.operation),
         checkBoxID: checkBoxID(this.operation.IDop)
+      }
+    },
+
+    computed: {
+      modelValue: {
+        get () {
+          return this.operation.CheckOp
+        }
       }
     },
 
@@ -99,19 +82,10 @@
 
     methods: {
       updateCheckOp () {
-        this.$store.dispatch('updateOperation', this.operation)
-      },
-
-      startDrag (event) {
-        this.$store.dispatch('toggleCategoriesDropZone')
-        this.$store.dispatch(
-          'actualDragCategory',
-          event.srcElement.dataset.idcat
-        )
-      },
-
-      endDrag () {
-        this.$store.dispatch('toggleCategoriesDropZone')
+        this.$store.dispatch('updateOperation', {
+          ...this.operation,
+          CheckOp: !this.operation.CheckOp
+        })
       }
     }
   }

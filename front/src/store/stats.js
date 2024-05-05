@@ -13,6 +13,7 @@ export default {
       return state.categoriesTotal.map((categorie) => {
         return {
           name: getters.getCategoryName(categorie.IDcat).Nom,
+          catId: categorie.IDcat,
           y: categorie.TotalMonth * -1
         }
       })

@@ -38,9 +38,7 @@
           {{ account.NomCompte }}
         </option>
       </select>
-      <div>
-        ➡️
-      </div>
+      <div>➡️</div>
       <select
         v-model="operation.IDcompteCredit"
         class="form-control select-compte-credit"
@@ -93,19 +91,24 @@
 
     computed: {
       ...mapState({
-        activeAccountID: state => state.compte.activeAccount.IDcompte
+        activeAccountID: (state) => state.compte.activeAccount.IDcompte
       }),
       ...mapGetters(['visibleAccounts', 'porteFeuilleCompte', 'getAccount']),
       accountsDebit () {
         return this.visibleAccounts.filter((account) => {
           const IDcompte = parseFloat(account.IDcompte)
-          if (IDcompte !== parseFloat(this.operation.IDcompteCredit) && IDcompte !== parseFloat(this.porteFeuilleCompte[0].IDcompte)) {
+          if (
+            IDcompte !== parseFloat(this.operation.IDcompteCredit) &&
+            IDcompte !== parseFloat(this.porteFeuilleCompte[0].IDcompte)
+          ) {
             return account
           }
+          return undefined
         })
       },
       accountsCredit () {
         if (this.cash) {
+          // eslint-disable-next-line vue/no-side-effects-in-computed-properties
           this.operation.IDcompteCredit = this.porteFeuilleCompte[0].IDcompte
           return this.porteFeuilleCompte
         }
@@ -113,9 +116,14 @@
         return this.visibleAccounts.filter((account) => {
           const IDcompte = parseFloat(account.IDcompte)
 
-          if (parseFloat(account.IDcompte) !== parseFloat(this.operation.IDcompteDebit) && IDcompte !== parseFloat(this.porteFeuilleCompte[0].IDcompte)) {
+          if (
+            parseFloat(account.IDcompte) !==
+            parseFloat(this.operation.IDcompteDebit) &&
+            IDcompte !== parseFloat(this.porteFeuilleCompte[0].IDcompte)
+          ) {
             return account
           }
+          return undefined
         })
       }
     },
@@ -127,7 +135,9 @@
     },
 
     created () {
-      this.operation.DateOp = new Date(this.operation.DateOp).toISOString().split('T')[0]
+      this.operation.DateOp = new Date(this.operation.DateOp)
+        .toISOString()
+        .split('T')[0]
     },
 
     mounted () {
@@ -141,8 +151,18 @@
       },
 
       updateOperation () {
-        const NomOp = this.operation.NomOp + ' (' + this.getAccount(this.operation.IDcompteDebit).NomCompte + ' -> ' + this.getAccount(this.operation.IDcompteCredit).NomCompte + ')'
-        this.$store.dispatch('createTransfert', { ...this.operation, NomOp, DateOp: new Date(this.operation.DateOp) })
+        const NomOp =
+          this.operation.NomOp +
+          ' (' +
+          this.getAccount(this.operation.IDcompteDebit).NomCompte +
+          ' -> ' +
+          this.getAccount(this.operation.IDcompteCredit).NomCompte +
+          ')'
+        this.$store.dispatch('createTransfert', {
+          ...this.operation,
+          NomOp,
+          DateOp: new Date(this.operation.DateOp)
+        })
 
         this.resetOperationAttribut()
       },

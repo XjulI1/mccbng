@@ -93,11 +93,30 @@ export const fetchRecurrOperation = (userToken, APIURL) => {
   })
 }
 
+export const fetchOperations = (where, userToken, APIURL) => {
+  const filter = {
+    where,
+    order: 'DateOp DESC'
+  }
+
+  return axios.get(APIURL + '/api/operations', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    },
+    params: {
+      filter
+    }
+  }).then((response) => {
+    return response.data
+  })
+}
+
 export default {
   fetchOperationsForAccount,
   updateOperation,
   deleteOperation,
   fetchSearchOperations,
   generateRecurringOperations,
-  fetchRecurrOperation
+  fetchRecurrOperation,
+  fetchOperations
 }

@@ -6,9 +6,9 @@
         <option
           v-for="month in listMonth"
           :key="'month-' + month"
-          :value="month+1"
+          :value="month + 1"
         >
-          {{ month+1 }}
+          {{ month + 1 }}
         </option>
       </select>
 
@@ -42,16 +42,18 @@
     data () {
       return {
         listMonth: [...Array(12).keys()],
-        listYear: [...Array(((new Date()).getYear() + 1900) - 2016).keys()].map(key => key + 2017)
+        listYear: [...Array(new Date().getYear() + 1900 - 2016).keys()].map(
+          (key) => key + 2017
+        )
       }
     },
 
     computed: {
       ...mapState({
-        negativeMonth: state => state.stats.negativeMonth,
-        storeCurrentYear: state => state.stats.currentYear,
-        storeCurrentMonth: state => state.stats.currentMonth,
-        userID: state => state.user.id
+        negativeMonth: (state) => state.stats.negativeMonth,
+        storeCurrentYear: (state) => state.stats.currentYear,
+        storeCurrentMonth: (state) => state.stats.currentMonth,
+        userID: (state) => state.user.id
       }),
 
       ...mapGetters(['availableCompte', 'getAccount']),
@@ -91,8 +93,11 @@
       numberDaysForCurrentMonth () {
         const currentDate = new Date()
 
-        if (this.currentYear === currentDate.getFullYear() && this.currentMonth === currentDate.getMonth() + 1) {
-          return (new Date()).getDate() * -1
+        if (
+          this.currentYear === currentDate.getFullYear() &&
+          this.currentMonth === currentDate.getMonth() + 1
+        ) {
+          return new Date().getDate() * -1
         }
 
         return new Date(this.currentYear, this.currentMonth, 0).getDate()
@@ -102,25 +107,24 @@
 </script>
 
 <style scoped>
+.sum-by-month {
+  margin-left: 10px;
+  margin-right: 10px;
+}
 
-  .sum-by-month {
-    margin-left: 10px;
-    margin-right: 10px;
-  }
+.parjour {
+  margin-left: 4%;
+  margin-bottom: 10px;
+}
 
-  .parjour {
-    margin-left: 4%;
-    margin-bottom: 10px;
-  }
+.selector-date {
+  text-align: center;
+  margin-bottom: 10px;
+}
 
-  .selector-date {
-    text-align: center;
-    margin-bottom: 10px;
-  }
-
-  .total-month {
-    text-align: center;
-    margin-top: 20px;
-    margin-bottom: 20px;
-  }
+.total-month {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
 </style>

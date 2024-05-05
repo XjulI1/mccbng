@@ -30,7 +30,6 @@
     "vue": "^3.2.38",
     "vue-router": "^4.1.5",
     "vue2-touch-events": "link:../vue-touch-events",
-    "vuedraggable": "^2.17.0",
     "vuex": "^4.0.2"
   },
   "devDependencies": {

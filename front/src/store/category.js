@@ -6,7 +6,7 @@ export default {
   },
 
   getters: {
-    getCategoryName({ list }) {
+    getCategoryName ({ list }) {
       return (IDcat) => {
         return list.find(categorie => parseInt(categorie.IDcat) === parseInt(IDcat))
       }
@@ -14,13 +14,13 @@ export default {
   },
 
   mutations: {
-    setCategoryList(state, list) {
+    setCategoryList (state, list) {
       state.list = list
     }
   },
 
   actions: {
-    fetchCategoryList({ state, rootState, commit }) {
+    fetchCategoryList ({ state, rootState, commit }) {
       if (state.list.length < 2) {
         fetchCategoryList(rootState.user.id, rootState.user.token, process.env.VUE_APP_API_URL)
           .then((categories) => {
