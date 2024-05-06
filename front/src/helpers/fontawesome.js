@@ -12,7 +12,8 @@ import {
   faTimesCircle,
   faRedo,
   faMoneyBillAlt,
-  faHistory
+  faHistory,
+  faFunnelDollar
 } from '@fortawesome/free-solid-svg-icons'
 
 export default {
@@ -30,7 +31,8 @@ export default {
       faTimesCircle,
       faRedo,
       faMoneyBillAlt,
-      faHistory
+      faHistory,
+      faFunnelDollar
     })
   }
 }
