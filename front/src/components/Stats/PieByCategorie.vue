@@ -1,9 +1,17 @@
 <template>
   <div>
     <div class="pie-by-categorie__chart" />
-    <operation-list v-if="selectedCatId" />
+    <operation-list
+      v-if="selectedCatId"
+      class="pie-by-categorie__operation-list"
+      :OperationRenderer="OperationRenderer"
+    />
   </div>
 </template>
+
+<script setup>
+  import OperationRenderer from '../Home/Operation.vue'
+</script>
 
 <script>
   import Highcharts from 'highcharts'

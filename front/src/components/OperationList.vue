@@ -1,6 +1,7 @@
 <template>
   <div class="operation-list">
-    <operation
+    <component
+      :is="OperationRenderer"
       v-for="operation in operationsList"
       :key="'operation-' + operation.IDop"
       v-bind="{ operation }"
@@ -10,11 +11,10 @@
 
 <script>
   import { mapState } from 'vuex'
-  import Operation from '../components/Home/Operation'
 
   export default {
     name: 'OperationList',
-    components: { Operation },
+    props: { OperationRenderer: { type: Object, required: true } },
 
     computed: {
       ...mapState({

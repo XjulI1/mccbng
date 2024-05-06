@@ -12,7 +12,6 @@
     </button>
     <button
       class="btn btn-success amortissement-button"
-      v-bind="{ disabled: true }"
       @click="getAmortissement"
     >
       <font-awesome-icon icon="history" />
@@ -67,6 +66,11 @@
       getRecurrenteOp () {
         this.$store.dispatch('toggleAccountList', false)
         this.$router.push('/recurrOperation')
+      },
+
+      getAmortissement () {
+        this.$store.dispatch('toggleAccountList', false)
+        this.$router.push('/amortissement')
       },
 
       changeParams () {

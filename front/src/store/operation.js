@@ -84,7 +84,6 @@ export default {
     fetchOperations ({ rootState, commit }, where) {
       fetchOperations(where, rootState.user.token, process.env.VUE_APP_API_URL)
         .then((operations) => {
-          console.log(operations)
           commit('setOperationsOfActiveAccount', operations)
         })
     }

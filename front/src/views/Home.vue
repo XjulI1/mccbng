@@ -1,12 +1,13 @@
 <template>
   <div class="home">
     <router-view />
-    <OperationList />
+    <OperationList :OperationRenderer="OperationRenderer" />
   </div>
 </template>
 
 <script setup>
   import OperationList from '../components/OperationList.vue'
+  import OperationRenderer from '../components/Home/Operation.vue'
 </script>
 
 <style lang="scss" scoped>
