@@ -8,5 +8,8 @@
   "workspaces": [
     "front",
     "back"
-  ]
+  ],
+  "resolutions": {
+    "@achrinza/node-ipc": "^10.1.11"
+  }
 }
