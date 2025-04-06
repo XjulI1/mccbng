@@ -1,5 +1,6 @@
 {
   "name": "@mccbng/front",
+  "description": "Front mccbng : mCloud Compte and Budget Next Generation",
   "version": "1.0.0",
   "private": true,
   "scripts": {
