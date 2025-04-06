@@ -1,5 +1,6 @@
 {
   "name": "mccbng",
+  "description": "mccbng : mCloud Compte and Budget Next Generation",
   "version": "1.0.0",
   "repository": "git@github.com:XjulI1/mccbng.git",
   "author": "Xavier JULIEN <xavijulien@gmail.com>",

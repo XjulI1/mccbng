@@ -1,7 +1,7 @@
 {
   "name": "@mccbng/back",
   "version": "1.0.0",
-  "description": "API mCcBng",
+  "description": "API mccbng : mCloud Compte and Budget Next Generation",
   "keywords": [
     "loopback-application",
     "loopback"
