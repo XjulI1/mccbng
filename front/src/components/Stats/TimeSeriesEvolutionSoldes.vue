@@ -7,6 +7,8 @@
   import { mapState } from 'vuex'
   import { fetchEvolutionSolde } from '@/services/stats'
 
+  let chart // Initialize chart variable
+
   export default {
     name: 'TimeSeriesEvolutionSoldes',
 
@@ -21,11 +23,38 @@
     computed: {
       ...mapState({
         userID: (state) => state.user.id,
-        userToken: (state) => state.user.token
+        userToken: (state) => state.user.token,
+        isZoom: (state) => state.display.zoom_stats
       })
     },
 
     watch: {
+      isZoom (value) {
+        if (value) {
+          const parentElement = this.$el.parentElement
+
+          document.body.appendChild(this.$el)
+          this.$el.classList.add('is-zoom')
+          chart.reflow()
+
+          const clickZoom = () => {
+            parentElement.appendChild(this.$el)
+            this.$store.dispatch('toggleZoomStats', false)
+            this.$el.classList.remove('is-zoom')
+
+            setTimeout(() => {
+              document
+                .querySelector('#app')
+                .removeEventListener('click', clickZoom)
+              chart.reflow()
+            }, 100)
+          }
+
+          setTimeout(() => {
+            document.querySelector('#app').addEventListener('click', clickZoom)
+          }, 500)
+        }
+      },
       userID (value) {
         fetchEvolutionSolde(
           value,
@@ -56,7 +85,7 @@
 
     methods: {
       buildChart () {
-        const chart = Highcharts.chart(
+        chart = Highcharts.chart(
           this.$el || this.$el.querySelector('.evolutionSoldes'),
           {
             chart: {
@@ -143,3 +172,19 @@
     }
   }
 </script>
+
+<style scoped>
+.evolutionSoldes {
+  width: 100%;
+  height: 400px;
+}
+.is-zoom {
+  position: fixed;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  height: 80%;
+  z-index: 1000;
+  border: 2px solid #ccc;
+}
+</style>

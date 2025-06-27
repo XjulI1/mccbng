@@ -16,6 +16,15 @@
       <font-awesome-icon icon="money-bill" />
       Masquer les montants
     </button>
+    <br>
+    <br>
+    <button
+      class="btn btn-success"
+      @click="toggleZoomStats"
+    >
+      <font-awesome-icon icon="chart-area" />
+      Zoom évolution solde
+    </button>
     <div class="api-url">
       {{ apiURL }}
     </div>
@@ -39,6 +48,10 @@
     methods: {
       toggleAmount (event) {
         this.$store.dispatch('toggleMaskAmount')
+        event.target.blur()
+      },
+      toggleZoomStats (event) {
+        this.$store.dispatch('toggleZoomStats')
         event.target.blur()
       }
     }

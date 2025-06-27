@@ -13,7 +13,8 @@ import {
   faRedo,
   faMoneyBillAlt,
   faHistory,
-  faFunnelDollar
+  faFunnelDollar,
+  faChartArea
 } from '@fortawesome/free-solid-svg-icons'
 
 export default {
@@ -32,7 +33,8 @@ export default {
       faRedo,
       faMoneyBillAlt,
       faHistory,
-      faFunnelDollar
+      faFunnelDollar,
+      faChartArea
     })
   }
 }
