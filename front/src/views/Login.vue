@@ -25,19 +25,30 @@
               stroke="currentColor"
               stroke-width="2"
             />
-            <circle cx="12" cy="15" r="1" fill="currentColor" />
+            <circle
+              cx="12"
+              cy="15"
+              r="1"
+              fill="currentColor"
+            />
           </svg>
         </div>
         <h2>Authentification</h2>
         <p>Saisissez votre code d'accès sécurisé</p>
       </div>
 
-      <div v-if="autoAuthProgress" class="auto-auth">
-        <div class="loading-spinner"></div>
+      <div
+        v-if="autoAuthProgress"
+        class="auto-auth"
+      >
+        <div class="loading-spinner" />
         <p>Authentification automatique en cours...</p>
       </div>
 
-      <div v-else class="auth-content">
+      <div
+        v-else
+        class="auth-content"
+      >
         <div class="code-display">
           <div class="code-dots">
             <div
@@ -45,9 +56,12 @@
               :key="i"
               class="dot"
               :class="{ filled: i <= code.length }"
-            ></div>
+            />
           </div>
-          <div v-if="error && !code" class="error-message">
+          <div
+            v-if="error && !code"
+            class="error-message"
+          >
             <svg
               width="16"
               height="16"
@@ -93,7 +107,7 @@
           >
             {{ value }}
           </button>
-          <button style="visibility: hidden"></button>
+          <button style="visibility: hidden" />
           <button
             v-if="code.length > 0"
             class="keypad-btn clear-btn"
@@ -136,79 +150,79 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { useStore } from "vuex";
-import {
-  auth,
-  checkUserAuthentification,
-  getTokenCookie,
-  getUserIDCookie,
-  saveCookies,
-} from "@/services/auth";
-import randomListNumber from "@/helpers/randomListNumber";
+  import { ref, watch, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useStore } from 'vuex'
+  import {
+    auth,
+    checkUserAuthentification,
+    getTokenCookie,
+    getUserIDCookie,
+    saveCookies
+  } from '@/services/auth'
+  import randomListNumber from '@/helpers/randomListNumber'
 
-const router = useRouter();
-const store = useStore();
+  const router = useRouter()
+  const store = useStore()
 
-const autoAuthProgress = ref(true);
-const buttonList = ref(randomListNumber());
-const code = ref("");
-const error = ref(false);
+  const autoAuthProgress = ref(true)
+  const buttonList = ref(randomListNumber())
+  const code = ref('')
+  const error = ref(false)
 
-const endAuthentification = ({ userToken, userID }) => {
-  store.dispatch("saveUserToken", userToken);
-  store.dispatch("fetchUserByIDAndGenerateRecurringOp", userID);
+  const endAuthentification = ({ userToken, userID }) => {
+    store.dispatch('saveUserToken', userToken)
+    store.dispatch('fetchUserByIDAndGenerateRecurringOp', userID)
 
-  saveCookies({ userToken, userID });
+    saveCookies({ userToken, userID })
 
-  router.replace({ name: "Home" });
-};
-
-watch(code, (value) => {
-  if (value.length === 6) {
-    auth(value, import.meta.env.VITE_API_URL)
-      .then(({ userToken, ttl, userID }) => {
-        endAuthentification({ userToken, ttl, userID });
-      })
-      .catch(() => {
-        error.value = true;
-        code.value = "";
-      });
+    router.replace({ name: 'Home' })
   }
-});
 
-// Equivalent to beforeCreate
-const userToken = getTokenCookie();
-const userID = getUserIDCookie();
-
-checkUserAuthentification({
-  userToken,
-  userID,
-  apiUrl: import.meta.env.VITE_API_URL,
-}).then((isExist) => {
-  if (isExist) {
-    endAuthentification({ userID, userToken });
-  } else {
-    autoAuthProgress.value = false;
-  }
-});
-
-onMounted(() => {
-  window.addEventListener("keydown", (event) => {
-    if (event.key >= 0 && event.key <= 9) {
-      code.value += event.key;
+  watch(code, (value) => {
+    if (value.length === 6) {
+      auth(value, import.meta.env.VITE_API_URL)
+        .then(({ userToken, ttl, userID }) => {
+          endAuthentification({ userToken, ttl, userID })
+        })
+        .catch(() => {
+          error.value = true
+          code.value = ''
+        })
     }
-  });
-});
+  })
 
-const addNumber = (event) => {
-  code.value += event.target.value;
-};
+  // Equivalent to beforeCreate
+  const userToken = getTokenCookie()
+  const userID = getUserIDCookie()
 
-const crossDelete = () => {
-  code.value = "";
-};
+  checkUserAuthentification({
+    userToken,
+    userID,
+    apiUrl: import.meta.env.VITE_API_URL
+  }).then((isExist) => {
+    if (isExist) {
+      endAuthentification({ userID, userToken })
+    } else {
+      autoAuthProgress.value = false
+    }
+  })
+
+  onMounted(() => {
+    window.addEventListener('keydown', (event) => {
+      if (event.key >= 0 && event.key <= 9) {
+        code.value += event.key
+      }
+    })
+  })
+
+  const addNumber = (event) => {
+    code.value += event.target.value
+  }
+
+  const crossDelete = () => {
+    code.value = ''
+  }
 </script>
 
 <style lang="scss" scoped>

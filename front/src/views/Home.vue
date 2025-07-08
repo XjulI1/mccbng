@@ -6,8 +6,8 @@
 </template>
 
 <script setup lang="ts">
-import OperationList from "../components/OperationList.vue";
-import OperationRenderer from "../components/Home/Operation.vue";
+  import OperationList from '../components/OperationList.vue'
+  import OperationRenderer from '../components/Home/Operation.vue'
 </script>
 
 <style lang="scss" scoped>

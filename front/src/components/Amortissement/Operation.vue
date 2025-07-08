@@ -35,64 +35,69 @@
         </ul>
       </div>
     </div>
-    <div v-if="simulator" class="simulator">
-      <div class="title">Revente</div>
+    <div
+      v-if="simulator"
+      class="simulator"
+    >
+      <div class="title">
+        Revente
+      </div>
       <input
         v-model="simulatorData.prixRevente"
         type="text"
         placeholder="Prix de revente"
-      />
+      >
       <input
         v-model="simulatorData.dateRevente"
         type="date"
         placeholder="Date de revente"
-      />
+      >
     </div>
-    <hr />
+    <hr>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed } from "vue";
-const { operation } = defineProps(["operation"]);
-const currentDate = computed(() =>
-  simulatorData.value.dateRevente
-    ? new Date(simulatorData.value.dateRevente)
-    : new Date()
-);
-const duree = computed(() => currentDate.value - new Date(operation.DateOp));
-const simulator = ref(false);
-const montantTotal = computed(() =>
-  Math.round(operation.MontantOp * -1 - simulatorData.value.prixRevente)
-);
-const MILLISECONDS_IN_YEAR = 31536000000;
+  import { ref, computed } from 'vue'
+  const { operation } = defineProps(['operation'])
+  const currentDate = computed(() =>
+    simulatorData.value.dateRevente
+      ? new Date(simulatorData.value.dateRevente)
+      : new Date()
+  )
+  const duree = computed(() => currentDate.value - new Date(operation.DateOp))
+  const simulator = ref(false)
+  const montantTotal = computed(() =>
+    Math.round(operation.MontantOp * -1 - simulatorData.value.prixRevente)
+  )
+  const MILLISECONDS_IN_YEAR = 31536000000
 
-const simulatorData = ref({
-  prixRevente: 0,
-  dateRevente: undefined,
-});
+  const simulatorData = ref({
+    prixRevente: 0,
+    dateRevente: undefined
+  })
 
-function toggleSimulate() {
-  simulator.value = !simulator.value;
-  if (!simulator.value) {
-    simulatorData.value = {
-      prixRevente: 0,
-      dateRevente: undefined,
-    };
+  function toggleSimulate () {
+    simulator.value = !simulator.value
+    if (!simulator.value) {
+      simulatorData.value = {
+        prixRevente: 0,
+        dateRevente: undefined
+      }
+    }
   }
-}
 
-const dureeAmortissement = computed(() => ({
-  year: Math.floor(duree.value / MILLISECONDS_IN_YEAR),
-  yearMonth:
-    Math.floor(duree.value / (MILLISECONDS_IN_YEAR / 12)) -
-    Math.floor(duree.value / MILLISECONDS_IN_YEAR) * 12,
-  month: Math.floor(duree.value / (MILLISECONDS_IN_YEAR / 12)),
-}));
+  const dureeAmortissement = computed(() => ({
+    year: Math.floor(duree.value / MILLISECONDS_IN_YEAR),
+    yearMonth:
+      Math.floor(duree.value / (MILLISECONDS_IN_YEAR / 12)) -
+      Math.floor(duree.value / MILLISECONDS_IN_YEAR) * 12,
+    month: Math.floor(duree.value / (MILLISECONDS_IN_YEAR / 12))
+  }))
 
-const prixAmortissement = computed(() => ({
-  year: Math.round(montantTotal.value / (dureeAmortissement.value.year || 1)),
-  month: Math.round(montantTotal.value / (dureeAmortissement.value.month || 1)),
-}));
+  const prixAmortissement = computed(() => ({
+    year: Math.round(montantTotal.value / (dureeAmortissement.value.year || 1)),
+    month: Math.round(montantTotal.value / (dureeAmortissement.value.month || 1))
+  }))
 </script>
 <style lang="scss" scoped>
 .amortissement-view {
