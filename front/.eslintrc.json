@@ -10,14 +10,16 @@
     "plugin:vue/vue3-essential",
     "eslint:recommended",
     "plugin:vue/vue3-recommended",
-    "@vue/standard"
+    "@vue/standard",
+    "@vue/typescript/recommended"
   ],
   "parser": "vue-eslint-parser",
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module",
     "parser": {
-      "js": "@babel/eslint-parser"
+      "js": "@babel/eslint-parser",
+      "ts": "@typescript-eslint/parser"
     },
     "requireConfigFile": false,
     "babelOptions": {
@@ -32,7 +34,9 @@
     "no-console": "warn",
     "no-debugger": "warn",
     "import/no-extraneous-dependencies": "off",
-    "vue/multi-word-component-names": "off"
+    "vue/multi-word-component-names": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": "warn"
   },
   "globals": {
     "defineProps": "readonly",
