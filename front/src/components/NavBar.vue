@@ -9,7 +9,7 @@
     </button>
     <button
       class="btn btn-success amortissement-button"
-      v-bind="{ disabled }"
+      :disabled="route.name === 'Login'"
       @click="getAmortissement"
     >
       <font-awesome-icon icon="history" />
@@ -23,7 +23,7 @@
     </button>
     <button
       class="btn btn-info operation-recurrente-button"
-      v-bind="{ disabled }"
+      :disabled="route.name === 'Login'"
       @click="getRecurrenteOp"
     >
       <font-awesome-icon icon="retweet" />
