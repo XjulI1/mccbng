@@ -9,6 +9,7 @@
     </button>
     <button
       class="btn btn-success amortissement-button"
+      v-bind="{ disabled }"
       @click="getAmortissement"
     >
       <font-awesome-icon icon="history" />
@@ -22,6 +23,7 @@
     </button>
     <button
       class="btn btn-info operation-recurrente-button"
+      v-bind="{ disabled }"
       @click="getRecurrenteOp"
     >
       <font-awesome-icon icon="retweet" />
