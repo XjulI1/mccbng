@@ -351,20 +351,27 @@ const changeParams = () => {
 }
 
 .nav-bar {
-  padding: 0;
-  height: $navbar-height;
-  width: $left-panel-width;
-  background-color: white;
+  padding: 8px 16px;
+  height: auto;
+  width: fit-content;
+  max-width: 90%;
   position: fixed;
-  bottom: 0;
-  left: 0;
-  display: inline;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
   text-align: center;
   z-index: 100;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 
   @media screen and (max-width: $mobile_BP_max_width) {
-    width: 100%;
-    height: $navbar-height-mobile;
+    width: fit-content;
+    max-width: 95%;
+    bottom: 16px;
+    padding: 6px 12px;
   }
 
   a {
@@ -377,39 +384,29 @@ const changeParams = () => {
     position: fixed;
 
     .btn {
-      border-radius: 0;
+      border-radius: 14px;
+      margin: 0 6px;
+      height: $navbar-height;
+      width: 3rem;
+      border: none;
+      backdrop-filter: blur(5px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 1.2rem;
+      font-weight: 600;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
 
       @media screen and (max-width: $mobile_BP_max_width) {
         padding-bottom: 18px;
       }
     }
-
-    .amortissement-button,
-    .virement-button,
-    .operation-recurrente-button,
-    .params-button {
-      width: 19%;
-      height: $navbar-height;
-      font-size: 1.2rem;
-      line-height: 1.1rem;
-      font-weight: 600;
-
-      @media screen and (max-width: $mobile_BP_max_width) {
-        height: $navbar-height-mobile;
-      }
-    }
-
-    .new-operation-button {
-      width: 24%;
-      height: $navbar-height;
-      font-size: 1.2rem;
-      line-height: 1.1rem;
-      font-weight: 600;
-
-      @media screen and (max-width: $mobile_BP_max_width) {
-        height: $navbar-height-mobile;
-      }
-    }
   }
+}
+.btn-group > .btn:not(:last-child):not(.dropdown-toggle) {
+  border-top-right-radius: 14px !important;
+  border-bottom-right-radius: 14px !important;
 }
 </style>

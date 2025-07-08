@@ -97,6 +97,7 @@ const prixAmortissement = computed(() => ({
 <style lang="scss" scoped>
 .amortissement-view {
   max-width: 900px;
+  margin-bottom: $navbar-height-and-margin;
 }
 
 h2 {

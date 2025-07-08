@@ -1,5 +1,5 @@
 <template>
-  <div style="margin-bottom: 40px">
+  <div class="op-recurrentes">
     <operation-recurrente
       v-for="operation in operationsRecurrenteList"
       :key="'operation-recu-' + operation.IDopRecu"
@@ -41,3 +41,8 @@ onMounted(() => {
   }
 });
 </script>
+<style lang="scss" scoped>
+.op-recurrentes {
+  margin-bottom: $navbar-height-and-margin;
+}
+</style>

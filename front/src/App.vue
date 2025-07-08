@@ -94,7 +94,7 @@ hr {
 
   .right-panel {
     width: 100%;
-    min-height: calc(100vh - #{$header-height} - #{$navbar-height});
+    min-height: calc(100vh - #{$header-height} - #{$navbar-height-and-margin});
   }
 
   @media all and (min-width: $desktop_BP_min_width) {
@@ -117,7 +117,7 @@ hr {
     background-color: rgba(242, 242, 242, 0.95);
     width: 100%;
     padding-top: 3px;
-    padding-bottom: calc(#{$navbar-height-mobile} + 5px);
+    padding-bottom: calc(#{$navbar-height-and-margin} + 5px);
   }
 }
 

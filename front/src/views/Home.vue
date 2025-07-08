@@ -13,7 +13,7 @@ import OperationRenderer from "../components/Home/Operation.vue";
 <style lang="scss" scoped>
 @media screen and (max-width: 767px) {
   .home {
-    margin-bottom: $navbar-height;
+    margin-bottom: $navbar-height-and-margin;
   }
 }
 
