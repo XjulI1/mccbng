@@ -174,17 +174,13 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
   import { useStore } from 'vuex'
-  import { useRouter } from 'vue-router'
-
-  const props = defineProps({
-    operationID: {
-      type: String,
-      default: undefined
-    }
-  })
+  import { useRoute, useRouter } from 'vue-router'
 
   const store = useStore()
+  const route = useRoute()
   const router = useRouter()
+
+  const operationID = ref(route.params.id)
 
   const montantOpIsPositive = ref(false)
   const operation = ref({
@@ -267,9 +263,9 @@
   })
 
   // Equivalent to created
-  if (props.operationID) {
+  if (operationID.value) {
     const existingOperation = store.getters.operationFromCurrentList(
-      props.operationID
+      operationID.value
     )
     if (existingOperation) {
       operation.value = { ...existingOperation }

@@ -148,11 +148,8 @@
   import { useStore } from 'vuex'
   import { useRoute, useRouter } from 'vue-router'
 
-  const props = defineProps({
-    cash: {
-      type: Boolean,
-      default: false
-    }
+  const cash = computed(() => {
+    return String(route.name).includes('Retrait')
   })
 
   const store = useStore()
@@ -165,7 +162,7 @@
     DateOp: '',
     IDcompteDebit: undefined,
     IDcompteCredit: undefined,
-    IDcat: props.cash ? 21 : 25
+    IDcat: cash.value ? 21 : 25
   })
 
   const activeAccountID = computed(
@@ -189,7 +186,7 @@
   })
 
   const accountsCredit = computed(() => {
-    if (props.cash) {
+    if (cash.value) {
       operation.value.IDcompteCredit = porteFeuilleCompte.value[0].IDcompte
       return porteFeuilleCompte.value
     }
@@ -224,7 +221,7 @@
   })
 
   watch(
-    () => props.cash,
+    () => cash.value,
     (value) => {
       operation.value.IDcat = value ? 21 : 25
     }
