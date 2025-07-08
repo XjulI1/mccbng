@@ -34,7 +34,10 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
 import {
   auth,
   checkUserAuthentification,
@@ -44,76 +47,66 @@ import {
 } from "@/services/auth";
 import randomListNumber from "@/helpers/randomListNumber";
 
-export default {
-  name: "Login",
+const router = useRouter();
+const store = useStore();
 
-  data() {
-    return {
-      autoAuthProgress: true,
-      buttonList: randomListNumber(),
-      code: "",
-      error: false,
-    };
-  },
+const autoAuthProgress = ref(true);
+const buttonList = ref(randomListNumber());
+const code = ref("");
+const error = ref(false);
 
-  watch: {
-    code(value) {
-      if (value.length === 6) {
-        auth(value, process.env.VUE_APP_API_URL)
-          .then(({ userToken, ttl, userID }) => {
-            this.endAuthentification({ userToken, ttl, userID });
-          })
-          .catch(() => {
-            this.error = true;
-            this.code = "";
-          });
-      }
-    },
-  },
+const endAuthentification = ({ userToken, userID }) => {
+  store.dispatch("saveUserToken", userToken);
+  store.dispatch("fetchUserByIDAndGenerateRecurringOp", userID);
 
-  beforeCreate() {
-    const userToken = getTokenCookie();
-    const userID = getUserIDCookie();
+  saveCookies({ userToken, userID });
 
-    checkUserAuthentification({
-      userToken,
-      userID,
-      apiUrl: process.env.VUE_APP_API_URL,
-    }).then((isExist) => {
-      if (isExist) {
-        this.endAuthentification({ userID, userToken });
-      } else {
-        this.autoAuthProgress = false;
-      }
-    });
-  },
+  router.replace({ name: "Home" });
+};
 
-  mounted() {
-    window.addEventListener("keydown", (event) => {
-      if (event.key >= 0 && event.key <= 9) {
-        this.code += event.key;
-      }
-    });
-  },
+watch(code, (value) => {
+  if (value.length === 6) {
+    auth(value, process.env.VUE_APP_API_URL)
+      .then(({ userToken, ttl, userID }) => {
+        endAuthentification({ userToken, ttl, userID });
+      })
+      .catch(() => {
+        error.value = true;
+        code.value = "";
+      });
+  }
+});
 
-  methods: {
-    addNumber(event) {
-      this.code += event.target.value;
-    },
+// Equivalent to beforeCreate
+const userToken = getTokenCookie();
+const userID = getUserIDCookie();
 
-    crossDelete() {
-      this.code = "";
-    },
+checkUserAuthentification({
+  userToken,
+  userID,
+  apiUrl: process.env.VUE_APP_API_URL,
+}).then((isExist) => {
+  if (isExist) {
+    endAuthentification({ userID, userToken });
+  } else {
+    autoAuthProgress.value = false;
+  }
+});
 
-    endAuthentification({ userToken, userID }) {
-      this.$store.dispatch("saveUserToken", userToken);
-      this.$store.dispatch("fetchUserByIDAndGenerateRecurringOp", userID);
+onMounted(() => {
+  window.addEventListener("keydown", (event) => {
+    if (event.key >= 0 && event.key <= 9) {
+      code.value += event.key;
+    }
+  });
+});
 
-      saveCookies({ userToken, userID });
+const addNumber = (event) => {
+  code.value += event.target.value;
+};
 
-      this.$router.replace({ name: "Home" });
-    },
-  },
+const crossDelete = () => {
+  code.value = "";
 };
 </script>
 

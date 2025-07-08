@@ -9,41 +9,38 @@
   </div>
 </template>
 
-<script>
-  import { mapState } from 'vuex'
+<script setup>
+import { computed, watch } from "vue";
+import { useStore } from "vuex";
 
-  export default {
-    name: 'OperationList',
-    props: { OperationRenderer: { type: Object, required: true } },
+const props = defineProps({
+  OperationRenderer: { type: Object, required: true },
+});
 
-    computed: {
-      ...mapState({
-        userFavoris: (state) => state.user.favoris,
-        accountList: (state) => state.compte.accountList,
-        operationsOfActiveAccount: (state) =>
-          state.operation.operationsOfActiveAccount
-      }),
+const store = useStore();
 
-      operationsList () {
-        if (
-          this.operationsOfActiveAccount &&
-          this.operationsOfActiveAccount[0] &&
-          this.operationsOfActiveAccount[0].IDop !== undefined
-        ) {
-          return this.operationsOfActiveAccount
-        }
-        return []
-      }
-    },
+const userFavoris = computed(() => store.state.user.favoris);
+const accountList = computed(() => store.state.compte.accountList);
+const operationsOfActiveAccount = computed(
+  () => store.state.operation.operationsOfActiveAccount
+);
 
-    watch: {
-      accountList () {
-        if (this.operationsOfActiveAccount === undefined) {
-          this.$store.dispatch('fetchActiveAccount', this.userFavoris)
-        }
-      }
-    }
+const operationsList = computed(() => {
+  if (
+    operationsOfActiveAccount.value &&
+    operationsOfActiveAccount.value[0] &&
+    operationsOfActiveAccount.value[0].IDop !== undefined
+  ) {
+    return operationsOfActiveAccount.value;
   }
+  return [];
+});
+
+watch(accountList, () => {
+  if (operationsOfActiveAccount.value === undefined) {
+    store.dispatch("fetchActiveAccount", userFavoris.value);
+  }
+});
 </script>
 <style lang="scss" scoped>
 .operation-list {

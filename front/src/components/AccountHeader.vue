@@ -23,36 +23,31 @@
   </div>
 </template>
 
-<script>
-import { mapState } from "vuex";
-
+<script setup>
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useStore } from "vuex";
 import Currency from "./Currency";
 
-export default {
-  name: "AccountHeader",
-  components: { Currency },
-  computed: {
-    ...mapState({
-      activeAccount: (state) => state.compte.activeAccount,
-    }),
+const route = useRoute();
+const router = useRouter();
+const store = useStore();
 
-    disabledTotal() {
-      return this.$route.meta.disabledTotalHeader === undefined
-        ? false
-        : this.$route.meta.disabledTotalHeader;
-    },
-  },
+const activeAccount = computed(() => store.state.compte.activeAccount);
 
-  methods: {
-    goToStats() {
-      this.$store.dispatch("toggleAccountList", false);
-      this.$router.push("stats");
-    },
+const disabledTotal = computed(() => {
+  return route.meta.disabledTotalHeader === undefined
+    ? false
+    : route.meta.disabledTotalHeader;
+});
 
-    searchOperation() {
-      this.$router.push("search");
-    },
-  },
+const goToStats = () => {
+  store.dispatch("toggleAccountList", false);
+  router.push("stats");
+};
+
+const searchOperation = () => {
+  router.push("search");
 };
 </script>
 

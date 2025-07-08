@@ -24,74 +24,67 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useStore } from "vuex";
 import Currency from "../Currency";
 
-export default {
-  name: "Compte",
-  components: { Currency },
-  /* eslint-disable vue/require-prop-types */
+const props = defineProps([
+  "accountInformations",
+  "boldTitle",
+  "disableClick",
+  "noColor",
+  "warning",
+  "faIcon",
+]);
 
-  props: [
-    "accountInformations",
-    "boldTitle",
-    "disableClick",
-    "noColor",
-    "warning",
-    "faIcon",
-  ],
+const route = useRoute();
+const router = useRouter();
+const store = useStore();
 
-  data() {
-    return {
-      soldeColor: this.getSoldeColor(),
-      classBoldTitle: this.boldTitle ? "bold-title" : "",
-      classPointer: this.disableClick ? "" : "cursor-pointer",
-    };
-  },
+const getSoldeColor = () => {
+  if (props.noColor) {
+    return "";
+  }
 
-  computed: {
-    imgID() {
-      return this.accountInformations.banque
-        ? this.accountInformations.banque.IDbanque
-        : 0;
-    },
-  },
+  if (props.accountInformations.soldeNotChecked < props.warning) {
+    return "soldeWarning";
+  }
 
-  watch: {
-    "accountInformations.soldeNotChecked"() {
-      this.soldeColor = this.getSoldeColor();
-    },
-  },
+  return props.accountInformations.soldeNotChecked >= 0
+    ? "soldeIn"
+    : "soldeOut";
+};
 
-  methods: {
-    getAccountDetails() {
-      if (!this.disableClick) {
-        if (this.$route.path !== "/") {
-          this.$router.push("/");
-        }
+const soldeColor = ref(getSoldeColor());
+const classBoldTitle = computed(() => (props.boldTitle ? "bold-title" : ""));
+const classPointer = computed(() =>
+  props.disableClick ? "" : "cursor-pointer"
+);
 
-        this.$store.dispatch(
-          "fetchActiveAccount",
-          this.accountInformations.IDcompte
-        );
-        this.$store.dispatch("toggleAccountList", false);
-      }
-    },
+const imgID = computed(() => {
+  return props.accountInformations.banque
+    ? props.accountInformations.banque.IDbanque
+    : 0;
+});
 
-    getSoldeColor() {
-      if (this.noColor) {
-        return "";
-      }
+watch(
+  () => props.accountInformations.soldeNotChecked,
+  () => {
+    soldeColor.value = getSoldeColor();
+  }
+);
 
-      if (this.accountInformations.soldeNotChecked < this.warning) {
-        return "soldeWarning";
-      }
+const getAccountDetails = () => {
+  if (!props.disableClick) {
+    if (route.path !== "/") {
+      router.push("/");
+    }
 
-      return this.accountInformations.soldeNotChecked >= 0
-        ? "soldeIn"
-        : "soldeOut";
-    },
-  },
+    store.dispatch("fetchActiveAccount", props.accountInformations.IDcompte);
+    store.dispatch("toggleAccountList", false);
+  }
 };
 </script>
 <style lang="scss" scoped>

@@ -2,41 +2,37 @@
   <div>
     <input
       id="search-input"
-      ref="search-input"
+      ref="searchInputRef"
       v-model="searchTerms"
       type="text"
       class="form-control"
       placeholder="Search terms"
       @keyup="search"
-    >
+    />
   </div>
 </template>
 
-<script>
-  export default {
-    name: 'Search',
+<script setup>
+import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
 
-    data () {
-      return {
-        searchTerms: '',
-        timer: null
-      }
-    },
+const store = useStore();
 
-    mounted () {
-      this.$refs['search-input'].focus()
-    },
+const searchTerms = ref("");
+const timer = ref(null);
+const searchInputRef = ref(null);
 
-    methods: {
-      search () {
-        if (this.timer) {
-          clearTimeout(this.timer)
-          this.timer = null
-        }
-        this.timer = setTimeout(() => {
-          this.$store.dispatch('getSearchOperations', this.searchTerms)
-        }, 200)
-      }
-    }
+onMounted(() => {
+  searchInputRef.value.focus();
+});
+
+const search = () => {
+  if (timer.value) {
+    clearTimeout(timer.value);
+    timer.value = null;
   }
+  timer.value = setTimeout(() => {
+    store.dispatch("getSearchOperations", searchTerms.value);
+  }, 200);
+};
 </script>

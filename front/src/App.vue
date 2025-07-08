@@ -16,8 +16,10 @@
   </div>
 </template>
 
-<script>
-import { mapState } from "vuex";
+<script setup>
+import { computed, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
 
 import NavBar from "@/components/NavBar";
 import CompteList from "@/components/CompteList";
@@ -26,36 +28,26 @@ import TimeSeriesEvolutionSoldes from "./components/Stats/TimeSeriesEvolutionSol
 
 import "@/styles/bootstrap.css";
 
-export default {
-  name: "App",
+const router = useRouter();
+const store = useStore();
 
-  components: { TimeSeriesEvolutionSoldes, CompteList, AccountHeader, NavBar },
+const userID = computed(() => store.state.user.id);
+const displayAccountList = computed(() => store.state.display.account_list);
 
-  computed: mapState({
-    userID: (state) => state.user.id,
-    displayAccountList: (state) => state.display.account_list,
-  }),
+watch(userID, () => {
+  store.dispatch("fetchAccountList");
+  store.dispatch("fetchCategoryList");
+});
 
-  watch: {
-    userID() {
-      this.$store.dispatch("fetchAccountList");
-      this.$store.dispatch("fetchCategoryList");
-    },
-  },
+// Equivalent to beforeCreate
+router.push("/login");
 
-  beforeCreate() {
-    this.$router.push("/login");
-  },
+const openAccountList = () => {
+  store.dispatch("toggleAccountList", true);
+};
 
-  methods: {
-    openAccountList() {
-      this.$store.dispatch("toggleAccountList", true);
-    },
-
-    closeAccountList() {
-      this.$store.dispatch("toggleAccountList", false);
-    },
-  },
+const closeAccountList = () => {
+  store.dispatch("toggleAccountList", false);
 };
 </script>
 

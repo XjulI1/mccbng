@@ -4,14 +4,11 @@
       <div class="col-6">
         <label>
           {{ operation.NomOpRecu }}
-          <br>
+          <br />
           {{ dateOperation }}
         </label>
       </div>
-      <div
-        class="col-2 center-text"
-        :class="css.montant"
-      >
+      <div class="col-2 center-text" :class="css.montant">
         <Currency :amount="operation.MontantOpRecu" />
       </div>
       <div class="col-4">
@@ -21,36 +18,35 @@
   </div>
 </template>
 
-<script>
-  import Currency from './Currency'
+<script setup>
+import { computed } from "vue";
+import { useStore } from "vuex";
+import Currency from "./Currency";
 
-  export default {
-    name: 'OperationRecurrente',
-    components: { Currency },
-    props: {
-      operation: {
-        type: Object,
-        default: () => {}
-      }
-    },
+const props = defineProps({
+  operation: {
+    type: Object,
+    default: () => {},
+  },
+});
 
-    data () {
-      const store = this.$store
+const store = useStore();
 
-      return {
-        dateOperation: new Date(
-          this.operation.DernierDateOpRecu
-        ).toLocaleDateString(),
-        css: {
-          montant: this.operation.MontantOpRecu > 0 ? 'montantIn' : 'montantOut'
-        },
-        accountName:
-          store.state.compte.accountList.find(
-            (account) => account.IDcompte === this.operation.IDcompte
-          )?.NomCompte || 'Unknown Account'
-      }
-    }
-  }
+const dateOperation = computed(() => {
+  return new Date(props.operation.DernierDateOpRecu).toLocaleDateString();
+});
+
+const css = computed(() => ({
+  montant: props.operation.MontantOpRecu > 0 ? "montantIn" : "montantOut",
+}));
+
+const accountName = computed(() => {
+  return (
+    store.state.compte.accountList.find(
+      (account) => account.IDcompte === props.operation.IDcompte
+    )?.NomCompte || "Unknown Account"
+  );
+});
 </script>
 
 <style scoped>

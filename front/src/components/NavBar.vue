@@ -32,44 +32,44 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "Navbar",
+<script setup>
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useStore } from "vuex";
 
-  computed: {
-    disabled() {
-      return this.$route.meta.disabledTotalHeader === undefined
-        ? false
-        : this.$route.meta.disabledTotalHeader;
-    },
-  },
+const route = useRoute();
+const router = useRouter();
+const store = useStore();
 
-  methods: {
-    addOperation() {
-      this.$store.dispatch("toggleAccountList", false);
-      this.$router.push("/newOperation");
-    },
+const disabled = computed(() => {
+  return route.meta.disabledTotalHeader === undefined
+    ? false
+    : route.meta.disabledTotalHeader;
+});
 
-    doTransfert() {
-      this.$store.dispatch("toggleAccountList", false);
-      this.$router.push("/transfert");
-    },
+const addOperation = () => {
+  store.dispatch("toggleAccountList", false);
+  router.push("/newOperation");
+};
 
-    getRecurrenteOp() {
-      this.$store.dispatch("toggleAccountList", false);
-      this.$router.push("/recurrOperation");
-    },
+const doTransfert = () => {
+  store.dispatch("toggleAccountList", false);
+  router.push("/transfert");
+};
 
-    getAmortissement() {
-      this.$store.dispatch("toggleAccountList", false);
-      this.$router.push("/amortissement");
-    },
+const getRecurrenteOp = () => {
+  store.dispatch("toggleAccountList", false);
+  router.push("/recurrOperation");
+};
 
-    changeParams() {
-      this.$store.dispatch("toggleAccountList", false);
-      this.$router.push("/config");
-    },
-  },
+const getAmortissement = () => {
+  store.dispatch("toggleAccountList", false);
+  router.push("/amortissement");
+};
+
+const changeParams = () => {
+  store.dispatch("toggleAccountList", false);
+  router.push("/config");
 };
 </script>
 

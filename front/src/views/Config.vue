@@ -22,28 +22,26 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "Config",
-  data() {
-    return {
-      apiURL: process.env.VUE_APP_API_URL,
-    };
-  },
-  created() {
-    this.$store.commit("setActiveAccount", { NomCompte: "Configurations" });
-  },
+<script setup>
+import { onMounted } from "vue";
+import { useStore } from "vuex";
 
-  methods: {
-    toggleAmount(event) {
-      this.$store.dispatch("toggleMaskAmount");
-      event.target.blur();
-    },
-    toggleZoomStats(event) {
-      this.$store.dispatch("toggleZoomStats");
-      event.target.blur();
-    },
-  },
+const store = useStore();
+
+const apiURL = process.env.VUE_APP_API_URL;
+
+onMounted(() => {
+  store.commit("setActiveAccount", { NomCompte: "Configurations" });
+});
+
+const toggleAmount = (event) => {
+  store.dispatch("toggleMaskAmount");
+  event.target.blur();
+};
+
+const toggleZoomStats = (event) => {
+  store.dispatch("toggleZoomStats");
+  event.target.blur();
 };
 </script>
 <style lang="scss" scoped>

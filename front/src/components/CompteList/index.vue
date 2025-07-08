@@ -12,35 +12,35 @@
       :account-informations="account"
       fa-icon="money-bill"
     />
-    <hr class="hr-point">
+    <hr class="hr-point" />
     <compte
       :account-informations="totalAccounts.available"
       :bold-title="cssClasses.compteBoldTitle.boldTitle"
       :disable-click="true"
       no-color="true"
     />
-    <hr>
+    <hr />
     <compte
       v-for="account in bloquedCompte"
       :key="'account-' + account.IDcompte"
       :account-informations="account"
       fa-icon="times-circle"
     />
-    <hr class="hr-point">
+    <hr class="hr-point" />
     <compte
       :account-informations="totalAccounts.all"
       :bold-title="cssClasses.compteBoldTitle.boldTitle"
       :disable-click="true"
       :warning="warningTotal"
     />
-    <hr>
+    <hr />
     <compte
       v-for="account in retraiteCompte"
       :key="'account-' + account.IDcompte"
       :account-informations="account"
       fa-icon="times-circle"
     />
-    <hr class="hr-point">
+    <hr class="hr-point" />
     <compte
       :account-informations="totalAccounts.retraite"
       :bold-title="cssClasses.compteBoldTitle.boldTitle"
@@ -50,75 +50,61 @@
   </div>
 </template>
 
-<script>
-  import Compte from './Compte'
+<script setup>
+import { ref, computed, watch } from "vue";
+import { useStore } from "vuex";
+import Compte from "./Compte";
 
-  import { mapGetters, mapState } from 'vuex'
+const store = useStore();
 
-  export default {
-    name: 'CompteList',
-    components: { Compte },
+const totalAccounts = ref({
+  available: {
+    NomCompte: "Total disponible",
+    solde: 0,
+  },
+  all: {
+    NomCompte: "Total global",
+    solde: 0,
+  },
+  retraite: {
+    NomCompte: "Total retraite",
+    solde: 0,
+  },
+});
 
-    data () {
-      return {
-        totalAccounts: {
-          available: {
-            NomCompte: 'Total disponible',
-            solde: 0
-          },
-          all: {
-            NomCompte: 'Total global',
-            solde: 0
-          },
-          retraite: {
-            NomCompte: 'Total retraite',
-            solde: 0
-          }
-        },
-        cssClasses: {
-          compteBoldTitle: { boldTitle: true }
-        }
-      }
-    },
+const cssClasses = ref({
+  compteBoldTitle: { boldTitle: true },
+});
 
-    computed: {
-      ...mapState({
-        warningTotal: (state) => state.user.warningTotal
-      }),
-      ...mapGetters([
-        'totalAvailable',
-        'totalGlobal',
-        'totalRetraite',
-        'availableCompte',
-        'bloquedCompte',
-        'retraiteCompte',
-        'porteFeuilleCompte'
-      ])
-    },
+const warningTotal = computed(() => store.state.user.warningTotal);
+const totalAvailable = computed(() => store.getters.totalAvailable);
+const totalGlobal = computed(() => store.getters.totalGlobal);
+const totalRetraite = computed(() => store.getters.totalRetraite);
+const availableCompte = computed(() => store.getters.availableCompte);
+const bloquedCompte = computed(() => store.getters.bloquedCompte);
+const retraiteCompte = computed(() => store.getters.retraiteCompte);
+const porteFeuilleCompte = computed(() => store.getters.porteFeuilleCompte);
 
-    watch: {
-      totalAvailable (value) {
-        this.totalAccounts.available = {
-          ...this.totalAccounts.available,
-          soldeNotChecked: value
-        }
-      },
+watch(totalAvailable, (value) => {
+  totalAccounts.value.available = {
+    ...totalAccounts.value.available,
+    soldeNotChecked: value,
+  };
+});
 
-      totalGlobal (value) {
-        this.totalAccounts.all = {
-          ...this.totalAccounts.all,
-          soldeNotChecked: value
-        }
-      },
+watch(totalGlobal, (value) => {
+  totalAccounts.value.all = {
+    ...totalAccounts.value.all,
+    soldeNotChecked: value,
+  };
+});
 
-      totalRetraite (value) {
-        this.totalAccounts.retraite = {
-          ...this.totalAccounts.retraite,
-          soldeNotChecked: value
-        }
-      }
-    }
-  }
+watch(totalRetraite, (value) => {
+  totalAccounts.value.retraite = {
+    ...totalAccounts.value.retraite,
+    soldeNotChecked: value,
+  };
+});
 </script>
 
 <style>

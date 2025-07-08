@@ -10,139 +10,118 @@
 </template>
 
 <script setup>
-  import OperationRenderer from '../Home/Operation.vue'
-</script>
+import { ref, computed, watch, onMounted, getCurrentInstance } from "vue";
+import { useStore } from "vuex";
+import Highcharts from "highcharts";
+import OperationList from "../OperationList.vue";
+import OperationRenderer from "../Home/Operation.vue";
+import { lastDayOfMonth } from "@/helpers/date";
 
-<script>
-  import Highcharts from 'highcharts'
-  import { mapGetters, mapState } from 'vuex'
-  import OperationList from '../OperationList.vue'
-  import { lastDayOfMonth } from '@/helpers/date'
+const store = useStore();
+const { proxy } = getCurrentInstance();
 
-  let currentVueComponent
+const selectedCatId = ref(null);
 
-  export default {
-    name: 'PieByCategorie',
-    components: { OperationList },
-    data () {
-      return {
-        selectedCatId: null
-      }
+const categoriesTotal = computed(
+  () => store.getters.getCategoriesTotalForHighchartPie
+);
+const userID = computed(() => store.state.user.id);
+const storeCurrentYear = computed(() => store.state.stats.currentYear);
+const storeCurrentMonth = computed(() => store.state.stats.currentMonth);
+
+const buildChart = () => {
+  Highcharts.chart(proxy.$el.querySelector(".pie-by-categorie__chart"), {
+    chart: {
+      plotBackgroundColor: null,
+      plotBorderWidth: null,
+      plotShadow: false,
+      type: "pie",
     },
-
-    computed: {
-      ...mapGetters({ categoriesTotal: 'getCategoriesTotalForHighchartPie' }),
-      ...mapState({
-        userID: (state) => state.user.id,
-        storeCurrentYear: (state) => state.stats.currentYear,
-        storeCurrentMonth: (state) => state.stats.currentMonth
-      })
+    credits: {
+      enabled: false,
     },
-
-    watch: {
-      categoriesTotal () {
-        this.buildChart()
-        this.$store.commit('setOperationsOfActiveAccount', [])
+    title: {
+      text: null,
+    },
+    tooltip: {
+      pointFormat: "{series.name}: <b>{point.y}€</b>",
+    },
+    plotOptions: {
+      pie: {
+        allowPointSelect: true,
+        cursor: "pointer",
+        dataLabels: {
+          enabled: true,
+          format: "<b>{point.name}</b>: {point.percentage:.1f} %",
+          style: {
+            color:
+              (Highcharts.theme && Highcharts.theme.contrastTextColor) ||
+              "black",
+          },
+        },
       },
-
-      userID () {
-        this.$store.dispatch('fetchSumCategoriesByUserByMonth')
+      series: {
+        point: {
+          events: {
+            click: function () {
+              selectedCatId.value = this.catId;
+            },
+          },
+        },
       },
-      selectedCatId () {
-        this.$store.dispatch('fetchOperations', {
-          IDcat: this.selectedCatId,
-          and: [
-            {
-              DateOp: {
-                gte: new Date(
-                  this.storeCurrentYear +
-                    '-' +
-                    this.storeCurrentMonth +
-                    '-01 00:00:00Z'
-                )
-              }
-            },
-            {
-              DateOp: {
-                lte: new Date(
-                  this.storeCurrentYear +
-                    '-' +
-                    this.storeCurrentMonth +
-                    '-' +
-                    lastDayOfMonth(
-                      this.storeCurrentYear,
-                      this.storeCurrentMonth
-                    ) +
-                    ' 23:59:59Z'
-                )
-              }
-            }
-          ]
-        })
-      }
     },
+    series: [
+      {
+        colorByPoint: true,
+        name: "Total",
+        data: categoriesTotal.value,
+      },
+    ],
+  });
+};
 
-    created () {
-      if (this.userID) {
-        this.$store.dispatch('fetchSumCategoriesByUserByMonth')
-      }
-    },
+watch(categoriesTotal, () => {
+  buildChart();
+  store.commit("setOperationsOfActiveAccount", []);
+});
 
-    mounted () {
-      currentVueComponent = this
-    },
+watch(userID, () => {
+  store.dispatch("fetchSumCategoriesByUserByMonth");
+});
 
-    methods: {
-      buildChart () {
-        Highcharts.chart(this.$el.querySelector('.pie-by-categorie__chart'), {
-          chart: {
-            plotBackgroundColor: null,
-            plotBorderWidth: null,
-            plotShadow: false,
-            type: 'pie'
-          },
-          credits: {
-            enabled: false
-          },
-          title: {
-            text: null
-          },
-          tooltip: {
-            pointFormat: '{series.name}: <b>{point.y}€</b>'
-          },
-          plotOptions: {
-            pie: {
-              allowPointSelect: true,
-              cursor: 'pointer',
-              dataLabels: {
-                enabled: true,
-                format: '<b>{point.name}</b>: {point.percentage:.1f} %',
-                style: {
-                  color:
-                    (Highcharts.theme && Highcharts.theme.contrastTextColor) ||
-                    'black'
-                }
-              }
-            },
-            series: {
-              point: {
-                events: {
-                  click: function () {
-                    currentVueComponent.selectedCatId = this.catId
-                  }
-                }
-              }
-            }
-          },
-          series: [
-            {
-              colorByPoint: true,
-              name: 'Total',
-              data: this.categoriesTotal
-            }
-          ]
-        })
-      }
-    }
+watch(selectedCatId, () => {
+  store.dispatch("fetchOperations", {
+    IDcat: selectedCatId.value,
+    and: [
+      {
+        DateOp: {
+          gte: new Date(
+            storeCurrentYear.value +
+              "-" +
+              storeCurrentMonth.value +
+              "-01 00:00:00Z"
+          ),
+        },
+      },
+      {
+        DateOp: {
+          lte: new Date(
+            storeCurrentYear.value +
+              "-" +
+              storeCurrentMonth.value +
+              "-" +
+              lastDayOfMonth(storeCurrentYear.value, storeCurrentMonth.value) +
+              " 23:59:59Z"
+          ),
+        },
+      },
+    ],
+  });
+});
+
+onMounted(() => {
+  if (userID.value) {
+    store.dispatch("fetchSumCategoriesByUserByMonth");
   }
+});
 </script>
