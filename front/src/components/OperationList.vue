@@ -13,7 +13,7 @@
   import { computed, watch } from 'vue'
   import { useStore } from 'vuex'
 
-  const props = defineProps({
+  defineProps({
     OperationRenderer: { type: Object, required: true }
   })
 
