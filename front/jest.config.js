@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   testEnvironment: 'jsdom',
   moduleFileExtensions: [
     'js',
@@ -16,7 +16,7 @@ module.exports = {
     '^.+\\.tsx$': 'ts-jest'
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(vue2-touch-events)/)'
+    'node_modules/(?!(vue2-touch-events|@vue)/)'
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -30,5 +30,5 @@ module.exports = {
     '!src/main.js',
     '!**/node_modules/**'
   ],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js']
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
 }

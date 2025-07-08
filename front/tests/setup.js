@@ -1,16 +1,4 @@
 // Configuration globale pour Jest
-import { config } from '@vue/test-utils'
-
-// Configuration globale des composants de test
-config.global.stubs = {
-  // Stub des composants tiers si nécessaire
-  'router-link': {
-    template: '<a><slot /></a>'
-  },
-  'router-view': {
-    template: '<div><slot /></div>'
-  }
-}
 
 // Mock des modules externes si nécessaire
 global.console = {

@@ -2,6 +2,7 @@
   "name": "@mccbng/front",
   "description": "Front mccbng : mCloud Compte and Budget Next Generation",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
+    "@babel/eslint-parser": "^7.28.0",
     "@babel/preset-env": "^7.23.6",
     "@vitejs/plugin-vue": "^4.5.2",
     "@vue/compiler-sfc": "^3.4.3",

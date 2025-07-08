@@ -1,0 +1,44 @@
+{
+  "root": true,
+  "env": {
+    "node": true,
+    "jest": true,
+    "browser": true,
+    "es2022": true
+  },
+  "extends": [
+    "plugin:vue/vue3-essential",
+    "eslint:recommended",
+    "plugin:vue/vue3-recommended",
+    "@vue/standard"
+  ],
+  "parser": "vue-eslint-parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "parser": {
+      "js": "@babel/eslint-parser"
+    },
+    "requireConfigFile": false,
+    "babelOptions": {
+      "babelrc": false,
+      "configFile": false,
+      "presets": ["@babel/preset-env"]
+    }
+  },
+  "rules": {
+    "indent": "off",
+    "vue/script-indent": ["error", 2, { "baseIndent": 1 }],
+    "no-console": "warn",
+    "no-debugger": "warn",
+    "import/no-extraneous-dependencies": "off",
+    "vue/multi-word-component-names": "off"
+  },
+  "globals": {
+    "defineProps": "readonly",
+    "defineEmits": "readonly",
+    "defineExpose": "readonly",
+    "withDefaults": "readonly",
+    "defineOptions": "readonly"
+  }
+}
