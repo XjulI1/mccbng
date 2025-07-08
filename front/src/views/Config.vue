@@ -37,24 +37,6 @@
         </button>
       </div>
 
-      <div class="config-card">
-        <div class="card-header">
-          <div class="card-icon stats-icon">
-            <font-awesome-icon icon="chart-area" />
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">Affichage des statistiques</h3>
-            <p class="card-description">
-              Activer le zoom sur l'évolution du solde
-            </p>
-          </div>
-        </div>
-        <button class="config-btn success-btn" @click="toggleZoomStats">
-          <font-awesome-icon icon="search-plus" />
-          {{ zoomStatsText }}
-        </button>
-      </div>
-
       <div class="config-card logout-card">
         <div class="card-header">
           <div class="card-icon logout-icon">
@@ -88,7 +70,6 @@
 <script setup lang="ts">
 import { onMounted, computed } from "vue";
 import { useStore } from "vuex";
-import { useRouter } from "vue-router";
 import { removeCookies } from "@/services/auth";
 
 const store = useStore();
@@ -102,10 +83,6 @@ const maskAmountText = computed(() => {
     : "Masquer les montants";
 });
 
-const zoomStatsText = computed(() => {
-  return store.state.zoomStats ? "Désactiver le zoom" : "Activer le zoom";
-});
-
 onMounted(() => {
   store.commit("setActiveAccount", { NomCompte: "Configurations" });
 });
@@ -117,15 +94,7 @@ const toggleAmount = (event: Event) => {
   }
 };
 
-const toggleZoomStats = (event: Event) => {
-  store.dispatch("toggleZoomStats");
-  if (event.target instanceof HTMLElement) {
-    event.target.blur();
-  }
-};
-
-const logout = (event: Event) => {
-  // Fallback si la méthode logout n'existe pas dans le store
+const logout = () => {
   localStorage.clear();
   sessionStorage.clear();
   removeCookies();
