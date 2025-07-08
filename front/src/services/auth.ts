@@ -17,19 +17,22 @@ export const getUserIDCookie = () => {
 }
 
 export const auth = (value, apiUrl) => {
-  return axios.post(apiUrl + '/api/users/login', {
-    code: value
-  }).then((response) => {
-    if (response.status === 200) {
-      return {
-        userToken: response.data.id,
-        ttl: response.data.ttl,
-        userID: response.data.userId
+  return axios
+    .post(apiUrl + '/api/users/login', {
+      code: value
+    })
+    .then((response) => {
+      if (response.status === 200) {
+        return {
+          userToken: response.data.id,
+          ttl: response.data.ttl,
+          userID: response.data.userId
+        }
       }
-    }
-  }).catch((error) => {
-    throw new Error(error)
-  })
+    })
+    .catch((error) => {
+      throw new Error(error)
+    })
 }
 
 export const saveCookies = ({ userToken, userID, ttl }) => {
@@ -39,18 +42,27 @@ export const saveCookies = ({ userToken, userID, ttl }) => {
   cookie.set(COOKIE_USER_ID, userID)
 }
 
-export const checkUserAuthentification = ({ userToken, _, apiUrl }) => {
-  return axios.get(apiUrl + '/api/users/exists', {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  }).then(() => {
-    return true
-  }).catch(() => {
-    saveCookies({ userToken: undefined, userID: undefined, ttl: 0 })
+export const removeCookies = () => {
+  const cookie = new Cookies()
+  cookie.remove(COOKIE_TOKEN)
+  cookie.remove(COOKIE_USER_ID)
+}
 
-    return false
-  })
+export const checkUserAuthentification = ({ userToken, _, apiUrl }) => {
+  return axios
+    .get(apiUrl + '/api/users/exists', {
+      headers: {
+        Authorization: 'Bearer ' + userToken
+      }
+    })
+    .then(() => {
+      return true
+    })
+    .catch(() => {
+      saveCookies({ userToken: undefined, userID: undefined, ttl: 0 })
+
+      return false
+    })
 }
 
 export default {

@@ -14,7 +14,10 @@ import {
   faMoneyBillAlt,
   faHistory,
   faFunnelDollar,
-  faChartArea
+  faChartArea,
+  faEyeSlash,
+  faSignOutAlt,
+  faSearchPlus
 } from '@fortawesome/free-solid-svg-icons'
 
 export default {
@@ -34,7 +37,10 @@ export default {
       faMoneyBillAlt,
       faHistory,
       faFunnelDollar,
-      faChartArea
+      faChartArea,
+      faEyeSlash,
+      faSignOutAlt,
+      faSearchPlus
     })
   }
 }
