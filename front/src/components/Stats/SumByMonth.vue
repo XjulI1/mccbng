@@ -35,7 +35,7 @@
 <script setup>
   import { ref, computed, watch, onMounted } from 'vue'
   import { useStore } from 'vuex'
-  import Currency from '../Currency'
+  import Currency from '../Currency.vue'
 
   const store = useStore()
 

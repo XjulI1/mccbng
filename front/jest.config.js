@@ -1,22 +1,34 @@
 module.exports = {
+  testEnvironment: 'jsdom',
   moduleFileExtensions: [
     'js',
     'jsx',
     'json',
-    'vue'
+    'vue',
+    'ts',
+    'tsx'
   ],
   transform: {
-    '^.+\\.vue$': 'vue-jest',
-    '.+\\.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$': 'jest-transform-stub',
-    '^.+\\.jsx?$': 'babel-jest'
+    '^.+\\.vue$': '@vue/vue3-jest',
+    '^.+\\.js$': 'babel-jest',
+    '^.+\\.jsx$': 'babel-jest',
+    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.tsx$': 'ts-jest'
   },
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
-  },
-  snapshotSerializers: [
-    'jest-serializer-vue'
+  transformIgnorePatterns: [
+    'node_modules/(?!(vue2-touch-events)/)'
   ],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
+  },
   testMatch: [
-    '<rootDir>/(**/*.spec.(js|jsx|ts|tsx)|**/__tests__/*.(js|jsx|ts|tsx))'
-  ]
+    '<rootDir>/(tests/unit/**/*.spec.(js|jsx|ts|tsx)|**/__tests__/*.(js|jsx|ts|tsx))'
+  ],
+  collectCoverageFrom: [
+    'src/**/*.{js,vue}',
+    '!src/main.js',
+    '!**/node_modules/**'
+  ],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js']
 }

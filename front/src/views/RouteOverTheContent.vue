@@ -29,9 +29,9 @@
 <script setup>
   import { computed } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
-  import OperationForm from '@/components/OperationForm'
-  import Search from '@/components/Search'
-  import TransfertForm from '@/components/TransfertForm'
+  import OperationForm from '@/components/OperationForm.vue'
+  import Search from '@/components/Search.vue'
+  import TransfertForm from '@/components/TransfertForm.vue'
 
   const components = {
     'operation-form': OperationForm,

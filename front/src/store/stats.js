@@ -40,7 +40,7 @@ export default {
 
   actions: {
     fetchSumByUserByMonth (context) {
-      axios.get(process.env.VUE_APP_API_URL + '/api/operations/sumByUserByMonth', {
+      axios.get(import.meta.env.VITE_API_URL + '/api/operations/sumByUserByMonth', {
         headers: {
           Authorization: 'Bearer ' + context.rootState.user.token
         },
@@ -57,7 +57,7 @@ export default {
     fetchSumCategoriesByUserByMonth (context) {
       context.dispatch('fetchCategoryList')
 
-      axios.get(process.env.VUE_APP_API_URL + '/api/operations/sumCategoriesByUserByMonth', {
+      axios.get(import.meta.env.VITE_API_URL + '/api/operations/sumCategoriesByUserByMonth', {
         headers: {
           Authorization: 'Bearer ' + context.rootState.user.token
         },

@@ -42,7 +42,7 @@
   import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useStore } from 'vuex'
-  import Currency from '../Currency'
+  import Currency from '../Currency.vue'
 
   const props = defineProps([
     'accountInformations',

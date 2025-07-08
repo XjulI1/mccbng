@@ -27,10 +27,10 @@
   import { useRouter } from 'vue-router'
   import { useStore } from 'vuex'
 
-  import NavBar from '@/components/NavBar'
-  import CompteList from '@/components/CompteList'
-  import AccountHeader from '@/components/AccountHeader'
-  import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes'
+  import NavBar from '@/components/NavBar.vue'
+  import CompteList from '@/components/CompteList/index.vue'
+  import AccountHeader from '@/components/AccountHeader.vue'
+  import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes.vue'
 
   import '@/styles/bootstrap.css'
 

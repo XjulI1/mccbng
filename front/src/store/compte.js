@@ -62,7 +62,7 @@ export default {
     },
 
     generateRecurringOperations ({ rootState }) {
-      generateRecurringOperations(rootState.user.id, rootState.user.token, process.env.VUE_APP_API_URL)
+      generateRecurringOperations(rootState.user.id, rootState.user.token, import.meta.env.VITE_API_URL)
     },
 
     fetchActiveAccount ({ state, commit, getters, dispatch, rootState }, accountID) {
@@ -70,7 +70,7 @@ export default {
 
       dispatch('fetchOperationsOfActiveAccount')
 
-      sumForACompte(rootState.user.token, state.activeAccount.IDcompte, process.env.VUE_APP_API_URL)
+      sumForACompte(rootState.user.token, state.activeAccount.IDcompte, import.meta.env.VITE_API_URL)
         .then(({ TotalChecked, TotalNotChecked }) => {
           commit('setNewBalances', { TotalChecked, TotalNotChecked })
         })
@@ -79,7 +79,7 @@ export default {
     fetchAccountList ({ rootState, commit }) {
       const userID = rootState.user.id
       const userToken = rootState.user.token
-      const APIURL = process.env.VUE_APP_API_URL
+      const APIURL = import.meta.env.VITE_API_URL
 
       fetchAccountList(userID, userToken, APIURL)
         .then((accountList) => {

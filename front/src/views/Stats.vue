@@ -8,8 +8,8 @@
 <script setup>
   import { onMounted } from 'vue'
   import { useStore } from 'vuex'
-  import SumByMonth from '@/components/Stats/SumByMonth'
-  import PieByCategorie from '@/components/Stats/PieByCategorie'
+  import SumByMonth from '@/components/Stats/SumByMonth.vue'
+  import PieByCategorie from '@/components/Stats/PieByCategorie.vue'
 
   const store = useStore()
 

@@ -44,7 +44,7 @@
     generateCssVariables,
     generateDateOperationVariables
   } from '@/helpers/components/Operation'
-  import Currency from '../Currency'
+  import Currency from '../Currency.vue'
 
   const props = defineProps({
     operation: {

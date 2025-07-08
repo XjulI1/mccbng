@@ -53,7 +53,7 @@
 <script setup>
   import { ref, computed, watch } from 'vue'
   import { useStore } from 'vuex'
-  import Compte from './Compte'
+  import Compte from './Compte.vue'
 
   const store = useStore()
 

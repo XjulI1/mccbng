@@ -81,7 +81,7 @@
 
   watch(code, (value) => {
     if (value.length === 6) {
-      auth(value, process.env.VUE_APP_API_URL)
+      auth(value, import.meta.env.VITE_API_URL)
         .then(({ userToken, ttl, userID }) => {
           endAuthentification({ userToken, ttl, userID })
         })
@@ -99,7 +99,7 @@
   checkUserAuthentification({
     userToken,
     userID,
-    apiUrl: process.env.VUE_APP_API_URL
+    apiUrl: import.meta.env.VITE_API_URL
   }).then((isExist) => {
     if (isExist) {
       endAuthentification({ userID, userToken })

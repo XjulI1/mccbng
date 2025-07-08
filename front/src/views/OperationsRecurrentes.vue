@@ -12,7 +12,7 @@
 <script setup>
   import { computed, watch, onMounted } from 'vue'
   import { useStore } from 'vuex'
-  import OperationRecurrente from '@/components/OperationRecurrente'
+  import OperationRecurrente from '@/components/OperationRecurrente.vue'
 
   const store = useStore()
 

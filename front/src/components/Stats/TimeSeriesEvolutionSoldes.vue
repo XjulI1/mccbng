@@ -133,28 +133,30 @@
   })
 
   watch(userID, (value) => {
-    fetchEvolutionSolde(value, userToken.value, process.env.VUE_APP_API_URL).then(
-      (results) => {
-        let sum = results.soldeGlobal
-        global.value = results.global.map((data) => {
-          sum += data.montant
-          return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
-        })
+    fetchEvolutionSolde(
+      value,
+      userToken.value,
+      import.meta.env.VITE_API_URL
+    ).then((results) => {
+      let sum = results.soldeGlobal
+      global.value = results.global.map((data) => {
+        sum += data.montant
+        return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
+      })
 
-        sum = results.soldeDispo
-        dispo.value = results.dispo.map((data) => {
-          sum += data.montant
-          return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
-        })
+      sum = results.soldeDispo
+      dispo.value = results.dispo.map((data) => {
+        sum += data.montant
+        return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
+      })
 
-        sum = results.soldeRetraite
-        retraite.value = results.retraite.map((data) => {
-          sum += data.montant
-          return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
-        })
-        buildChart()
-      }
-    )
+      sum = results.soldeRetraite
+      retraite.value = results.retraite.map((data) => {
+        sum += data.montant
+        return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
+      })
+      buildChart()
+    })
   })
 </script>
 

@@ -37,7 +37,7 @@
 
   const store = useStore()
 
-  const apiURL = process.env.VUE_APP_API_URL
+  const apiURL = import.meta.env.VITE_API_URL
 
   onMounted(() => {
     store.commit('setActiveAccount', { NomCompte: 'Configurations' })

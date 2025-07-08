@@ -27,7 +27,7 @@ export default {
 
   actions: {
     fetchUser ({ state, commit }, userID) {
-      return fetchUser(userID, state.token, process.env.VUE_APP_API_URL)
+      return fetchUser(userID, state.token, import.meta.env.VITE_API_URL)
         .then((response) => {
           commit('setUser', response)
         })

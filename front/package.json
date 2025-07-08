@@ -4,12 +4,16 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "vue-cli-service build",
-    "build:staging": "vue-cli-service build --mode test",
-    "test:unit": "vue-cli-service test:unit",
-    "lint": "vue-cli-service lint",
-    "dev": "vue-cli-service serve",
-    "test": "yarn test:unit",
+    "dev": "vite",
+    "build": "vite build",
+    "build:staging": "vite build --mode test",
+    "preview": "vite preview",
+    "test": "jest",
+    "test:unit": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .vue,.js,.jsx,.ts,.tsx --fix",
+    "lint:check": "eslint src --ext .vue,.js,.jsx,.ts,.tsx",
     "docker:staging:build": "docker buildx build --platform linux/amd64 -t dockregistry.xju.fr/mccbng/front:staging .",
     "docker:staging:push": "docker push dockregistry.xju.fr/mccbng/front:staging",
     "docker:latest:build": "docker buildx build --platform linux/amd64 -t dockregistry.xju.fr/mccbng/front:latest .",
@@ -17,7 +21,6 @@
     "docker:run": "docker run -p 3000:3000 -d front"
   },
   "dependencies": {
-    "@babel/eslint-parser": "^7.18.9",
     "@fortawesome/fontawesome-svg-core": "^1.2.0",
     "@fortawesome/free-solid-svg-icons": "^5.1.0",
     "@fortawesome/vue-fontawesome": "^3.0.0-3",
@@ -33,28 +36,30 @@
     "vuex": "^4.0.2"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~5.0.8",
-    "@vue/cli-plugin-eslint": "~5.0.8",
-    "@vue/cli-plugin-pwa": "^5.0.8",
-    "@vue/cli-plugin-unit-jest": "^5.0.8",
-    "@vue/cli-service": "~5.0.8",
-    "@vue/compiler-sfc": "^3.2.38",
+    "@babel/core": "^7.23.6",
+    "@babel/preset-env": "^7.23.6",
+    "@vitejs/plugin-vue": "^4.5.2",
+    "@vue/compiler-sfc": "^3.4.3",
     "@vue/eslint-config-standard": "^8.0.1",
-    "@vue/test-utils": "^2.0.2",
-    "babel-core": "7.0.0-bridge.0",
-    "babel-eslint": "^10.1.0",
-    "babel-jest": "^25.1.0",
-    "eslint": "^8.23.0",
-    "eslint-loader": "^4.0.2",
-    "eslint-plugin-import": "^2.26.0",
+    "@vue/test-utils": "^2.4.3",
+    "@vue/vue3-jest": "^29.2.6",
+    "autoprefixer": "^10.4.21",
+    "babel-jest": "^29.7.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^6.0.1",
+    "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-standard": "^5.0.0",
-    "eslint-plugin-vue": "^9.4.0",
-    "lint-staged": "^10.0.7",
-    "sass": "^1.60.0",
-    "sass-loader": "^10",
-    "vue-template-compiler": "^2.7.10"
+    "eslint-plugin-vue": "^9.19.2",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "lint-staged": "^15.2.0",
+    "postcss": "^8.5.6",
+    "sass": "^1.69.5",
+    "ts-jest": "^29.1.1",
+    "vite": "^5.0.10",
+    "vite-plugin-pwa": "^0.17.4"
   },
   "browserslist": [
     "> 10%",
@@ -64,12 +69,8 @@
   "_id": "mccbng_front@1.0.0",
   "license": "MIT",
   "lint-staged": {
-    "*.js": [
-      "vue-cli-service lint",
-      "git add"
-    ],
-    "*.vue": [
-      "vue-cli-service lint",
+    "*.{js,jsx,ts,tsx,vue}": [
+      "eslint --fix",
       "git add"
     ]
   },
