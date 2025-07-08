@@ -30,11 +30,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "vuex";
-import {
-  checkBoxID,
-  generateCssVariables,
-  generateDateOperationVariables,
-} from "@/helpers/components/Operation";
 import Currency from "../Currency.vue";
 
 const props = defineProps({
@@ -45,6 +40,21 @@ const props = defineProps({
 });
 
 const store = useStore();
+
+const checkBoxID = (operationID) => {
+  return "checkboxOperationID-" + operationID;
+};
+
+const generateCssVariables = ({ IDcat, MontantOp }) => {
+  return {
+    category: IDcat === 0 ? "noCategory" : "",
+    montant: MontantOp > 0 ? "montantIn" : "montantOut",
+  };
+};
+
+const generateDateOperationVariables = ({ DateOp }) => {
+  return new Date(DateOp).toLocaleDateString();
+};
 
 const dateOperation = ref(generateDateOperationVariables(props.operation));
 const css = ref(generateCssVariables(props.operation));
