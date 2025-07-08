@@ -1,7 +1,10 @@
 <template>
   <div class="app-header">
     <div>
-      <button class="btn btn-info search-button" @click="searchOperation">
+      <button
+        class="btn btn-info search-button"
+        @click="searchOperation"
+      >
         <font-awesome-icon icon="search" />
       </button>
     </div>
@@ -16,7 +19,10 @@
       </div>
     </div>
     <div>
-      <button class="btn btn-secondary chart-button" @click="goToStats">
+      <button
+        class="btn btn-secondary chart-button"
+        @click="goToStats"
+      >
         <font-awesome-icon icon="chart-pie" />
       </button>
     </div>
@@ -24,31 +30,31 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useStore } from "vuex";
-import Currency from "./Currency";
+  import { computed } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useStore } from 'vuex'
+  import Currency from './Currency'
 
-const route = useRoute();
-const router = useRouter();
-const store = useStore();
+  const route = useRoute()
+  const router = useRouter()
+  const store = useStore()
 
-const activeAccount = computed(() => store.state.compte.activeAccount);
+  const activeAccount = computed(() => store.state.compte.activeAccount)
 
-const disabledTotal = computed(() => {
-  return route.meta.disabledTotalHeader === undefined
-    ? false
-    : route.meta.disabledTotalHeader;
-});
+  const disabledTotal = computed(() => {
+    return route.meta.disabledTotalHeader === undefined
+      ? false
+      : route.meta.disabledTotalHeader
+  })
 
-const goToStats = () => {
-  store.dispatch("toggleAccountList", false);
-  router.push("stats");
-};
+  const goToStats = () => {
+    store.dispatch('toggleAccountList', false)
+    router.push('stats')
+  }
 
-const searchOperation = () => {
-  router.push("search");
-};
+  const searchOperation = () => {
+    router.push('search')
+  }
 </script>
 
 <style lang="scss" scoped>

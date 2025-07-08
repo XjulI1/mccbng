@@ -1,18 +1,27 @@
 <template>
   <div class="config">
-    <a class="btn btn-info" href="/">
+    <a
+      class="btn btn-info"
+      href="/"
+    >
       <font-awesome-icon icon="redo" />
       Reload App
     </a>
-    <br />
-    <br />
-    <button class="btn btn-warning" @click="toggleAmount">
+    <br>
+    <br>
+    <button
+      class="btn btn-warning"
+      @click="toggleAmount"
+    >
       <font-awesome-icon icon="money-bill" />
       Masquer les montants
     </button>
-    <br />
-    <br />
-    <button class="btn btn-success" @click="toggleZoomStats">
+    <br>
+    <br>
+    <button
+      class="btn btn-success"
+      @click="toggleZoomStats"
+    >
       <font-awesome-icon icon="chart-area" />
       Zoom évolution solde
     </button>
@@ -23,26 +32,26 @@
 </template>
 
 <script setup>
-import { onMounted } from "vue";
-import { useStore } from "vuex";
+  import { onMounted } from 'vue'
+  import { useStore } from 'vuex'
 
-const store = useStore();
+  const store = useStore()
 
-const apiURL = process.env.VUE_APP_API_URL;
+  const apiURL = process.env.VUE_APP_API_URL
 
-onMounted(() => {
-  store.commit("setActiveAccount", { NomCompte: "Configurations" });
-});
+  onMounted(() => {
+    store.commit('setActiveAccount', { NomCompte: 'Configurations' })
+  })
 
-const toggleAmount = (event) => {
-  store.dispatch("toggleMaskAmount");
-  event.target.blur();
-};
+  const toggleAmount = (event) => {
+    store.dispatch('toggleMaskAmount')
+    event.target.blur()
+  }
 
-const toggleZoomStats = (event) => {
-  store.dispatch("toggleZoomStats");
-  event.target.blur();
-};
+  const toggleZoomStats = (event) => {
+    store.dispatch('toggleZoomStats')
+    event.target.blur()
+  }
 </script>
 <style lang="scss" scoped>
 .config {

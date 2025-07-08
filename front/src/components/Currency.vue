@@ -1,25 +1,28 @@
 <template>
-  <span class="currency" :class="{ mask: mask }">
+  <span
+    class="currency"
+    :class="{ mask: mask }"
+  >
     {{ formatAmount(amount) }} {{ currency }}
   </span>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useStore } from "vuex";
-import { formatAmount } from "@/helpers/format";
+  import { computed } from 'vue'
+  import { useStore } from 'vuex'
+  import { formatAmount } from '@/helpers/format'
 
-const props = defineProps({
-  amount: {
-    type: Number,
-    default: null,
-  },
-});
+  const props = defineProps({
+    amount: {
+      type: Number,
+      default: null
+    }
+  })
 
-const store = useStore();
+  const store = useStore()
 
-const currency = computed(() => store.state.compte.currency);
-const mask = computed(() => store.state.user.maskAmount);
+  const currency = computed(() => store.state.compte.currency)
+  const mask = computed(() => store.state.user.maskAmount)
 </script>
 
 <style lang="scss" scoped>

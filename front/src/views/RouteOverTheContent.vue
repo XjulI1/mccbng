@@ -1,12 +1,24 @@
 <template>
-  <div class="route-other-the-content" @click="returnToHome">
+  <div
+    class="route-other-the-content"
+    @click="returnToHome"
+  >
     <div class="component-content">
       <h3 class="title">
         {{ $route.name }}
       </h3>
-      <component :is="components[componentName]" v-bind="{ ...params, cash }" />
-      <div v-if="invertButton" class="btn-invert">
-        <button class="btn btn-sm btn-warning" @click="invertTransfert">
+      <component
+        :is="components[componentName]"
+        v-bind="{ ...params, cash }"
+      />
+      <div
+        v-if="invertButton"
+        class="btn-invert"
+      >
+        <button
+          class="btn btn-sm btn-warning"
+          @click="invertTransfert"
+        >
           {{ invertButton }}
         </button>
       </div>
@@ -15,63 +27,63 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import OperationForm from "@/components/OperationForm";
-import Search from "@/components/Search";
-import TransfertForm from "@/components/TransfertForm";
+  import { computed } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import OperationForm from '@/components/OperationForm'
+  import Search from '@/components/Search'
+  import TransfertForm from '@/components/TransfertForm'
 
-const components = {
-  "operation-form": OperationForm,
-  search: Search,
-  "transfert-form": TransfertForm,
-};
+  const components = {
+    'operation-form': OperationForm,
+    search: Search,
+    'transfert-form': TransfertForm
+  }
 
-const props = defineProps({
-  componentName: {
-    type: String,
-    default: "",
-  },
-});
+  const props = defineProps({
+    componentName: {
+      type: String,
+      default: ''
+    }
+  })
 
-const route = useRoute();
-const router = useRouter();
+  const route = useRoute()
+  const router = useRouter()
 
-const params = {
-  operationID: route.params.id,
-};
+  const params = {
+    operationID: route.params.id
+  }
 
-const invertButton = computed(() => {
-  switch (route.name) {
-    case "Retrait":
-      return "Virement";
-    case "Virement":
-      return "Retrait";
+  const invertButton = computed(() => {
+    switch (route.name) {
+    case 'Retrait':
+      return 'Virement'
+    case 'Virement':
+      return 'Retrait'
     default:
-      return undefined;
+      return undefined
+    }
+  })
+
+  const cash = computed(() => {
+    return route.name.includes('Retrait')
+  })
+
+  const returnToHome = (event) => {
+    if (event.target.className === 'route-other-the-content') {
+      router.push('/')
+    }
   }
-});
 
-const cash = computed(() => {
-  return route.name.includes("Retrait");
-});
-
-const returnToHome = (event) => {
-  if (event.target.className === "route-other-the-content") {
-    router.push("/");
-  }
-};
-
-const invertTransfert = () => {
-  switch (route.name) {
-    case "Retrait":
-      return router.push("/transfert");
-    case "Virement":
-      return router.push("/retrait");
+  const invertTransfert = () => {
+    switch (route.name) {
+    case 'Retrait':
+      return router.push('/transfert')
+    case 'Virement':
+      return router.push('/retrait')
     default:
-      return undefined;
+      return undefined
+    }
   }
-};
 </script>
 
 <style lang="scss" scoped>

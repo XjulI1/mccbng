@@ -1,5 +1,8 @@
 <template>
-  <div class="nav-bar btn-group" role="group">
+  <div
+    class="nav-bar btn-group"
+    role="group"
+  >
     <button
       class="btn btn-warning virement-button"
       v-bind="{ disabled }"
@@ -26,51 +29,54 @@
     >
       <font-awesome-icon icon="retweet" />
     </button>
-    <button class="btn btn-danger params-button" @click="changeParams">
+    <button
+      class="btn btn-danger params-button"
+      @click="changeParams"
+    >
       <font-awesome-icon icon="cogs" />
     </button>
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useStore } from "vuex";
+  import { computed } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useStore } from 'vuex'
 
-const route = useRoute();
-const router = useRouter();
-const store = useStore();
+  const route = useRoute()
+  const router = useRouter()
+  const store = useStore()
 
-const disabled = computed(() => {
-  return route.meta.disabledTotalHeader === undefined
-    ? false
-    : route.meta.disabledTotalHeader;
-});
+  const disabled = computed(() => {
+    return route.meta.disabledTotalHeader === undefined
+      ? false
+      : route.meta.disabledTotalHeader
+  })
 
-const addOperation = () => {
-  store.dispatch("toggleAccountList", false);
-  router.push("/newOperation");
-};
+  const addOperation = () => {
+    store.dispatch('toggleAccountList', false)
+    router.push('/newOperation')
+  }
 
-const doTransfert = () => {
-  store.dispatch("toggleAccountList", false);
-  router.push("/transfert");
-};
+  const doTransfert = () => {
+    store.dispatch('toggleAccountList', false)
+    router.push('/transfert')
+  }
 
-const getRecurrenteOp = () => {
-  store.dispatch("toggleAccountList", false);
-  router.push("/recurrOperation");
-};
+  const getRecurrenteOp = () => {
+    store.dispatch('toggleAccountList', false)
+    router.push('/recurrOperation')
+  }
 
-const getAmortissement = () => {
-  store.dispatch("toggleAccountList", false);
-  router.push("/amortissement");
-};
+  const getAmortissement = () => {
+    store.dispatch('toggleAccountList', false)
+    router.push('/amortissement')
+  }
 
-const changeParams = () => {
-  store.dispatch("toggleAccountList", false);
-  router.push("/config");
-};
+  const changeParams = () => {
+    store.dispatch('toggleAccountList', false)
+    router.push('/config')
+  }
 </script>
 
 <style lang="scss" scoped>
