@@ -1,14 +1,8 @@
 <template>
-  <div
-    id="app"
-    class="root-app"
-  >
+  <div id="app" class="root-app">
     <account-header />
     <div class="container-flex">
-      <div
-        class="left-panel"
-        :class="{ 'mask-panel': !displayAccountList }"
-      >
+      <div class="left-panel" :class="{ 'mask-panel': !displayAccountList }">
         <CompteList v-touch:swipe.left="closeAccountList" />
         <TimeSeriesEvolutionSoldes />
       </div>
@@ -22,39 +16,39 @@
   </div>
 </template>
 
-<script setup>
-  import { computed, watch } from 'vue'
-  import { useRouter } from 'vue-router'
-  import { useStore } from 'vuex'
+<script setup lang="ts">
+import { computed, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
 
-  import NavBar from '@/components/NavBar.vue'
-  import CompteList from '@/components/CompteList/index.vue'
-  import AccountHeader from '@/components/AccountHeader.vue'
-  import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes.vue'
+import NavBar from "@/components/NavBar.vue";
+import CompteList from "@/components/CompteList/index.vue";
+import AccountHeader from "@/components/AccountHeader.vue";
+import TimeSeriesEvolutionSoldes from "./components/Stats/TimeSeriesEvolutionSoldes.vue";
 
-  import '@/styles/main.css'
+import "@/styles/main.css";
 
-  const router = useRouter()
-  const store = useStore()
+const router = useRouter();
+const store = useStore();
 
-  const userID = computed(() => store.state.user.id)
-  const displayAccountList = computed(() => store.state.display.account_list)
+const userID = computed(() => store.state.user.id);
+const displayAccountList = computed(() => store.state.display.account_list);
 
-  watch(userID, () => {
-    store.dispatch('fetchAccountList')
-    store.dispatch('fetchCategoryList')
-  })
+watch(userID, () => {
+  store.dispatch("fetchAccountList");
+  store.dispatch("fetchCategoryList");
+});
 
-  // Equivalent to beforeCreate
-  router.push('/login')
+// Equivalent to beforeCreate
+router.push("/login");
 
-  const openAccountList = () => {
-    store.dispatch('toggleAccountList', true)
-  }
+const openAccountList = () => {
+  store.dispatch("toggleAccountList", true);
+};
 
-  const closeAccountList = () => {
-    store.dispatch('toggleAccountList', false)
-  }
+const closeAccountList = () => {
+  store.dispatch("toggleAccountList", false);
+};
 </script>
 
 <style lang="scss">
@@ -74,8 +68,8 @@ body {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 *,

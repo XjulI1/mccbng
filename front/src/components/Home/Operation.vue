@@ -5,24 +5,15 @@
       v-model="modelValue"
       type="checkbox"
       @change="updateCheckOp"
-    >
-    <div
-      class="label"
-      :class="css.category"
-    >
-      <label
-        :for="checkBoxIDValue"
-        :data-id="operation.IDop"
-      >
+    />
+    <div class="label" :class="css.category">
+      <label :for="checkBoxIDValue" :data-id="operation.IDop">
         {{ operation.NomOp }}
-        <br>
+        <br />
         {{ dateOperation }}
       </label>
     </div>
-    <div
-      class="montant"
-      :class="css.montant"
-    >
+    <div class="montant" :class="css.montant">
       <Currency :amount="operation.MontantOp" />
     </div>
     <div>
@@ -36,47 +27,47 @@
   </div>
 </template>
 
-<script setup>
-  import { computed, ref, watch } from 'vue'
-  import { useStore } from 'vuex'
-  import {
-    checkBoxID,
-    generateCssVariables,
-    generateDateOperationVariables
-  } from '@/helpers/components/Operation'
-  import Currency from '../Currency.vue'
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { useStore } from "vuex";
+import {
+  checkBoxID,
+  generateCssVariables,
+  generateDateOperationVariables,
+} from "@/helpers/components/Operation";
+import Currency from "../Currency.vue";
 
-  const props = defineProps({
-    operation: {
-      type: Object,
-      default: () => {}
-    }
-  })
+const props = defineProps({
+  operation: {
+    type: Object,
+    default: () => {},
+  },
+});
 
-  const store = useStore()
+const store = useStore();
 
-  const dateOperation = ref(generateDateOperationVariables(props.operation))
-  const css = ref(generateCssVariables(props.operation))
-  const checkBoxIDValue = checkBoxID(props.operation.IDop)
+const dateOperation = ref(generateDateOperationVariables(props.operation));
+const css = ref(generateCssVariables(props.operation));
+const checkBoxIDValue = checkBoxID(props.operation.IDop);
 
-  const modelValue = computed(() => {
-    return props.operation.CheckOp
-  })
+const modelValue = computed(() => {
+  return props.operation.CheckOp;
+});
 
-  watch(
-    () => props.operation,
-    () => {
-      dateOperation.value = generateDateOperationVariables(props.operation)
-      css.value = generateCssVariables(props.operation)
-    }
-  )
-
-  const updateCheckOp = () => {
-    store.dispatch('updateOperation', {
-      ...props.operation,
-      CheckOp: !props.operation.CheckOp
-    })
+watch(
+  () => props.operation,
+  () => {
+    dateOperation.value = generateDateOperationVariables(props.operation);
+    css.value = generateCssVariables(props.operation);
   }
+);
+
+const updateCheckOp = () => {
+  store.dispatch("updateOperation", {
+    ...props.operation,
+    CheckOp: !props.operation.CheckOp,
+  });
+};
 </script>
 
 <style lang="scss" scoped>

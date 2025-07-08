@@ -10,7 +10,7 @@
       type="text"
       class="form-control"
       placeholder="Titre"
-    >
+    />
     <input
       v-model="operation.MontantOp"
       type="number"
@@ -18,18 +18,15 @@
       :class="montantClass()"
       placeholder="Montant"
       @blur="blurMontantOp"
-    >
+    />
     <input
       v-model="operation.DateOp"
       type="date"
       class="form-control"
       placeholder="Date"
-    >
+    />
 
-    <select
-      v-model="operation.IDcat"
-      class="form-control select-category"
-    >
+    <select v-model="operation.IDcat" class="form-control select-category">
       <option
         v-for="category in categoryList"
         :key="'category-' + category.IDcat"
@@ -45,159 +42,129 @@
           v-model="operation.CheckOp"
           type="checkbox"
           class="op-checkbox"
-        >
-        <label
-          class=""
-          for="OpCheck"
-        >Check</label>
+        />
+        <label class="" for="OpCheck">Check</label>
 
         <input
           id="Amortissement"
           v-model="operation.amortissement"
           type="checkbox"
           class="op-checkbox"
-        >
-        <label
-          class=""
-          for="Amortissement"
-        >Amortissement</label>
+        />
+        <label class="" for="Amortissement">Amortissement</label>
       </p>
     </div>
-    <div
-      class="btn-group debit-credit"
-      role="group"
-    >
-      <button
-        class="btn btn-success"
-        @click="montantIsPositive"
-      >
-        Crédit
-      </button>
-      <button
-        class="btn btn-danger"
-        @click="montantIsNegative"
-      >
-        Débit
-      </button>
+    <div class="btn-group debit-credit" role="group">
+      <button class="btn btn-success" @click="montantIsPositive">Crédit</button>
+      <button class="btn btn-danger" @click="montantIsNegative">Débit</button>
     </div>
     <div>
-      <button
-        class="btn btn-primary"
-        @click="updateOperation"
-      >
-        Valider
-      </button>
+      <button class="btn btn-primary" @click="updateOperation">Valider</button>
     </div>
-    <div
-      v-if="operation.IDop"
-      class="btn-delete"
-    >
-      <button
-        class="btn btn-sm btn-warning"
-        @click="deleteOperation"
-      >
+    <div v-if="operation.IDop" class="btn-delete">
+      <button class="btn btn-sm btn-warning" @click="deleteOperation">
         Delete
       </button>
     </div>
   </div>
 </template>
 
-<script setup>
-  import { ref, computed, watch, onMounted, getCurrentInstance } from 'vue'
-  import { useStore } from 'vuex'
-  import { useRouter } from 'vue-router'
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, getCurrentInstance } from "vue";
+import { useStore } from "vuex";
+import { useRouter } from "vue-router";
 
-  const props = defineProps({
-    operationID: {
-      type: String,
-      default: undefined
-    }
-  })
+const props = defineProps({
+  operationID: {
+    type: String,
+    default: undefined,
+  },
+});
 
-  const store = useStore()
-  const router = useRouter()
-  const { proxy } = getCurrentInstance()
+const store = useStore();
+const router = useRouter();
+const { proxy } = getCurrentInstance();
 
-  const montantOpIsPositive = ref(false)
-  const operation = ref({
-    NomOp: '',
-    MontantOp: 0,
-    DateOp: new Date(),
-    CheckOp: false,
-    IDcompte: undefined,
-    IDcat: 0
-  })
+const montantOpIsPositive = ref(false);
+const operation = ref({
+  NomOp: "",
+  MontantOp: 0,
+  DateOp: new Date(),
+  CheckOp: false,
+  IDcompte: undefined,
+  IDcat: 0,
+});
 
-  const activeAccountID = computed(
-    () => store.state.compte.activeAccount.IDcompte
-  )
-  const categoryList = computed(() => store.state.category.list)
+const activeAccountID = computed(
+  () => store.state.compte.activeAccount.IDcompte
+);
+const categoryList = computed(() => store.state.category.list);
 
-  watch(activeAccountID, (value) => {
-    operation.value.IDcompte = value
-  })
+watch(activeAccountID, (value) => {
+  operation.value.IDcompte = value;
+});
 
-  const blurMontantOp = (event) => {
-    operation.value.MontantOp = parseFloat(event.target.value)
+const blurMontantOp = (event) => {
+  operation.value.MontantOp = parseFloat(event.target.value);
 
-    if (operation.value.MontantOp > 0 && !montantOpIsPositive.value) {
-      operation.value.MontantOp *= -1
-    }
+  if (operation.value.MontantOp > 0 && !montantOpIsPositive.value) {
+    operation.value.MontantOp *= -1;
   }
+};
 
-  const montantClass = () => {
-    return montantOpIsPositive.value ? 'montant-positif' : 'montant-negatif'
+const montantClass = () => {
+  return montantOpIsPositive.value ? "montant-positif" : "montant-negatif";
+};
+
+const montantIsPositive = () => {
+  montantOpIsPositive.value = true;
+  operation.value.MontantOp = Math.abs(operation.value.MontantOp);
+};
+
+const montantIsNegative = () => {
+  montantOpIsPositive.value = false;
+  operation.value.MontantOp *= -1;
+};
+
+const updateOperation = () => {
+  store.dispatch("updateOperation", {
+    ...operation.value,
+    DateOp: new Date(operation.value.DateOp),
+  });
+
+  if (operation.value.IDop === undefined) {
+    resetOperationAttribut();
+  } else {
+    router.push("/");
   }
+};
 
-  const montantIsPositive = () => {
-    montantOpIsPositive.value = true
-    operation.value.MontantOp = Math.abs(operation.value.MontantOp)
-  }
+const deleteOperation = () => {
+  store.dispatch("deleteOperation", operation.value);
+  router.push("/");
+};
 
-  const montantIsNegative = () => {
-    montantOpIsPositive.value = false
-    operation.value.MontantOp *= -1
-  }
+const resetOperationAttribut = () => {
+  operation.value.NomOp = "";
+  operation.value.MontantOp = 0;
+  operation.value.CheckOp = false;
+  montantOpIsPositive.value = false;
+};
 
-  const updateOperation = () => {
-    store.dispatch('updateOperation', {
-      ...operation.value,
-      DateOp: new Date(operation.value.DateOp)
-    })
+// Lifecycle hooks
+onMounted(() => {
+  proxy.$el.querySelector("#operation-name").focus();
+  operation.value.IDcompte = activeAccountID.value;
+});
 
-    if (operation.value.IDop === undefined) {
-      resetOperationAttribut()
-    } else {
-      router.push('/')
-    }
-  }
-
-  const deleteOperation = () => {
-    store.dispatch('deleteOperation', operation.value)
-    router.push('/')
-  }
-
-  const resetOperationAttribut = () => {
-    operation.value.NomOp = ''
-    operation.value.MontantOp = 0
-    operation.value.CheckOp = false
-    montantOpIsPositive.value = false
-  }
-
-  // Lifecycle hooks
-  onMounted(() => {
-    proxy.$el.querySelector('#operation-name').focus()
-    operation.value.IDcompte = activeAccountID.value
-  })
-
-  // Equivalent to created
-  operation.value = props.operationID
-    ? store.getters.operationFromCurrentList(props.operationID)
-    : operation.value
-  operation.value.DateOp = new Date(operation.value.DateOp)
-    .toISOString()
-    .split('T')[0]
-  montantOpIsPositive.value = operation.value.MontantOp > 0
+// Equivalent to created
+operation.value = props.operationID
+  ? store.getters.operationFromCurrentList(props.operationID)
+  : operation.value;
+operation.value.DateOp = new Date(operation.value.DateOp)
+  .toISOString()
+  .split("T")[0];
+montantOpIsPositive.value = operation.value.MontantOp > 0;
 </script>
 
 <style scoped>

@@ -14,11 +14,7 @@
 
       Année :
       <select v-model="currentYear">
-        <option
-          v-for="year in listYear"
-          :key="'year-' + year"
-          :value="year"
-        >
+        <option v-for="year in listYear" :key="'year-' + year" :value="year">
           {{ year }}
         </option>
       </select>
@@ -32,65 +28,65 @@
   </div>
 </template>
 
-<script setup>
-  import { ref, computed, watch, onMounted } from 'vue'
-  import { useStore } from 'vuex'
-  import Currency from '../Currency.vue'
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from "vue";
+import { useStore } from "vuex";
+import Currency from "../Currency.vue";
 
-  const store = useStore()
+const store = useStore();
 
-  const listMonth = ref([...Array(12).keys()])
-  const listYear = ref(
-    [...Array(new Date().getYear() + 1900 - 2016).keys()].map((key) => key + 2017)
-  )
+const listMonth = ref([...Array(12).keys()]);
+const listYear = ref(
+  [...Array(new Date().getYear() + 1900 - 2016).keys()].map((key) => key + 2017)
+);
 
-  const negativeMonth = computed(() => store.state.stats.negativeMonth)
-  const storeCurrentYear = computed(() => store.state.stats.currentYear)
-  const storeCurrentMonth = computed(() => store.state.stats.currentMonth)
-  const userID = computed(() => store.state.user.id)
-  const availableCompte = computed(() => store.getters.availableCompte)
-  const getAccount = computed(() => store.getters.getAccount)
+const negativeMonth = computed(() => store.state.stats.negativeMonth);
+const storeCurrentYear = computed(() => store.state.stats.currentYear);
+const storeCurrentMonth = computed(() => store.state.stats.currentMonth);
+const userID = computed(() => store.state.user.id);
+const availableCompte = computed(() => store.getters.availableCompte);
+const getAccount = computed(() => store.getters.getAccount);
 
-  const currentYear = computed({
-    get () {
-      return storeCurrentYear.value
-    },
-    set (value) {
-      store.dispatch('changeStatsCurrentYear', value)
-    }
-  })
+const currentYear = computed({
+  get() {
+    return storeCurrentYear.value;
+  },
+  set(value) {
+    store.dispatch("changeStatsCurrentYear", value);
+  },
+});
 
-  const currentMonth = computed({
-    get () {
-      return storeCurrentMonth.value
-    },
-    set (value) {
-      store.dispatch('changeStatsCurrentMonth', value)
-    }
-  })
+const currentMonth = computed({
+  get() {
+    return storeCurrentMonth.value;
+  },
+  set(value) {
+    store.dispatch("changeStatsCurrentMonth", value);
+  },
+});
 
-  const numberDaysForCurrentMonth = () => {
-    const currentDate = new Date()
+const numberDaysForCurrentMonth = () => {
+  const currentDate = new Date();
 
-    if (
-      currentYear.value === currentDate.getFullYear() &&
-      currentMonth.value === currentDate.getMonth() + 1
-    ) {
-      return new Date().getDate() * -1
-    }
-
-    return new Date(currentYear.value, currentMonth.value, 0).getDate()
+  if (
+    currentYear.value === currentDate.getFullYear() &&
+    currentMonth.value === currentDate.getMonth() + 1
+  ) {
+    return new Date().getDate() * -1;
   }
 
-  watch(availableCompte, () => {
-    store.dispatch('fetchSumByUserByMonth')
-  })
+  return new Date(currentYear.value, currentMonth.value, 0).getDate();
+};
 
-  onMounted(() => {
-    if (userID.value) {
-      store.dispatch('fetchSumByUserByMonth')
-    }
-  })
+watch(availableCompte, () => {
+  store.dispatch("fetchSumByUserByMonth");
+});
+
+onMounted(() => {
+  if (userID.value) {
+    store.dispatch("fetchSumByUserByMonth");
+  }
+});
 </script>
 
 <style scoped>
