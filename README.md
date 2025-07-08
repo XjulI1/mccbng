@@ -31,5 +31,5 @@
 - `.env` / `.env.test` / `.env.production`
 
 ```
-VUE_APP_API_URL=http://localhost:3001
+VITE_API_URL=http://localhost:3001
 ```

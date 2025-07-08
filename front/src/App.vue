@@ -32,7 +32,7 @@
   import AccountHeader from '@/components/AccountHeader.vue'
   import TimeSeriesEvolutionSoldes from './components/Stats/TimeSeriesEvolutionSoldes.vue'
 
-  import '@/styles/bootstrap.css'
+  import '@/styles/main.css'
 
   const router = useRouter()
   const store = useStore()
