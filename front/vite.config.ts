@@ -9,6 +9,7 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
+      filename: "service-worker.js",
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "icon/*.png"],
       manifest: {
