@@ -17,17 +17,6 @@
         :is="components[componentName]"
         v-bind="{ ...params, cash }"
       />
-      <div
-        v-if="invertButton"
-        class="btn-invert"
-      >
-        <button
-          class="btn btn-sm btn-warning"
-          @click="invertTransfert"
-        >
-          {{ invertButton }}
-        </button>
-      </div>
     </div>
   </div>
 </template>
@@ -59,39 +48,17 @@
     operationID: route.params.id
   }
 
-  const invertButton = computed(() => {
-    switch (route.name) {
-    case 'Retrait':
-      return 'Virement'
-    case 'Virement':
-      return 'Retrait'
-    default:
-      return undefined
-    }
-  })
-
   const cash = computed(() => {
-    return route.name.includes('Retrait')
+    return String(route.name).includes('Retrait')
   })
 
   const displayTitle = computed(() => {
-    return ['Search', 'Virement', 'Retrait'].includes(route.name as string)
+    return ['Search'].includes(route.name as string)
   })
 
   const returnToHome = (event) => {
     if (event.target.className === 'route-other-the-content') {
       router.push('/')
-    }
-  }
-
-  const invertTransfert = () => {
-    switch (route.name) {
-    case 'Retrait':
-      return router.push('/transfert')
-    case 'Virement':
-      return router.push('/retrait')
-    default:
-      return undefined
     }
   }
 </script>
@@ -117,9 +84,5 @@
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   padding: 1rem;
   border-radius: 4px;
-}
-
-.btn-invert {
-  text-align: right;
 }
 </style>

@@ -7,13 +7,18 @@
             <font-awesome-icon icon="redo" />
           </div>
           <div class="card-content">
-            <h3 class="card-title">Recharger l'application</h3>
+            <h3 class="card-title">
+              Recharger l'application
+            </h3>
             <p class="card-description">
               Actualiser et recharger complètement l'application
             </p>
           </div>
         </div>
-        <a class="config-btn primary-btn" href="/">
+        <a
+          class="config-btn primary-btn"
+          href="/"
+        >
           <font-awesome-icon icon="redo" />
           Recharger
         </a>
@@ -25,13 +30,18 @@
             <font-awesome-icon icon="eye-slash" />
           </div>
           <div class="card-content">
-            <h3 class="card-title">Confidentialité</h3>
+            <h3 class="card-title">
+              Confidentialité
+            </h3>
             <p class="card-description">
               Masquer ou afficher les montants dans l'interface
             </p>
           </div>
         </div>
-        <button class="config-btn warning-btn" @click="toggleAmount">
+        <button
+          class="config-btn warning-btn"
+          @click="toggleAmount"
+        >
           <font-awesome-icon icon="money-bill" />
           {{ maskAmountText }}
         </button>
@@ -43,13 +53,18 @@
             <font-awesome-icon icon="sign-out-alt" />
           </div>
           <div class="card-content">
-            <h3 class="card-title">Déconnexion</h3>
+            <h3 class="card-title">
+              Déconnexion
+            </h3>
             <p class="card-description">
               Se déconnecter de l'application et revenir à l'écran de connexion
             </p>
           </div>
         </div>
-        <button class="config-btn danger-btn" @click="logout">
+        <button
+          class="config-btn danger-btn"
+          @click="logout"
+        >
           <font-awesome-icon icon="sign-out-alt" />
           Se déconnecter
         </button>
@@ -58,7 +73,9 @@
 
     <div class="config-footer">
       <div class="api-info">
-        <div class="api-label">URL de l'API</div>
+        <div class="api-label">
+          URL de l'API
+        </div>
         <div class="api-url">
           {{ apiURL }}
         </div>
@@ -68,38 +85,38 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from "vue";
-import { useStore } from "vuex";
-import { removeCookies } from "@/services/auth";
+  import { onMounted, computed } from 'vue'
+  import { useStore } from 'vuex'
+  import { removeCookies } from '@/services/auth'
 
-const store = useStore();
+  const store = useStore()
 
-const apiURL = import.meta.env.VITE_API_URL;
+  const apiURL = import.meta.env.VITE_API_URL
 
-// Computed properties pour les textes dynamiques
-const maskAmountText = computed(() => {
-  return store.state.maskAmount
-    ? "Afficher les montants"
-    : "Masquer les montants";
-});
+  // Computed properties pour les textes dynamiques
+  const maskAmountText = computed(() => {
+    return store.state.maskAmount
+      ? 'Afficher les montants'
+      : 'Masquer les montants'
+  })
 
-onMounted(() => {
-  store.commit("setActiveAccount", { NomCompte: "Configurations" });
-});
+  onMounted(() => {
+    store.commit('setActiveAccount', { NomCompte: 'Configurations' })
+  })
 
-const toggleAmount = (event: Event) => {
-  store.dispatch("toggleMaskAmount");
-  if (event.target instanceof HTMLElement) {
-    event.target.blur();
+  const toggleAmount = (event: Event) => {
+    store.dispatch('toggleMaskAmount')
+    if (event.target instanceof HTMLElement) {
+      event.target.blur()
+    }
   }
-};
 
-const logout = () => {
-  localStorage.clear();
-  sessionStorage.clear();
-  removeCookies();
-  window.location.reload();
-};
+  const logout = () => {
+    localStorage.clear()
+    sessionStorage.clear()
+    removeCookies()
+    window.location.reload()
+  }
 </script>
 <style lang="scss" scoped>
 .config {
