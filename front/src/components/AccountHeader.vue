@@ -1,10 +1,7 @@
 <template>
   <div class="app-header">
     <div>
-      <button
-        class="btn btn-info search-button"
-        @click="searchOperation"
-      >
+      <button class="btn btn-info search-button" @click="searchOperation">
         <font-awesome-icon icon="search" />
       </button>
     </div>
@@ -12,16 +9,14 @@
       <div>
         {{ activeAccount.NomCompte }}
       </div>
-      <div :class="{'no-total' : disabledTotal}">
-        <Currency :amount="(activeAccount.soldeNotChecked || 0)" /> -
-        [<Currency :amount="(activeAccount.soldeChecked || 0)" />]
+      <div :class="{ 'no-total': disabledTotal }">
+        <Currency :amount="activeAccount.soldeNotChecked || 0" /> - [<Currency
+          :amount="activeAccount.soldeChecked || 0"
+        />]
       </div>
     </div>
     <div>
-      <button
-        class="btn btn-secondary chart-button"
-        @click="goToStats"
-      >
+      <button class="btn btn-secondary chart-button" @click="goToStats">
         <font-awesome-icon icon="chart-pie" />
       </button>
     </div>
@@ -29,57 +24,79 @@
 </template>
 
 <script>
-  import { mapState } from 'vuex'
+import { mapState } from "vuex";
 
-  import '@/styles/components/Header.scss'
-  import Currency from './Currency'
+import Currency from "./Currency";
 
-  export default {
-    name: 'AccountHeader',
-    components: { Currency },
-    computed: {
-      ...mapState({
-        activeAccount: state => state.compte.activeAccount
-      }),
+export default {
+  name: "AccountHeader",
+  components: { Currency },
+  computed: {
+    ...mapState({
+      activeAccount: (state) => state.compte.activeAccount,
+    }),
 
-      disabledTotal () {
-        return this.$route.meta.disabledTotalHeader === undefined ? false : this.$route.meta.disabledTotalHeader
-      }
+    disabledTotal() {
+      return this.$route.meta.disabledTotalHeader === undefined
+        ? false
+        : this.$route.meta.disabledTotalHeader;
+    },
+  },
+
+  methods: {
+    goToStats() {
+      this.$store.dispatch("toggleAccountList", false);
+      this.$router.push("stats");
     },
 
-    methods: {
-      goToStats () {
-        this.$store.dispatch('toggleAccountList', false)
-        this.$router.push('stats')
-      },
-
-      searchOperation () {
-        this.$router.push('search')
-      }
-    }
-  }
+    searchOperation() {
+      this.$router.push("search");
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
-  .app-header {
-    display: flex;
-    justify-content: space-between;
+.app-header {
+  height: $header-height;
+  width: 100%;
+  background-color: rgba(200, 200, 200, 0.9);
+  position: fixed;
+  top: 0;
+  left: 0;
+  text-align: center;
+  padding-top: 10px;
+  z-index: 100;
 
-    padding-left: 10px;
-    padding-right: 10px;
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
 
-    @media all and (min-width: $desktop_BP_min_width) {
-      padding-left: 15%;
-      padding-right: 15%;
-    }
+  padding-left: 10px;
+  padding-right: 10px;
 
-    button.chart-button,
-    button.search-button {
-      margin-top: 3px;
-      width: 45px;
-      height: 45px;
-      font-size: 1.2rem;
-      line-height: 1.0rem;
-    }
+  @media all and (min-width: $desktop_BP_min_width) {
+    padding-left: 15%;
+    padding-right: 15%;
   }
+
+  button.chart-button,
+  button.search-button {
+    margin-top: 3px;
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+    line-height: 1rem;
+  }
+}
+
+.account-info {
+  font-weight: bold;
+  font-size: 1.05rem;
+  padding: 0;
+}
+
+.no-total {
+  display: none;
+}
 </style>
