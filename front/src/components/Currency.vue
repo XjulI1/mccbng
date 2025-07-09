@@ -12,7 +12,7 @@
   import { useStore } from 'vuex'
   import { formatAmount } from '@/helpers/format'
 
-  const props = defineProps({
+  defineProps({
     amount: {
       type: Number,
       default: null
