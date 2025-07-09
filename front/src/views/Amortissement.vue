@@ -1,5 +1,7 @@
 <template>
-  <OperationList :OperationRenderer="OperationRenderer" />
+  <div>
+    <OperationList :OperationRenderer="OperationRenderer" />
+  </div>
 </template>
 
 <script setup lang="ts">
