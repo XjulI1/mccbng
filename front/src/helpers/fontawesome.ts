@@ -1,4 +1,4 @@
-import { library } from "@fortawesome/fontawesome-svg-core";
+import { library } from '@fortawesome/fontawesome-svg-core'
 import {
   faChartPie,
   faCheck,
@@ -19,8 +19,8 @@ import {
   faSignOutAlt,
   faSearchPlus,
   faChevronUp,
-  faChevronDown,
-} from "@fortawesome/free-solid-svg-icons";
+  faChevronDown
+} from '@fortawesome/free-solid-svg-icons'
 
 export default {
   load: () => {
@@ -44,7 +44,7 @@ export default {
       faSignOutAlt,
       faSearchPlus,
       faChevronUp,
-      faChevronDown,
-    });
-  },
-};
+      faChevronDown
+    })
+  }
+}

@@ -90,7 +90,7 @@ hr {
 }
 
 .root-app {
-  padding-top: $header-height;
+  padding-top: $header-height-and-margin;
 
   .container-flex {
     display: flex;

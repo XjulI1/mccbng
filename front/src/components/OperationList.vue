@@ -45,5 +45,6 @@
 <style lang="scss" scoped>
 .operation-list {
   width: 100%;
+  padding: 10px;
 }
 </style>

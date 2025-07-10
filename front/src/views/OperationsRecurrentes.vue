@@ -5,36 +5,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onMounted } from "vue";
-import { useStore } from "vuex";
-import OperationRecurrenteList from "@/components/OperationRecurrenteList.vue";
+  import { computed, watch, onMounted } from 'vue'
+  import { useStore } from 'vuex'
+  import OperationRecurrenteList from '@/components/OperationRecurrenteList.vue'
 
-const store = useStore();
+  const store = useStore()
 
-const userToken = computed(() => store.state.user.token);
-const operationsOfActiveAccount = computed(
-  () => store.state.operation.operationsOfActiveAccount
-);
+  const userToken = computed(() => store.state.user.token)
+  const operationsOfActiveAccount = computed(
+    () => store.state.operation.operationsOfActiveAccount
+  )
 
-const operationsRecurrenteList = computed(() => {
-  if (
-    operationsOfActiveAccount.value[0] &&
-    operationsOfActiveAccount.value[0].IDopRecu !== undefined
-  ) {
-    return operationsOfActiveAccount.value;
-  }
-  return [];
-});
+  const operationsRecurrenteList = computed(() => {
+    if (
+      operationsOfActiveAccount.value[0] &&
+      operationsOfActiveAccount.value[0].IDopRecu !== undefined
+    ) {
+      return operationsOfActiveAccount.value
+    }
+    return []
+  })
 
-watch(userToken, () => {
-  store.dispatch("fetchRecurrOperation");
-});
+  watch(userToken, () => {
+    store.dispatch('fetchRecurrOperation')
+  })
 
-onMounted(() => {
-  if (userToken.value) {
-    store.dispatch("fetchRecurrOperation");
-  }
-});
+  onMounted(() => {
+    if (userToken.value) {
+      store.dispatch('fetchRecurrOperation')
+    }
+  })
 </script>
 <style lang="scss" scoped>
 .op-recurrentes {

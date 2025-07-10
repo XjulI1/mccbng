@@ -5,14 +5,14 @@
       <div class="control-group">
         <h3>Grouper par</h3>
         <button
-          @click="setGrouping('account')"
           :class="['control-button', { active: grouping === 'account' }]"
+          @click="setGrouping('account')"
         >
           Compte
         </button>
         <button
-          @click="setGrouping('category')"
           :class="['control-button', { active: grouping === 'category' }]"
+          @click="setGrouping('category')"
         >
           Catégorie
         </button>
@@ -21,14 +21,14 @@
       <div class="control-group">
         <h3>Tri par 📅</h3>
         <button
-          @click="setSorting('asc')"
           :class="['control-button', { active: sorting === 'asc' }]"
+          @click="setSorting('asc')"
         >
           Ascendant
         </button>
         <button
-          @click="setSorting('desc')"
           :class="['control-button', { active: sorting === 'desc' }]"
+          @click="setSorting('desc')"
         >
           Descendant
         </button>
@@ -51,7 +51,9 @@
           :key="groupName"
           class="operation-group"
         >
-          <h4 class="group-title">{{ groupName }}</h4>
+          <h4 class="group-title">
+            {{ groupName }}
+          </h4>
           <OperationRecurrente
             v-for="operation in group"
             :key="(operation as any).IDopRecu"
@@ -64,87 +66,87 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { useStore } from "vuex";
-import OperationRecurrente from "./OperationRecurrente.vue";
+  import { computed, ref } from 'vue'
+  import { useStore } from 'vuex'
+  import OperationRecurrente from './OperationRecurrente.vue'
 
-const props = defineProps({
-  operations: {
-    type: Array,
-    default: () => [],
-  },
-});
+  const props = defineProps({
+    operations: {
+      type: Array,
+      default: () => []
+    }
+  })
 
-const store = useStore();
+  const store = useStore()
 
-// État pour les contrôles
-const grouping = ref("none"); // 'none', 'account', 'category'
-const sorting = ref("desc"); // 'asc', 'desc'
+  // État pour les contrôles
+  const grouping = ref('none') // 'none', 'account', 'category'
+  const sorting = ref('desc') // 'asc', 'desc'
 
-// Fonctions pour changer les contrôles
-const setGrouping = (type: string) => {
-  if (type === grouping.value) {
-    // Si le type est déjà sélectionné, on le remet à "none"
-    grouping.value = "none";
-    return;
+  // Fonctions pour changer les contrôles
+  const setGrouping = (type: string) => {
+    if (type === grouping.value) {
+      // Si le type est déjà sélectionné, on le remet à "none"
+      grouping.value = 'none'
+      return
+    }
+    grouping.value = type
   }
-  grouping.value = type;
-};
 
-const setSorting = (type: string) => {
-  sorting.value = type;
-};
+  const setSorting = (type: string) => {
+    sorting.value = type
+  }
 
-// Tri des opérations
-const sortedOperations = computed(() => {
-  const sorted = [...props.operations].sort((a: any, b: any) => {
-    const dateA = new Date(a.DernierDateOpRecu);
-    const dateB = new Date(b.DernierDateOpRecu);
+  // Tri des opérations
+  const sortedOperations = computed(() => {
+    const sorted = [...props.operations].sort((a: any, b: any) => {
+      const dateA = new Date(a.DernierDateOpRecu)
+      const dateB = new Date(b.DernierDateOpRecu)
 
-    if (sorting.value === "asc") {
-      return dateA.getTime() - dateB.getTime();
-    } else {
-      return dateB.getTime() - dateA.getTime();
-    }
-  });
+      if (sorting.value === 'asc') {
+        return dateA.getTime() - dateB.getTime()
+      } else {
+        return dateB.getTime() - dateA.getTime()
+      }
+    })
 
-  return sorted;
-});
+    return sorted
+  })
 
-// Regroupement des opérations
-const groupedOperations = computed(() => {
-  const groups: { [key: string]: any[] } = {};
+  // Regroupement des opérations
+  const groupedOperations = computed(() => {
+    const groups: { [key: string]: any[] } = {}
 
-  sortedOperations.value.forEach((operation: any) => {
-    let groupKey = "";
+    sortedOperations.value.forEach((operation: any) => {
+      let groupKey = ''
 
-    if (grouping.value === "account") {
-      const account = store.state.compte.accountList.find(
-        (acc: any) => acc.IDcompte === operation.IDcompte
-      );
-      groupKey = account?.NomCompte || "Compte inconnu";
-    } else if (grouping.value === "category") {
-      const category = store.state.category.list.find(
-        (cat: any) => cat.IDcat === operation.IDcat
-      );
-      groupKey = category?.Nom || "Catégorie inconnue";
-    }
+      if (grouping.value === 'account') {
+        const account = store.state.compte.accountList.find(
+          (acc: any) => acc.IDcompte === operation.IDcompte
+        )
+        groupKey = account?.NomCompte || 'Compte inconnu'
+      } else if (grouping.value === 'category') {
+        const category = store.state.category.list.find(
+          (cat: any) => cat.IDcat === operation.IDcat
+        )
+        groupKey = category?.Nom || 'Catégorie inconnue'
+      }
 
-    if (!groups[groupKey]) {
-      groups[groupKey] = [];
-    }
-    groups[groupKey].push(operation);
-  });
+      if (!groups[groupKey]) {
+        groups[groupKey] = []
+      }
+      groups[groupKey].push(operation)
+    })
 
-  return groups;
-});
+    return groups
+  })
 </script>
 
 <style scoped>
 .operations-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 10px;
 }
 
 .controls-bar {

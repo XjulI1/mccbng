@@ -1,57 +1,57 @@
-import axios from "axios";
+import axios from 'axios'
 
 export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
   const filter = {
     where: { IDcompte },
-    order: "CheckOp ASC, DateOp DESC",
-    limit: 35,
-  };
+    order: 'CheckOp ASC, DateOp DESC',
+    limit: 35
+  }
 
   return axios
-    .get(APIURL + "/api/operations", {
+    .get(APIURL + '/api/operations', {
       headers: {
-        Authorization: "Bearer " + userToken,
+        Authorization: 'Bearer ' + userToken
       },
       params: {
-        filter,
-      },
+        filter
+      }
     })
     .then((response) => {
-      return response.data;
-    });
-};
+      return response.data
+    })
+}
 
 export const updateOperation = (operation, userToken, APIURL) => {
   if (operation.IDop) {
     return axios.put(
-      APIURL + "/api/operations/" + operation.IDop,
+      APIURL + '/api/operations/' + operation.IDop,
       { ...operation, IDop: undefined },
       {
         headers: {
-          Authorization: "Bearer " + userToken,
-        },
+          Authorization: 'Bearer ' + userToken
+        }
       }
-    );
+    )
   } else {
     return axios.post(
-      APIURL + "/api/operations/",
+      APIURL + '/api/operations/',
       { ...operation, IDcompteCredit: undefined, IDcompteDebit: undefined },
       {
         headers: {
-          Authorization: "Bearer " + userToken,
-        },
+          Authorization: 'Bearer ' + userToken
+        }
       }
-    );
+    )
   }
-};
+}
 
 export const deleteOperation = (IDoperation, userToken, APIURL) => {
-  return axios.delete(APIURL + "/api/operations/" + IDoperation, {
+  return axios.delete(APIURL + '/api/operations/' + IDoperation, {
     headers: {
-      Authorization: "Bearer " + userToken,
-    },
-  });
-};
+      Authorization: 'Bearer ' + userToken
+    }
+  })
+}
 
 export const fetchSearchOperations = (
   searchTerms,
@@ -64,77 +64,77 @@ export const fetchSearchOperations = (
       IDcompte: { inq: accountList.map((account) => account.IDcompte) },
       or: [
         { NomOp: { like: `%${searchTerms}%` } },
-        { MontantOp: { like: `%${searchTerms}%` } },
-      ],
+        { MontantOp: { like: `%${searchTerms}%` } }
+      ]
     },
-    order: "DateOp DESC",
-    limit: 20,
-  };
+    order: 'DateOp DESC',
+    limit: 20
+  }
 
   return axios
-    .get(APIURL + "/api/operations", {
+    .get(APIURL + '/api/operations', {
       headers: {
-        Authorization: "Bearer " + userToken,
+        Authorization: 'Bearer ' + userToken
       },
       params: {
-        filter,
-      },
+        filter
+      }
     })
     .then((response) => {
-      return response.data;
-    });
-};
+      return response.data
+    })
+}
 
 export const generateRecurringOperations = (userID, userToken, APIURL) => {
   axios.post(
-    APIURL + "/api/operation-recurrentes/auto-generation/" + userID,
+    APIURL + '/api/operation-recurrentes/auto-generation/' + userID,
     {},
     {
       headers: {
-        Authorization: "Bearer " + userToken,
-      },
+        Authorization: 'Bearer ' + userToken
+      }
     }
-  );
-};
+  )
+}
 
 export const fetchRecurrOperation = (userToken, APIURL) => {
   const filter = {
-    order: "DernierDateOpRecu DESC, NomOpRecu ASC",
-  };
+    order: 'DernierDateOpRecu DESC, NomOpRecu ASC'
+  }
 
   return axios
-    .get(APIURL + "/api/operation-recurrentes", {
+    .get(APIURL + '/api/operation-recurrentes', {
       headers: {
-        Authorization: "Bearer " + userToken,
+        Authorization: 'Bearer ' + userToken
       },
       params: {
-        filter,
-      },
+        filter
+      }
     })
     .then((response) => {
-      return response.data;
-    });
-};
+      return response.data
+    })
+}
 
 export const fetchOperations = (where, userToken, APIURL) => {
   const filter = {
     where,
-    order: "DateOp DESC",
-  };
+    order: 'DateOp DESC'
+  }
 
   return axios
-    .get(APIURL + "/api/operations", {
+    .get(APIURL + '/api/operations', {
       headers: {
-        Authorization: "Bearer " + userToken,
+        Authorization: 'Bearer ' + userToken
       },
       params: {
-        filter,
-      },
+        filter
+      }
     })
     .then((response) => {
-      return response.data;
-    });
-};
+      return response.data
+    })
+}
 
 export default {
   fetchOperationsForAccount,
@@ -143,5 +143,5 @@ export default {
   fetchSearchOperations,
   generateRecurringOperations,
   fetchRecurrOperation,
-  fetchOperations,
-};
+  fetchOperations
+}
