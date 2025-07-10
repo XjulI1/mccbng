@@ -24,6 +24,7 @@
       </div>
       <div class="actions">
         <button
+          v-if="showDetails"
           class="simulator-btn"
           :class="{ active: simulator }"
           :title="simulator ? 'Fermer le simulateur' : 'Ouvrir le simulateur'"
@@ -31,10 +32,20 @@
         >
           <font-awesome-icon icon="funnel-dollar" />
         </button>
+        <button
+          class="details-btn"
+          :class="{ active: showDetails }"
+          :title="showDetails ? 'Masquer les détails' : 'Afficher les détails'"
+          @click="toggleDetails"
+        >
+          <font-awesome-icon
+            :icon="showDetails ? 'chevron-up' : 'chevron-down'"
+          />
+        </button>
       </div>
     </div>
 
-    <div class="card-content">
+    <div v-if="showDetails" class="card-content">
       <div class="amortissement-grid">
         <div class="duration-card">
           <div class="card-info">
@@ -46,9 +57,7 @@
                 }}</span>
                 <span class="duration-unit">années</span>
               </div>
-              <div class="duration-separator">
-                +
-              </div>
+              <div class="duration-separator">+</div>
               <div class="duration-item">
                 <span class="duration-number">{{
                   dureeAmortissement.yearMonth
@@ -67,17 +76,13 @@
             <h4>💰 Coût</h4>
             <div class="cost-breakdown">
               <div class="cost-item">
-                <div class="cost-period">
-                  Par an
-                </div>
+                <div class="cost-period">Par an</div>
                 <div class="cost-value">
                   {{ formatPrice(prixAmortissement.year) }}€
                 </div>
               </div>
               <div class="cost-item">
-                <div class="cost-period">
-                  Par mois
-                </div>
+                <div class="cost-period">Par mois</div>
                 <div class="cost-value">
                   {{ formatPrice(prixAmortissement.month) }}€
                 </div>
@@ -88,10 +93,7 @@
       </div>
     </div>
 
-    <div
-      v-if="simulator"
-      class="simulator-section"
-    >
+    <div v-if="simulator" class="simulator-section">
       <div class="simulator-header">
         <h4>📊 Simulateur de revente</h4>
       </div>
@@ -108,7 +110,7 @@
               min="0"
               step="0.01"
               class="price-input"
-            >
+            />
             <span class="input-suffix">€</span>
           </div>
         </div>
@@ -120,70 +122,75 @@
             v-model="simulatorData.dateRevente"
             type="date"
             class="date-input"
-          >
+          />
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+import { ref, computed } from "vue";
 
-  const { operation } = defineProps(['operation'])
+const { operation } = defineProps(["operation"]);
 
-  const simulator = ref(false)
-  const MILLISECONDS_IN_YEAR = 31536000000
+const simulator = ref(false);
+const showDetails = ref(false);
+const MILLISECONDS_IN_YEAR = 31536000000;
 
-  const simulatorData = ref({
-    prixRevente: 0,
-    dateRevente: undefined
-  })
+const simulatorData = ref({
+  prixRevente: 0,
+  dateRevente: undefined,
+});
 
-  const currentDate = computed(() =>
-    simulatorData.value.dateRevente
-      ? new Date(simulatorData.value.dateRevente)
-      : new Date()
-  )
+const currentDate = computed(() =>
+  simulatorData.value.dateRevente
+    ? new Date(simulatorData.value.dateRevente)
+    : new Date()
+);
 
-  const duree = computed(() => {
-    const current = currentDate.value.getTime()
-    const operation_date = new Date(operation.DateOp).getTime()
-    return current - operation_date
-  })
+const duree = computed(() => {
+  const current = currentDate.value.getTime();
+  const operation_date = new Date(operation.DateOp).getTime();
+  return current - operation_date;
+});
 
-  const montantTotal = computed(() =>
-    Math.round(operation.MontantOp * -1 - simulatorData.value.prixRevente)
-  )
+const montantTotal = computed(() =>
+  Math.round(operation.MontantOp * -1 - simulatorData.value.prixRevente)
+);
 
-  const dureeAmortissement = computed(() => ({
-    year: Math.floor(duree.value / MILLISECONDS_IN_YEAR),
-    yearMonth:
-      Math.floor(duree.value / (MILLISECONDS_IN_YEAR / 12)) -
-      Math.floor(duree.value / MILLISECONDS_IN_YEAR) * 12,
-    month: Math.floor(duree.value / (MILLISECONDS_IN_YEAR / 12))
-  }))
+const dureeAmortissement = computed(() => ({
+  year: Math.floor(duree.value / MILLISECONDS_IN_YEAR),
+  yearMonth:
+    Math.floor(duree.value / (MILLISECONDS_IN_YEAR / 12)) -
+    Math.floor(duree.value / MILLISECONDS_IN_YEAR) * 12,
+  month: Math.floor(duree.value / (MILLISECONDS_IN_YEAR / 12)),
+}));
 
-  const prixAmortissement = computed(() => ({
-    year: Math.round(montantTotal.value / (dureeAmortissement.value.year || 1)),
-    month: Math.round(montantTotal.value / (dureeAmortissement.value.month || 1))
-  }))
+const prixAmortissement = computed(() => ({
+  year: Math.round(montantTotal.value / (dureeAmortissement.value.year || 1)),
+  month: Math.round(montantTotal.value / (dureeAmortissement.value.month || 1)),
+}));
 
-  function formatPrice (value: number): string {
-    return new Intl.NumberFormat('fr-FR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(Math.abs(value))
+function formatPrice(value: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(value));
+}
+
+function toggleDetails() {
+  showDetails.value = !showDetails.value;
+}
+
+function toggleSimulate() {
+  simulator.value = !simulator.value;
+  if (!simulator.value) {
+    simulatorData.value = {
+      prixRevente: 0,
+      dateRevente: undefined,
+    };
   }
-
-  function toggleSimulate () {
-    simulator.value = !simulator.value
-    if (!simulator.value) {
-      simulatorData.value = {
-        prixRevente: 0,
-        dateRevente: undefined
-      }
-    }
-  }
+}
 </script>
 <style scoped>
 .amortissement-card {
@@ -230,8 +237,11 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2rem;
   gap: 1rem;
+}
+
+.card-content {
+  margin-top: 2rem;
 }
 
 .operation-info {
@@ -295,6 +305,32 @@
 .actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.details-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: #f7fafc;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.details-btn:hover {
+  background: #edf2f7;
+  transform: scale(1.05);
+}
+
+.details-btn.active {
+  background: linear-gradient(135deg, #38a169 0%, #48bb78 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(56, 161, 105, 0.4);
 }
 
 .simulator-btn {

@@ -1,4 +1,4 @@
-import { library } from '@fortawesome/fontawesome-svg-core'
+import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faChartPie,
   faCheck,
@@ -17,8 +17,10 @@ import {
   faChartArea,
   faEyeSlash,
   faSignOutAlt,
-  faSearchPlus
-} from '@fortawesome/free-solid-svg-icons'
+  faSearchPlus,
+  faChevronUp,
+  faChevronDown,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default {
   load: () => {
@@ -40,7 +42,9 @@ export default {
       faChartArea,
       faEyeSlash,
       faSignOutAlt,
-      faSearchPlus
-    })
-  }
-}
+      faSearchPlus,
+      faChevronUp,
+      faChevronDown,
+    });
+  },
+};
