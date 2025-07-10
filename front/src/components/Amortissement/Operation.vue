@@ -1,5 +1,5 @@
 <template>
-  <div class="amortissement-card">
+  <div class="amortissement-card" @click="toggleDetails">
     <div class="card-header">
       <div class="operation-info">
         <h3 class="operation-title">
@@ -36,7 +36,6 @@
           class="details-btn"
           :class="{ active: showDetails }"
           :title="showDetails ? 'Masquer les détails' : 'Afficher les détails'"
-          @click="toggleDetails"
         >
           <font-awesome-icon
             :icon="showDetails ? 'chevron-up' : 'chevron-down'"
@@ -182,7 +181,7 @@ function toggleDetails() {
   showDetails.value = !showDetails.value;
 }
 
-function toggleSimulate() {
+function toggleSimulate(event: MouseEvent) {
   simulator.value = !simulator.value;
   if (!simulator.value) {
     simulatorData.value = {
@@ -190,6 +189,8 @@ function toggleSimulate() {
       dateRevente: undefined,
     };
   }
+  event.stopPropagation();
+  event.preventDefault();
 }
 </script>
 <style scoped>
