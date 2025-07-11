@@ -1,36 +1,22 @@
 <template>
-  <div
-    class="account-informations"
-    :class="classPointer"
-    @click="getAccountDetails"
-  >
-    <div
-      class="account-name"
-      :class="classBoldTitle"
-    >
-      <img
-        v-if="imgID"
-        class="banque-img"
-        :src="`/img/banques/banque-${imgID}.png`"
-      >
-      <font-awesome-icon
-        v-else-if="faIcon"
-        :icon="faIcon"
-        class="icon-fa"
-      />
-      {{ accountInformations.NomCompte }}
+  <div class="account-compact" :class="classPointer" @click="getAccountDetails">
+    <div class="account-info">
+      <div class="account-icon">
+        <img
+          v-if="imgID"
+          class="banque-img"
+          :src="`/img/banques/banque-${imgID}.png`"
+        />
+        <font-awesome-icon v-else-if="faIcon" :icon="faIcon" class="icon-fa" />
+      </div>
+      <div class="account-name" :class="classBoldTitle">
+        {{ accountInformations.NomCompte }}
+      </div>
     </div>
-    <div
-      class="account-solde"
-      :class="soldeColor"
-    >
+    <div class="account-amount" :class="soldeColor">
       <Currency :amount="accountInformations.soldeNotChecked || 0" />
     </div>
-    <div
-      v-if="warning"
-      class="warning-infos"
-      :class="soldeColor"
-    >
+    <div v-if="warning" class="warning-compact" :class="soldeColor">
       <Currency
         :amount="(accountInformations.soldeNotChecked || 0) - warning"
       />
@@ -39,139 +25,177 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { useStore } from 'vuex'
-  import Currency from '../Currency.vue'
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useStore } from "vuex";
+import Currency from "../Currency.vue";
 
-  const props = defineProps([
-    'accountInformations',
-    'boldTitle',
-    'disableClick',
-    'noColor',
-    'warning',
-    'faIcon'
-  ])
+const props = defineProps([
+  "accountInformations",
+  "boldTitle",
+  "disableClick",
+  "noColor",
+  "warning",
+  "faIcon",
+]);
 
-  const route = useRoute()
-  const router = useRouter()
-  const store = useStore()
+const route = useRoute();
+const router = useRouter();
+const store = useStore();
 
-  const getSoldeColor = () => {
-    if (props.noColor) {
-      return ''
-    }
-
-    if (props.accountInformations.soldeNotChecked < props.warning) {
-      return 'soldeWarning'
-    }
-
-    return props.accountInformations.soldeNotChecked >= 0
-      ? 'soldeIn'
-      : 'soldeOut'
+const getSoldeColor = () => {
+  if (props.noColor) {
+    return "";
   }
 
-  const soldeColor = ref(getSoldeColor())
-  const classBoldTitle = computed(() => (props.boldTitle ? 'bold-title' : ''))
-  const classPointer = computed(() =>
-    props.disableClick ? '' : 'cursor-pointer'
-  )
-
-  const imgID = computed(() => {
-    return props.accountInformations.banque
-      ? props.accountInformations.banque.IDbanque
-      : 0
-  })
-
-  watch(
-    () => props.accountInformations.soldeNotChecked,
-    () => {
-      soldeColor.value = getSoldeColor()
-    }
-  )
-
-  const getAccountDetails = () => {
-    if (!props.disableClick) {
-      if (route.path !== '/') {
-        router.push('/')
-      }
-
-      store.dispatch('fetchActiveAccount', props.accountInformations.IDcompte)
-      store.dispatch('toggleAccountList', false)
-    }
+  if (props.accountInformations.soldeNotChecked < props.warning) {
+    return "soldeWarning";
   }
+
+  return props.accountInformations.soldeNotChecked >= 0
+    ? "soldeIn"
+    : "soldeOut";
+};
+
+const soldeColor = ref(getSoldeColor());
+const classBoldTitle = computed(() => (props.boldTitle ? "bold-title" : ""));
+const classPointer = computed(() =>
+  props.disableClick ? "" : "cursor-pointer"
+);
+
+const imgID = computed(() => {
+  return props.accountInformations.banque
+    ? props.accountInformations.banque.IDbanque
+    : 0;
+});
+
+watch(
+  () => props.accountInformations.soldeNotChecked,
+  () => {
+    soldeColor.value = getSoldeColor();
+  }
+);
+
+const getAccountDetails = () => {
+  if (!props.disableClick) {
+    if (route.path !== "/") {
+      router.push("/");
+    }
+
+    store.dispatch("fetchActiveAccount", props.accountInformations.IDcompte);
+    store.dispatch("toggleAccountList", false);
+  }
+};
 </script>
-<style lang="scss" scoped>
-.account-informations {
-  padding-top: 5px;
-  padding-bottom: 5px;
-
+<style scoped>
+.account-compact {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
 
-  &.cursor-pointer {
-    cursor: pointer;
-  }
+.account-compact:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e0;
+  transform: translateX(2px);
+}
 
-  .account-name {
-    flex-grow: 1;
-    padding-left: 10px;
-    padding-right: 10px;
+.account-compact.cursor-pointer {
+  cursor: pointer;
+}
 
-    svg {
-      margin-right: 5px;
-    }
-  }
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
 
-  .account-solde {
-    text-align: right;
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .bold-title {
-    font-weight: bold;
-  }
-
-  .soldeIn {
-    color: green;
-  }
-
-  .soldeWarning {
-    color: orange;
-  }
-
-  .soldeOut {
-    color: red;
-    font-weight: bold;
-  }
-
-  .warning-infos {
-    width: 100%;
-    text-align: right;
-    font-size: 0.7rem;
-    font-weight: bold;
-    padding-right: 10px;
-  }
-
-  .col-8 {
-    padding-left: 10px;
-  }
-
-  .col-4,
-  .col-12 {
-    padding: 0 10px 0 0;
-  }
-
-  .icon-fa {
-    font-size: 0.7rem;
-    color: grey;
-    margin-bottom: 0.1rem;
-  }
+.account-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
 
 .banque-img {
-  width: 20px;
-  vertical-align: text-bottom;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.icon-fa {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.account-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-name.bold-title {
+  font-weight: 700;
+}
+
+.account-amount {
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: right;
+  flex-shrink: 0;
+  min-width: fit-content;
+}
+
+.warning-compact {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 8px;
+  opacity: 0.8;
+}
+
+.soldeIn {
+  color: #10b981;
+}
+
+.soldeWarning {
+  color: #f59e0b;
+}
+
+.soldeOut {
+  color: #ef4444;
+}
+
+@media (max-width: 768px) {
+  .account-compact {
+    padding: 6px 10px;
+    min-height: 40px;
+  }
+
+  .account-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .banque-img {
+    width: 14px;
+    height: 14px;
+  }
 }
 </style>
