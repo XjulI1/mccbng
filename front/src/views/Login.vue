@@ -34,7 +34,6 @@
           </svg>
         </div>
         <h2>Authentification</h2>
-        <p>Saisissez votre code d'accès sécurisé</p>
       </div>
 
       <div

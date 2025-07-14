@@ -3,11 +3,14 @@
     id="app"
     class="root-app"
   >
-    <account-header />
+    <account-header :class="{ 'is-login-page': route.name === 'Login' }" />
     <div class="container-flex">
       <div
         class="left-panel"
-        :class="{ 'mask-panel': !displayAccountList }"
+        :class="{
+          'mask-panel': !displayAccountList,
+          'is-login-page': route.name === 'Login',
+        }"
       >
         <CompteList v-touch:swipe.left="closeAccountList" />
       </div>
@@ -23,7 +26,7 @@
 
 <script setup lang="ts">
   import { computed, watch } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { useRoute, useRouter } from 'vue-router'
   import { useStore } from 'vuex'
 
   import NavBar from '@/components/NavBar.vue'
@@ -33,6 +36,7 @@
   import '@/styles/main.css'
 
   const router = useRouter()
+  const route = useRoute()
   const store = useStore()
 
   const userID = computed(() => store.state.user.id)
@@ -101,6 +105,12 @@ hr {
     min-height: calc(100vh - #{$header-height} - #{$navbar-height-and-margin});
   }
 
+  .right-panel.login-page {
+    width: 100%;
+    margin-top: -#{$header-height-and-margin};
+    height: 100vh;
+  }
+
   @media all and (min-width: $desktop_BP_min_width) {
     .right-panel {
       width: calc(100% - #{$left-panel-width});
@@ -137,6 +147,10 @@ hr {
 .container {
   margin: 0 !important;
   padding: 0 !important;
+}
+
+.is-login-page {
+  display: none !important;
 }
 
 @media screen and (max-width: $mobile_BP_max_width) {

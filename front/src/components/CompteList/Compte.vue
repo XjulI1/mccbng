@@ -1,22 +1,40 @@
 <template>
-  <div class="account-compact" :class="classPointer" @click="getAccountDetails">
+  <div
+    class="account-compact"
+    :class="classPointer"
+    @click="getAccountDetails"
+  >
     <div class="account-info">
       <div class="account-icon">
         <img
           v-if="imgID"
           class="banque-img"
           :src="`/img/banques/banque-${imgID}.png`"
+        >
+        <font-awesome-icon
+          v-else-if="faIcon"
+          :icon="faIcon"
+          class="icon-fa"
         />
-        <font-awesome-icon v-else-if="faIcon" :icon="faIcon" class="icon-fa" />
       </div>
-      <div class="account-name" :class="classBoldTitle">
+      <div
+        class="account-name"
+        :class="classBoldTitle"
+      >
         {{ accountInformations.NomCompte }}
       </div>
     </div>
-    <div class="account-amount" :class="soldeColor">
+    <div
+      class="account-amount"
+      :class="soldeColor"
+    >
       <Currency :amount="accountInformations.soldeNotChecked || 0" />
     </div>
-    <div v-if="warning" class="warning-compact" :class="soldeColor">
+    <div
+      v-if="warning"
+      class="warning-compact"
+      :class="soldeColor"
+    >
       <Currency
         :amount="(accountInformations.soldeNotChecked || 0) - warning"
       />
@@ -25,67 +43,67 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useStore } from "vuex";
-import Currency from "../Currency.vue";
+  import { computed, ref, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useStore } from 'vuex'
+  import Currency from '../Currency.vue'
 
-const props = defineProps([
-  "accountInformations",
-  "boldTitle",
-  "disableClick",
-  "noColor",
-  "warning",
-  "faIcon",
-]);
+  const props = defineProps([
+    'accountInformations',
+    'boldTitle',
+    'disableClick',
+    'noColor',
+    'warning',
+    'faIcon'
+  ])
 
-const route = useRoute();
-const router = useRouter();
-const store = useStore();
+  const route = useRoute()
+  const router = useRouter()
+  const store = useStore()
 
-const getSoldeColor = () => {
-  if (props.noColor) {
-    return "";
-  }
-
-  if (props.accountInformations.soldeNotChecked < props.warning) {
-    return "soldeWarning";
-  }
-
-  return props.accountInformations.soldeNotChecked >= 0
-    ? "soldeIn"
-    : "soldeOut";
-};
-
-const soldeColor = ref(getSoldeColor());
-const classBoldTitle = computed(() => (props.boldTitle ? "bold-title" : ""));
-const classPointer = computed(() =>
-  props.disableClick ? "" : "cursor-pointer"
-);
-
-const imgID = computed(() => {
-  return props.accountInformations.banque
-    ? props.accountInformations.banque.IDbanque
-    : 0;
-});
-
-watch(
-  () => props.accountInformations.soldeNotChecked,
-  () => {
-    soldeColor.value = getSoldeColor();
-  }
-);
-
-const getAccountDetails = () => {
-  if (!props.disableClick) {
-    if (route.path !== "/") {
-      router.push("/");
+  const getSoldeColor = () => {
+    if (props.noColor) {
+      return ''
     }
 
-    store.dispatch("fetchActiveAccount", props.accountInformations.IDcompte);
-    store.dispatch("toggleAccountList", false);
+    if (props.accountInformations.soldeNotChecked < props.warning) {
+      return 'soldeWarning'
+    }
+
+    return props.accountInformations.soldeNotChecked >= 0
+      ? 'soldeIn'
+      : 'soldeOut'
   }
-};
+
+  const soldeColor = ref(getSoldeColor())
+  const classBoldTitle = computed(() => (props.boldTitle ? 'bold-title' : ''))
+  const classPointer = computed(() =>
+    props.disableClick ? '' : 'cursor-pointer'
+  )
+
+  const imgID = computed(() => {
+    return props.accountInformations.banque
+      ? props.accountInformations.banque.IDbanque
+      : 0
+  })
+
+  watch(
+    () => props.accountInformations.soldeNotChecked,
+    () => {
+      soldeColor.value = getSoldeColor()
+    }
+  )
+
+  const getAccountDetails = () => {
+    if (!props.disableClick) {
+      if (route.path !== '/') {
+        router.push('/')
+      }
+
+      store.dispatch('fetchActiveAccount', props.accountInformations.IDcompte)
+      store.dispatch('toggleAccountList', false)
+    }
+  }
 </script>
 <style scoped>
 .account-compact {

@@ -27,7 +27,10 @@
     </div>
 
     <!-- Section Comptes Bloqués -->
-    <div v-if="bloquedCompte.length > 0" class="section-compact">
+    <div
+      v-if="bloquedCompte.length > 0"
+      class="section-compact"
+    >
       <div class="section-header">
         <span class="section-title">🔒 Bloqués</span>
         <div class="section-total">
@@ -59,15 +62,16 @@
           v-if="warningTotal && totalGlobal < warningTotal"
           class="global-warning"
         >
-          <span
-            >Objectif annuel: <Currency :amount="totalGlobal - warningTotal"
-          /></span>
+          <span>Objectif annuel: <Currency :amount="totalGlobal - warningTotal" /></span>
         </div>
       </div>
     </div>
 
     <!-- Section Retraite -->
-    <div v-if="retraiteCompte.length > 0" class="section-compact">
+    <div
+      v-if="retraiteCompte.length > 0"
+      class="section-compact"
+    >
       <div class="section-header">
         <span class="section-title">🏦 Retraite</span>
         <div class="section-total">
@@ -88,21 +92,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { useStore } from "vuex";
-import Compte from "./Compte.vue";
-import Currency from "../Currency.vue";
+  import { computed } from 'vue'
+  import { useStore } from 'vuex'
+  import Compte from './Compte.vue'
+  import Currency from '../Currency.vue'
 
-const store = useStore();
+  const store = useStore()
 
-const warningTotal = computed(() => store.state.user.warningTotal);
-const totalAvailable = computed(() => store.getters.totalAvailable);
-const totalGlobal = computed(() => store.getters.totalGlobal);
-const totalRetraite = computed(() => store.getters.totalRetraite);
-const availableCompte = computed(() => store.getters.availableCompte);
-const bloquedCompte = computed(() => store.getters.bloquedCompte);
-const retraiteCompte = computed(() => store.getters.retraiteCompte);
-const porteFeuilleCompte = computed(() => store.getters.porteFeuilleCompte);
+  const warningTotal = computed(() => store.state.user.warningTotal)
+  const totalAvailable = computed(() => store.getters.totalAvailable)
+  const totalGlobal = computed(() => store.getters.totalGlobal)
+  const totalRetraite = computed(() => store.getters.totalRetraite)
+  const availableCompte = computed(() => store.getters.availableCompte)
+  const bloquedCompte = computed(() => store.getters.bloquedCompte)
+  const retraiteCompte = computed(() => store.getters.retraiteCompte)
+  const porteFeuilleCompte = computed(() => store.getters.porteFeuilleCompte)
 </script>
 
 <style scoped>
