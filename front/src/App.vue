@@ -2,6 +2,7 @@
   <div
     id="app"
     class="root-app"
+    :class="{ 'is-login-page': route.name === 'Login' }"
   >
     <account-header :class="{ 'is-login-page': route.name === 'Login' }" />
     <div class="container-flex">
@@ -96,6 +97,10 @@ hr {
 .root-app {
   padding-top: $header-height-and-margin;
 
+  &.is-login-page {
+    padding-top: 0;
+  }
+
   .container-flex {
     display: flex;
   }
@@ -107,7 +112,6 @@ hr {
 
   .right-panel.login-page {
     width: 100%;
-    margin-top: -#{$header-height-and-margin};
     height: 100vh;
   }
 
@@ -149,7 +153,7 @@ hr {
   padding: 0 !important;
 }
 
-.is-login-page {
+.app-header.is-login-page {
   display: none !important;
 }
 
