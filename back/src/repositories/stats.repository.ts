@@ -19,7 +19,7 @@ export class StatsRepository extends DefaultCrudRepository<
       '' +
       'SELECT ROUND(SUM(solde), 2) AS sum ' +
       'FROM Compte ' +
-      'WHERE retraite = 0 AND IDuser = ' +
+      'WHERE retraite = 0 AND children = 0 AND IDuser = ' +
       userID;
 
     const querySoldeRetraite =
@@ -44,7 +44,7 @@ export class StatsRepository extends DefaultCrudRepository<
       'FROM Operation NATURAL JOIN Compte ' +
       'WHERE IDuser = ' +
       userID +
-      ' AND retraite = 0 ' +
+      ' AND retraite = 0 AND children = 0 ' +
       'GROUP BY date ' +
       'ORDER BY date ASC';
 
