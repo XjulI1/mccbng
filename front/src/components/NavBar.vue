@@ -4,6 +4,13 @@
     role="group"
   >
     <button
+      class="btn btn-secondary left-panel-button"
+      :disabled="route.name === 'Login'"
+      @click="burgerMenuClick"
+    >
+      <font-awesome-icon icon="hamburger" />
+    </button>
+    <button
       class="btn btn-warning virement-button"
       v-bind="{ disabled }"
       @click="doTransfert"
@@ -11,18 +18,18 @@
       <font-awesome-icon icon="exchange-alt" />
     </button>
     <button
-      class="btn btn-success amortissement-button"
-      :disabled="route.name === 'Login'"
-      @click="getAmortissement"
-    >
-      <font-awesome-icon icon="history" />
-    </button>
-    <button
       class="btn btn-primary new-operation-button"
       v-bind="{ disabled }"
       @click="addOperation"
     >
       <font-awesome-icon icon="plus" />
+    </button>
+    <button
+      class="btn btn-success amortissement-button"
+      :disabled="route.name === 'Login'"
+      @click="getAmortissement"
+    >
+      <font-awesome-icon icon="history" />
     </button>
     <button
       class="btn btn-info operation-recurrente-button"
@@ -54,6 +61,10 @@
       ? false
       : route.meta.disabledTotalHeader
   })
+
+  const burgerMenuClick = () => {
+    store.dispatch('toggleAccountList')
+  }
 
   const addOperation = () => {
     store.dispatch('toggleAccountList', false)
@@ -140,16 +151,14 @@
 }
 
 .btn-warning:not(:disabled):not(.disabled):active,
-.btn-warning:not(:disabled):not(.disabled).active,
-.show > .btn-warning.dropdown-toggle {
+.btn-warning:not(:disabled):not(.disabled).active {
   color: #212529;
   background-color: #d39e00;
   border-color: #c69500;
 }
 
 .btn-warning:not(:disabled):not(.disabled):active:focus,
-.btn-warning:not(:disabled):not(.disabled).active:focus,
-.show > .btn-warning.dropdown-toggle:focus {
+.btn-warning:not(:disabled):not(.disabled).active:focus {
   box-shadow: 0 0 0 0.2rem rgba(222, 170, 12, 0.5);
 }
 
@@ -181,16 +190,14 @@
 }
 
 .btn-danger:not(:disabled):not(.disabled):active,
-.btn-danger:not(:disabled):not(.disabled).active,
-.show > .btn-danger.dropdown-toggle {
+.btn-danger:not(:disabled):not(.disabled).active {
   color: #fff;
   background-color: #bd2130;
   border-color: #b21f2d;
 }
 
 .btn-danger:not(:disabled):not(.disabled):active:focus,
-.btn-danger:not(:disabled):not(.disabled).active:focus,
-.show > .btn-danger.dropdown-toggle:focus {
+.btn-danger:not(:disabled):not(.disabled).active:focus {
   box-shadow: 0 0 0 0.2rem rgba(225, 83, 97, 0.5);
 }
 
@@ -222,16 +229,14 @@
 }
 
 .btn-success:not(:disabled):not(.disabled):active,
-.btn-success:not(:disabled):not(.disabled).active,
-.show > .btn-success.dropdown-toggle {
+.btn-success:not(:disabled):not(.disabled).active {
   color: #fff;
   background-color: #1e7e34;
   border-color: #1c7430;
 }
 
 .btn-success:not(:disabled):not(.disabled):active:focus,
-.btn-success:not(:disabled):not(.disabled).active:focus,
-.show > .btn-success.dropdown-toggle:focus {
+.btn-success:not(:disabled):not(.disabled).active:focus {
   box-shadow: 0 0 0 0.2rem rgba(72, 180, 97, 0.5);
 }
 
@@ -263,16 +268,14 @@
 }
 
 .btn-info:not(:disabled):not(.disabled):active,
-.btn-info:not(:disabled):not(.disabled).active,
-.show > .btn-info.dropdown-toggle {
+.btn-info:not(:disabled):not(.disabled).active {
   color: #fff;
   background-color: #117a8b;
   border-color: #10707f;
 }
 
 .btn-info:not(:disabled):not(.disabled):active:focus,
-.btn-info:not(:disabled):not(.disabled).active:focus,
-.show > .btn-info.dropdown-toggle:focus {
+.btn-info:not(:disabled):not(.disabled).active:focus {
   box-shadow: 0 0 0 0.2rem rgba(58, 176, 195, 0.5);
 }
 
@@ -304,16 +307,14 @@
 }
 
 .btn-primary:not(:disabled):not(.disabled):active,
-.btn-primary:not(:disabled):not(.disabled).active,
-.show > .btn-primary.dropdown-toggle {
+.btn-primary:not(:disabled):not(.disabled).active {
   color: #fff;
   background-color: #0062cc;
   border-color: #005cbf;
 }
 
 .btn-primary:not(:disabled):not(.disabled):active:focus,
-.btn-primary:not(:disabled):not(.disabled).active:focus,
-.show > .btn-primary.dropdown-toggle:focus {
+.btn-primary:not(:disabled):not(.disabled).active:focus {
   box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
 }
 
@@ -345,16 +346,14 @@
 }
 
 .btn-secondary:not(:disabled):not(.disabled):active,
-.btn-secondary:not(:disabled):not(.disabled).active,
-.show > .btn-secondary.dropdown-toggle {
+.btn-secondary:not(:disabled):not(.disabled).active {
   color: #fff;
   background-color: #545b62;
   border-color: #4e555b;
 }
 
 .btn-secondary:not(:disabled):not(.disabled):active:focus,
-.btn-secondary:not(:disabled):not(.disabled).active:focus,
-.show > .btn-secondary.dropdown-toggle:focus {
+.btn-secondary:not(:disabled):not(.disabled).active:focus {
   box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5);
 }
 
@@ -401,6 +400,8 @@
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       font-size: 1.2rem;
       font-weight: 600;
+      border-top-right-radius: 14px;
+      border-bottom-right-radius: 14px;
 
       &:hover {
         transform: translateY(-2px);
@@ -410,11 +411,24 @@
       @media screen and (max-width: $mobile_BP_max_width) {
         padding-bottom: 18px;
       }
+
+      @media screen and (min-width: $mobile_BP_max_width) {
+        &.left-panel-button {
+          display: none;
+        }
+      }
+
+      &.amortissement-button {
+        border-top-right-radius: 0px;
+        border-bottom-right-radius: 0px;
+        margin-right: 0;
+      }
+      &.operation-recurrente-button {
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+        margin-left: 0;
+      }
     }
   }
-}
-.btn-group > .btn:not(:last-child):not(.dropdown-toggle) {
-  border-top-right-radius: 14px !important;
-  border-bottom-right-radius: 14px !important;
 }
 </style>

@@ -19,7 +19,8 @@ import {
   faSignOutAlt,
   faSearchPlus,
   faChevronUp,
-  faChevronDown
+  faChevronDown,
+  faHamburger
 } from '@fortawesome/free-solid-svg-icons'
 
 export default {
@@ -44,7 +45,8 @@ export default {
       faSignOutAlt,
       faSearchPlus,
       faChevronUp,
-      faChevronDown
+      faChevronDown,
+      faHamburger
     })
   }
 }

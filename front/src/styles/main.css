@@ -272,11 +272,6 @@ select.form-control {
   margin-left: -1px;
 }
 
-.btn-group > .btn:not(:last-child):not(.dropdown-toggle) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
 .btn-group > .btn:not(:first-child) {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;

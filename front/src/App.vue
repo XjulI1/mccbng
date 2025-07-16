@@ -26,38 +26,38 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useStore } from "vuex";
+  import { computed, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useStore } from 'vuex'
 
-import NavBar from "@/components/NavBar.vue";
-import CompteList from "@/components/CompteList/index.vue";
-import AccountHeader from "@/components/AccountHeader.vue";
+  import NavBar from '@/components/NavBar.vue'
+  import CompteList from '@/components/CompteList/index.vue'
+  import AccountHeader from '@/components/AccountHeader.vue'
 
-import "@/styles/main.css";
+  import '@/styles/main.css'
 
-const router = useRouter();
-const route = useRoute();
-const store = useStore();
+  const router = useRouter()
+  const route = useRoute()
+  const store = useStore()
 
-const userID = computed(() => store.state.user.id);
-const displayAccountList = computed(() => store.state.display.account_list);
+  const userID = computed(() => store.state.user.id)
+  const displayAccountList = computed(() => store.state.display.account_list)
 
-watch(userID, () => {
-  store.dispatch("fetchAccountList");
-  store.dispatch("fetchCategoryList");
-});
+  watch(userID, () => {
+    store.dispatch('fetchAccountList')
+    store.dispatch('fetchCategoryList')
+  })
 
-// Equivalent to beforeCreate
-router.push("/login");
+  // Equivalent to beforeCreate
+  router.push('/login')
 
-const openAccountList = () => {
-  store.dispatch("toggleAccountList", true);
-};
+  const openAccountList = () => {
+    store.dispatch('toggleAccountList', true)
+  }
 
-const closeAccountList = () => {
-  store.dispatch("toggleAccountList", false);
-};
+  const closeAccountList = () => {
+    store.dispatch('toggleAccountList', false)
+  }
 </script>
 
 <style lang="scss">
@@ -173,7 +173,7 @@ hr {
   }
 
   .right-panel.mask-panel {
-    // height: 100vh;
+    height: 100vh;
     overflow-y: hidden;
   }
 }
