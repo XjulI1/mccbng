@@ -282,8 +282,6 @@
 <style scoped>
 .operation-form {
   max-width: 600px;
-  margin: -1rem;
-  padding: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -424,7 +422,9 @@
 .toggle-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  max-width: 300px;
+  margin: auto;
+  gap: 1rem;
   background: #f7fafc;
   padding: 0.5rem;
   border-radius: 12px;
@@ -432,7 +432,7 @@
 }
 
 .toggle-btn {
-  padding: 0.875rem 1rem;
+  padding: 0.5rem 0.8rem;
   border: none;
   border-radius: 8px;
   font-weight: 600;

@@ -49,7 +49,7 @@
 }
 
 .component-content {
-  margin: ($header-height + 5px) auto auto;
+  margin: ($header-height-and-margin + 5px) auto auto;
   max-width: 600px;
 }
 </style>
