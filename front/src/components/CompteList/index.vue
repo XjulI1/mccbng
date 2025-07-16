@@ -32,7 +32,7 @@
       class="section-compact"
     >
       <div class="section-header">
-        <span class="section-title">🤝 Joint</span>
+        <span class="section-title">🤝 Joints</span>
         <div class="section-total">
           <Currency :amount="totalJoint" />
         </div>
@@ -89,6 +89,28 @@
       </div>
     </div>
 
+    <!-- Section Comptes Children -->
+    <div
+      v-if="childrenCompte.length > 0"
+      class="section-compact"
+    >
+      <div class="section-header">
+        <span class="section-title">👶 Enfants</span>
+        <div class="section-total">
+          <Currency :amount="totalChildren" />
+        </div>
+      </div>
+      <div class="accounts-row">
+        <compte
+          v-for="account in childrenCompte"
+          :key="'account-' + account.IDcompte"
+          :account-informations="account"
+          fa-icon="child"
+          compact-mode="true"
+        />
+      </div>
+    </div>
+
     <!-- Section Retraite -->
     <div
       v-if="retraiteCompte.length > 0"
@@ -126,11 +148,13 @@
   const totalGlobal = computed(() => store.getters.totalGlobal)
   const totalRetraite = computed(() => store.getters.totalRetraite)
   const totalJoint = computed(() => store.getters.totalJoint)
+  const totalChildren = computed(() => store.getters.totalChildren)
   const availableCompte = computed(() => store.getters.availableCompte)
   const bloquedCompte = computed(() => store.getters.bloquedCompte)
   const retraiteCompte = computed(() => store.getters.retraiteCompte)
   const porteFeuilleCompte = computed(() => store.getters.porteFeuilleCompte)
   const jointCompte = computed(() => store.getters.jointCompte)
+  const childrenCompte = computed(() => store.getters.childrenCompte)
 </script>
 
 <style scoped>
