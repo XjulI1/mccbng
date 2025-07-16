@@ -47,6 +47,12 @@ export class Compte extends Entity {
     type: 'boolean',
     default: false,
   })
+  joint?: boolean;
+
+  @property({
+    type: 'boolean',
+    default: false,
+  })
   retraite?: boolean;
 
   @property({
