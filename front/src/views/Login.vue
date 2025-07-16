@@ -226,7 +226,7 @@
 
 <style lang="scss" scoped>
 .login-page {
-  min-height: calc(100vh - $header-height);
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;

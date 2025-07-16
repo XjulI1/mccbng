@@ -112,7 +112,6 @@ hr {
 
   .right-panel.login-page {
     width: 100%;
-    height: 100vh;
   }
 
   @media all and (min-width: $desktop_BP_min_width) {
@@ -170,7 +169,7 @@ hr {
   }
 
   .right-panel.mask-panel {
-    height: 100vh;
+    // height: 100vh;
     overflow-y: hidden;
   }
 }
