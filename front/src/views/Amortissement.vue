@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="amortissement-view">
     <OperationList :OperationRenderer="OperationRenderer" />
   </div>
 </template>
@@ -16,3 +16,10 @@
   })
   store.commit('setActiveAccount', { NomCompte: 'Amortissement' })
 </script>
+
+<style lang="scss" scoped>
+.amortissement-view {
+    margin-bottom: $navbar-height-and-margin;
+
+}
+</style>

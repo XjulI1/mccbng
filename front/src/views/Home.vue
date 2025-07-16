@@ -11,13 +11,11 @@
 </script>
 
 <style lang="scss" scoped>
-@media screen and (max-width: 767px) {
-  .home {
-    margin-bottom: $navbar-height-and-margin;
-  }
+.home {
+  margin-bottom: $navbar-height-and-margin;
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: $desktop_BP_min_width) {
   .home {
     display: flex;
   }

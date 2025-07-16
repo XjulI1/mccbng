@@ -67,8 +67,8 @@
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 75%;
+  transform: translateX(-75%);
   text-align: center;
   padding: 10px;
   z-index: 100;
@@ -79,6 +79,11 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   gap: 1rem;
   border-radius: 14px;
+
+  @media screen and (max-width: $mobile_BP_max_width) {
+    left: 50%;
+    transform: translateX(-50%);
+  }
 
   button.chart-button,
   button.search-button {

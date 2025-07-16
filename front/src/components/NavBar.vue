@@ -25,18 +25,18 @@
       <font-awesome-icon icon="plus" />
     </button>
     <button
-      class="btn btn-success amortissement-button"
-      :disabled="route.name === 'Login'"
-      @click="getAmortissement"
-    >
-      <font-awesome-icon icon="history" />
-    </button>
-    <button
       class="btn btn-info operation-recurrente-button"
       :disabled="route.name === 'Login'"
       @click="getRecurrenteOp"
     >
       <font-awesome-icon icon="retweet" />
+    </button>
+    <button
+      class="btn btn-success amortissement-button"
+      :disabled="route.name === 'Login'"
+      @click="getAmortissement"
+    >
+      <font-awesome-icon icon="history" />
     </button>
     <button
       class="btn btn-danger params-button"
@@ -418,12 +418,12 @@
         }
       }
 
-      &.amortissement-button {
+      &.operation-recurrente-button {
         border-top-right-radius: 0px;
         border-bottom-right-radius: 0px;
         margin-right: 0;
       }
-      &.operation-recurrente-button {
+      &.amortissement-button {
         border-top-left-radius: 0px;
         border-bottom-left-radius: 0px;
         margin-left: 0;

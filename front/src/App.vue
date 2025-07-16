@@ -127,6 +127,7 @@ hr {
   @media all and (min-width: $desktop_BP_min_width) {
     display: block;
     width: $left-panel-width;
+    margin-top: -$header-height-and-margin;
 
     &.is-login-page {
       display: none;
