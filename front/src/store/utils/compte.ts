@@ -1,6 +1,16 @@
 export const filterBloquedAccounts = (_, { visibleAccounts }) => {
   return visibleAccounts.filter((account) => {
-    if (account.bloque && !account.retraite) {
+    if (account.bloque && !account.retraite && !account.joint) {
+      return account
+    }
+
+    return undefined
+  })
+}
+
+export const filterJointAccounts = (_, { visibleAccounts }) => {
+  return visibleAccounts.filter((account) => {
+    if (account.joint) {
       return account
     }
 
@@ -46,8 +56,8 @@ export const totalAvailable = (_, { availableCompte, porteFeuilleCompte }) => {
   }, 0)
 }
 
-export const totalGlobal = (_, { bloquedCompte, totalAvailable }) => {
-  return bloquedCompte.reduce((acc, account) => {
+export const totalGlobal = (_, { bloquedCompte, jointCompte, totalAvailable }) => {
+  return [].concat(bloquedCompte, jointCompte).reduce((acc, account: any) => {
     acc += account.soldeNotChecked
     return Math.round(acc * 100) / 100
   }, totalAvailable)
@@ -55,6 +65,13 @@ export const totalGlobal = (_, { bloquedCompte, totalAvailable }) => {
 
 export const totalRetraite = (_, { retraiteCompte }) => {
   return retraiteCompte.reduce((acc, account) => {
+    acc += account.soldeNotChecked
+    return Math.round(acc * 100) / 100
+  }, 0)
+}
+
+export const totalJoint = (_, { jointCompte }) => {
+  return jointCompte.reduce((acc, account) => {
     acc += account.soldeNotChecked
     return Math.round(acc * 100) / 100
   }, 0)

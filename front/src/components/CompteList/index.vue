@@ -26,6 +26,28 @@
       </div>
     </div>
 
+    <!-- Section Comptes Joint -->
+    <div
+      v-if="jointCompte.length > 0"
+      class="section-compact"
+    >
+      <div class="section-header">
+        <span class="section-title">🤝 Joint</span>
+        <div class="section-total">
+          <Currency :amount="totalJoint" />
+        </div>
+      </div>
+      <div class="accounts-row">
+        <compte
+          v-for="account in jointCompte"
+          :key="'account-' + account.IDcompte"
+          :account-informations="account"
+          fa-icon="handshake"
+          compact-mode="true"
+        />
+      </div>
+    </div>
+
     <!-- Section Comptes Bloqués -->
     <div
       v-if="bloquedCompte.length > 0"
@@ -34,7 +56,7 @@
       <div class="section-header">
         <span class="section-title">🔒 Bloqués</span>
         <div class="section-total">
-          <Currency :amount="totalGlobal - totalAvailable" />
+          <Currency :amount="totalGlobal - totalAvailable - totalJoint" />
         </div>
       </div>
       <div class="accounts-row">
@@ -103,10 +125,12 @@
   const totalAvailable = computed(() => store.getters.totalAvailable)
   const totalGlobal = computed(() => store.getters.totalGlobal)
   const totalRetraite = computed(() => store.getters.totalRetraite)
+  const totalJoint = computed(() => store.getters.totalJoint)
   const availableCompte = computed(() => store.getters.availableCompte)
   const bloquedCompte = computed(() => store.getters.bloquedCompte)
   const retraiteCompte = computed(() => store.getters.retraiteCompte)
   const porteFeuilleCompte = computed(() => store.getters.porteFeuilleCompte)
+  const jointCompte = computed(() => store.getters.jointCompte)
 </script>
 
 <style scoped>
