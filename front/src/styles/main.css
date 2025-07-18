@@ -1,4 +1,11 @@
-/* Reset et base styles */
+/* =======================
+   IMPORTS DES MODULES CSS
+   ======================= */
+@import './theme.css';
+
+/* =======================
+   RESET ET BASE STYLES
+   ======================= */
 * {
   box-sizing: border-box;
 }
@@ -11,8 +18,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  color: #333;
-  background-color: #fff;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
 }
 
 /* Layout container */

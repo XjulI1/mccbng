@@ -10,7 +10,6 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { useStore } from 'vuex'
-  import { formatAmount } from '@/helpers/format'
 
   defineProps({
     amount: {
@@ -20,6 +19,13 @@
   })
 
   const store = useStore()
+
+  function formatAmount (amount) {
+    return amount?.toLocaleString('fr-FR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }
 
   const currency = computed(() => store.state.compte.currency)
   const mask = computed(() => store.state.user.maskAmount)

@@ -159,7 +159,6 @@
     getUserIDCookie,
     saveCookies
   } from '@/services/auth'
-  import randomListNumber from '@/helpers/randomListNumber'
 
   const router = useRouter()
   const store = useStore()
@@ -168,6 +167,12 @@
   const buttonList = ref(randomListNumber())
   const code = ref('')
   const error = ref(false)
+
+  function randomListNumber () {
+    return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => {
+      return 0.5 - Math.random()
+    })
+  }
 
   const endAuthentification = ({ userToken, userID }) => {
     store.dispatch('saveUserToken', userToken)

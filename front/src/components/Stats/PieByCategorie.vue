@@ -15,7 +15,6 @@
   import Highcharts from 'highcharts'
   import OperationList from '../OperationList.vue'
   import OperationRenderer from '../Home/Operation.vue'
-  import { lastDayOfMonth } from '@/helpers/date'
 
   const store = useStore()
   const { proxy } = getCurrentInstance()
@@ -28,6 +27,10 @@
   const userID = computed(() => store.state.user.id)
   const storeCurrentYear = computed(() => store.state.stats.currentYear)
   const storeCurrentMonth = computed(() => store.state.stats.currentMonth)
+  function lastDayOfMonth (year, month) {
+    const lastDay = new Date(year, month, 0)
+    return lastDay.getDate()
+  }
 
   const buildChart = () => {
     Highcharts.chart(proxy.$el.querySelector('.pie-by-categorie__chart'), {
