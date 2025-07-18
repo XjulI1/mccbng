@@ -39,35 +39,35 @@ export default {
   },
 
   actions: {
-    fetchSumByUserByMonth (context) {
+    fetchSumByUserByMonth ({ state, commit, rootState }) {
       axios.get(import.meta.env.VITE_API_URL + '/api/operations/sumByUserByMonth', {
         headers: {
-          Authorization: 'Bearer ' + context.rootState.user.token
+          Authorization: 'Bearer ' + rootState.user.token
         },
         params: {
-          userID: this.state.user.id,
-          monthNumber: this.state.stats.currentMonth,
-          yearNumber: this.state.stats.currentYear
+          userID: rootState.user.id,
+          monthNumber: state.currentMonth,
+          yearNumber: state.currentYear
         }
       }).then((response) => {
-        context.commit('setNegativeMonth', response.data[0].MonthNegative)
+        commit('setNegativeMonth', response.data[0].MonthNegative)
       })
     },
 
-    fetchSumCategoriesByUserByMonth (context) {
-      context.dispatch('fetchCategoryList')
+    fetchSumCategoriesByUserByMonth ({ dispatch, commit, state, rootState }) {
+      dispatch('fetchCategoryList')
 
       axios.get(import.meta.env.VITE_API_URL + '/api/operations/sumCategoriesByUserByMonth', {
         headers: {
-          Authorization: 'Bearer ' + context.rootState.user.token
+          Authorization: 'Bearer ' + rootState.user.token
         },
         params: {
-          userID: this.state.user.id,
-          monthNumber: this.state.stats.currentMonth,
-          yearNumber: this.state.stats.currentYear
+          userID: rootState.user.id,
+          monthNumber: state.currentMonth,
+          yearNumber: state.currentYear
         }
       }).then((response) => {
-        context.commit('setCategoriesForMonth', response.data)
+        commit('setCategoriesForMonth', response.data)
       })
     },
 

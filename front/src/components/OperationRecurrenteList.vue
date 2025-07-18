@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
+  import { computed, type ComputedRef, ref } from 'vue'
   import { useStore } from 'vuex'
   import OperationRecurrente from './OperationRecurrente.vue'
 
@@ -98,7 +98,7 @@
   }
 
   // Tri des opérations
-  const sortedOperations = computed(() => {
+  const sortedOperations: ComputedRef<any[]> = computed(() => {
     const sorted = [...props.operations].sort((a: any, b: any) => {
       const dateA = new Date(a.DernierDateOpRecu)
       const dateB = new Date(b.DernierDateOpRecu)

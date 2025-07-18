@@ -186,8 +186,8 @@
   watch(code, (value) => {
     if (value.length === 6) {
       auth(value, import.meta.env.VITE_API_URL)
-        .then(({ userToken, ttl, userID }) => {
-          endAuthentification({ userToken, ttl, userID })
+        .then(({ userToken, userID }) => {
+          endAuthentification({ userToken, userID })
         })
         .catch(() => {
           error.value = true
@@ -202,7 +202,6 @@
 
   checkUserAuthentification({
     userToken,
-    userID,
     apiUrl: import.meta.env.VITE_API_URL
   }).then((isExist) => {
     if (isExist) {
@@ -213,8 +212,8 @@
   })
 
   onMounted(() => {
-    window.addEventListener('keydown', (event) => {
-      if (event.key >= 0 && event.key <= 9) {
+    window.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (parseInt(event.key) >= 0 && parseInt(event.key) <= 9) {
         code.value += event.key
       }
     })

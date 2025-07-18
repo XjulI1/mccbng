@@ -29,13 +29,14 @@ export const auth = (value, apiUrl) => {
           userID: response.data.userId
         }
       }
+      throw new Error('Authentication failed')
     })
     .catch((error) => {
       throw new Error(error)
     })
 }
 
-export const saveCookies = ({ userToken, userID, ttl }) => {
+export const saveCookies = ({ userToken, userID }) => {
   const cookie = new Cookies()
 
   cookie.set(COOKIE_TOKEN, userToken)
@@ -48,7 +49,7 @@ export const removeCookies = () => {
   cookie.remove(COOKIE_USER_ID)
 }
 
-export const checkUserAuthentification = ({ userToken, _, apiUrl }) => {
+export const checkUserAuthentification = ({ userToken, apiUrl }) => {
   return axios
     .get(apiUrl + '/api/users/exists', {
       headers: {
@@ -59,7 +60,7 @@ export const checkUserAuthentification = ({ userToken, _, apiUrl }) => {
       return true
     })
     .catch(() => {
-      saveCookies({ userToken: undefined, userID: undefined, ttl: 0 })
+      saveCookies({ userToken: undefined, userID: undefined })
 
       return false
     })

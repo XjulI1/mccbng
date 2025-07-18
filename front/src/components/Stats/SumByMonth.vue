@@ -41,7 +41,7 @@
 
   const listMonth = ref([...Array(12).keys()])
   const listYear = ref(
-    [...Array(new Date().getYear() + 1900 - 2016).keys()].map((key) => key + 2017)
+    [...Array(new Date().getFullYear() - 2016).keys()].map((key) => key + 2017)
   )
 
   const negativeMonth = computed(() => store.state.stats.negativeMonth)
@@ -49,7 +49,6 @@
   const storeCurrentMonth = computed(() => store.state.stats.currentMonth)
   const userID = computed(() => store.state.user.id)
   const availableCompte = computed(() => store.getters.availableCompte)
-  const getAccount = computed(() => store.getters.getAccount)
 
   const currentYear = computed({
     get () {
@@ -68,19 +67,6 @@
       store.dispatch('changeStatsCurrentMonth', value)
     }
   })
-
-  const numberDaysForCurrentMonth = () => {
-    const currentDate = new Date()
-
-    if (
-      currentYear.value === currentDate.getFullYear() &&
-      currentMonth.value === currentDate.getMonth() + 1
-    ) {
-      return new Date().getDate() * -1
-    }
-
-    return new Date(currentYear.value, currentMonth.value, 0).getDate()
-  }
 
   watch(availableCompte, () => {
     store.dispatch('fetchSumByUserByMonth')

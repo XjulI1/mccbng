@@ -12,14 +12,14 @@
     </button>
     <button
       class="btn btn-warning virement-button"
-      v-bind="{ disabled }"
+      :disabled="disabled.valueOf()"
       @click="doTransfert"
     >
       <font-awesome-icon icon="exchange-alt" />
     </button>
     <button
       class="btn btn-primary new-operation-button"
-      v-bind="{ disabled }"
+      :disabled="disabled.valueOf()"
       @click="addOperation"
     >
       <font-awesome-icon icon="plus" />
@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { computed, type ComputedRef } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useStore } from 'vuex'
 
@@ -56,10 +56,10 @@
   const router = useRouter()
   const store = useStore()
 
-  const disabled = computed(() => {
+  const disabled: ComputedRef<boolean> = computed(() => {
     return route.meta.disabledTotalHeader === undefined
       ? false
-      : route.meta.disabledTotalHeader
+      : Boolean(route.meta.disabledTotalHeader)
   })
 
   const burgerMenuClick = () => {
