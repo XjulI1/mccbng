@@ -1,10 +1,7 @@
 <template>
   <div class="app-header">
     <div>
-      <button
-        class="btn btn-info search-button"
-        @click="searchOperation"
-      >
+      <button class="btn btn-info search-button" @click="searchOperation">
         <font-awesome-icon icon="search" />
       </button>
     </div>
@@ -18,11 +15,8 @@
         />]
       </div>
     </div>
-    <div>
-      <button
-        class="btn btn-secondary chart-button"
-        @click="goToStats"
-      >
+    <div class="header-actions">
+      <button class="btn btn-secondary chart-button" @click="goToStats">
         <font-awesome-icon icon="chart-pie" />
       </button>
     </div>
@@ -30,31 +24,32 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { useStore } from 'vuex'
-  import Currency from './Currency.vue'
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useStore } from "vuex";
+import Currency from "./Currency.vue";
+import ThemeToggle from "./ThemeToggle.vue";
 
-  const route = useRoute()
-  const router = useRouter()
-  const store = useStore()
+const route = useRoute();
+const router = useRouter();
+const store = useStore();
 
-  const activeAccount = computed(() => store.state.compte.activeAccount)
+const activeAccount = computed(() => store.state.compte.activeAccount);
 
-  const disabledTotal = computed(() => {
-    return route.meta.disabledTotalHeader === undefined
-      ? false
-      : route.meta.disabledTotalHeader
-  })
+const disabledTotal = computed(() => {
+  return route.meta.disabledTotalHeader === undefined
+    ? false
+    : route.meta.disabledTotalHeader;
+});
 
-  const goToStats = () => {
-    store.dispatch('toggleAccountList', false)
-    router.push('stats')
-  }
+const goToStats = () => {
+  store.dispatch("toggleAccountList", false);
+  router.push("stats");
+};
 
-  const searchOperation = () => {
-    router.push('search')
-  }
+const searchOperation = () => {
+  router.push("search");
+};
 </script>
 
 <style lang="scss" scoped>
@@ -64,8 +59,9 @@
   width: fit-content;
   max-width: 90%;
   min-width: 360px;
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: var(--glass-blur);
+  background-color: var(--bg-glass);
+  border: var(--glass-border);
   top: 10px;
   left: 75%;
   transform: translateX(-75%);
@@ -76,13 +72,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-glass);
   gap: 1rem;
   border-radius: 14px;
 
   @media screen and (max-width: $mobile_BP_max_width) {
     left: 50%;
     transform: translateX(-50%);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
   }
 
   button.chart-button,
@@ -108,7 +110,7 @@
   font-weight: 600;
   font-size: 1.05rem;
   padding: 0;
-  color: #212529;
+  color: var(--text-primary);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
   div:first-child {

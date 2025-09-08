@@ -29,6 +29,7 @@
   import { computed, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useStore } from 'vuex'
+  import { useGlobalTheme } from '@/composables/useTheme'
 
   import NavBar from '@/components/NavBar.vue'
   import CompteList from '@/components/CompteList/index.vue'
@@ -39,6 +40,9 @@
   const router = useRouter()
   const route = useRoute()
   const store = useStore()
+
+  // Initialisation du système de thème
+  useGlobalTheme()
 
   const userID = computed(() => store.state.user.id)
   const displayAccountList = computed(() => store.state.display.account_list)
