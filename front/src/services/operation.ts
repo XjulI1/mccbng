@@ -116,6 +116,38 @@ export const fetchRecurrOperation = (userToken, APIURL) => {
     })
 }
 
+export const updateRecurringOperation = (operationRecurrente, userToken, APIURL) => {
+  if (operationRecurrente.IDopRecu) {
+    return axios.put(
+      APIURL + '/api/operation-recurrentes/' + operationRecurrente.IDopRecu,
+      { ...operationRecurrente, IDopRecu: undefined },
+      {
+        headers: {
+          Authorization: 'Bearer ' + userToken
+        }
+      }
+    )
+  } else {
+    return axios.post(
+      APIURL + '/api/operation-recurrentes/',
+      operationRecurrente,
+      {
+        headers: {
+          Authorization: 'Bearer ' + userToken
+        }
+      }
+    )
+  }
+}
+
+export const deleteRecurringOperation = (IDopRecu, userToken, APIURL) => {
+  return axios.delete(APIURL + '/api/operation-recurrentes/' + IDopRecu, {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    }
+  })
+}
+
 export const fetchOperations = (where, userToken, APIURL) => {
   const filter = {
     where,
@@ -143,5 +175,7 @@ export default {
   fetchSearchOperations,
   generateRecurringOperations,
   fetchRecurrOperation,
+  updateRecurringOperation,
+  deleteRecurringOperation,
   fetchOperations
 }

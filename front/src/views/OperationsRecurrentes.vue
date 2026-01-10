@@ -1,5 +1,6 @@
 <template>
   <div class="op-recurrentes">
+    <router-view />
     <operation-recurrente-list :operations="operationsRecurrenteList" />
   </div>
 </template>

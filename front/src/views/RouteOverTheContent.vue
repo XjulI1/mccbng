@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="route-other-the-content"
-    @click="returnToHome"
-  >
+  <div class="route-other-the-content" @click="returnToHome">
     <div class="component-content">
       <component :is="components[componentName]" />
     </div>
@@ -10,31 +7,37 @@
 </template>
 
 <script setup lang="ts">
-  import { useRouter } from 'vue-router'
-  import OperationForm from '@/components/OperationForm.vue'
-  import Search from '@/components/Search.vue'
-  import TransfertForm from '@/components/TransfertForm.vue'
+import { useRouter } from "vue-router";
+import OperationForm from "@/components/OperationForm.vue";
+import OperationRecurrenteForm from "@/components/OperationRecurrenteForm.vue";
+import Search from "@/components/Search.vue";
+import TransfertForm from "@/components/TransfertForm.vue";
 
-  const components = {
-    'operation-form': OperationForm,
-    search: Search,
-    'transfert-form': TransfertForm
+const components = {
+  "operation-form": OperationForm,
+  "operation-recurrente-form": OperationRecurrenteForm,
+  search: Search,
+  "transfert-form": TransfertForm,
+};
+
+const props = defineProps({
+  componentName: {
+    type: String,
+    default: "",
+  },
+});
+
+const router = useRouter();
+
+function returnToHome(event) {
+  if (event.target.className !== "route-other-the-content") return;
+
+  if (props.componentName === "operation-recurrente-form") {
+    router.push("/recurrOperation");
+  } else {
+    router.push("/");
   }
-
-  defineProps({
-    componentName: {
-      type: String,
-      default: ''
-    }
-  })
-
-  const router = useRouter()
-
-  function returnToHome (event) {
-    if (event.target.className === 'route-other-the-content') {
-      router.push('/')
-    }
-  }
+}
 </script>
 
 <style lang="scss" scoped>

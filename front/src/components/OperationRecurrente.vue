@@ -1,26 +1,17 @@
 <template>
-  <div class="operation-card">
+  <div class="operation-card" @click="editOperation">
     <div class="operation-row">
       <div class="operation-info">
         <span class="operation-name">{{ operation.NomOpRecu }}</span>
         <span class="operation-date">{{ dateOperation }}</span>
       </div>
-      <div
-        class="operation-amount"
-        :class="css.montant"
-      >
+      <div class="operation-amount" :class="css.montant">
         <Currency :amount="operation.MontantOpRecu" />
       </div>
-      <div
-        v-if="showAccount"
-        class="operation-account"
-      >
+      <div v-if="showAccount" class="operation-account">
         <span class="account-badge">{{ accountName }}</span>
       </div>
-      <div
-        v-if="showCategory"
-        class="operation-category"
-      >
+      <div v-if="showCategory" class="operation-category">
         <span class="category-badge">{{ categoryName }}</span>
       </div>
       <div class="operation-controls">
@@ -28,7 +19,7 @@
           class="control-btn"
           :class="{ active: showAccount }"
           title="Afficher/masquer le compte"
-          @click="toggleAccount"
+          @click.stop="toggleAccount"
         >
           💳
         </button>
@@ -36,7 +27,7 @@
           class="control-btn"
           :class="{ active: showCategory }"
           title="Afficher/masquer la catégorie"
-          @click="toggleCategory"
+          @click.stop="toggleCategory"
         >
           🏷️
         </button>
@@ -46,54 +37,60 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
-  import { useStore } from 'vuex'
-  import Currency from './Currency.vue'
+import { computed, ref } from "vue";
+import { useStore } from "vuex";
+import { useRouter } from "vue-router";
+import Currency from "./Currency.vue";
 
-  const props = defineProps({
-    operation: {
-      type: Object,
-      default: () => {}
-    }
-  })
+const props = defineProps({
+  operation: {
+    type: Object,
+    default: () => {},
+  },
+});
 
-  const store = useStore()
+const store = useStore();
+const router = useRouter();
 
-  // État pour afficher/masquer les colonnes
-  const showAccount = ref(false)
-  const showCategory = ref(false)
+// État pour afficher/masquer les colonnes
+const showAccount = ref(false);
+const showCategory = ref(false);
 
-  // Fonctions pour basculer l'affichage
-  const toggleAccount = () => {
-    showAccount.value = !showAccount.value
-  }
+// Fonctions pour basculer l'affichage
+const toggleAccount = () => {
+  showAccount.value = !showAccount.value;
+};
 
-  const toggleCategory = () => {
-    showCategory.value = !showCategory.value
-  }
+const toggleCategory = () => {
+  showCategory.value = !showCategory.value;
+};
 
-  const dateOperation = computed(() => {
-    return new Date(props.operation.DernierDateOpRecu).toLocaleDateString()
-  })
+const editOperation = () => {
+  router.push(`/editRecurrOperation/${props.operation.IDopRecu}`);
+};
 
-  const css = computed(() => ({
-    montant: props.operation.MontantOpRecu > 0 ? 'montantIn' : 'montantOut'
-  }))
+const dateOperation = computed(() => {
+  return new Date(props.operation.DernierDateOpRecu).toLocaleDateString();
+});
 
-  const accountName = computed(() => {
-    return (
-      store.state.compte.accountList.find(
-        (account) => account.IDcompte === props.operation.IDcompte
-      )?.NomCompte || 'Unknown Account'
-    )
-  })
-  const categoryName = computed(() => {
-    return (
-      store.state.category.list.find(
-        (category) => category.IDcat === props.operation.IDcat
-      )?.Nom || 'Unknown Category'
-    )
-  })
+const css = computed(() => ({
+  montant: props.operation.MontantOpRecu > 0 ? "montantIn" : "montantOut",
+}));
+
+const accountName = computed(() => {
+  return (
+    store.state.compte.accountList.find(
+      (account) => account.IDcompte === props.operation.IDcompte
+    )?.NomCompte || "Unknown Account"
+  );
+});
+const categoryName = computed(() => {
+  return (
+    store.state.category.list.find(
+      (category) => category.IDcat === props.operation.IDcat
+    )?.Nom || "Unknown Category"
+  );
+});
 </script>
 
 <style scoped>
@@ -106,11 +103,13 @@
   border: 1px solid #e5e7eb;
   color: #374151;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .operation-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
 }
 
 .operation-row {

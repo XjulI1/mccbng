@@ -19,7 +19,7 @@
     </button>
     <button
       class="btn btn-primary new-operation-button"
-      :disabled="disabled.valueOf()"
+      :disabled="disabled.valueOf() && route.name !== 'Opérations récurrentes'"
       @click="addOperation"
     >
       <font-awesome-icon icon="plus" />
@@ -68,7 +68,11 @@
 
   const addOperation = () => {
     store.dispatch('toggleAccountList', false)
-    router.push('/newOperation')
+    if (route.name === 'Opérations récurrentes') {
+      router.push('/newRecurrOperation')
+    } else {
+      router.push('/newOperation')
+    }
   }
 
   const doTransfert = () => {

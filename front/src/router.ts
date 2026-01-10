@@ -56,7 +56,22 @@ export default createRouter({
     component: OperationsRecurrentes,
     meta: {
       disabledTotalHeader: true
-    }
+    },
+    children: [{
+      path: '/newRecurrOperation',
+      name: 'Nouvelle opération récurrente',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'operation-recurrente-form'
+      }
+    }, {
+      path: '/editRecurrOperation/:id',
+      name: 'Edition opération récurrente',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'operation-recurrente-form'
+      }
+    }]
   }, {
     path: '/amortissement',
     name: 'Amortissement',
