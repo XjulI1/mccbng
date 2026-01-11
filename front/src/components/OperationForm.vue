@@ -200,7 +200,9 @@
   const categoryList = computed(() => store.state.category.list)
 
   watch(activeAccountID, (value) => {
-    operation.value.IDcompte = value
+    if (!operation.value.IDop) {
+      operation.value.IDcompte = value
+    }
   })
 
   const blurMontantOp = (event) => {
@@ -259,7 +261,9 @@
     if (nameInput) {
       nameInput.focus()
     }
-    operation.value.IDcompte = activeAccountID.value
+    if (!operation.value.IDop) {
+      operation.value.IDcompte = activeAccountID.value
+    }
   })
 
   // Equivalent to created
