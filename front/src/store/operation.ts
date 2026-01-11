@@ -16,7 +16,9 @@ export default {
     hasMoreOperations: true,
     isLoadingOperations: false,
     operationsSkip: 0,
-    operationsLimit: 35
+    operationsLimit: 35,
+    isSearchMode: false,
+    currentSearchTerms: ''
   },
 
   getters: {
@@ -55,6 +57,12 @@ export default {
     resetOperationsPagination (state) {
       state.operationsSkip = 0
       state.hasMoreOperations = true
+    },
+    setIsSearchMode (state, isSearchMode) {
+      state.isSearchMode = isSearchMode
+    },
+    setCurrentSearchTerms (state, searchTerms) {
+      state.currentSearchTerms = searchTerms
     }
   },
 
@@ -62,6 +70,7 @@ export default {
     fetchOperationsOfActiveAccount ({ rootState, commit, state }) {
       commit('resetOperationsPagination')
       commit('setIsLoadingOperations', true)
+      commit('setIsSearchMode', false)
 
       fetchOperationsForAccount(
         rootState.compte.activeAccount.IDcompte,
@@ -192,15 +201,50 @@ export default {
       dispatch('fetchRecurrOperation')
     },
 
-    getSearchOperations ({ rootState, commit }, searchTerms) {
+    getSearchOperations ({ rootState, commit, state }, searchTerms) {
+      commit('resetOperationsPagination')
+      commit('setIsLoadingOperations', true)
+      commit('setIsSearchMode', true)
+      commit('setCurrentSearchTerms', searchTerms)
+
       fetchSearchOperations(
         searchTerms,
         rootState.compte.accountList,
         rootState.user.token,
-        import.meta.env.VITE_API_URL
+        import.meta.env.VITE_API_URL,
+        0,
+        state.operationsLimit
       ).then((operations) => {
         commit('setActiveAccount', { NomCompte: 'Search' })
         commit('setOperationsOfActiveAccount', operations)
+        commit('setOperationsSkip', state.operationsLimit)
+        commit('setHasMoreOperations', operations.length === state.operationsLimit)
+        commit('setIsLoadingOperations', false)
+      }).catch(() => {
+        commit('setIsLoadingOperations', false)
+      })
+    },
+    loadMoreSearchOperations ({ rootState, commit, state }) {
+      if (!state.hasMoreOperations || state.isLoadingOperations) {
+        return Promise.resolve()
+      }
+
+      commit('setIsLoadingOperations', true)
+
+      return fetchSearchOperations(
+        state.currentSearchTerms,
+        rootState.compte.accountList,
+        rootState.user.token,
+        import.meta.env.VITE_API_URL,
+        state.operationsSkip,
+        state.operationsLimit
+      ).then((operations) => {
+        commit('appendOperationsToActiveAccount', operations)
+        commit('setOperationsSkip', state.operationsSkip + operations.length)
+        commit('setHasMoreOperations', operations.length === state.operationsLimit)
+        commit('setIsLoadingOperations', false)
+      }).catch(() => {
+        commit('setIsLoadingOperations', false)
       })
     },
     fetchOperations ({ rootState, commit }, where) {

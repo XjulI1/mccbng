@@ -45,6 +45,7 @@
   )
   const hasMoreOperations = computed(() => store.state.operation.hasMoreOperations && activeAccount.value.NomCompte !== 'Amortissement')
   const isLoadingOperations = computed(() => store.state.operation.isLoadingOperations)
+  const isSearchMode = computed(() => store.state.operation.isSearchMode)
 
   const operationsList = computed(() => {
     if (
@@ -61,7 +62,11 @@
 
   const loadMore = () => {
     if (!isLoadingOperations.value && hasMoreOperations.value) {
-      store.dispatch('loadMoreOperations')
+      if (isSearchMode.value) {
+        store.dispatch('loadMoreSearchOperations')
+      } else {
+        store.dispatch('loadMoreOperations')
+      }
     }
   }
 

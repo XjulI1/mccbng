@@ -58,7 +58,9 @@ export const fetchSearchOperations = (
   searchTerms,
   accountList,
   userToken,
-  APIURL
+  APIURL,
+  skip = 0,
+  limit = 35
 ) => {
   const filter = {
     where: {
@@ -69,7 +71,8 @@ export const fetchSearchOperations = (
       ]
     },
     order: 'DateOp DESC',
-    limit: 20
+    limit,
+    skip
   }
 
   return axios
