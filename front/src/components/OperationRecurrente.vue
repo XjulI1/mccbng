@@ -1,17 +1,29 @@
 <template>
-  <div class="operation-card" @click="editOperation">
+  <div
+    class="operation-card"
+    @click="editOperation"
+  >
     <div class="operation-row">
       <div class="operation-info">
         <span class="operation-name">{{ operation.NomOpRecu }}</span>
         <span class="operation-date">{{ dateOperation }}</span>
       </div>
-      <div class="operation-amount" :class="css.montant">
+      <div
+        class="operation-amount"
+        :class="css.montant"
+      >
         <Currency :amount="operation.MontantOpRecu" />
       </div>
-      <div v-if="showAccount" class="operation-account">
+      <div
+        v-if="showAccount"
+        class="operation-account"
+      >
         <span class="account-badge">{{ accountName }}</span>
       </div>
-      <div v-if="showCategory" class="operation-category">
+      <div
+        v-if="showCategory"
+        class="operation-category"
+      >
         <span class="category-badge">{{ categoryName }}</span>
       </div>
       <div class="operation-controls">
@@ -37,60 +49,60 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { useStore } from "vuex";
-import { useRouter } from "vue-router";
-import Currency from "./Currency.vue";
+  import { computed, ref } from 'vue'
+  import { useStore } from 'vuex'
+  import { useRouter } from 'vue-router'
+  import Currency from './Currency.vue'
 
-const props = defineProps({
-  operation: {
-    type: Object,
-    default: () => {},
-  },
-});
+  const props = defineProps({
+    operation: {
+      type: Object,
+      default: () => {}
+    }
+  })
 
-const store = useStore();
-const router = useRouter();
+  const store = useStore()
+  const router = useRouter()
 
-// État pour afficher/masquer les colonnes
-const showAccount = ref(false);
-const showCategory = ref(false);
+  // État pour afficher/masquer les colonnes
+  const showAccount = ref(false)
+  const showCategory = ref(false)
 
-// Fonctions pour basculer l'affichage
-const toggleAccount = () => {
-  showAccount.value = !showAccount.value;
-};
+  // Fonctions pour basculer l'affichage
+  const toggleAccount = () => {
+    showAccount.value = !showAccount.value
+  }
 
-const toggleCategory = () => {
-  showCategory.value = !showCategory.value;
-};
+  const toggleCategory = () => {
+    showCategory.value = !showCategory.value
+  }
 
-const editOperation = () => {
-  router.push(`/editRecurrOperation/${props.operation.IDopRecu}`);
-};
+  const editOperation = () => {
+    router.push(`/editRecurrOperation/${props.operation.IDopRecu}`)
+  }
 
-const dateOperation = computed(() => {
-  return new Date(props.operation.DernierDateOpRecu).toLocaleDateString();
-});
+  const dateOperation = computed(() => {
+    return new Date(props.operation.DernierDateOpRecu).toLocaleDateString()
+  })
 
-const css = computed(() => ({
-  montant: props.operation.MontantOpRecu > 0 ? "montantIn" : "montantOut",
-}));
+  const css = computed(() => ({
+    montant: props.operation.MontantOpRecu > 0 ? 'montantIn' : 'montantOut'
+  }))
 
-const accountName = computed(() => {
-  return (
-    store.state.compte.accountList.find(
-      (account) => account.IDcompte === props.operation.IDcompte
-    )?.NomCompte || "Unknown Account"
-  );
-});
-const categoryName = computed(() => {
-  return (
-    store.state.category.list.find(
-      (category) => category.IDcat === props.operation.IDcat
-    )?.Nom || "Unknown Category"
-  );
-});
+  const accountName = computed(() => {
+    return (
+      store.state.compte.accountList.find(
+        (account) => account.IDcompte === props.operation.IDcompte
+      )?.NomCompte || 'Unknown Account'
+    )
+  })
+  const categoryName = computed(() => {
+    return (
+      store.state.category.list.find(
+        (category) => category.IDcat === props.operation.IDcat
+      )?.Nom || 'Unknown Category'
+    )
+  })
 </script>
 
 <style scoped>

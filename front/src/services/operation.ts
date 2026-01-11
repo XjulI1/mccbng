@@ -1,10 +1,11 @@
 import axios from 'axios'
 
-export const fetchOperationsForAccount = (IDcompte, userToken, APIURL) => {
+export const fetchOperationsForAccount = (IDcompte, userToken, APIURL, skip = 0, limit = 35) => {
   const filter = {
     where: { IDcompte },
     order: 'CheckOp ASC, DateOp DESC',
-    limit: 35
+    limit,
+    skip
   }
 
   return axios

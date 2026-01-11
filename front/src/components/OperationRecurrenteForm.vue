@@ -14,18 +14,24 @@
       </h2>
 
       <div class="form-group">
-        <label for="operation-name" class="form-label">Titre</label>
+        <label
+          for="operation-name"
+          class="form-label"
+        >Titre</label>
         <input
           id="operation-name"
           v-model="operationRecurrente.NomOpRecu"
           type="text"
           class="form-input"
           placeholder="Entrez le titre de l'opération récurrente"
-        />
+        >
       </div>
 
       <div class="form-group">
-        <label for="operation-amount" class="form-label">Montant</label>
+        <label
+          for="operation-amount"
+          class="form-label"
+        >Montant</label>
         <input
           id="operation-amount"
           v-model="operationRecurrente.MontantOpRecu"
@@ -35,19 +41,26 @@
           placeholder="0.00"
           step="0.01"
           @blur="blurMontantOp"
-        />
+        >
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="operation-frequency" class="form-label">Fréquence</label>
+          <label
+            for="operation-frequency"
+            class="form-label"
+          >Fréquence</label>
           <select
             id="operation-frequency"
             v-model="operationRecurrente.Frequence"
             class="form-select"
           >
-            <option value="3">Mensuelle</option>
-            <option value="7">Annuelle</option>
+            <option value="3">
+              Mensuelle
+            </option>
+            <option value="7">
+              Annuelle
+            </option>
           </select>
         </div>
 
@@ -55,29 +68,59 @@
           v-if="isYearly"
           class="form-group"
         >
-          <label for="operation-month" class="form-label">Mois</label>
+          <label
+            for="operation-month"
+            class="form-label"
+          >Mois</label>
           <select
             id="operation-month"
             v-model="operationRecurrente.MoisOpRecu"
             class="form-select"
           >
-            <option value="0">Janvier</option>
-            <option value="1">Février</option>
-            <option value="2">Mars</option>
-            <option value="3">Avril</option>
-            <option value="4">Mai</option>
-            <option value="5">Juin</option>
-            <option value="6">Juillet</option>
-            <option value="7">Août</option>
-            <option value="8">Septembre</option>
-            <option value="9">Octobre</option>
-            <option value="10">Novembre</option>
-            <option value="11">Décembre</option>
+            <option value="0">
+              Janvier
+            </option>
+            <option value="1">
+              Février
+            </option>
+            <option value="2">
+              Mars
+            </option>
+            <option value="3">
+              Avril
+            </option>
+            <option value="4">
+              Mai
+            </option>
+            <option value="5">
+              Juin
+            </option>
+            <option value="6">
+              Juillet
+            </option>
+            <option value="7">
+              Août
+            </option>
+            <option value="8">
+              Septembre
+            </option>
+            <option value="9">
+              Octobre
+            </option>
+            <option value="10">
+              Novembre
+            </option>
+            <option value="11">
+              Décembre
+            </option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="operation-day-num" class="form-label">Jour du mois</label>
+          <label
+            for="operation-day-num"
+            class="form-label"
+          >Jour du mois</label>
           <input
             id="operation-day-num"
             v-model="operationRecurrente.JourNumOpRecu"
@@ -86,18 +129,26 @@
             placeholder="Jour (1-31)"
             min="1"
             max="31"
-          />
+          >
         </div>
       </div>
 
       <div class="form-group">
-        <label for="operation-account" class="form-label">Compte</label>
+        <label
+          for="operation-account"
+          class="form-label"
+        >Compte</label>
         <select
           id="operation-account"
           v-model="operationRecurrente.IDcompte"
           class="form-select"
         >
-          <option value="" disabled>Sélectionnez un compte</option>
+          <option
+            value=""
+            disabled
+          >
+            Sélectionnez un compte
+          </option>
           <option
             v-for="account in accountList"
             :key="'account-' + account.IDcompte"
@@ -109,13 +160,21 @@
       </div>
 
       <div class="form-group">
-        <label for="operation-category" class="form-label">Catégorie</label>
+        <label
+          for="operation-category"
+          class="form-label"
+        >Catégorie</label>
         <select
           id="operation-category"
           v-model="operationRecurrente.IDcat"
           class="form-select"
         >
-          <option value="" disabled>Sélectionnez une catégorie</option>
+          <option
+            value=""
+            disabled
+          >
+            Sélectionnez une catégorie
+          </option>
           <option
             v-for="category in categoryList"
             :key="'category-' + category.IDcat"
@@ -181,121 +240,121 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
-import { useStore } from "vuex";
-import { useRoute, useRouter } from "vue-router";
+  import { ref, computed, watch, onMounted } from 'vue'
+  import { useStore } from 'vuex'
+  import { useRoute, useRouter } from 'vue-router'
 
-const store = useStore();
-const route = useRoute();
-const router = useRouter();
+  const store = useStore()
+  const route = useRoute()
+  const router = useRouter()
 
-const operationRecurrenteID = ref(route.params.id);
+  const operationRecurrenteID = ref(route.params.id)
 
-const montantOpIsPositive = ref(false);
-const operationRecurrente = ref({
-  IDopRecu: undefined,
-  NomOpRecu: "",
-  MontantOpRecu: 0,
-  JourOpRecu: 1,
-  JourNumOpRecu: 1,
-  MoisOpRecu: 1,
-  Frequence: 3,
-  DernierDateOpRecu: new Date(),
-  IDcompte: undefined,
-  IDcat: 0,
-});
+  const montantOpIsPositive = ref(false)
+  const operationRecurrente = ref({
+    IDopRecu: undefined,
+    NomOpRecu: '',
+    MontantOpRecu: 0,
+    JourOpRecu: 1,
+    JourNumOpRecu: 1,
+    MoisOpRecu: 1,
+    Frequence: 3,
+    DernierDateOpRecu: new Date(),
+    IDcompte: undefined,
+    IDcat: 0
+  })
 
-const accountList = computed(() =>
-  store.state.compte.accountList.filter((account) => account.visible)
-);
-const categoryList = computed(() => store.state.category.list);
-const activeAccountID = computed(
-  () => store.state.compte.activeAccount.IDcompte
-);
-const isYearly = computed(() => operationRecurrente.value.Frequence == 7);
+  const accountList = computed(() =>
+    store.state.compte.accountList.filter((account) => account.visible)
+  )
+  const categoryList = computed(() => store.state.category.list)
+  const activeAccountID = computed(
+    () => store.state.compte.activeAccount.IDcompte
+  )
+  const isYearly = computed(() => operationRecurrente.value.Frequence === 7)
 
-watch(activeAccountID, (value) => {
-  if (!operationRecurrente.value.IDopRecu) {
-    operationRecurrente.value.IDcompte = value;
+  watch(activeAccountID, (value) => {
+    if (!operationRecurrente.value.IDopRecu) {
+      operationRecurrente.value.IDcompte = value
+    }
+  })
+
+  const blurMontantOp = (event) => {
+    operationRecurrente.value.MontantOpRecu = parseFloat(event.target.value)
+
+    if (
+      operationRecurrente.value.MontantOpRecu > 0 &&
+      !montantOpIsPositive.value
+    ) {
+      operationRecurrente.value.MontantOpRecu *= -1
+    }
   }
-});
 
-const blurMontantOp = (event) => {
-  operationRecurrente.value.MontantOpRecu = parseFloat(event.target.value);
-
-  if (
-    operationRecurrente.value.MontantOpRecu > 0 &&
-    !montantOpIsPositive.value
-  ) {
-    operationRecurrente.value.MontantOpRecu *= -1;
+  const montantClass = () => {
+    return montantOpIsPositive.value ? 'montant-positif' : 'montant-negatif'
   }
-};
 
-const montantClass = () => {
-  return montantOpIsPositive.value ? "montant-positif" : "montant-negatif";
-};
+  const montantIsPositive = () => {
+    montantOpIsPositive.value = true
+    operationRecurrente.value.MontantOpRecu = Math.abs(
+      operationRecurrente.value.MontantOpRecu
+    )
+  }
 
-const montantIsPositive = () => {
-  montantOpIsPositive.value = true;
-  operationRecurrente.value.MontantOpRecu = Math.abs(
-    operationRecurrente.value.MontantOpRecu
-  );
-};
+  const montantIsNegative = () => {
+    montantOpIsPositive.value = false
+    operationRecurrente.value.MontantOpRecu *= -1
+  }
 
-const montantIsNegative = () => {
-  montantOpIsPositive.value = false;
-  operationRecurrente.value.MontantOpRecu *= -1;
-};
+  const updateOperationRecurrente = () => {
+    store.dispatch('updateRecurringOperation', operationRecurrente.value)
 
-const updateOperationRecurrente = () => {
-  store.dispatch("updateRecurringOperation", operationRecurrente.value);
+    if (operationRecurrente.value.IDopRecu === undefined) {
+      resetOperationAttribut()
+    } else {
+      router.push('/recurrOperation')
+    }
+  }
 
-  if (operationRecurrente.value.IDopRecu === undefined) {
-    resetOperationAttribut();
+  const deleteOperationRecurrente = () => {
+    store.dispatch('deleteRecurringOperation', operationRecurrente.value)
+    router.push('/recurrOperation')
+  }
+
+  const resetOperationAttribut = () => {
+    operationRecurrente.value.NomOpRecu = ''
+    operationRecurrente.value.MontantOpRecu = 0
+    operationRecurrente.value.JourOpRecu = 1
+    operationRecurrente.value.Frequence = 3
+    montantOpIsPositive.value = false
+  }
+
+  // Lifecycle hooks
+  onMounted(() => {
+    const nameInput = document.querySelector(
+      '#operation-name'
+    ) as HTMLInputElement
+    if (nameInput) {
+      nameInput.focus()
+    }
+    if (!operationRecurrente.value.IDopRecu) {
+      operationRecurrente.value.IDcompte = activeAccountID.value
+    }
+  })
+
+  // Equivalent to created
+  if (operationRecurrenteID.value) {
+    const existingOperation = store.state.operation.recurringOperations?.find(
+      (op) => op.IDopRecu === parseInt(operationRecurrenteID.value as string)
+    )
+    if (existingOperation) {
+      operationRecurrente.value = { ...existingOperation }
+      montantOpIsPositive.value = operationRecurrente.value.MontantOpRecu > 0
+    }
   } else {
-    router.push("/recurrOperation");
+    operationRecurrente.value.DernierDateOpRecu = new Date()
+    operationRecurrente.value.IDcompte = activeAccountID.value
   }
-};
-
-const deleteOperationRecurrente = () => {
-  store.dispatch("deleteRecurringOperation", operationRecurrente.value);
-  router.push("/recurrOperation");
-};
-
-const resetOperationAttribut = () => {
-  operationRecurrente.value.NomOpRecu = "";
-  operationRecurrente.value.MontantOpRecu = 0;
-  operationRecurrente.value.JourOpRecu = 1;
-  operationRecurrente.value.Frequence = 3;
-  montantOpIsPositive.value = false;
-};
-
-// Lifecycle hooks
-onMounted(() => {
-  const nameInput = document.querySelector(
-    "#operation-name"
-  ) as HTMLInputElement;
-  if (nameInput) {
-    nameInput.focus();
-  }
-  if (!operationRecurrente.value.IDopRecu) {
-    operationRecurrente.value.IDcompte = activeAccountID.value;
-  }
-});
-
-// Equivalent to created
-if (operationRecurrenteID.value) {
-  const existingOperation = store.state.operation.recurringOperations?.find(
-    (op) => op.IDopRecu === parseInt(operationRecurrenteID.value as string)
-  );
-  if (existingOperation) {
-    operationRecurrente.value = { ...existingOperation };
-    montantOpIsPositive.value = operationRecurrente.value.MontantOpRecu > 0;
-  }
-} else {
-  operationRecurrente.value.DernierDateOpRecu = new Date();
-  operationRecurrente.value.IDcompte = activeAccountID.value;
-}
 </script>
 
 <style scoped>

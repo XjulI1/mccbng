@@ -164,8 +164,8 @@
 
   const duree = computed(() => {
     const current = currentDate.value.getTime()
-    const operation_date = new Date(operation.DateOp).getTime()
-    return current - operation_date
+    const operationDate = new Date(operation.DateOp).getTime()
+    return current - operationDate
   })
 
   const montantTotal = computed(() =>

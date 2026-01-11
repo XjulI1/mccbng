@@ -188,7 +188,7 @@ export default {
 
       dispatch('fetchOperationsOfActiveAccount')
 
-      sumForACompte(rootState.user.token, state.activeAccount.IDcompte, import.meta.env.VITE_API_URL)
+      sumForACompte(rootState.user.token, accountID, import.meta.env.VITE_API_URL)
         .then(({ TotalChecked, TotalNotChecked }) => {
           commit('setNewBalances', { TotalChecked, TotalNotChecked })
         })

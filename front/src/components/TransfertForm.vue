@@ -187,6 +187,7 @@
 
   const accountsCredit = computed(() => {
     if (cash.value) {
+      // eslint-disable-next-line vue/no-side-effects-in-computed-properties
       operation.value.IDcompteCredit = porteFeuilleCompte.value[0].IDcompte
       return porteFeuilleCompte.value
     }
