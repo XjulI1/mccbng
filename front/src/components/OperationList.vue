@@ -43,7 +43,7 @@
   const operationsOfActiveAccount = computed(
     () => store.state.operation.operationsOfActiveAccount
   )
-  const hasMoreOperations = computed(() => store.state.operation.hasMoreOperations)
+  const hasMoreOperations = computed(() => store.state.operation.hasMoreOperations && activeAccount.value.NomCompte !== 'Amortissement')
   const isLoadingOperations = computed(() => store.state.operation.isLoadingOperations)
 
   const operationsList = computed(() => {
