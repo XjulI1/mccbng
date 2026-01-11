@@ -26,6 +26,12 @@
       >
         <Currency :amount="operation.MontantOp" />
       </div>
+      <div
+        v-if="isSearchMode"
+        class="operation-account"
+      >
+        <span class="account-badge">{{ accountName }}</span>
+      </div>
       <div class="operation-actions">
         <router-link
           :to="'/editOperation/' + operation.IDop"
@@ -74,6 +80,16 @@
 
   const modelValue = computed(() => {
     return props.operation.CheckOp
+  })
+
+  const isSearchMode = computed(() => store.state.operation.isSearchMode)
+
+  const accountName = computed(() => {
+    return (
+      store.state.compte.accountList.find(
+        (account) => account.IDcompte === props.operation.IDcompte
+      )?.NomCompte || 'Compte inconnu'
+    )
   })
 
   watch(
@@ -212,6 +228,23 @@
   background: #e5e7eb;
   transform: scale(1.05);
   border-color: #9ca3af;
+}
+
+.operation-account {
+  display: flex;
+  align-items: center;
+}
+
+.account-badge {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
