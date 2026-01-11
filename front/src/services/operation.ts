@@ -172,6 +172,25 @@ export const fetchOperations = (where, userToken, APIURL) => {
     })
 }
 
+export const suggestCategories = (operationName, userToken, APIURL, limit = 5) => {
+  return axios
+    .get(APIURL + '/api/operations/suggestCategories', {
+      headers: {
+        Authorization: 'Bearer ' + userToken
+      },
+      params: {
+        operationName,
+        limit
+      }
+    })
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      return []
+    })
+}
+
 export default {
   fetchOperationsForAccount,
   updateOperation,
@@ -181,5 +200,6 @@ export default {
   fetchRecurrOperation,
   updateRecurringOperation,
   deleteRecurringOperation,
-  fetchOperations
+  fetchOperations,
+  suggestCategories
 }

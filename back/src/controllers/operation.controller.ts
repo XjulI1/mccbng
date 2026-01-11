@@ -19,6 +19,8 @@ import {
 import {Operation} from '../models';
 import {OperationRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
+import {inject} from '@loopback/core';
+import {SecurityBindings, securityId, UserProfile} from '@loopback/security';
 
 @authenticate('jwt')
 export class OperationController {
@@ -346,5 +348,77 @@ export class OperationController {
       'GROUP BY IDcat';
 
     return this.operationRepository.execute(SQLrequest);
+  }
+
+  @get('/operations/suggestCategories', {
+    responses: {
+      '200': {
+        description: 'Suggest categories based on operation name',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  IDcat: {type: 'number'},
+                  weight: {type: 'number'},
+                  count: {type: 'number'},
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async suggestCategories(
+    @inject(SecurityBindings.USER)
+    currentUserProfile: UserProfile,
+    @param.query.string('operationName') operationName: string,
+    @param.query.number('limit') limit?: number,
+  ): Promise<any> {
+    if (!operationName || operationName.trim().length < 2) {
+      return [];
+    }
+
+    const UserID = currentUserProfile[securityId];
+    const searchName = operationName
+      .trim()
+      .toLowerCase()
+      .replace(/'/g, "''"); // Échapper les guillemets simples pour MySQL
+    const limitValue = limit || 5;
+
+    // Recherche des opérations avec des noms similaires
+    // On utilise LIKE avec des wildcards pour trouver des correspondances partielles
+    const SQLrequest =
+      'SELECT IDcat, COUNT(*) as count ' +
+      'FROM Operation ' +
+      'NATURAL JOIN Compte ' +
+      'WHERE Compte.IDuser = ' +
+      UserID +
+      ' ' +
+      'AND IDcat IS NOT NULL AND IDcat > 0 ' +
+      "AND LOWER(NomOp) LIKE '%" +
+      searchName +
+      "%' " +
+      'GROUP BY IDcat ' +
+      'ORDER BY count DESC ' +
+      'LIMIT ' +
+      limitValue;
+
+    const results = await this.operationRepository.execute(SQLrequest);
+
+    // Calcul du poids basé sur la fréquence
+    const totalCount = results.reduce(
+      (sum: number, item: any) => sum + item.count,
+      0,
+    );
+
+    return results.map((item: any) => ({
+      IDcat: item.IDcat,
+      count: item.count,
+      weight: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
+    }));
   }
 }

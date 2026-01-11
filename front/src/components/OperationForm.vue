@@ -71,8 +71,33 @@
           >
             Sélectionnez une catégorie
           </option>
+          <optgroup
+            v-if="suggestedCategories.length > 0"
+            label="📌 Suggestions"
+          >
+            <option
+              v-for="suggestion in suggestedCategories"
+              :key="'suggested-' + suggestion.category.IDcat"
+              :value="suggestion.category.IDcat"
+            >
+              {{ suggestion.category.Nom }} ({{ Math.round(suggestion.weight) }}%)
+            </option>
+          </optgroup>
+          <optgroup
+            v-if="suggestedCategories.length > 0"
+            label="Toutes les catégories"
+          >
+            <option
+              v-for="category in otherCategories"
+              :key="'category-' + category.IDcat"
+              :value="category.IDcat"
+            >
+              {{ category.Nom }}
+            </option>
+          </optgroup>
           <option
             v-for="category in categoryList"
+            v-if="suggestedCategories.length === 0"
             :key="'category-' + category.IDcat"
             :value="category.IDcat"
           >
@@ -175,6 +200,7 @@
   import { ref, computed, watch, onMounted } from 'vue'
   import { useStore } from 'vuex'
   import { useRoute, useRouter } from 'vue-router'
+  import { suggestCategories } from '@/services/operation'
 
   const store = useStore()
   const route = useRoute()
@@ -194,15 +220,73 @@
     amortissement: false
   })
 
+  const suggestedCategoriesData = ref([])
+
   const activeAccountID = computed(
     () => store.state.compte.activeAccount.IDcompte
   )
   const categoryList = computed(() => store.state.category.list)
 
+  const suggestedCategories = computed(() => {
+    if (suggestedCategoriesData.value.length === 0) return []
+
+    return suggestedCategoriesData.value.map((suggestion: any) => {
+      const category = categoryList.value.find(
+        (cat: any) => cat.IDcat === suggestion.IDcat
+      )
+      return {
+        ...suggestion,
+        category
+      }
+    }).filter((item: any) => item.category)
+  })
+
+  const otherCategories = computed(() => {
+    if (suggestedCategories.value.length === 0) return categoryList.value
+
+    const suggestedIds = suggestedCategories.value.map((s: any) => s.category.IDcat)
+    return categoryList.value.filter((cat: any) => !suggestedIds.includes(cat.IDcat))
+  })
+
   watch(activeAccountID, (value) => {
     if (!operation.value.IDop) {
       operation.value.IDcompte = value
     }
+  })
+
+  // Debounce timer pour les suggestions
+  let suggestTimeout: ReturnType<typeof setTimeout> | null = null
+
+  watch(() => operation.value.NomOp, (newName) => {
+    // Réinitialiser les suggestions si le champ est vide
+    if (!newName || newName.trim().length < 2) {
+      suggestedCategoriesData.value = []
+      return
+    }
+
+    // Debounce pour éviter trop de requêtes
+    if (suggestTimeout) {
+      clearTimeout(suggestTimeout)
+    }
+
+    suggestTimeout = setTimeout(async () => {
+      try {
+        const suggestions = await suggestCategories(
+          newName,
+          store.state.user.token,
+          import.meta.env.VITE_API_URL
+        )
+        suggestedCategoriesData.value = suggestions
+
+        // Auto-sélectionner la première suggestion si elle a un poids élevé (>70%)
+        if (suggestions.length > 0 && suggestions[0].weight > 70) {
+          operation.value.IDcat = suggestions[0].IDcat
+        }
+      } catch (error) {
+        console.error('Erreur lors de la suggestion de catégories:', error)
+        suggestedCategoriesData.value = []
+      }
+    }, 500)
   })
 
   const blurMontantOp = (event) => {
