@@ -19,7 +19,7 @@
     </button>
     <button
       class="btn btn-primary new-operation-button"
-      :disabled="disabled.valueOf() && route.name !== 'Opérations récurrentes'"
+      :disabled="disabled.valueOf() && route.name !== 'Opérations récurrentes' && route.name !== 'Crédits'"
       @click="addOperation"
     >
       <font-awesome-icon icon="plus" />
@@ -37,6 +37,13 @@
       @click="getAmortissement"
     >
       <font-awesome-icon icon="history" />
+    </button>
+    <button
+      class="btn btn-credit credit-button"
+      :disabled="route.name === 'Login'"
+      @click="getCredits"
+    >
+      <font-awesome-icon icon="credit-card" />
     </button>
     <button
       class="btn btn-danger params-button"
@@ -70,6 +77,8 @@
     store.dispatch('toggleAccountList', false)
     if (route.name === 'Opérations récurrentes') {
       router.push('/newRecurrOperation')
+    } else if (route.name === 'Crédits') {
+      router.push('/newCredit')
     } else {
       router.push('/newOperation')
     }
@@ -88,6 +97,11 @@
   const getAmortissement = () => {
     store.dispatch('toggleAccountList', false)
     router.push('/amortissement')
+  }
+
+  const getCredits = () => {
+    store.dispatch('toggleAccountList', false)
+    router.push('/credits')
   }
 
   const changeParams = () => {
@@ -242,6 +256,45 @@
 .btn-success:not(:disabled):not(.disabled):active:focus,
 .btn-success:not(:disabled):not(.disabled).active:focus {
   box-shadow: 0 0 0 0.2rem rgba(72, 180, 97, 0.5);
+}
+
+.btn-credit {
+  color: #fff;
+  background-color: #6f42c1;
+  border-color: #6f42c1;
+}
+
+.btn-credit:hover {
+  color: #fff;
+  background-color: #5a32a3;
+  border-color: #4e2a8e;
+}
+
+.btn-credit:focus,
+.btn-credit.focus {
+  color: #fff;
+  background-color: #5a32a3;
+  border-color: #4e2a8e;
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.5);
+}
+
+.btn-credit.disabled,
+.btn-credit:disabled {
+  color: #fff;
+  background-color: #6f42c1;
+  border-color: #6f42c1;
+}
+
+.btn-credit:not(:disabled):not(.disabled):active,
+.btn-credit:not(:disabled):not(.disabled).active {
+  color: #fff;
+  background-color: #4e2a8e;
+  border-color: #432578;
+}
+
+.btn-credit:not(:disabled):not(.disabled):active:focus,
+.btn-credit:not(:disabled):not(.disabled).active:focus {
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.5);
 }
 
 .btn-info {
