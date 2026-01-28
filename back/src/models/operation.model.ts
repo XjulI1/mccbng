@@ -60,6 +60,12 @@ export class Operation extends Entity {
   })
   amortissement?: boolean;
 
+  @property({
+    type: 'number',
+    required: false,
+  })
+  IDcredit?: number;
+
   // Define well-known properties here
 
   // Indexer property to allow additional data

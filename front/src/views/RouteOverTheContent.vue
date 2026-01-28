@@ -15,12 +15,14 @@
   import OperationRecurrenteForm from '@/components/OperationRecurrenteForm.vue'
   import Search from '@/components/Search.vue'
   import TransfertForm from '@/components/TransfertForm.vue'
+  import CreditForm from '@/components/CreditForm.vue'
 
   const components = {
     'operation-form': OperationForm,
     'operation-recurrente-form': OperationRecurrenteForm,
     search: Search,
-    'transfert-form': TransfertForm
+    'transfert-form': TransfertForm,
+    'credit-form': CreditForm
   }
 
   const props = defineProps({
@@ -37,6 +39,8 @@
 
     if (props.componentName === 'operation-recurrente-form') {
       router.push('/recurrOperation')
+    } else if (props.componentName === 'credit-form') {
+      router.push('/credits')
     } else {
       router.push('/')
     }

@@ -6,6 +6,7 @@ const Login = () => import(/* webpackChunkName: "login" */ './views/Login.vue')
 const Config = () => import(/* webpackChunkName: "config" */ './views/Config.vue')
 const OperationsRecurrentes = () => import(/* webpackChunkName: "operecur" */ './views/OperationsRecurrentes.vue')
 const Amortissement = () => import(/* webpackChunkName: "operecur" */ './views/Amortissement.vue')
+const Credits = () => import(/* webpackChunkName: "credits" */ './views/Credits.vue')
 const RouteOverTheContent = () => import(/* webpackChunkName: "othercontent" */ './views/RouteOverTheContent.vue')
 
 export default createRouter({
@@ -79,6 +80,28 @@ export default createRouter({
     meta: {
       disabledTotalHeader: true
     }
+  }, {
+    path: '/credits',
+    name: 'Crédits',
+    component: Credits,
+    meta: {
+      disabledTotalHeader: true
+    },
+    children: [{
+      path: '/newCredit',
+      name: 'Nouveau crédit',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'credit-form'
+      }
+    }, {
+      path: '/editCredit/:id',
+      name: 'Edition crédit',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'credit-form'
+      }
+    }]
   }, {
     path: '/stats',
     name: 'Stats',
