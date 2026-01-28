@@ -248,12 +248,19 @@ export default {
       })
     },
     fetchOperations ({ rootState, commit }, where) {
+      commit('resetOperationsPagination')
+      commit('setIsLoadingOperations', true)
+
       fetchOperations(
         where,
         rootState.user.token,
         import.meta.env.VITE_API_URL
       ).then((operations) => {
         commit('setOperationsOfActiveAccount', operations)
+        commit('setHasMoreOperations', false)
+        commit('setIsLoadingOperations', false)
+      }).catch(() => {
+        commit('setIsLoadingOperations', false)
       })
     }
   }
