@@ -111,16 +111,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: #f8fafc;
+  background: var(--bg-secondary);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   transition: all 0.2s ease;
   min-height: 44px;
 }
 
 .account-compact:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e0;
+  background: var(--bg-muted);
+  border-color: var(--border-color);
   transform: translateX(2px);
 }
 
@@ -142,7 +142,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: var(--bg-primary);
   border-radius: 4px;
   flex-shrink: 0;
 }
@@ -155,13 +155,13 @@
 
 .icon-fa {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .account-name {
   font-size: 1rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

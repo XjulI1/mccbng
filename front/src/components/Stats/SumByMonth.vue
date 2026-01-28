@@ -83,6 +83,11 @@
 .sum-by-month {
   margin-left: 10px;
   margin-right: 10px;
+  background: var(--bg-card);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .parjour {
@@ -92,12 +97,49 @@
 
 .selector-date {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.selector-date select {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-width: 80px;
+}
+
+.selector-date select:hover {
+  border-color: var(--border-color-focus);
+  background: var(--bg-muted);
+}
+
+.selector-date select:focus {
+  outline: none;
+  border-color: var(--border-color-focus);
+  box-shadow: var(--input-focus-shadow);
 }
 
 .total-month {
   text-align: center;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: var(--spacing-m);
+  margin-bottom: var(--spacing-m);
+  color: var(--text-primary);
+  font-size: var(--font-size-lg);
+}
+
+.total-month b {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
 }
 </style>

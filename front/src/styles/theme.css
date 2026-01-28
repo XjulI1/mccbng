@@ -34,11 +34,105 @@
   --bg-muted: #f1f5f9;
   --bg-glass: rgba(255, 255, 255, 0.95);
   --bg-glass-dark: rgba(255, 255, 255, 0.8);
+  --bg-overlay: rgba(0, 0, 0, 0.25);
+  --bg-overlay-light: rgba(0, 0, 0, 0.05);
+  --bg-overlay-medium: rgba(0, 0, 0, 0.075);
+  --bg-transparent: transparent;
+
+  /* Couleurs de fond pour alertes et états */
+  --bg-success-light: rgba(72, 187, 120, 0.1);
+  --bg-danger-light: rgba(245, 101, 101, 0.1);
+  --bg-warning-light: rgba(255, 193, 7, 0.1);
+
+  /* Couleurs pour cards et éléments */
+  --bg-card: #ffffff;
+  --bg-card-header: rgba(0, 0, 0, 0.03);
+  --bg-list-item: #ffffff;
+  --bg-list-item-striped: rgba(0, 0, 0, 0.05);
+  --bg-input: #ffffff;
+  --bg-input-group: #e9ecef;
   
   /* Bordures */
   --border-color: #e2e8f0;
   --border-color-light: #f1f5f9;
   --border-color-focus: #667eea;
+  --border-color-input: #ced4da;
+  --border-color-input-focus: #80bdff;
+  --border-color-card: rgba(0, 0, 0, 0.125);
+  --border-color-table: #dee2e6;
+  --border-color-alert: transparent;
+
+  /* Couleurs pour boutons */
+  --btn-primary-bg: #007bff;
+  --btn-primary-hover: #0069d9;
+  --btn-primary-border: #0062cc;
+  --btn-primary-focus-shadow: rgba(38, 143, 255, 0.5);
+
+  --btn-secondary-bg: #6c757d;
+  --btn-secondary-hover: #5a6268;
+  --btn-secondary-border: #545b62;
+
+  --btn-success-bg: #28a745;
+  --btn-success-hover: #218838;
+  --btn-success-border: #1e7e34;
+
+  --btn-danger-bg: #dc3545;
+  --btn-danger-hover: #c82333;
+  --btn-danger-border: #bd2130;
+
+  --btn-warning-bg: #ffc107;
+  --btn-warning-hover: #e0a800;
+  --btn-warning-border: #d39e00;
+
+  --btn-info-bg: #17a2b8;
+  --btn-info-hover: #138496;
+  --btn-info-border: #117a8b;
+
+  --btn-light-bg: #f8f9fa;
+  --btn-light-hover: #e2e6ea;
+  --btn-light-border: #dae0e5;
+
+  --btn-dark-bg: #343a40;
+  --btn-dark-hover: #23272b;
+  --btn-dark-border: #1d2124;
+
+  /* Couleurs pour inputs et formulaires */
+  --input-text-color: #495057;
+  --input-placeholder-color: #6c757d;
+  --input-focus-shadow: rgba(0, 123, 255, 0.25);
+
+  /* Couleurs pour badges */
+  --badge-primary-bg: #007bff;
+  --badge-secondary-bg: #6c757d;
+  --badge-success-bg: #28a745;
+  --badge-danger-bg: #dc3545;
+  --badge-warning-bg: #ffc107;
+  --badge-info-bg: #17a2b8;
+
+  /* Couleurs pour alertes */
+  --alert-primary-color: #004085;
+  --alert-primary-bg: #cce7ff;
+  --alert-primary-border: #b8daff;
+
+  --alert-secondary-color: #383d41;
+  --alert-secondary-bg: #e2e3e5;
+  --alert-secondary-border: #d6d8db;
+
+  --alert-success-color: #155724;
+  --alert-success-bg: #d4edda;
+  --alert-success-border: #c3e6cb;
+
+  --alert-danger-color: #721c24;
+  --alert-danger-bg: #f8d7da;
+  --alert-danger-border: #f5c6cb;
+
+  --alert-warning-color: #856404;
+  --alert-warning-bg: #fff3cd;
+  --alert-warning-border: #ffeeba;
+
+  --alert-info-color: #0c5460;
+  --alert-info-bg: #d1ecf1;
+  --alert-info-border: #bee5eb;
   
   /* Espacements */
   --spacing-xs: 0.25rem;   /* 4px */
@@ -122,6 +216,18 @@
     --border-color: #4a5568;
     --border-color-light: #2d3748;
     --border-color-focus: #667eea;
+    --border-color-input: #4a5568;
+    --border-color-input-focus: #80bdff;
+    --border-color-card: rgba(255, 255, 255, 0.1);
+    --border-color-table: #4a5568;
+
+    /* Couleurs pour cards et éléments en mode sombre */
+    --bg-card: #2d3748;
+    --bg-card-header: rgba(255, 255, 255, 0.05);
+    --bg-list-item: #2d3748;
+    --bg-list-item-striped: rgba(255, 255, 255, 0.05);
+    --bg-input: #2d3748;
+    --bg-input-group: #4a5568;
     
     /* Ombres adaptées pour le mode sombre */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -157,14 +263,25 @@ html.light-theme {
   
   --border-color: #e2e8f0;
   --border-color-light: #f1f5f9;
-  
+  --border-color-input: #ced4da;
+  --border-color-input-focus: #80bdff;
+  --border-color-card: rgba(0, 0, 0, 0.125);
+  --border-color-table: #dee2e6;
+
+  --bg-card: #ffffff;
+  --bg-card-header: rgba(0, 0, 0, 0.03);
+  --bg-list-item: #ffffff;
+  --bg-list-item-striped: rgba(0, 0, 0, 0.05);
+  --bg-input: #ffffff;
+  --bg-input-group: #e9ecef;
+
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 8px 15px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.15);
   --shadow-btn: 0 4px 12px rgba(0, 0, 0, 0.2);
-  
+
   --glass-border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -184,14 +301,25 @@ html.dark-theme {
   
   --border-color: #4a5568;
   --border-color-light: #2d3748;
-  
+  --border-color-input: #4a5568;
+  --border-color-input-focus: #80bdff;
+  --border-color-card: rgba(255, 255, 255, 0.1);
+  --border-color-table: #4a5568;
+
+  --bg-card: #2d3748;
+  --bg-card-header: rgba(255, 255, 255, 0.05);
+  --bg-list-item: #2d3748;
+  --bg-list-item-striped: rgba(255, 255, 255, 0.05);
+  --bg-input: #2d3748;
+  --bg-input-group: #4a5568;
+
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 8px 15px rgba(0, 0, 0, 0.3);
   --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.3);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-btn: 0 4px 12px rgba(0, 0, 0, 0.4);
-  
+
   --glass-border: 1px solid rgba(255, 255, 255, 0.1);
 }
 

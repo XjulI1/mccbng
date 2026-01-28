@@ -150,12 +150,12 @@
 }
 
 .controls-bar {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
   display: flex;
   gap: 32px;
   flex-wrap: wrap;
@@ -164,48 +164,48 @@
 .control-group {
   display: flex;
   /* flex-direction: column; */
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .control-group h3 {
-  margin: 0 0 8px 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .control-button {
-  background: #f9fafb;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;
-  color: #374151;
-  font-weight: 500;
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
   min-width: 120px;
   text-align: center;
   max-height: fit-content;
 }
 
 .control-button:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: var(--bg-muted);
+  border-color: var(--text-muted);
 }
 
 .control-button.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: white;
 }
 
 .control-button.active:hover {
-  background: #2563eb;
+  background: var(--color-primary-dark);
 }
 
 .operations-list {
-  margin-top: 20px;
+  margin-top: var(--spacing-xl);
 }
 
 .operation-group {
@@ -214,13 +214,13 @@
 
 .group-title {
   font-size: 1.2rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 16px 0;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  border-radius: 8px;
-  border-left: 4px solid #3b82f6;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-primary);
 }
 
 @media (max-width: 768px) {

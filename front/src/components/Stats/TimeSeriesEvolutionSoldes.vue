@@ -143,7 +143,10 @@
   left: 10%;
   width: 80%;
   height: 80%;
-  z-index: 1000;
-  border: 2px solid #ccc;
+  z-index: var(--z-modal);
+  border: 2px solid var(--border-color);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-xl);
+  border-radius: var(--radius-lg);
 }
 </style>

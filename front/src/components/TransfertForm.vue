@@ -291,59 +291,59 @@
 .transfert-form {
   max-width: 600px;
   margin: -1rem;
-  padding: 1rem;
+  padding: var(--spacing-lg);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .form-card {
-  background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
+  box-shadow: var(--shadow-xl);
   width: 100%;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
 }
 
 .form-title {
   font-size: 1.8rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0 0 1rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-lg);
   text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-xl);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--spacing-lg);
 }
 
 .form-label {
   display: block;
-  font-weight: 600;
-  color: #4a5568;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .transfer-label {
   display: block;
-  font-weight: 500;
-  color: #718096;
-  margin-bottom: 0.5rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-sm);
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -352,37 +352,37 @@
 .form-input,
 .form-select {
   width: 100%;
-  padding: 0.875rem 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background: #f8fafc;
-  color: #2d3748;
+  padding: 0.875rem var(--spacing-lg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-normal);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  border-color: #667eea;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--border-color-focus);
+  background: var(--bg-input);
+  box-shadow: var(--input-focus-shadow);
   transform: translateY(-1px);
 }
 
 .form-input::placeholder {
-  color: #a0aec0;
+  color: var(--text-light);
 }
 
 .transfer-group {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  gap: 1rem;
+  gap: var(--spacing-lg);
   align-items: center;
-  background: #f7fafc;
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 2px solid #e2e8f0;
+  background: var(--bg-secondary);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--border-color);
 }
 
 .transfer-select {
@@ -394,61 +394,71 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
-  margin-top: 1.5rem;
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-xl);
 }
 
 .arrow-icon {
   width: 24px;
   height: 24px;
-  color: #667eea;
-  background: white;
-  padding: 0.5rem;
+  color: var(--color-primary);
+  background: var(--bg-card);
+  padding: var(--spacing-sm);
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .form-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-2xl);
   flex-wrap: wrap;
 }
 
 .btn {
-  padding: 0.875rem 1.5rem;
+  padding: 0.875rem var(--spacing-xl);
   border: none;
-  border-radius: 12px;
-  font-weight: 600;
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  font-size: 1rem;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-base);
   min-width: 120px;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   color: white;
   flex: 1;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-btn);
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+  background: var(--neutral-gradient);
   color: white;
 }
 
 .btn-secondary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(113, 128, 150, 0.4);
+  box-shadow: var(--shadow-btn);
+}
+
+.btn-warning {
+  background: var(--warning-gradient);
+  color: white;
+}
+
+.btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-btn);
 }
 
 .btn-icon {
@@ -457,7 +467,7 @@
 
 @media (max-width: 768px) {
   .form-card {
-    padding: 1.5rem;
+    padding: var(--spacing-xl);
   }
 
   .transfer-group {
@@ -467,7 +477,7 @@
   }
 
   .transfer-arrow {
-    margin-top: 0.5rem;
+    margin-top: var(--spacing-sm);
     transform: rotate(90deg);
   }
 }

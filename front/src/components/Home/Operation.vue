@@ -110,25 +110,25 @@
 
 <style scoped>
 .operation-card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
-  color: #374151;
-  transition: all 0.3s ease;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition: all var(--transition-normal);
 }
 
 .operation-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .operation-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-lg);
 }
 
 .operation-checkbox {
@@ -139,56 +139,56 @@
 .operation-checkbox input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  border-radius: 4px;
-  border: 2px solid #d1d5db;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-color);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .operation-checkbox input[type="checkbox"]:checked {
-  background-color: #3b82f6;
-  border-color: #3b82f6;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .operation-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .operation-name {
   font-size: 1.1rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
   cursor: pointer;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .operation-name:hover {
-  color: #3b82f6;
+  color: var(--color-primary);
 }
 
 .operation-name.noCategory {
-  color: #6b7280;
+  color: var(--text-muted);
   font-style: italic;
 }
 
 .operation-date {
   font-size: 0.85rem;
-  color: #6b7280;
-  font-weight: 400;
+  color: var(--text-muted);
+  font-weight: var(--font-weight-normal);
 }
 
 .operation-amount {
   font-size: 1.2rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-align: right;
   padding: 6px 12px;
-  border-radius: 8px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   min-width: 100px;
   max-width: fit-content;
 }
@@ -216,18 +216,18 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: #f3f4f6;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
   text-decoration: none;
   font-size: 1rem;
   transition: all 0.2s ease;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-color);
 }
 
 .edit-btn:hover {
-  background: #e5e7eb;
+  background: var(--bg-muted);
   transform: scale(1.05);
-  border-color: #9ca3af;
+  border-color: var(--text-muted);
 }
 
 .operation-account {
@@ -237,13 +237,13 @@
 
 .account-badge {
   background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-  padding: 4px 12px;
+  color: var(--color-primary);
+  padding: var(--spacing-xs) var(--spacing-md);
   border-radius: 20px;
   border: 1px solid rgba(59, 130, 246, 0.2);
   display: inline-block;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   white-space: nowrap;
 }
 
