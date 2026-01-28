@@ -34,7 +34,6 @@
   import { useRoute, useRouter } from 'vue-router'
   import { useStore } from 'vuex'
   import Currency from './Currency.vue'
-  import ThemeToggle from './ThemeToggle.vue'
 
   const route = useRoute()
   const router = useRouter()

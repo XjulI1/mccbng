@@ -6,4 +6,5 @@ export * from './compte.controller';
 export * from './compte-banque.controller';
 export * from './operation.controller';
 export * from './operation-recurrente.controller';
+export * from './credit.controller';
 export * from './user.controller';

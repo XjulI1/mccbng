@@ -203,7 +203,7 @@ export class OperationRecurrenteController {
       'SELECT * FROM OperationRecurrente NATURAL JOIN Compte WHERE IDuser = ' +
       userID;
     const sqlInsertNewOp =
-      'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, CheckOp) VALUES ';
+      'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, CheckOp, IDcredit) VALUES ';
     const sqlUpdateOpRec =
       'UPDATE OperationRecurrente SET DernierDateOpRecu = "';
     const millisecondDay = 24 * 60 * 60 * 1000;
@@ -215,12 +215,13 @@ export class OperationRecurrenteController {
     ) => {
       await this.operationRecurrenteRepository.execute(
         sqlInsertNewOp +
-          `("${opRec.NomOpRecu}", 
-          ${opRec.MontantOpRecu}, 
-          "${opLastDate.toISOString().split('T')[0]}", 
-          ${opRec.IDcompte}, 
-          ${opRec.IDcat}, 
-          0)`,
+          `("${opRec.NomOpRecu}",
+          ${opRec.MontantOpRecu},
+          "${opLastDate.toISOString().split('T')[0]}",
+          ${opRec.IDcompte},
+          ${opRec.IDcat},
+          0,
+          ${opRec.IDcredit || 'NULL'})`,
       );
 
       await this.operationRecurrenteRepository.execute(

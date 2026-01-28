@@ -5,60 +5,62 @@ import {Entity, model, property} from '@loopback/repository';
     strict: true,
     forceId: false,
     validateUpsert: true,
-    plural: 'OperationRecurrentes',
+    plural: 'Credits',
     idInjection: false,
   },
 })
-export class OperationRecurrente extends Entity {
+export class Credit extends Entity {
   @property({
     type: 'number',
     id: true,
     generated: true,
   })
-  IDopRecu?: number;
+  IDcredit?: number;
 
   @property({
     type: 'string',
     required: true,
   })
-  NomOpRecu: string;
+  NomCredit: string;
+
+  @property({
+    type: 'string',
+    required: false,
+  })
+  NomPreteur?: string;
 
   @property({
     type: 'number',
     required: true,
     dataType: 'FLOAT',
   })
-  MontantOpRecu: number;
+  MontantInitial: number;
 
   @property({
     type: 'number',
     required: true,
+    dataType: 'FLOAT',
   })
-  JourOpRecu: number;
+  MontantMensuel: number;
 
   @property({
     type: 'number',
-    default: 1,
+    required: false,
+    dataType: 'FLOAT',
   })
-  JourNumOpRecu?: number;
-
-  @property({
-    type: 'number',
-    default: 1,
-  })
-  MoisOpRecu?: number;
-
-  @property({
-    type: 'number',
-    default: 3,
-  })
-  Frequence?: number;
+  TauxInteret?: number;
 
   @property({
     type: 'date',
     required: true,
   })
-  DernierDateOpRecu: string;
+  DateDebut: string;
+
+  @property({
+    type: 'date',
+    required: true,
+  })
+  DateFin: string;
 
   @property({
     type: 'number',
@@ -68,15 +70,29 @@ export class OperationRecurrente extends Entity {
 
   @property({
     type: 'number',
-    default: 0,
+    required: false,
   })
-  IDcat?: number;
+  IDopRecu?: number;
+
+  @property({
+    type: 'number',
+    required: true,
+  })
+  IDuser: number;
+
+  @property({
+    type: 'string',
+    required: false,
+    default: 'actif',
+  })
+  Statut?: string;
 
   @property({
     type: 'number',
     required: false,
+    default: 0,
   })
-  IDcredit?: number;
+  IDcat?: number;
 
   // Define well-known properties here
 
@@ -84,14 +100,13 @@ export class OperationRecurrente extends Entity {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [prop: string]: any;
 
-  constructor(data?: Partial<OperationRecurrente>) {
+  constructor(data?: Partial<Credit>) {
     super(data);
   }
 }
 
-export interface OperationRecurrenteRelations {
+export interface CreditRelations {
   // describe navigational properties here
 }
 
-export type OperationRecurrenteWithRelations = OperationRecurrente &
-  OperationRecurrenteRelations;
+export type CreditWithRelations = Credit & CreditRelations;
