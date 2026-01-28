@@ -189,15 +189,15 @@
 }
 
 .soldeIn {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .soldeWarning {
-  color: #f59e0b;
+  color: var(--color-warning-dark);
 }
 
 .soldeOut {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 @media (max-width: 768px) {

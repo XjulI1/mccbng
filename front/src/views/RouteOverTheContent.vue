@@ -52,10 +52,13 @@
   left: 0;
   z-index: 1000;
   position: fixed;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .component-content {
-  margin: ($header-height-and-margin + 5px) auto auto;
+  margin: ($header-height-and-margin + 5px) auto 20px;
   max-width: 600px;
+  padding: 0 10px;
 }
 </style>

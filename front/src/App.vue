@@ -140,7 +140,6 @@ hr {
 
   @media screen and (max-width: $mobile_BP_max_width) {
     margin-top: 0;
-    background-color: rgba(242, 242, 242, 0.95);
     width: 100%;
     padding-top: 3px;
     padding-bottom: calc(#{$navbar-height-and-margin} + 5px);

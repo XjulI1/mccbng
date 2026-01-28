@@ -190,11 +190,11 @@
 .section-total {
   font-size: 1rem;
   font-weight: 700;
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .section-total.warning {
-  color: #f59e0b;
+  color: var(--color-warning-dark);
 }
 
 .accounts-row {
@@ -225,11 +225,11 @@
 .total-amount {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .total-amount.warning {
-  color: #f59e0b;
+  color: var(--color-warning-dark);
 }
 
 .global-total {
@@ -260,11 +260,11 @@
 .global-amount {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .global-amount.warning {
-  color: #f59e0b;
+  color: var(--color-warning-dark);
 }
 
 .global-warning {
