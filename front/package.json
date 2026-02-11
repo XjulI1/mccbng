@@ -27,7 +27,7 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.0",
     "@fortawesome/free-solid-svg-icons": "^5.1.0",
     "@fortawesome/vue-fontawesome": "^3.0.0-3",
-    "axios": "^1.3.0",
+    "axios": "^1.13.5",
     "core-js": "^3.6.5",
     "hammerjs": "^2.0.8",
     "highcharts": "^10.0.0",
