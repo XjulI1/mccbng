@@ -17,9 +17,9 @@
     "type-check:watch": "vue-tsc --noEmit --watch",
     "lint": "eslint src --ext .vue,.js,.jsx,.ts,.tsx --fix",
     "lint:check": "eslint src --ext .vue,.js,.jsx,.ts,.tsx",
-    "docker:staging:build": "docker buildx build --platform linux/amd64 -t dockregistry.xju.fr/mccbng/front:staging .",
+    "docker:staging:build": "docker buildx build --platform linux/amd64 -t dockregistry.xju.fr/mccbng/front:staging -f Dockerfile ..",
     "docker:staging:push": "docker push dockregistry.xju.fr/mccbng/front:staging",
-    "docker:latest:build": "docker buildx build --platform linux/amd64 -t dockregistry.xju.fr/mccbng/front:latest .",
+    "docker:latest:build": "docker buildx build --platform linux/amd64 -t dockregistry.xju.fr/mccbng/front:latest -f Dockerfile ..",
     "docker:latest:push": "docker push dockregistry.xju.fr/mccbng/front:latest",
     "docker:run": "docker run -p 3000:3000 -d front"
   },
