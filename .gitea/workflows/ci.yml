@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+      - 'claude/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend:
+    name: Backend – Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'yarn'
+          cache-dependency-path: back/yarn.lock
+
+      - name: Install dependencies
+        working-directory: back
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        working-directory: back
+        run: yarn build
+
+      - name: Lint
+        working-directory: back
+        run: yarn lint
+
+      - name: Test
+        working-directory: back
+        run: yarn test
+
+  frontend:
+    name: Frontend – Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'yarn'
+          cache-dependency-path: front/yarn.lock
+
+      - name: Install dependencies
+        working-directory: front
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        working-directory: front
+        run: yarn build
+
+      - name: Lint
+        working-directory: front
+        run: yarn lint:check
+
+      - name: Test
+        working-directory: front
+        run: yarn test
