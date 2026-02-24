@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="pie-by-categorie__chart" />
+    <div ref="chartEl" class="pie-by-categorie__chart" />
     <operation-list
       v-if="selectedCatId"
       class="pie-by-categorie__operation-list"
@@ -10,16 +10,16 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted, getCurrentInstance } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { useStore } from 'vuex'
   import Highcharts from 'highcharts'
   import OperationList from '../OperationList.vue'
   import OperationRenderer from '../Home/Operation.vue'
 
   const store = useStore()
-  const { proxy } = getCurrentInstance()
+  const chartEl = ref<HTMLElement | null>(null)
 
-  const selectedCatId = ref(null)
+  const selectedCatId = ref<number | null>(null)
 
   const categoriesTotal = computed(
     () => store.getters.getCategoriesTotalForHighchartPie
@@ -33,10 +33,10 @@
   }
 
   const buildChart = () => {
-    Highcharts.chart(proxy.$el.querySelector('.pie-by-categorie__chart'), {
+    Highcharts.chart(chartEl.value!, {
       chart: {
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
+        plotBackgroundColor: undefined,
+        plotBorderWidth: undefined,
         plotShadow: false,
         type: 'pie'
       },
@@ -44,7 +44,7 @@
         enabled: false
       },
       title: {
-        text: null
+        text: undefined
       },
       tooltip: {
         pointFormat: '{series.name}: <b>{point.y}€</b>'
@@ -57,17 +57,16 @@
             enabled: true,
             format: '<b>{point.name}</b>: {point.percentage:.1f} %',
             style: {
-              color:
-                (Highcharts.theme && Highcharts.theme.contrastTextColor) ||
-                'black'
+              color: 'black'
             }
           }
         },
         series: {
           point: {
             events: {
-              click: function () {
-                selectedCatId.value = this.catId
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              click: function (this: Highcharts.Point) {
+                selectedCatId.value = (this as any).catId
               }
             }
           }
@@ -80,7 +79,7 @@
           data: categoriesTotal.value
         }
       ]
-    })
+    } as unknown as Highcharts.Options)
   }
 
   watch(categoriesTotal, () => {
