@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'claude/**'
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (build / lint / test)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create datasource config placeholder
+        run: |
+          echo '{"name":"mccb_mysql","connector":"mysql","url":"","host":"localhost","port":3306,"user":"","password":"","database":"mccbng"}' \
+            > back/src/datasources/mccb-mysql.datasource.config.json
+
+      - name: Build
+        run: yarn workspace @mccbng/back build
+
+      - name: Lint
+        run: yarn workspace @mccbng/back lint
+
+      - name: Test
+        working-directory: back
+        run: node_modules/.bin/lb-mocha --allow-console-logs "dist/__tests__"
+
+  frontend:
+    name: Frontend (lint / type-check / build / test)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn workspace @mccbng/front lint:check
+
+      - name: Type check
+        run: yarn workspace @mccbng/front type-check
+
+      - name: Build
+        run: yarn workspace @mccbng/front build
+        env:
+          VITE_API_URL: http://localhost:3001
+
+      - name: Test
+        run: yarn workspace @mccbng/front test
