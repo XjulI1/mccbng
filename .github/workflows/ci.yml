@@ -12,6 +12,20 @@ jobs:
     name: Backend (build / lint / test)
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: ci_test
+          MYSQL_DATABASE: mccbng
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -uroot -pci_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,9 +40,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Create datasource config placeholder
+      - name: Create datasource config
         run: |
-          echo '{"name":"mccb_mysql","connector":"mysql","url":"","host":"localhost","port":3306,"user":"","password":"","database":"mccbng"}' \
+          echo '{"name":"mccb_mysql","connector":"mysql","url":"","host":"127.0.0.1","port":3306,"user":"root","password":"ci_test","database":"mccbng"}' \
             > back/src/datasources/mccb-mysql.datasource.config.json
 
       - name: Build
