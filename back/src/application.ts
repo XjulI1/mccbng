@@ -15,10 +15,9 @@ import {UserRepository, UserCredentialsRepository} from './repositories';
 import {AuthenticationComponent} from '@loopback/authentication';
 import {
   JWTAuthenticationComponent,
-  SECURITY_SCHEME_SPEC,
+  TokenServiceBindings,
 } from '@loopback/authentication-jwt';
 import {UserServiceBindings} from './services/keys';
-import {TokenServiceBindings} from '@loopback/authentication-jwt';
 
 export {ApplicationConfig};
 
@@ -46,13 +45,13 @@ export class ApiLoopbackApplication extends BootMixin(
     this.component(JWTAuthenticationComponent);
 
     // Bind user service
-    this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService),
-      // Bind user and credentials repository
-      this.bind(UserServiceBindings.USER_REPOSITORY).toClass(UserRepository),
-      this.bind(UserServiceBindings.USER_CREDENTIALS_REPOSITORY).toClass(
-        UserCredentialsRepository,
-      ),
-      this.bind(TokenServiceBindings.TOKEN_SECRET).to(generateUniqueId());
+    this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService);
+    // Bind user and credentials repository
+    this.bind(UserServiceBindings.USER_REPOSITORY).toClass(UserRepository);
+    this.bind(UserServiceBindings.USER_CREDENTIALS_REPOSITORY).toClass(
+      UserCredentialsRepository,
+    );
+    this.bind(TokenServiceBindings.TOKEN_SECRET).to(generateUniqueId());
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here

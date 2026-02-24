@@ -60,6 +60,7 @@ export class User extends Entity {
   @property({
     type: 'string',
   })
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   secret_key: string;
 
   @property({

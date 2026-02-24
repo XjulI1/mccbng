@@ -26,6 +26,7 @@ export class MyUserService {
     const invalidCredentialsError = 'Invalid email or password.';
 
     const foundUser = await this.userRepository.findOne({
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       where: {secret_key: credentials.code},
     });
 

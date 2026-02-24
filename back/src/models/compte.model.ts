@@ -65,6 +65,7 @@ export class Compte extends Entity {
     type: 'boolean',
     default: false,
   })
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   porte_feuille?: boolean;
 
   @property({

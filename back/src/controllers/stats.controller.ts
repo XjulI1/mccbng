@@ -1,12 +1,4 @@
-import {
-  AnyObject,
-  Count,
-  CountSchema,
-  Filter,
-  FilterExcludingWhere,
-  repository,
-  Where,
-} from '@loopback/repository';
+import {AnyObject, repository} from '@loopback/repository';
 
 import {Stats} from '../models';
 import {StatsRepository} from '../repositories';

@@ -209,8 +209,11 @@ export class OperationRecurrenteController {
     const millisecondDay = 24 * 60 * 60 * 1000;
 
     const insertNewOpFromRec = async (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       opLastDate: any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       opRec: any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       list: any,
     ) => {
       await this.operationRecurrenteRepository.execute(
@@ -232,8 +235,11 @@ export class OperationRecurrenteController {
       await goToNext(list);
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newOpFromRec = async (opRec: any, list: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const currentDate: any = new Date();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const opLastDate: any = new Date(opRec.DernierDateOpRecu);
 
       opLastDate.setHours(12);
@@ -261,6 +267,7 @@ export class OperationRecurrenteController {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const goToNext = async (list: any) => {
       if (list.length > 0) {
         await newOpFromRec(list.pop(), list);
