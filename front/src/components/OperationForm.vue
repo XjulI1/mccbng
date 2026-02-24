@@ -95,14 +95,15 @@
               {{ category.Nom }}
             </option>
           </optgroup>
-          <option
-            v-for="category in categoryList"
-            v-if="suggestedCategories.length === 0"
-            :key="'category-' + category.IDcat"
-            :value="category.IDcat"
-          >
-            {{ category.Nom }}
-          </option>
+          <template v-if="suggestedCategories.length === 0">
+            <option
+              v-for="category in categoryList"
+              :key="'category-' + category.IDcat"
+              :value="category.IDcat"
+            >
+              {{ category.Nom }}
+            </option>
+          </template>
         </select>
       </div>
 
