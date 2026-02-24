@@ -19,10 +19,9 @@ jobs:
         with:
           node-version: '24'
           cache: 'yarn'
-          cache-dependency-path: back/yarn.lock
+          cache-dependency-path: yarn.lock
 
       - name: Install dependencies
-        working-directory: back
         run: yarn install --frozen-lockfile
 
       - name: Build
@@ -50,10 +49,9 @@ jobs:
         with:
           node-version: '24'
           cache: 'yarn'
-          cache-dependency-path: front/yarn.lock
+          cache-dependency-path: yarn.lock
 
       - name: Install dependencies
-        working-directory: front
         run: yarn install --frozen-lockfile
 
       - name: Build
