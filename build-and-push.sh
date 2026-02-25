@@ -35,6 +35,20 @@ echo ""
 echo "=> Building front image: ${REGISTRY}/front:${IMAGE_TAG}"
 docker build -t "${REGISTRY}/front:${IMAGE_TAG}" "${WORK_DIR}/front"
 
+# Create a dummy datasource config for the build (gitignored, removed during Docker build)
+cat > "${WORK_DIR}/back/src/datasources/mccb-mysql.datasource.config.json" <<'DSCFG'
+{
+  "name": "mccb_mysql",
+  "connector": "mysql",
+  "url": "",
+  "host": "",
+  "port": 3306,
+  "user": "",
+  "password": "",
+  "database": ""
+}
+DSCFG
+
 # Build back (api) image
 echo ""
 echo "=> Building api image: ${REGISTRY}/api:${IMAGE_TAG}"
