@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  builder:
+    image: docker:cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./build-and-push.sh:/build-and-push.sh:ro
+    environment:
+      DOCKER_API_VERSION: ${DOCKER_API_VERSION:-1.43}
+      GIT_REPO: ${GIT_REPO:-https://github.com/XjulI1/mccbng.git}
+      GIT_BRANCH: ${GIT_BRANCH:-main}
+      REGISTRY: ${REGISTRY:-dockregistry.xju.fr/mccbng}
+      IMAGE_TAG: ${IMAGE_TAG:-latest}
+    entrypoint: ["sh", "/build-and-push.sh"]
