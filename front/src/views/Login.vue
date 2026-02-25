@@ -185,7 +185,7 @@
 
   watch(code, (value) => {
     if (value.length === 6) {
-      auth(value, import.meta.env.VITE_API_URL)
+      auth(value, window.env.VITE_API_URL)
         .then(({ userToken, userID }) => {
           endAuthentification({ userToken, userID })
         })
@@ -202,7 +202,7 @@
 
   checkUserAuthentification({
     userToken,
-    apiUrl: import.meta.env.VITE_API_URL
+    apiUrl: window.env.VITE_API_URL
   }).then((isExist) => {
     if (isExist) {
       endAuthentification({ userID, userToken })

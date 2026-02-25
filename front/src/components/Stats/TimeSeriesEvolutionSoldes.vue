@@ -109,7 +109,7 @@
   fetchEvolutionSolde(
     userID.value,
     userToken.value,
-    import.meta.env.VITE_API_URL
+    window.env.VITE_API_URL
   ).then((results) => {
     let sum = results.soldeGlobal
     global.value = results.global.map((data) => {

@@ -75,7 +75,7 @@ export default {
       fetchOperationsForAccount(
         rootState.compte.activeAccount.IDcompte,
         rootState.user.token,
-        import.meta.env.VITE_API_URL,
+        window.env.VITE_API_URL,
         0,
         state.operationsLimit
       ).then((operations) => {
@@ -98,7 +98,7 @@ export default {
       return fetchOperationsForAccount(
         rootState.compte.activeAccount.IDcompte,
         rootState.user.token,
-        import.meta.env.VITE_API_URL,
+        window.env.VITE_API_URL,
         state.operationsSkip,
         state.operationsLimit
       ).then((operations) => {
@@ -115,7 +115,7 @@ export default {
       await updateOperation(
         operation,
         rootState.user.token,
-        import.meta.env.VITE_API_URL
+        window.env.VITE_API_URL
       )
 
       dispatch('fetchActiveAccount', operation.IDcompte)
@@ -125,7 +125,7 @@ export default {
       await deleteOperation(
         operation.IDop,
         rootState.user.token,
-        import.meta.env.VITE_API_URL
+        window.env.VITE_API_URL
       )
 
       dispatch('fetchActiveAccount', operation.IDcompte)
@@ -143,7 +143,7 @@ export default {
           IDcompte: operation.IDcompteDebit
         },
         rootState.user.token,
-        import.meta.env.VITE_API_URL
+        window.env.VITE_API_URL
       )
 
       await updateOperation(
@@ -153,7 +153,7 @@ export default {
           IDcompte: operation.IDcompteCredit
         },
         rootState.user.token,
-        import.meta.env.VITE_API_URL
+        window.env.VITE_API_URL
       )
 
       dispatch('fetchActiveAccount', operation.IDcompteDebit)
@@ -165,7 +165,7 @@ export default {
 
       fetchRecurrOperation(
         rootState.user.token,
-        import.meta.env.VITE_API_URL
+        window.env.VITE_API_URL
       ).then((operations) => {
         commit('setOperationsOfActiveAccount', operations)
         commit('setRecurringOperations', operations)
@@ -182,7 +182,7 @@ export default {
           Frequence: parseInt(operationRecurrente.Frequence)
         },
         rootState.user.token,
-        import.meta.env.VITE_API_URL
+        window.env.VITE_API_URL
       )
 
       dispatch('fetchRecurrOperation')
@@ -195,7 +195,7 @@ export default {
       await deleteRecurringOperation(
         operationRecurrente.IDopRecu,
         rootState.user.token,
-        import.meta.env.VITE_API_URL
+        window.env.VITE_API_URL
       )
 
       dispatch('fetchRecurrOperation')
@@ -211,7 +211,7 @@ export default {
         searchTerms,
         rootState.compte.accountList,
         rootState.user.token,
-        import.meta.env.VITE_API_URL,
+        window.env.VITE_API_URL,
         0,
         state.operationsLimit
       ).then((operations) => {
@@ -235,7 +235,7 @@ export default {
         state.currentSearchTerms,
         rootState.compte.accountList,
         rootState.user.token,
-        import.meta.env.VITE_API_URL,
+        window.env.VITE_API_URL,
         state.operationsSkip,
         state.operationsLimit
       ).then((operations) => {
@@ -254,7 +254,7 @@ export default {
       fetchOperations(
         where,
         rootState.user.token,
-        import.meta.env.VITE_API_URL
+        window.env.VITE_API_URL
       ).then((operations) => {
         commit('setOperationsOfActiveAccount', operations)
         commit('setHasMoreOperations', false)
