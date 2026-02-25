@@ -274,7 +274,7 @@
         const suggestions = await suggestCategories(
           newName,
           store.state.user.token,
-          import.meta.env.VITE_API_URL
+          window.env.VITE_API_URL
         )
         suggestedCategoriesData.value = suggestions
 

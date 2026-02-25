@@ -91,7 +91,7 @@
 
   const store = useStore()
 
-  const apiURL = import.meta.env.VITE_API_URL
+  const apiURL = window.env.VITE_API_URL
 
   // Computed properties pour les textes dynamiques
   const maskAmountText = computed(() => {
