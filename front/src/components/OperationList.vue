@@ -86,7 +86,7 @@
           threshold: 0
         }
       )
-      observer.observe(sentinelRef.value)
+      observer.observe(sentinelRef.value as unknown as Element)
     }
   })
 

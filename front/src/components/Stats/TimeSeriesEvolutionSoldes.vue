@@ -22,7 +22,7 @@
 
   const buildChart = () => {
     chart = Highcharts.chart(
-      chartEl.value!,
+      chartEl.value! as HTMLElement,
       {
         chart: {
           zooming: { type: 'x' }

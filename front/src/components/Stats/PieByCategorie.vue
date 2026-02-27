@@ -33,7 +33,7 @@
   }
 
   const buildChart = () => {
-    Highcharts.chart(chartEl.value!, {
+    Highcharts.chart(chartEl.value! as HTMLElement, {
       chart: {
         plotBackgroundColor: undefined,
         plotBorderWidth: undefined,
