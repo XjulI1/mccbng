@@ -1,4 +1,5 @@
 import {
+  AnyObject,
   Count,
   CountSchema,
   Filter,
@@ -189,14 +190,14 @@ export class OperationController {
     },
   })
   async sumAllCompteForUser(
-    @param.query.number('userID') UserID: number,
+    @param.query.number('userID') userID: number,
     @param.filter(Operation) filter?: Filter<Operation>,
-  ): Promise<any> {
+  ): Promise<AnyObject> {
     const sqlChecked =
       'SELECT IDCompte, SUM(MontantOp) as TotalChecked ' +
       'FROM Operation NATURAL JOIN Compte ' +
       'WHERE IDuser = ' +
-      UserID +
+      userID +
       ' AND CheckOp = true AND Compte.visible = 1 ' +
       'GROUP BY IDCompte';
 
@@ -204,17 +205,20 @@ export class OperationController {
       'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked ' +
       'FROM Operation NATURAL JOIN Compte  ' +
       'WHERE IDuser = ' +
-      UserID +
+      userID +
       ' AND CheckOp = false AND Compte.visible = 1 ' +
       'GROUP BY IDCompte';
 
-    let checkedTotal = await this.operationRepository.execute(sqlChecked);
-    const notCheckedTotal = await this.operationRepository.execute(
-      sqlNotChecked,
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let checkedTotal: any = await this.operationRepository.execute(sqlChecked);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notCheckedTotal: any =
+      await this.operationRepository.execute(sqlNotChecked);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkedTotal = checkedTotal.map((objectCheck: any) => {
       const filterCompte = notCheckedTotal.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (object: any) => object.IDCompte === objectCheck.IDCompte,
       );
 
@@ -239,14 +243,14 @@ export class OperationController {
     },
   })
   async sumForACompte(
-    @param.query.number('id') CompteID: number,
+    @param.query.number('id') compteID: number,
     @param.filter(Operation) filter?: Filter<Operation>,
-  ): Promise<any> {
+  ): Promise<AnyObject> {
     const sqlChecked =
       'SELECT IDCompte, SUM(MontantOp) as TotalChecked ' +
       'FROM Operation ' +
       'WHERE IDcompte = ' +
-      CompteID +
+      compteID +
       ' AND CheckOp = true ' +
       'GROUP BY IDCompte';
 
@@ -254,14 +258,13 @@ export class OperationController {
       'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked ' +
       'FROM Operation ' +
       'WHERE IDcompte = ' +
-      CompteID +
+      compteID +
       ' AND CheckOp = false ' +
       'GROUP BY IDCompte';
 
     const checkedTotal = await this.operationRepository.execute(sqlChecked);
-    const notCheckedTotal = await this.operationRepository.execute(
-      sqlNotChecked,
-    );
+    const notCheckedTotal =
+      await this.operationRepository.execute(sqlNotChecked);
 
     return Object.assign(checkedTotal[0] || {}, notCheckedTotal[0] || {});
   }
@@ -279,32 +282,32 @@ export class OperationController {
     },
   })
   async sumByUserByMonth(
-    @param.query.number('userID') UserID: number,
-    @param.query.number('monthNumber') MonthNumber: number,
-    @param.query.number('yearNumber') YearNumber: number,
-    @param.query.number('IDCompte') IDCompte: number,
+    @param.query.number('userID') userID: number,
+    @param.query.number('monthNumber') monthNumber: number,
+    @param.query.number('yearNumber') yearNumber: number,
+    @param.query.number('IDCompte') idCompte: number,
     @param.filter(Operation) filter?: Filter<Operation>,
-  ): Promise<any> {
+  ): Promise<AnyObject> {
     let SQLrequest =
       'SELECT ROUND(SUM(MontantOp), 2) as MonthNegative ' +
       'FROM Operation ' +
       'NATURAL JOIN Compte ' +
       'WHERE MONTH(DateOp) = ' +
-      MonthNumber +
+      monthNumber +
       ' ' +
       'AND YEAR(DateOp) = ' +
-      YearNumber +
+      yearNumber +
       ' ' +
       'AND Compte.IDuser = ' +
-      UserID +
+      userID +
       ' ' +
       'AND IDcat IN ' +
       '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ' +
-      UserID +
+      userID +
       '))';
 
-    if (IDCompte) {
-      SQLrequest += 'AND IDCompte = ' + IDCompte;
+    if (idCompte) {
+      SQLrequest += 'AND IDCompte = ' + idCompte;
     }
 
     return this.operationRepository.execute(SQLrequest);
@@ -323,27 +326,27 @@ export class OperationController {
     },
   })
   async sumCategoriesByUserByMonth(
-    @param.query.number('userID') UserID: number,
-    @param.query.number('monthNumber') MonthNumber: number,
-    @param.query.number('yearNumber') YearNumber: number,
+    @param.query.number('userID') userID: number,
+    @param.query.number('monthNumber') monthNumber: number,
+    @param.query.number('yearNumber') yearNumber: number,
     @param.filter(Operation) filter?: Filter<Operation>,
-  ): Promise<any> {
+  ): Promise<AnyObject> {
     const SQLrequest =
       'SELECT ROUND(SUM(MontantOp), 2) as TotalMonth, IDcat ' +
       'FROM Operation ' +
       'NATURAL JOIN Compte ' +
       'WHERE MONTH(DateOp) = ' +
-      MonthNumber +
+      monthNumber +
       ' ' +
       'AND YEAR(DateOp) = ' +
-      YearNumber +
+      yearNumber +
       ' ' +
       'AND Compte.IDuser = ' +
-      UserID +
+      userID +
       ' ' +
       'AND IDcat IN ' +
       '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ' +
-      UserID +
+      userID +
       ')) ' +
       'GROUP BY IDcat';
 
@@ -377,17 +380,14 @@ export class OperationController {
     currentUserProfile: UserProfile,
     @param.query.string('operationName') operationName: string,
     @param.query.number('limit') limit?: number,
-  ): Promise<any> {
+  ): Promise<AnyObject> {
     if (!operationName || operationName.trim().length < 2) {
       return [];
     }
 
-    const UserID = currentUserProfile[securityId];
-    const searchName = operationName
-      .trim()
-      .toLowerCase()
-      .replace(/'/g, "''"); // Échapper les guillemets simples pour MySQL
-    const limitValue = limit || 5;
+    const userID = currentUserProfile[securityId];
+    const searchName = operationName.trim().toLowerCase().replace(/'/g, "''"); // Échapper les guillemets simples pour MySQL
+    const limitValue = limit ?? 5;
 
     // Recherche des opérations avec des noms similaires
     // On utilise LIKE avec des wildcards pour trouver des correspondances partielles
@@ -396,7 +396,7 @@ export class OperationController {
       'FROM Operation ' +
       'NATURAL JOIN Compte ' +
       'WHERE Compte.IDuser = ' +
-      UserID +
+      userID +
       ' ' +
       'AND IDcat IS NOT NULL AND IDcat > 0 ' +
       "AND LOWER(NomOp) LIKE '%" +
@@ -407,14 +407,17 @@ export class OperationController {
       'LIMIT ' +
       limitValue;
 
-    const results = await this.operationRepository.execute(SQLrequest);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const results: any = await this.operationRepository.execute(SQLrequest);
 
     // Calcul du poids basé sur la fréquence
     const totalCount = results.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, item: any) => sum + item.count,
       0,
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return results.map((item: any) => ({
       IDcat: item.IDcat,
       count: item.count,

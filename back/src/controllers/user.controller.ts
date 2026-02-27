@@ -112,7 +112,7 @@ export class UserController {
   async whoAmI(
     @inject(SecurityBindings.USER)
     currentUserProfile: UserProfile,
-  ): Promise<any> {
+  ): Promise<{favoris?: number; warningTotal?: number; IDuser: number}> {
     const {favoris, warningTotal, IDuser} = await this.userService.findUserById(
       currentUserProfile[securityId],
     );
@@ -144,7 +144,7 @@ export class UserController {
   ): Promise<boolean> {
     try {
       return Boolean(currentUserProfile[securityId]);
-    } catch (_) {
+    } catch (_err) {
       return false;
     }
   }

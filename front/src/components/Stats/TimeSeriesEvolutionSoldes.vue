@@ -1,15 +1,15 @@
 <template>
-  <div class="evolutionSoldes" />
+  <div ref="chartEl" class="evolutionSoldes" />
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, getCurrentInstance } from 'vue'
+  import { ref, computed } from 'vue'
   import { useStore } from 'vuex'
   import Highcharts from 'highcharts'
   import { fetchEvolutionSolde } from '@/services/stats'
 
   const store = useStore()
-  const { proxy } = getCurrentInstance()
+  const chartEl = ref<HTMLElement | null>(null)
 
   let chart // Initialize chart variable
 
@@ -22,10 +22,10 @@
 
   const buildChart = () => {
     chart = Highcharts.chart(
-      proxy.$el || proxy.$el.querySelector('.evolutionSoldes'),
+      chartEl.value!,
       {
         chart: {
-          zoomType: 'x'
+          zooming: { type: 'x' }
         },
         title: {
           text: 'Evolution du solde'
@@ -49,10 +49,10 @@
             fillColor: {
               linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
               stops: [
-                [0, Highcharts.getOptions().colors[0]],
+                [0, (Highcharts.getOptions().colors ?? [])[0]],
                 [
                   1,
-                  Highcharts.Color(Highcharts.getOptions().colors[0])
+                  new Highcharts.Color((Highcharts.getOptions().colors ?? [])[0])
                     .setOpacity(0)
                     .get('rgba')
                 ]
@@ -93,7 +93,7 @@
             data: retraite.value
           }
         ]
-      }
+      } as Highcharts.Options
     )
 
     chart.xAxis[0].setExtremes(

@@ -26,6 +26,7 @@ import {
 
 const FontAwesome = {
   load: () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     library.add({
       faChartPie,
       faCheck,
@@ -48,7 +49,7 @@ const FontAwesome = {
       faChevronUp,
       faChevronDown,
       faHamburger
-    })
+    } as any)
   }
 }
 

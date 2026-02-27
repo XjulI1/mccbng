@@ -183,7 +183,7 @@ export default {
       generateRecurringOperations(rootState.user.id, rootState.user.token, window.env.VITE_API_URL)
     },
 
-    fetchActiveAccount ({ state, commit, getters, dispatch, rootState }, accountID) {
+    fetchActiveAccount ({ commit, getters, dispatch, rootState }, accountID) {
       commit('setActiveAccount', getters.getAccount(accountID))
 
       dispatch('fetchOperationsOfActiveAccount')
