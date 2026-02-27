@@ -287,9 +287,7 @@ export class CreditController {
       },
     },
   })
-  async getPayments(
-    @param.path.number('id') id: number,
-  ): Promise<Operation[]> {
+  async getPayments(@param.path.number('id') id: number): Promise<Operation[]> {
     return this.operationRepository.find({
       where: {IDcredit: id},
       order: ['DateOp DESC'],
