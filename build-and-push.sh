@@ -30,6 +30,10 @@ echo ""
 echo "=> Cloning repository..."
 git clone --branch "${GIT_BRANCH}" --depth 1 "${GIT_REPO}" "${WORK_DIR}"
 
+# Copy root yarn.lock into each sub-project so Docker build context can access it
+cp "${WORK_DIR}/yarn.lock" "${WORK_DIR}/front/yarn.lock"
+cp "${WORK_DIR}/yarn.lock" "${WORK_DIR}/back/yarn.lock"
+
 # Build front image
 echo ""
 echo "=> Building front image: ${REGISTRY}/front:${IMAGE_TAG}"
