@@ -6,3 +6,5 @@ export * from './operation.model';
 export * from './operation-recurrente.model';
 export * from './user.model';
 export * from './user-credentials.model';
+export * from './gocardless-requisition.model';
+export * from './gocardless-account.model';
