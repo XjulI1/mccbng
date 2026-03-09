@@ -4,6 +4,7 @@ const Home = () => import(/* webpackChunkName: "home" */ './views/Home.vue')
 const Stats = () => import(/* webpackChunkName: "stats" */ './views/Stats.vue')
 const Login = () => import(/* webpackChunkName: "login" */ './views/Login.vue')
 const Config = () => import(/* webpackChunkName: "config" */ './views/Config.vue')
+const GoCardlessCallback = () => import(/* webpackChunkName: "gocardless" */ './views/GoCardlessCallback.vue')
 const OperationsRecurrentes = () => import(/* webpackChunkName: "operecur" */ './views/OperationsRecurrentes.vue')
 const Amortissement = () => import(/* webpackChunkName: "operecur" */ './views/Amortissement.vue')
 const RouteOverTheContent = () => import(/* webpackChunkName: "othercontent" */ './views/RouteOverTheContent.vue')
@@ -97,6 +98,13 @@ export default createRouter({
     path: '/config',
     name: 'Config',
     component: Config,
+    meta: {
+      disabledTotalHeader: true
+    }
+  }, {
+    path: '/gocardless/callback',
+    name: 'GoCardlessCallback',
+    component: GoCardlessCallback,
     meta: {
       disabledTotalHeader: true
     }

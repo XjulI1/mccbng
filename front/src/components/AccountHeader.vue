@@ -20,6 +20,18 @@
     </div>
     <div class="header-actions">
       <button
+        v-if="isAccountLinked"
+        class="btn btn-success sync-button"
+        :disabled="isSyncingAccount"
+        :title="isSyncingAccount ? 'Synchronisation en cours...' : 'Synchroniser avec la banque'"
+        @click="syncAccount"
+      >
+        <font-awesome-icon
+          icon="redo"
+          :class="{ 'fa-spin': isSyncingAccount }"
+        />
+      </button>
+      <button
         class="btn btn-secondary chart-button"
         @click="goToStats"
       >
@@ -46,6 +58,26 @@
       ? false
       : route.meta.disabledTotalHeader
   })
+
+  const isAccountLinked = computed(() => {
+    const IDcompte = activeAccount.value?.IDcompte
+    return IDcompte && store.getters.isAccountLinked(IDcompte)
+  })
+
+  const isSyncingAccount = computed(() => {
+    const IDcompte = activeAccount.value?.IDcompte
+    return IDcompte && store.getters.isSyncing(IDcompte)
+  })
+
+  const syncAccount = async () => {
+    const IDcompte = activeAccount.value?.IDcompte
+    if (!IDcompte) return
+    try {
+      await store.dispatch('syncAccountTransactions', IDcompte)
+    } catch (error: any) {
+      alert('Erreur de synchronisation : ' + (error.response?.data?.error?.message || error.message))
+    }
+  }
 
   const goToStats = () => {
     store.dispatch('toggleAccountList', false)
@@ -92,6 +124,34 @@
     gap: var(--spacing-sm);
   }
 
+  button.sync-button {
+    width: 45px;
+    height: 40px;
+    font-size: 1.2rem;
+    line-height: 1rem;
+    border-radius: 14px;
+    border: none;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    background: var(--success-gradient);
+    color: white;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .fa-spin {
+      animation: spin 1s linear infinite;
+    }
+  }
+
   button.chart-button,
   button.search-button {
     width: 45px;
@@ -131,5 +191,10 @@
 
 .no-total {
   display: none;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

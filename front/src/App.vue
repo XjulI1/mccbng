@@ -50,6 +50,8 @@
   watch(userID, () => {
     store.dispatch('fetchAccountList')
     store.dispatch('fetchCategoryList')
+    store.dispatch('fetchGocardlessStatus')
+    store.dispatch('fetchLinkedAccounts')
   })
 
   // Equivalent to beforeCreate
