@@ -8,8 +8,7 @@
   "private": true,
   "workspaces": [
     "front",
-    "back",
-    "vue-touch-events"
+    "back"
   ],
   "resolutions": {
     "@achrinza/node-ipc": "^10.1.11"

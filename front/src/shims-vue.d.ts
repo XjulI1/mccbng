@@ -11,14 +11,6 @@ declare module "*.vue" {
   export default component;
 }
 
-declare module "vue2-touch-events" {
-  import { App } from "vue";
-  const Vue2TouchEvents: {
-    install(app: App): void;
-  };
-  export default Vue2TouchEvents;
-}
-
 declare module "universal-cookie" {
   export default class Cookies {
     constructor(cookies?: string);
