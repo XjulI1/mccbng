@@ -1,7 +1,6 @@
 <template>
   <div
     class="amortissement-card"
-    @click="toggleDetails"
   >
     <div class="card-header">
       <div class="operation-info">
@@ -39,6 +38,7 @@
           class="details-btn"
           :class="{ active: showDetails }"
           :title="showDetails ? 'Masquer les détails' : 'Afficher les détails'"
+          @click="toggleDetails"
         >
           <font-awesome-icon
             :icon="showDetails ? 'chevron-up' : 'chevron-down'"
@@ -245,7 +245,6 @@
 }
 
 .amortissement-card:hover {
-  transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
 }
 
