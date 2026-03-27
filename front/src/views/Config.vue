@@ -47,6 +47,23 @@
         </button>
       </div>
 
+      <div class="config-card gocardless-card">
+        <div class="card-header">
+          <div class="card-icon bank-icon">
+            <font-awesome-icon icon="exchange-alt" />
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">
+              Synchronisation bancaire
+            </h3>
+            <p class="card-description">
+              Récupération automatique des opérations via GoCardless (Fortuneo)
+            </p>
+          </div>
+        </div>
+        <GoCardlessSetup />
+      </div>
+
       <div class="config-card logout-card">
         <div class="card-header">
           <div class="card-icon logout-icon">
@@ -88,6 +105,7 @@
   import { onMounted, computed } from 'vue'
   import { useStore } from 'vuex'
   import { removeCookies } from '@/services/auth'
+  import GoCardlessSetup from '@/components/GoCardlessSetup.vue'
 
   const store = useStore()
 
@@ -163,6 +181,15 @@
     transform: translateY(-8px);
   }
 
+  &.gocardless-card {
+    border: 1px solid rgba(40, 167, 69, 0.1);
+    grid-column: 1 / -1;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
   &.logout-card {
     border: 1px solid rgba(220, 53, 69, 0.1);
   }
@@ -202,6 +229,11 @@
       &.logout-icon {
         background: rgba(220, 53, 69, 0.1);
         color: var(--color-danger);
+      }
+
+      &.bank-icon {
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--color-success);
       }
     }
 
