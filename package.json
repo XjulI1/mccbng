@@ -6,14 +6,20 @@
   "author": "Xavier JULIEN <xavijulien@gmail.com>",
   "license": "MIT",
   "private": true,
-  "workspaces": [
-    "front",
-    "back"
-  ],
-  "resolutions": {
-    "@achrinza/node-ipc": "^10.1.11",
-    "cookie": ">=0.7.0",
-    "openapi-typescript": ">=7.0.0"
+  "pnpm": {
+    "overrides": {
+      "@achrinza/node-ipc": "^10.1.11",
+      "cookie": ">=0.7.0",
+      "openapi-typescript": ">=7.0.0"
+    },
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "core-js",
+      "nx"
+    ]
   },
-  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
+  "devDependencies": {
+    "lerna": "^8.2.2"
+  },
+  "packageManager": "pnpm@10.33.0"
 }
