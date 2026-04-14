@@ -47,6 +47,30 @@
         </button>
       </div>
 
+      <div class="config-card">
+        <div class="card-header">
+          <div class="card-icon debug-icon">
+            <font-awesome-icon icon="bug" />
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">
+              Outils de debug
+            </h3>
+            <p class="card-description">
+              Activer les DevTools (Eruda) pour inspecter les logs et les requêtes réseau sur iPad
+            </p>
+          </div>
+        </div>
+        <button
+          class="config-btn"
+          :class="isDebugEnabled ? 'debug-active-btn' : 'debug-btn'"
+          @click="toggleDebug"
+        >
+          <font-awesome-icon :icon="isDebugEnabled ? 'toggle-on' : 'toggle-off'" />
+          {{ isDebugEnabled ? 'Désactiver Eruda' : 'Activer Eruda' }}
+        </button>
+      </div>
+
       <div class="config-card logout-card">
         <div class="card-header">
           <div class="card-icon logout-icon">
@@ -88,8 +112,10 @@
   import { onMounted, computed } from 'vue'
   import { useStore } from 'vuex'
   import { removeCookies } from '@/services/auth'
+  import { useGlobalDebugTools } from '@/composables/useDebugTools'
 
   const store = useStore()
+  const { isDebugEnabled, toggleDebugTools } = useGlobalDebugTools()
 
   const apiURL = window.env.VITE_API_URL
 
@@ -106,6 +132,13 @@
 
   const toggleAmount = (event: Event) => {
     store.dispatch('toggleMaskAmount')
+    if (event.target instanceof HTMLElement) {
+      event.target.blur()
+    }
+  }
+
+  const toggleDebug = async (event: Event) => {
+    await toggleDebugTools()
     if (event.target instanceof HTMLElement) {
       event.target.blur()
     }
@@ -203,6 +236,11 @@
         background: rgba(220, 53, 69, 0.1);
         color: var(--color-danger);
       }
+
+      &.debug-icon {
+        background: rgba(111, 66, 193, 0.1);
+        color: #6f42c1;
+      }
     }
 
     .card-content {
@@ -292,6 +330,17 @@
       &:hover {
         box-shadow: var(--shadow-btn);
       }
+    }
+
+    &.debug-btn {
+      background: rgba(111, 66, 193, 0.1);
+      color: #6f42c1;
+      border: 1px solid rgba(111, 66, 193, 0.3);
+    }
+
+    &.debug-active-btn {
+      background: linear-gradient(135deg, #6f42c1 0%, #9c6fe4 100%);
+      color: white;
     }
   }
 }
