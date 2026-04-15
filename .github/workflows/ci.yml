@@ -30,15 +30,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: yarn
-          cache-dependency-path: yarn.lock
+          cache: pnpm
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Create datasource config
         run: |
@@ -46,10 +50,10 @@ jobs:
             > back/src/datasources/mccb-mysql.datasource.config.json
 
       - name: Build
-        run: yarn workspace @mccbng/back build
+        run: pnpm --filter @mccbng/back build
 
       - name: Lint
-        run: yarn workspace @mccbng/back lint
+        run: pnpm --filter @mccbng/back lint
 
       - name: Test
         working-directory: back
@@ -63,26 +67,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: yarn
-          cache-dependency-path: yarn.lock
+          cache: pnpm
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: yarn workspace @mccbng/front lint:check
+        run: pnpm --filter @mccbng/front lint:check
 
       - name: Type check
-        run: yarn workspace @mccbng/front type-check
+        run: pnpm --filter @mccbng/front type-check
 
       - name: Build
-        run: yarn workspace @mccbng/front build
+        run: pnpm --filter @mccbng/front build
         env:
           VITE_API_URL: http://localhost:3001
 
       - name: Test
-        run: yarn workspace @mccbng/front test
+        run: pnpm --filter @mccbng/front test
