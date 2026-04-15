@@ -44,7 +44,7 @@ export function useDebugTools () {
   return {
     isDebugEnabled: readonly(isDebugEnabled),
     initDebugTools,
-    toggleDebugTools,
+    toggleDebugTools
   }
 }
 
