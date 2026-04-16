@@ -90,10 +90,7 @@
 }
 
 .summary-card {
-  background: linear-gradient(
-    135deg,
-    var(--primary-gradient, #667eea 0%, #764ba2 100%)
-  );
+  background: var(--primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
   border-radius: 12px;
   padding: 1.25rem;
   display: flex;
