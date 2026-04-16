@@ -123,8 +123,16 @@ export class CreditController {
       },
     },
   })
-  async find(@param.filter(Credit) filter?: Filter<Credit>): Promise<Credit[]> {
-    return this.creditRepository.find(filter);
+  async find(
+    @inject(SecurityBindings.USER)
+    currentUserProfile: UserProfile,
+    @param.filter(Credit) filter?: Filter<Credit>,
+  ): Promise<Credit[]> {
+    const userID = Number(currentUserProfile[securityId]);
+    return this.creditRepository.find({
+      ...filter,
+      where: {and: [{IDuser: userID}, ...(filter?.where ? [filter.where] : [])]},
+    });
   }
 
   @patch('/credits', {
