@@ -30,6 +30,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import { useStore } from 'vuex'
   import { useGlobalTheme } from '@/composables/useTheme'
+  import { useGlobalDebugTools } from '@/composables/useDebugTools'
 
   import NavBar from '@/components/NavBar.vue'
   import CompteList from '@/components/CompteList/index.vue'
@@ -43,6 +44,10 @@
 
   // Initialisation du système de thème
   useGlobalTheme()
+
+  // Initialisation des outils de debug (chargement conditionnel d'Eruda)
+  const { initDebugTools } = useGlobalDebugTools()
+  initDebugTools()
 
   const userID = computed(() => store.state.user.id)
   const displayAccountList = computed(() => store.state.display.account_list)

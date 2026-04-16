@@ -21,7 +21,10 @@ import {
   faSearchPlus,
   faChevronUp,
   faChevronDown,
-  faHamburger
+  faHamburger,
+  faBug,
+  faToggleOn,
+  faToggleOff
 } from '@fortawesome/free-solid-svg-icons'
 
 const FontAwesome = {
@@ -48,7 +51,10 @@ const FontAwesome = {
       faSearchPlus,
       faChevronUp,
       faChevronDown,
-      faHamburger
+      faHamburger,
+      faBug,
+      faToggleOn,
+      faToggleOff
     } as any)
   }
 }
