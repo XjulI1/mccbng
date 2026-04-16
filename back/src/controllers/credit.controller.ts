@@ -1,7 +1,6 @@
 import {
   Count,
   CountSchema,
-  Filter,
   FilterExcludingWhere,
   repository,
   Where,
@@ -123,8 +122,12 @@ export class CreditController {
       },
     },
   })
-  async find(@param.filter(Credit) filter?: Filter<Credit>): Promise<Credit[]> {
-    return this.creditRepository.find(filter);
+  async find(
+    @inject(SecurityBindings.USER)
+    currentUserProfile: UserProfile,
+  ): Promise<Credit[]> {
+    const userID = Number(currentUserProfile[securityId]);
+    return this.creditRepository.find({where: {IDuser: userID}});
   }
 
   @patch('/credits', {

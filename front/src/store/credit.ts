@@ -41,17 +41,17 @@ export default {
       try {
         const credits = await fetchCredits(
           rootState.user.token,
-          import.meta.env.VITE_API_URL
+          window.env.VITE_API_URL
         )
-        commit('setCreditList', credits)
+        commit('setCreditList', Array.isArray(credits) ? credits : [])
 
         // Fetch balances for all credits
-        for (const credit of credits) {
+        for (const credit of (Array.isArray(credits) ? credits : [])) {
           try {
             const balance = await fetchCreditRemainingBalance(
               credit.IDcredit,
               rootState.user.token,
-              import.meta.env.VITE_API_URL
+              window.env.VITE_API_URL
             )
             commit('setCreditBalance', { IDcredit: credit.IDcredit, balance })
           } catch (error) {
@@ -70,7 +70,7 @@ export default {
         await updateCredit(
           credit,
           rootState.user.token,
-          import.meta.env.VITE_API_URL
+          window.env.VITE_API_URL
         )
         // Refresh credits list
         dispatch('fetchCredits')
@@ -85,7 +85,7 @@ export default {
         await deleteCredit(
           credit.IDcredit,
           rootState.user.token,
-          import.meta.env.VITE_API_URL
+          window.env.VITE_API_URL
         )
         // Refresh credits list
         dispatch('fetchCredits')
@@ -100,14 +100,14 @@ export default {
         const credit = await fetchCreditById(
           IDcredit,
           rootState.user.token,
-          import.meta.env.VITE_API_URL
+          window.env.VITE_API_URL
         )
         commit('setActiveCredit', credit)
 
         const balance = await fetchCreditRemainingBalance(
           IDcredit,
           rootState.user.token,
-          import.meta.env.VITE_API_URL
+          window.env.VITE_API_URL
         )
         commit('setCreditBalance', { IDcredit, balance })
       } catch (error) {
