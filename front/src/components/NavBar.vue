@@ -475,12 +475,30 @@
         }
       }
 
+      &.virement-button {
+        border-top-right-radius: 0px;
+        border-bottom-right-radius: 0px;
+        margin-right: 0;
+      }
+      &.new-operation-button {
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+        margin-left: 0;
+      }
       &.operation-recurrente-button {
         border-top-right-radius: 0px;
         border-bottom-right-radius: 0px;
         margin-right: 0;
       }
       &.amortissement-button {
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+        border-top-right-radius: 0px;
+        border-bottom-right-radius: 0px;
+        margin-left: 0;
+        margin-right: 0;
+      }
+      &.credit-button {
         border-top-left-radius: 0px;
         border-bottom-left-radius: 0px;
         margin-left: 0;
