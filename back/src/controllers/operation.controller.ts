@@ -25,6 +25,9 @@ import {inject} from '@loopback/core';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {getCurrentUserId} from '../services/current-user';
 
+// Operations have no IDuser column; ownership is derived from the parent
+// Compte. Every endpoint must therefore resolve the user's accounts first
+// and then restrict queries to those IDcompte values.
 @authenticate('jwt')
 export class OperationController {
   constructor(
@@ -34,25 +37,37 @@ export class OperationController {
     public compteRepository: CompteRepository,
   ) {}
 
-  private scope(
+  private async userCompteIds(
+    currentUserProfile: UserProfile,
+  ): Promise<number[]> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const comptes = await this.compteRepository.find({
+      where: {IDuser},
+      fields: {IDcompte: true},
+    });
+    return comptes
+      .map(c => c.IDcompte)
+      .filter((id): id is number => id !== undefined);
+  }
+
+  private async scope(
     currentUserProfile: UserProfile,
     where?: Where<Operation>,
-  ): Where<Operation> {
-    const IDuser = getCurrentUserId(currentUserProfile);
-    return where ? {and: [where, {IDuser}]} : {IDuser};
+  ): Promise<Where<Operation>> {
+    const ids = await this.userCompteIds(currentUserProfile);
+    const userScope: Where<Operation> = {IDcompte: {inq: ids}};
+    return where ? {and: [where, userScope]} : userScope;
   }
 
   private async assertOwned(
     id: number,
     currentUserProfile: UserProfile,
   ): Promise<void> {
-    const IDuser = getCurrentUserId(currentUserProfile);
-    const op = await this.operationRepository.findOne({
-      where: {IDop: id, IDuser},
-    });
+    const op = await this.operationRepository.findOne({where: {IDop: id}});
     if (!op) {
       throw new HttpErrors.NotFound(`Operation ${id} not found`);
     }
+    await this.assertCompteOwned(op.IDcompte, currentUserProfile);
   }
 
   private async assertCompteOwned(
@@ -83,18 +98,15 @@ export class OperationController {
         'application/json': {
           schema: getModelSchemaRef(Operation, {
             title: 'NewOperation',
-            exclude: ['IDop', 'IDuser'],
+            exclude: ['IDop'],
           }),
         },
       },
     })
-    operation: Omit<Operation, 'IDop' | 'IDuser'>,
+    operation: Omit<Operation, 'IDop'>,
   ): Promise<Operation> {
     await this.assertCompteOwned(operation.IDcompte, currentUserProfile);
-    return this.operationRepository.create({
-      ...operation,
-      IDuser: getCurrentUserId(currentUserProfile),
-    });
+    return this.operationRepository.create(operation);
   }
 
   @get('/operations/count', {
@@ -110,7 +122,7 @@ export class OperationController {
     @param.where(Operation) where?: Where<Operation>,
   ): Promise<Count> {
     return this.operationRepository.count(
-      this.scope(currentUserProfile, where),
+      await this.scope(currentUserProfile, where),
     );
   }
 
@@ -135,7 +147,7 @@ export class OperationController {
   ): Promise<Operation[]> {
     return this.operationRepository.find({
       ...filter,
-      where: this.scope(currentUserProfile, filter?.where),
+      where: await this.scope(currentUserProfile, filter?.where),
     });
   }
 
@@ -152,19 +164,19 @@ export class OperationController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Operation, {
-            partial: true,
-            exclude: ['IDuser'],
-          }),
+          schema: getModelSchemaRef(Operation, {partial: true}),
         },
       },
     })
-    operation: Omit<Operation, 'IDuser'>,
+    operation: Operation,
     @param.where(Operation) where?: Where<Operation>,
   ): Promise<Count> {
+    if (operation.IDcompte !== undefined) {
+      await this.assertCompteOwned(operation.IDcompte, currentUserProfile);
+    }
     return this.operationRepository.updateAll(
       operation,
-      this.scope(currentUserProfile, where),
+      await this.scope(currentUserProfile, where),
     );
   }
 
@@ -203,14 +215,11 @@ export class OperationController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Operation, {
-            partial: true,
-            exclude: ['IDuser'],
-          }),
+          schema: getModelSchemaRef(Operation, {partial: true}),
         },
       },
     })
-    operation: Omit<Operation, 'IDuser'>,
+    operation: Operation,
   ): Promise<void> {
     await this.assertOwned(id, currentUserProfile);
     if (operation.IDcompte !== undefined) {
@@ -233,7 +242,6 @@ export class OperationController {
   ): Promise<void> {
     await this.assertOwned(id, currentUserProfile);
     await this.assertCompteOwned(operation.IDcompte, currentUserProfile);
-    operation.IDuser = getCurrentUserId(currentUserProfile);
     await this.operationRepository.replaceById(id, operation);
   }
 
@@ -366,6 +374,10 @@ export class OperationController {
     @param.query.number('IDCompte') idCompte?: number,
   ): Promise<AnyObject> {
     const userID = getCurrentUserId(currentUserProfile);
+
+    if (idCompte) {
+      await this.assertCompteOwned(idCompte, currentUserProfile);
+    }
 
     const params: (number | string)[] = [
       monthNumber,

@@ -24,6 +24,9 @@ import {inject} from '@loopback/core';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {getCurrentUserId} from '../services/current-user';
 
+// OperationRecurrente has no IDuser column; ownership is derived from the
+// parent Compte. Endpoints must resolve the user's accounts first and then
+// restrict queries to those IDcompte values.
 @authenticate('jwt')
 export class OperationRecurrenteController {
   constructor(
@@ -33,25 +36,39 @@ export class OperationRecurrenteController {
     public compteRepository: CompteRepository,
   ) {}
 
-  private scope(
+  private async userCompteIds(
+    currentUserProfile: UserProfile,
+  ): Promise<number[]> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const comptes = await this.compteRepository.find({
+      where: {IDuser},
+      fields: {IDcompte: true},
+    });
+    return comptes
+      .map(c => c.IDcompte)
+      .filter((id): id is number => id !== undefined);
+  }
+
+  private async scope(
     currentUserProfile: UserProfile,
     where?: Where<OperationRecurrente>,
-  ): Where<OperationRecurrente> {
-    const IDuser = getCurrentUserId(currentUserProfile);
-    return where ? {and: [where, {IDuser}]} : {IDuser};
+  ): Promise<Where<OperationRecurrente>> {
+    const ids = await this.userCompteIds(currentUserProfile);
+    const userScope: Where<OperationRecurrente> = {IDcompte: {inq: ids}};
+    return where ? {and: [where, userScope]} : userScope;
   }
 
   private async assertOwned(
     id: number,
     currentUserProfile: UserProfile,
   ): Promise<void> {
-    const IDuser = getCurrentUserId(currentUserProfile);
     const op = await this.operationRecurrenteRepository.findOne({
-      where: {IDopRecu: id, IDuser},
+      where: {IDopRecu: id},
     });
     if (!op) {
       throw new HttpErrors.NotFound(`OperationRecurrente ${id} not found`);
     }
+    await this.assertCompteOwned(op.IDcompte, currentUserProfile);
   }
 
   private async assertCompteOwned(
@@ -84,21 +101,18 @@ export class OperationRecurrenteController {
         'application/json': {
           schema: getModelSchemaRef(OperationRecurrente, {
             title: 'NewOperationRecurrente',
-            exclude: ['IDopRecu', 'IDuser'],
+            exclude: ['IDopRecu'],
           }),
         },
       },
     })
-    operationRecurrente: Omit<OperationRecurrente, 'IDopRecu' | 'IDuser'>,
+    operationRecurrente: Omit<OperationRecurrente, 'IDopRecu'>,
   ): Promise<OperationRecurrente> {
     await this.assertCompteOwned(
       operationRecurrente.IDcompte,
       currentUserProfile,
     );
-    return this.operationRecurrenteRepository.create({
-      ...operationRecurrente,
-      IDuser: getCurrentUserId(currentUserProfile),
-    });
+    return this.operationRecurrenteRepository.create(operationRecurrente);
   }
 
   @get('/operation-recurrentes/count', {
@@ -114,7 +128,7 @@ export class OperationRecurrenteController {
     @param.where(OperationRecurrente) where?: Where<OperationRecurrente>,
   ): Promise<Count> {
     return this.operationRecurrenteRepository.count(
-      this.scope(currentUserProfile, where),
+      await this.scope(currentUserProfile, where),
     );
   }
 
@@ -141,7 +155,7 @@ export class OperationRecurrenteController {
   ): Promise<OperationRecurrente[]> {
     return this.operationRecurrenteRepository.find({
       ...filter,
-      where: this.scope(currentUserProfile, filter?.where),
+      where: await this.scope(currentUserProfile, filter?.where),
     });
   }
 
@@ -158,19 +172,22 @@ export class OperationRecurrenteController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(OperationRecurrente, {
-            partial: true,
-            exclude: ['IDuser'],
-          }),
+          schema: getModelSchemaRef(OperationRecurrente, {partial: true}),
         },
       },
     })
-    operationRecurrente: Omit<OperationRecurrente, 'IDuser'>,
+    operationRecurrente: OperationRecurrente,
     @param.where(OperationRecurrente) where?: Where<OperationRecurrente>,
   ): Promise<Count> {
+    if (operationRecurrente.IDcompte !== undefined) {
+      await this.assertCompteOwned(
+        operationRecurrente.IDcompte,
+        currentUserProfile,
+      );
+    }
     return this.operationRecurrenteRepository.updateAll(
       operationRecurrente,
-      this.scope(currentUserProfile, where),
+      await this.scope(currentUserProfile, where),
     );
   }
 
@@ -211,14 +228,11 @@ export class OperationRecurrenteController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(OperationRecurrente, {
-            partial: true,
-            exclude: ['IDuser'],
-          }),
+          schema: getModelSchemaRef(OperationRecurrente, {partial: true}),
         },
       },
     })
-    operationRecurrente: Omit<OperationRecurrente, 'IDuser'>,
+    operationRecurrente: OperationRecurrente,
   ): Promise<void> {
     await this.assertOwned(id, currentUserProfile);
     if (operationRecurrente.IDcompte !== undefined) {
@@ -250,7 +264,6 @@ export class OperationRecurrenteController {
       operationRecurrente.IDcompte,
       currentUserProfile,
     );
-    operationRecurrente.IDuser = getCurrentUserId(currentUserProfile);
     await this.operationRecurrenteRepository.replaceById(
       id,
       operationRecurrente,
@@ -287,7 +300,7 @@ export class OperationRecurrenteController {
     const sqlGet =
       'SELECT * FROM OperationRecurrente NATURAL JOIN Compte WHERE IDuser = ?';
     const sqlInsertNewOp =
-      'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, IDuser, CheckOp) VALUES (?, ?, ?, ?, ?, ?, 0)';
+      'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, CheckOp) VALUES (?, ?, ?, ?, ?, 0)';
     const sqlUpdateOpRec =
       'UPDATE OperationRecurrente SET DernierDateOpRecu = ? WHERE IDopRecu = ?';
     const millisecondDay = 24 * 60 * 60 * 1000;
@@ -307,7 +320,6 @@ export class OperationRecurrenteController {
         day,
         opRec.IDcompte,
         opRec.IDcat,
-        userID,
       ]);
 
       await this.operationRecurrenteRepository.execute(sqlUpdateOpRec, [
