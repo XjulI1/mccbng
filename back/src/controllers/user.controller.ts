@@ -191,6 +191,7 @@ export class UserController {
 
     if (secret_key) {
       const existingBySecret = await this.userRepository.findOne({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         where: {secret_key},
       });
       if (existingBySecret) {

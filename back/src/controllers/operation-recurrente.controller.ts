@@ -18,10 +18,7 @@ import {
   HttpErrors,
 } from '@loopback/rest';
 import {OperationRecurrente} from '../models';
-import {
-  CompteRepository,
-  OperationRecurrenteRepository,
-} from '../repositories';
+import {CompteRepository, OperationRecurrenteRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {SecurityBindings, UserProfile} from '@loopback/security';
