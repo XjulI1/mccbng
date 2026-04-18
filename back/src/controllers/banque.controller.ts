@@ -15,42 +15,19 @@ import {
   put,
   del,
   requestBody,
-  HttpErrors,
 } from '@loopback/rest';
 import {Banque} from '../models';
 import {BanqueRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
-import {inject} from '@loopback/core';
-import {SecurityBindings, UserProfile} from '@loopback/security';
-import {getCurrentUserId} from '../services/current-user';
 
+// Banques are a shared catalog across all users; any authenticated caller
+// can read and manage them.
 @authenticate('jwt')
 export class BanqueController {
   constructor(
     @repository(BanqueRepository)
     public banqueRepository: BanqueRepository,
   ) {}
-
-  private scope(
-    currentUserProfile: UserProfile,
-    where?: Where<Banque>,
-  ): Where<Banque> {
-    const IDuser = getCurrentUserId(currentUserProfile);
-    return where ? {and: [where, {IDuser}]} : {IDuser};
-  }
-
-  private async assertOwned(
-    id: number,
-    currentUserProfile: UserProfile,
-  ): Promise<void> {
-    const IDuser = getCurrentUserId(currentUserProfile);
-    const banque = await this.banqueRepository.findOne({
-      where: {IDbanque: id, IDuser},
-    });
-    if (!banque) {
-      throw new HttpErrors.NotFound(`Banque ${id} not found`);
-    }
-  }
 
   @post('/banques', {
     responses: {
@@ -61,23 +38,19 @@ export class BanqueController {
     },
   })
   async create(
-    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
           schema: getModelSchemaRef(Banque, {
             title: 'NewBanque',
-            exclude: ['IDbanque', 'IDuser'],
+            exclude: ['IDbanque'],
           }),
         },
       },
     })
-    banque: Omit<Banque, 'IDbanque' | 'IDuser'>,
+    banque: Omit<Banque, 'IDbanque'>,
   ): Promise<Banque> {
-    return this.banqueRepository.create({
-      ...banque,
-      IDuser: getCurrentUserId(currentUserProfile),
-    });
+    return this.banqueRepository.create(banque);
   }
 
   @get('/banques/count', {
@@ -88,11 +61,8 @@ export class BanqueController {
       },
     },
   })
-  async count(
-    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
-    @param.where(Banque) where?: Where<Banque>,
-  ): Promise<Count> {
-    return this.banqueRepository.count(this.scope(currentUserProfile, where));
+  async count(@param.where(Banque) where?: Where<Banque>): Promise<Count> {
+    return this.banqueRepository.count(where);
   }
 
   @get('/banques', {
@@ -110,14 +80,8 @@ export class BanqueController {
       },
     },
   })
-  async find(
-    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
-    @param.filter(Banque) filter?: Filter<Banque>,
-  ): Promise<Banque[]> {
-    return this.banqueRepository.find({
-      ...filter,
-      where: this.scope(currentUserProfile, filter?.where),
-    });
+  async find(@param.filter(Banque) filter?: Filter<Banque>): Promise<Banque[]> {
+    return this.banqueRepository.find(filter);
   }
 
   @patch('/banques', {
@@ -129,24 +93,17 @@ export class BanqueController {
     },
   })
   async updateAll(
-    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Banque, {
-            partial: true,
-            exclude: ['IDuser'],
-          }),
+          schema: getModelSchemaRef(Banque, {partial: true}),
         },
       },
     })
-    banque: Omit<Banque, 'IDuser'>,
+    banque: Banque,
     @param.where(Banque) where?: Where<Banque>,
   ): Promise<Count> {
-    return this.banqueRepository.updateAll(
-      banque,
-      this.scope(currentUserProfile, where),
-    );
+    return this.banqueRepository.updateAll(banque, where);
   }
 
   @get('/banques/{id}', {
@@ -162,12 +119,10 @@ export class BanqueController {
     },
   })
   async findById(
-    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @param.filter(Banque, {exclude: 'where'})
     filter?: FilterExcludingWhere<Banque>,
   ): Promise<Banque> {
-    await this.assertOwned(id, currentUserProfile);
     return this.banqueRepository.findById(id, filter);
   }
 
@@ -179,21 +134,16 @@ export class BanqueController {
     },
   })
   async updateById(
-    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Banque, {
-            partial: true,
-            exclude: ['IDuser'],
-          }),
+          schema: getModelSchemaRef(Banque, {partial: true}),
         },
       },
     })
-    banque: Omit<Banque, 'IDuser'>,
+    banque: Banque,
   ): Promise<void> {
-    await this.assertOwned(id, currentUserProfile);
     await this.banqueRepository.updateById(id, banque);
   }
 
@@ -205,12 +155,9 @@ export class BanqueController {
     },
   })
   async replaceById(
-    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody() banque: Banque,
   ): Promise<void> {
-    await this.assertOwned(id, currentUserProfile);
-    banque.IDuser = getCurrentUserId(currentUserProfile);
     await this.banqueRepository.replaceById(id, banque);
   }
 
@@ -221,11 +168,7 @@ export class BanqueController {
       },
     },
   })
-  async deleteById(
-    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
-    @param.path.number('id') id: number,
-  ): Promise<void> {
-    await this.assertOwned(id, currentUserProfile);
+  async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.banqueRepository.deleteById(id);
   }
 }
