@@ -20,6 +20,8 @@ import {Banque} from '../models';
 import {BanqueRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
 
+// Banques are a shared catalog across all users; any authenticated caller
+// can read and manage them.
 @authenticate('jwt')
 export class BanqueController {
   constructor(

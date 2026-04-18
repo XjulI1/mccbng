@@ -15,10 +15,14 @@ import {
   put,
   del,
   requestBody,
+  HttpErrors,
 } from '@loopback/rest';
 import {Categorie} from '../models';
 import {CategorieRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
+import {inject} from '@loopback/core';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {getCurrentUserId} from '../services/current-user';
 
 @authenticate('jwt')
 export class CategoriesController {
@@ -26,6 +30,39 @@ export class CategoriesController {
     @repository(CategorieRepository)
     public categorieRepository: CategorieRepository,
   ) {}
+
+  // Read scope: user-owned categories OR shared ones (IDuser = 0)
+  private readScope(
+    currentUserProfile: UserProfile,
+    where?: Where<Categorie>,
+  ): Where<Categorie> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const userScope: Where<Categorie> = {IDuser: {inq: [0, IDuser]}};
+    return where ? {and: [where, userScope]} : userScope;
+  }
+
+  // Write scope: user-owned categories only; shared categories cannot be
+  // mutated by users.
+  private writeScope(
+    currentUserProfile: UserProfile,
+    where?: Where<Categorie>,
+  ): Where<Categorie> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    return where ? {and: [where, {IDuser}]} : {IDuser};
+  }
+
+  private async assertOwned(
+    id: number,
+    currentUserProfile: UserProfile,
+  ): Promise<void> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const cat = await this.categorieRepository.findOne({
+      where: {IDcat: id, IDuser},
+    });
+    if (!cat) {
+      throw new HttpErrors.NotFound(`Categorie ${id} not found`);
+    }
+  }
 
   @post('/categories', {
     responses: {
@@ -36,19 +73,23 @@ export class CategoriesController {
     },
   })
   async create(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
           schema: getModelSchemaRef(Categorie, {
             title: 'NewCategorie',
-            exclude: ['IDcat'],
+            exclude: ['IDcat', 'IDuser'],
           }),
         },
       },
     })
-    categorie: Omit<Categorie, 'IDcat'>,
+    categorie: Omit<Categorie, 'IDcat' | 'IDuser'>,
   ): Promise<Categorie> {
-    return this.categorieRepository.create(categorie);
+    return this.categorieRepository.create({
+      ...categorie,
+      IDuser: getCurrentUserId(currentUserProfile),
+    });
   }
 
   @get('/categories/count', {
@@ -60,9 +101,12 @@ export class CategoriesController {
     },
   })
   async count(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.where(Categorie) where?: Where<Categorie>,
   ): Promise<Count> {
-    return this.categorieRepository.count(where);
+    return this.categorieRepository.count(
+      this.readScope(currentUserProfile, where),
+    );
   }
 
   @get('/categories', {
@@ -81,9 +125,13 @@ export class CategoriesController {
     },
   })
   async find(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.filter(Categorie) filter?: Filter<Categorie>,
   ): Promise<Categorie[]> {
-    return this.categorieRepository.find(filter);
+    return this.categorieRepository.find({
+      ...filter,
+      where: this.readScope(currentUserProfile, filter?.where),
+    });
   }
 
   @patch('/categories', {
@@ -95,17 +143,24 @@ export class CategoriesController {
     },
   })
   async updateAll(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Categorie, {partial: true}),
+          schema: getModelSchemaRef(Categorie, {
+            partial: true,
+            exclude: ['IDuser'],
+          }),
         },
       },
     })
-    categorie: Categorie,
+    categorie: Omit<Categorie, 'IDuser'>,
     @param.where(Categorie) where?: Where<Categorie>,
   ): Promise<Count> {
-    return this.categorieRepository.updateAll(categorie, where);
+    return this.categorieRepository.updateAll(
+      categorie,
+      this.writeScope(currentUserProfile, where),
+    );
   }
 
   @get('/categories/{id}', {
@@ -121,11 +176,20 @@ export class CategoriesController {
     },
   })
   async findById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @param.filter(Categorie, {exclude: 'where'})
     filter?: FilterExcludingWhere<Categorie>,
   ): Promise<Categorie> {
-    return this.categorieRepository.findById(id, filter);
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const cat = await this.categorieRepository.findOne({
+      ...filter,
+      where: {IDcat: id, IDuser: {inq: [0, IDuser]}},
+    });
+    if (!cat) {
+      throw new HttpErrors.NotFound(`Categorie ${id} not found`);
+    }
+    return cat;
   }
 
   @patch('/categories/{id}', {
@@ -136,16 +200,21 @@ export class CategoriesController {
     },
   })
   async updateById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Categorie, {partial: true}),
+          schema: getModelSchemaRef(Categorie, {
+            partial: true,
+            exclude: ['IDuser'],
+          }),
         },
       },
     })
-    categorie: Categorie,
+    categorie: Omit<Categorie, 'IDuser'>,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
     await this.categorieRepository.updateById(id, categorie);
   }
 
@@ -157,9 +226,12 @@ export class CategoriesController {
     },
   })
   async replaceById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody() categorie: Categorie,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
+    categorie.IDuser = getCurrentUserId(currentUserProfile);
     await this.categorieRepository.replaceById(id, categorie);
   }
 
@@ -170,7 +242,11 @@ export class CategoriesController {
       },
     },
   })
-  async deleteById(@param.path.number('id') id: number): Promise<void> {
+  async deleteById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+    @param.path.number('id') id: number,
+  ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
     await this.categorieRepository.deleteById(id);
   }
 }

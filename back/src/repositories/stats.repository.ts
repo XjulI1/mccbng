@@ -16,75 +16,53 @@ export class StatsRepository extends DefaultCrudRepository<
 
   async evolutionSolde(userID: number): Promise<AnyObject> {
     const querySoldeGlobal =
-      '' +
       'SELECT ROUND(SUM(solde), 2) AS sum ' +
       'FROM Compte ' +
-      'WHERE retraite = 0 AND children = 0 AND IDuser = ' +
-      userID;
+      'WHERE retraite = 0 AND children = 0 AND IDuser = ?';
 
     const querySoldeRetraite =
-      '' +
       'SELECT ROUND(SUM(solde), 2) AS sum ' +
       'FROM Compte ' +
-      'WHERE retraite = 1 AND IDuser = ' +
-      userID;
+      'WHERE retraite = 1 AND IDuser = ?';
 
     const querySoldeDispo =
-      '' +
       'SELECT ROUND(SUM(solde), 2) AS sum ' +
       'FROM Compte ' +
-      'WHERE IDuser = ' +
-      userID +
-      ' AND bloque = 0';
+      'WHERE IDuser = ? AND bloque = 0';
 
     const queryGlobal =
-      '' +
       'SELECT ROUND(SUM(MontantOp),2) AS montant, ' +
       "DATE_FORMAT(DateOp, '%Y-%m-%dT00:00:00.000Z') AS date " +
       'FROM Operation NATURAL JOIN Compte ' +
-      'WHERE IDuser = ' +
-      userID +
-      ' AND retraite = 0 AND children = 0 ' +
+      'WHERE IDuser = ? AND retraite = 0 AND children = 0 ' +
       'GROUP BY date ' +
       'ORDER BY date ASC';
 
     const queryRetraite =
-      '' +
       'SELECT ROUND(SUM(MontantOp),2) AS montant, ' +
       "DATE_FORMAT(DateOp, '%Y-%m-%dT00:00:00.000Z') AS date " +
       'FROM Operation NATURAL JOIN Compte ' +
-      'WHERE IDuser = ' +
-      userID +
-      ' AND retraite = 1 ' +
+      'WHERE IDuser = ? AND retraite = 1 ' +
       'GROUP BY date ' +
       'ORDER BY date ASC';
 
     const queryDispo =
-      '' +
       'SELECT ROUND(SUM(MontantOp),2) AS montant, ' +
       "DATE_FORMAT(DateOp, '%Y-%m-%dT00:00:00.000Z') AS date " +
       'FROM Operation NATURAL JOIN Compte ' +
-      'WHERE IDuser = ' +
-      userID +
-      ' AND bloque = 0 ' +
+      'WHERE IDuser = ? AND bloque = 0 ' +
       'GROUP BY date ' +
       'ORDER BY date ASC';
 
-    const soldeGlobal = this.execute(querySoldeGlobal);
-    const soldeRetraite = this.execute(querySoldeRetraite);
-    const soldeDispo = this.execute(querySoldeDispo);
-
-    const dataGlobal = this.execute(queryGlobal);
-    const dataRetraite = this.execute(queryRetraite);
-    const dataDispo = this.execute(queryDispo);
+    const params = [userID];
 
     const values = await Promise.all([
-      soldeGlobal,
-      soldeRetraite,
-      soldeDispo,
-      dataGlobal,
-      dataRetraite,
-      dataDispo,
+      this.execute(querySoldeGlobal, params),
+      this.execute(querySoldeRetraite, params),
+      this.execute(querySoldeDispo, params),
+      this.execute(queryGlobal, params),
+      this.execute(queryRetraite, params),
+      this.execute(queryDispo, params),
     ]);
 
     return {
