@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-export const fetchEvolutionSolde = (userID, userToken, APIURL) => {
-  return axios.get(APIURL + '/api/stats/evolutionSolde/' + userID, {
+export const fetchEvolutionSolde = (userToken, APIURL) => {
+  return axios.get(APIURL + '/api/stats/evolutionSolde', {
     headers: {
       Authorization: 'Bearer ' + userToken
     }

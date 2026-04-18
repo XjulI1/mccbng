@@ -89,9 +89,9 @@ export const fetchSearchOperations = (
     })
 }
 
-export const generateRecurringOperations = (userID, userToken, APIURL) => {
+export const generateRecurringOperations = (userToken, APIURL) => {
   axios.post(
-    APIURL + '/api/operation-recurrentes/auto-generation/' + userID,
+    APIURL + '/api/operation-recurrentes/auto-generation',
     {},
     {
       headers: {
