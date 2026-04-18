@@ -15,10 +15,14 @@ import {
   put,
   del,
   requestBody,
+  HttpErrors,
 } from '@loopback/rest';
 import {Compte} from '../models';
 import {CompteRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
+import {inject} from '@loopback/core';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {getCurrentUserId} from '../services/current-user';
 
 @authenticate('jwt')
 export class CompteController {
@@ -26,6 +30,27 @@ export class CompteController {
     @repository(CompteRepository)
     public compteRepository: CompteRepository,
   ) {}
+
+  private scope(
+    currentUserProfile: UserProfile,
+    where?: Where<Compte>,
+  ): Where<Compte> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    return where ? {and: [where, {IDuser}]} : {IDuser};
+  }
+
+  private async assertOwned(
+    id: number,
+    currentUserProfile: UserProfile,
+  ): Promise<void> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const compte = await this.compteRepository.findOne({
+      where: {IDcompte: id, IDuser},
+    });
+    if (!compte) {
+      throw new HttpErrors.NotFound(`Compte ${id} not found`);
+    }
+  }
 
   @post('/comptes', {
     responses: {
@@ -36,19 +61,23 @@ export class CompteController {
     },
   })
   async create(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
           schema: getModelSchemaRef(Compte, {
             title: 'NewCompte',
-            exclude: ['IDcompte'],
+            exclude: ['IDcompte', 'IDuser'],
           }),
         },
       },
     })
-    compte: Omit<Compte, 'IDcompte'>,
+    compte: Omit<Compte, 'IDcompte' | 'IDuser'>,
   ): Promise<Compte> {
-    return this.compteRepository.create(compte);
+    return this.compteRepository.create({
+      ...compte,
+      IDuser: getCurrentUserId(currentUserProfile),
+    });
   }
 
   @get('/comptes/count', {
@@ -59,8 +88,11 @@ export class CompteController {
       },
     },
   })
-  async count(@param.where(Compte) where?: Where<Compte>): Promise<Count> {
-    return this.compteRepository.count(where);
+  async count(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+    @param.where(Compte) where?: Where<Compte>,
+  ): Promise<Count> {
+    return this.compteRepository.count(this.scope(currentUserProfile, where));
   }
 
   @get('/comptes', {
@@ -78,8 +110,14 @@ export class CompteController {
       },
     },
   })
-  async find(@param.filter(Compte) filter?: Filter<Compte>): Promise<Compte[]> {
-    return this.compteRepository.find(filter);
+  async find(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+    @param.filter(Compte) filter?: Filter<Compte>,
+  ): Promise<Compte[]> {
+    return this.compteRepository.find({
+      ...filter,
+      where: this.scope(currentUserProfile, filter?.where),
+    });
   }
 
   @patch('/comptes', {
@@ -91,17 +129,24 @@ export class CompteController {
     },
   })
   async updateAll(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Compte, {partial: true}),
+          schema: getModelSchemaRef(Compte, {
+            partial: true,
+            exclude: ['IDuser'],
+          }),
         },
       },
     })
-    compte: Compte,
+    compte: Omit<Compte, 'IDuser'>,
     @param.where(Compte) where?: Where<Compte>,
   ): Promise<Count> {
-    return this.compteRepository.updateAll(compte, where);
+    return this.compteRepository.updateAll(
+      compte,
+      this.scope(currentUserProfile, where),
+    );
   }
 
   @get('/comptes/{id}', {
@@ -117,10 +162,12 @@ export class CompteController {
     },
   })
   async findById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @param.filter(Compte, {exclude: 'where'})
     filter?: FilterExcludingWhere<Compte>,
   ): Promise<Compte> {
+    await this.assertOwned(id, currentUserProfile);
     return this.compteRepository.findById(id, filter);
   }
 
@@ -132,16 +179,21 @@ export class CompteController {
     },
   })
   async updateById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Compte, {partial: true}),
+          schema: getModelSchemaRef(Compte, {
+            partial: true,
+            exclude: ['IDuser'],
+          }),
         },
       },
     })
-    compte: Compte,
+    compte: Omit<Compte, 'IDuser'>,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
     await this.compteRepository.updateById(id, compte);
   }
 
@@ -153,9 +205,12 @@ export class CompteController {
     },
   })
   async replaceById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody() compte: Compte,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
+    compte.IDuser = getCurrentUserId(currentUserProfile);
     await this.compteRepository.replaceById(id, compte);
   }
 
@@ -166,7 +221,11 @@ export class CompteController {
       },
     },
   })
-  async deleteById(@param.path.number('id') id: number): Promise<void> {
+  async deleteById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+    @param.path.number('id') id: number,
+  ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
     await this.compteRepository.deleteById(id);
   }
 }
