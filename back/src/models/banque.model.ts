@@ -23,6 +23,12 @@ export class Banque extends Entity {
   })
   NomBanque: string;
 
+  @property({
+    type: 'number',
+    required: true,
+  })
+  IDuser: number;
+
   // Define well-known properties here
 
   // Indexer property to allow additional data

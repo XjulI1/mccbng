@@ -68,6 +68,12 @@ export class OperationRecurrente extends Entity {
 
   @property({
     type: 'number',
+    required: true,
+  })
+  IDuser: number;
+
+  @property({
+    type: 'number',
     default: 0,
   })
   IDcat?: number;
