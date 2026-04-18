@@ -61,6 +61,7 @@ export class MyUserService {
       name: user.username,
       id: user.id,
       email: user.email,
+      IDuser: user.IDuser,
     };
   }
 
