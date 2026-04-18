@@ -15,17 +15,60 @@ import {
   put,
   del,
   requestBody,
+  HttpErrors,
 } from '@loopback/rest';
 import {OperationRecurrente} from '../models';
-import {OperationRecurrenteRepository} from '../repositories';
+import {
+  CompteRepository,
+  OperationRecurrenteRepository,
+} from '../repositories';
 import {authenticate} from '@loopback/authentication';
+import {inject} from '@loopback/core';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {getCurrentUserId} from '../services/current-user';
 
 @authenticate('jwt')
 export class OperationRecurrenteController {
   constructor(
     @repository(OperationRecurrenteRepository)
     public operationRecurrenteRepository: OperationRecurrenteRepository,
+    @repository(CompteRepository)
+    public compteRepository: CompteRepository,
   ) {}
+
+  private scope(
+    currentUserProfile: UserProfile,
+    where?: Where<OperationRecurrente>,
+  ): Where<OperationRecurrente> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    return where ? {and: [where, {IDuser}]} : {IDuser};
+  }
+
+  private async assertOwned(
+    id: number,
+    currentUserProfile: UserProfile,
+  ): Promise<void> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const op = await this.operationRecurrenteRepository.findOne({
+      where: {IDopRecu: id, IDuser},
+    });
+    if (!op) {
+      throw new HttpErrors.NotFound(`OperationRecurrente ${id} not found`);
+    }
+  }
+
+  private async assertCompteOwned(
+    compteID: number,
+    currentUserProfile: UserProfile,
+  ): Promise<void> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const compte = await this.compteRepository.findOne({
+      where: {IDcompte: compteID, IDuser},
+    });
+    if (!compte) {
+      throw new HttpErrors.NotFound(`Compte ${compteID} not found`);
+    }
+  }
 
   @post('/operation-recurrentes', {
     responses: {
@@ -38,19 +81,27 @@ export class OperationRecurrenteController {
     },
   })
   async create(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
           schema: getModelSchemaRef(OperationRecurrente, {
             title: 'NewOperationRecurrente',
-            exclude: ['IDopRecu'],
+            exclude: ['IDopRecu', 'IDuser'],
           }),
         },
       },
     })
-    operationRecurrente: Omit<OperationRecurrente, 'IDopRecu'>,
+    operationRecurrente: Omit<OperationRecurrente, 'IDopRecu' | 'IDuser'>,
   ): Promise<OperationRecurrente> {
-    return this.operationRecurrenteRepository.create(operationRecurrente);
+    await this.assertCompteOwned(
+      operationRecurrente.IDcompte,
+      currentUserProfile,
+    );
+    return this.operationRecurrenteRepository.create({
+      ...operationRecurrente,
+      IDuser: getCurrentUserId(currentUserProfile),
+    });
   }
 
   @get('/operation-recurrentes/count', {
@@ -62,9 +113,12 @@ export class OperationRecurrenteController {
     },
   })
   async count(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.where(OperationRecurrente) where?: Where<OperationRecurrente>,
   ): Promise<Count> {
-    return this.operationRecurrenteRepository.count(where);
+    return this.operationRecurrenteRepository.count(
+      this.scope(currentUserProfile, where),
+    );
   }
 
   @get('/operation-recurrentes', {
@@ -85,9 +139,13 @@ export class OperationRecurrenteController {
     },
   })
   async find(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.filter(OperationRecurrente) filter?: Filter<OperationRecurrente>,
   ): Promise<OperationRecurrente[]> {
-    return this.operationRecurrenteRepository.find(filter);
+    return this.operationRecurrenteRepository.find({
+      ...filter,
+      where: this.scope(currentUserProfile, filter?.where),
+    });
   }
 
   @patch('/operation-recurrentes', {
@@ -99,19 +157,23 @@ export class OperationRecurrenteController {
     },
   })
   async updateAll(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(OperationRecurrente, {partial: true}),
+          schema: getModelSchemaRef(OperationRecurrente, {
+            partial: true,
+            exclude: ['IDuser'],
+          }),
         },
       },
     })
-    operationRecurrente: OperationRecurrente,
+    operationRecurrente: Omit<OperationRecurrente, 'IDuser'>,
     @param.where(OperationRecurrente) where?: Where<OperationRecurrente>,
   ): Promise<Count> {
     return this.operationRecurrenteRepository.updateAll(
       operationRecurrente,
-      where,
+      this.scope(currentUserProfile, where),
     );
   }
 
@@ -130,10 +192,12 @@ export class OperationRecurrenteController {
     },
   })
   async findById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @param.filter(OperationRecurrente, {exclude: 'where'})
     filter?: FilterExcludingWhere<OperationRecurrente>,
   ): Promise<OperationRecurrente> {
+    await this.assertOwned(id, currentUserProfile);
     return this.operationRecurrenteRepository.findById(id, filter);
   }
 
@@ -145,16 +209,27 @@ export class OperationRecurrenteController {
     },
   })
   async updateById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(OperationRecurrente, {partial: true}),
+          schema: getModelSchemaRef(OperationRecurrente, {
+            partial: true,
+            exclude: ['IDuser'],
+          }),
         },
       },
     })
-    operationRecurrente: OperationRecurrente,
+    operationRecurrente: Omit<OperationRecurrente, 'IDuser'>,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
+    if (operationRecurrente.IDcompte !== undefined) {
+      await this.assertCompteOwned(
+        operationRecurrente.IDcompte,
+        currentUserProfile,
+      );
+    }
     await this.operationRecurrenteRepository.updateById(
       id,
       operationRecurrente,
@@ -169,9 +244,16 @@ export class OperationRecurrenteController {
     },
   })
   async replaceById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody() operationRecurrente: OperationRecurrente,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
+    await this.assertCompteOwned(
+      operationRecurrente.IDcompte,
+      currentUserProfile,
+    );
+    operationRecurrente.IDuser = getCurrentUserId(currentUserProfile);
     await this.operationRecurrenteRepository.replaceById(
       id,
       operationRecurrente,
@@ -185,11 +267,15 @@ export class OperationRecurrenteController {
       },
     },
   })
-  async deleteById(@param.path.number('id') id: number): Promise<void> {
+  async deleteById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+    @param.path.number('id') id: number,
+  ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
     await this.operationRecurrenteRepository.deleteById(id);
   }
 
-  @post('/operation-recurrentes/auto-generation/{userID}', {
+  @post('/operation-recurrentes/auto-generation', {
     responses: {
       '200': {
         description: 'Operation Recurrente auto generation POST success',
@@ -197,15 +283,16 @@ export class OperationRecurrenteController {
     },
   })
   async autoGeneration(
-    @param.path.number('userID') userID: number,
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
   ): Promise<Object> {
+    const userID = getCurrentUserId(currentUserProfile);
+
     const sqlGet =
-      'SELECT * FROM OperationRecurrente NATURAL JOIN Compte WHERE IDuser = ' +
-      userID;
+      'SELECT * FROM OperationRecurrente NATURAL JOIN Compte WHERE IDuser = ?';
     const sqlInsertNewOp =
-      'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, CheckOp) VALUES ';
+      'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, IDuser, CheckOp) VALUES (?, ?, ?, ?, ?, ?, 0)';
     const sqlUpdateOpRec =
-      'UPDATE OperationRecurrente SET DernierDateOpRecu = "';
+      'UPDATE OperationRecurrente SET DernierDateOpRecu = ? WHERE IDopRecu = ?';
     const millisecondDay = 24 * 60 * 60 * 1000;
 
     const insertNewOpFromRec = async (
@@ -216,21 +303,20 @@ export class OperationRecurrenteController {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       list: any,
     ) => {
-      await this.operationRecurrenteRepository.execute(
-        sqlInsertNewOp +
-          `("${opRec.NomOpRecu}", 
-          ${opRec.MontantOpRecu}, 
-          "${opLastDate.toISOString().split('T')[0]}", 
-          ${opRec.IDcompte}, 
-          ${opRec.IDcat}, 
-          0)`,
-      );
+      const day = opLastDate.toISOString().split('T')[0];
+      await this.operationRecurrenteRepository.execute(sqlInsertNewOp, [
+        opRec.NomOpRecu,
+        opRec.MontantOpRecu,
+        day,
+        opRec.IDcompte,
+        opRec.IDcat,
+        userID,
+      ]);
 
-      await this.operationRecurrenteRepository.execute(
-        sqlUpdateOpRec +
-          opLastDate.toISOString().split('T')[0] +
-          `" WHERE IDopRecu = ${opRec.IDopRecu}`,
-      );
+      await this.operationRecurrenteRepository.execute(sqlUpdateOpRec, [
+        day,
+        opRec.IDopRecu,
+      ]);
 
       await goToNext(list);
     };
@@ -274,7 +360,13 @@ export class OperationRecurrenteController {
       }
     };
 
-    const data = await this.operationRecurrenteRepository.execute(sqlGet);
+    const data = await this.operationRecurrenteRepository.execute(sqlGet, [
+      userID,
+    ]);
+
+    if (data.length === 0) {
+      return {};
+    }
 
     await newOpFromRec(data.pop(), data);
 
