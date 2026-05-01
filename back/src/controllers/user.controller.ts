@@ -10,6 +10,7 @@ import {model, property, repository} from '@loopback/repository';
 import {
   get,
   getModelSchemaRef,
+  HttpErrors,
   post,
   requestBody,
   SchemaObject,
@@ -176,9 +177,40 @@ export class UserController {
     })
     newUserRequest: NewUserRequest,
   ): Promise<User> {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const {secret_key, IDuser, email} = newUserRequest;
+
+    if (email) {
+      const existingByEmail = await this.userRepository.findOne({
+        where: {email},
+      });
+      if (existingByEmail) {
+        throw new HttpErrors.Conflict('A user with this email already exists');
+      }
+    }
+
+    if (secret_key) {
+      const existingBySecret = await this.userRepository.findOne({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        where: {secret_key},
+      });
+      if (existingBySecret) {
+        throw new HttpErrors.Conflict('secret_key is already in use');
+      }
+    }
+
+    if (IDuser !== undefined && IDuser !== null) {
+      const existingById = await this.userRepository.findOne({
+        where: {IDuser},
+      });
+      if (existingById) {
+        throw new HttpErrors.Conflict('IDuser is already in use');
+      }
+    }
+
     const password = await hash(newUserRequest.password, await genSalt());
     const savedUser = await this.userRepository.create(
-      _.omit(newUserRequest, 'password'),
+      _.omit(newUserRequest, 'password', 'id'),
     );
 
     await this.userRepository.userCredentials(savedUser.id).create({password});

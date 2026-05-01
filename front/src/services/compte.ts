@@ -21,13 +21,10 @@ export const fetchAccountList = (userID, userToken, APIURL) => {
   })
 }
 
-export const sumAllCompteForUser = (userID, userToken, APIURL) => {
+export const sumAllCompteForUser = (userToken, APIURL) => {
   return axios.get(APIURL + '/api/operations/sumAllCompteForUser', {
     headers: {
       Authorization: 'Bearer ' + userToken
-    },
-    params: {
-      userID
     }
   }).then((response) => {
     return response.data

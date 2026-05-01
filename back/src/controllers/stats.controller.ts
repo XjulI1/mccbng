@@ -2,8 +2,11 @@ import {AnyObject, repository} from '@loopback/repository';
 
 import {Stats} from '../models';
 import {StatsRepository} from '../repositories';
-import {get, getModelSchemaRef, param} from '@loopback/rest';
+import {get, getModelSchemaRef} from '@loopback/rest';
 import {authenticate} from '@loopback/authentication';
+import {inject} from '@loopback/core';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {getCurrentUserId} from '../services/current-user';
 
 @authenticate('jwt')
 export class StatsController {
@@ -12,7 +15,7 @@ export class StatsController {
     public statsRepository: StatsRepository,
   ) {}
 
-  @get('/stats/evolutionSolde/{userID}', {
+  @get('/stats/evolutionSolde', {
     responses: {
       '200': {
         description: 'Stats for a user',
@@ -28,8 +31,10 @@ export class StatsController {
     },
   })
   async evolutionSolde(
-    @param.path.string('userID') userID: number,
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
   ): Promise<AnyObject> {
-    return this.statsRepository.evolutionSolde(userID);
+    return this.statsRepository.evolutionSolde(
+      getCurrentUserId(currentUserProfile),
+    );
   }
 }

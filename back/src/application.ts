@@ -10,6 +10,7 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
 import {MyUserService} from './services/user.service';
+import {JwtService} from './services/jwt.service';
 import {UserRepository, UserCredentialsRepository} from './repositories';
 
 import {AuthenticationComponent} from '@loopback/authentication';
@@ -52,6 +53,8 @@ export class ApiLoopbackApplication extends BootMixin(
       UserCredentialsRepository,
     );
     this.bind(TokenServiceBindings.TOKEN_SECRET).to(generateUniqueId());
+    // Override the default JWT service so IDuser survives the token round-trip
+    this.bind(TokenServiceBindings.TOKEN_SERVICE).toClass(JwtService);
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here

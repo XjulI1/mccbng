@@ -17,7 +17,6 @@
   const dispo = ref([])
   const retraite = ref([])
 
-  const userID = computed(() => store.state.user.id)
   const userToken = computed(() => store.state.user.token)
 
   const buildChart = () => {
@@ -107,7 +106,6 @@
   }
 
   fetchEvolutionSolde(
-    userID.value,
     userToken.value,
     window.env.VITE_API_URL
   ).then((results) => {

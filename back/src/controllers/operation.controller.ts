@@ -16,19 +16,72 @@ import {
   put,
   del,
   requestBody,
+  HttpErrors,
 } from '@loopback/rest';
 import {Operation} from '../models';
-import {OperationRepository} from '../repositories';
+import {CompteRepository, OperationRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
-import {SecurityBindings, securityId, UserProfile} from '@loopback/security';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {getCurrentUserId} from '../services/current-user';
 
+// Operations have no IDuser column; ownership is derived from the parent
+// Compte. Every endpoint must therefore resolve the user's accounts first
+// and then restrict queries to those IDcompte values.
 @authenticate('jwt')
 export class OperationController {
   constructor(
     @repository(OperationRepository)
     public operationRepository: OperationRepository,
+    @repository(CompteRepository)
+    public compteRepository: CompteRepository,
   ) {}
+
+  private async userCompteIds(
+    currentUserProfile: UserProfile,
+  ): Promise<number[]> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const comptes = await this.compteRepository.find({
+      where: {IDuser},
+      fields: {IDcompte: true},
+    });
+    return comptes
+      .map(c => c.IDcompte)
+      .filter((id): id is number => id !== undefined);
+  }
+
+  private async scope(
+    currentUserProfile: UserProfile,
+    where?: Where<Operation>,
+  ): Promise<Where<Operation>> {
+    const ids = await this.userCompteIds(currentUserProfile);
+    const userScope: Where<Operation> = {IDcompte: {inq: ids}};
+    return where ? {and: [where, userScope]} : userScope;
+  }
+
+  private async assertOwned(
+    id: number,
+    currentUserProfile: UserProfile,
+  ): Promise<void> {
+    const op = await this.operationRepository.findOne({where: {IDop: id}});
+    if (!op) {
+      throw new HttpErrors.NotFound(`Operation ${id} not found`);
+    }
+    await this.assertCompteOwned(op.IDcompte, currentUserProfile);
+  }
+
+  private async assertCompteOwned(
+    compteID: number,
+    currentUserProfile: UserProfile,
+  ): Promise<void> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const compte = await this.compteRepository.findOne({
+      where: {IDcompte: compteID, IDuser},
+    });
+    if (!compte) {
+      throw new HttpErrors.NotFound(`Compte ${compteID} not found`);
+    }
+  }
 
   @post('/operations', {
     responses: {
@@ -39,6 +92,7 @@ export class OperationController {
     },
   })
   async create(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
@@ -51,6 +105,7 @@ export class OperationController {
     })
     operation: Omit<Operation, 'IDop'>,
   ): Promise<Operation> {
+    await this.assertCompteOwned(operation.IDcompte, currentUserProfile);
     return this.operationRepository.create(operation);
   }
 
@@ -63,9 +118,12 @@ export class OperationController {
     },
   })
   async count(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.where(Operation) where?: Where<Operation>,
   ): Promise<Count> {
-    return this.operationRepository.count(where);
+    return this.operationRepository.count(
+      await this.scope(currentUserProfile, where),
+    );
   }
 
   @get('/operations', {
@@ -84,9 +142,13 @@ export class OperationController {
     },
   })
   async find(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.filter(Operation) filter?: Filter<Operation>,
   ): Promise<Operation[]> {
-    return this.operationRepository.find(filter);
+    return this.operationRepository.find({
+      ...filter,
+      where: await this.scope(currentUserProfile, filter?.where),
+    });
   }
 
   @patch('/operations', {
@@ -98,6 +160,7 @@ export class OperationController {
     },
   })
   async updateAll(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
@@ -108,7 +171,13 @@ export class OperationController {
     operation: Operation,
     @param.where(Operation) where?: Where<Operation>,
   ): Promise<Count> {
-    return this.operationRepository.updateAll(operation, where);
+    if (operation.IDcompte !== undefined) {
+      await this.assertCompteOwned(operation.IDcompte, currentUserProfile);
+    }
+    return this.operationRepository.updateAll(
+      operation,
+      await this.scope(currentUserProfile, where),
+    );
   }
 
   @get('/operations/{id}', {
@@ -124,10 +193,12 @@ export class OperationController {
     },
   })
   async findById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @param.filter(Operation, {exclude: 'where'})
     filter?: FilterExcludingWhere<Operation>,
   ): Promise<Operation> {
+    await this.assertOwned(id, currentUserProfile);
     return this.operationRepository.findById(id, filter);
   }
 
@@ -139,6 +210,7 @@ export class OperationController {
     },
   })
   async updateById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody({
       content: {
@@ -149,6 +221,10 @@ export class OperationController {
     })
     operation: Operation,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
+    if (operation.IDcompte !== undefined) {
+      await this.assertCompteOwned(operation.IDcompte, currentUserProfile);
+    }
     await this.operationRepository.updateById(id, operation);
   }
 
@@ -160,9 +236,12 @@ export class OperationController {
     },
   })
   async replaceById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody() operation: Operation,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
+    await this.assertCompteOwned(operation.IDcompte, currentUserProfile);
     await this.operationRepository.replaceById(id, operation);
   }
 
@@ -173,7 +252,11 @@ export class OperationController {
       },
     },
   })
-  async deleteById(@param.path.number('id') id: number): Promise<void> {
+  async deleteById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+    @param.path.number('id') id: number,
+  ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
     await this.operationRepository.deleteById(id);
   }
 
@@ -190,30 +273,31 @@ export class OperationController {
     },
   })
   async sumAllCompteForUser(
-    @param.query.number('userID') userID: number,
-    @param.filter(Operation) filter?: Filter<Operation>,
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
   ): Promise<AnyObject> {
+    const userID = getCurrentUserId(currentUserProfile);
+
     const sqlChecked =
       'SELECT IDCompte, SUM(MontantOp) as TotalChecked ' +
       'FROM Operation NATURAL JOIN Compte ' +
-      'WHERE IDuser = ' +
-      userID +
-      ' AND CheckOp = true AND Compte.visible = 1 ' +
+      'WHERE IDuser = ? AND CheckOp = true AND Compte.visible = 1 ' +
       'GROUP BY IDCompte';
 
     const sqlNotChecked =
       'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked ' +
       'FROM Operation NATURAL JOIN Compte  ' +
-      'WHERE IDuser = ' +
-      userID +
-      ' AND CheckOp = false AND Compte.visible = 1 ' +
+      'WHERE IDuser = ? AND CheckOp = false AND Compte.visible = 1 ' +
       'GROUP BY IDCompte';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let checkedTotal: any = await this.operationRepository.execute(sqlChecked);
+    let checkedTotal: any = await this.operationRepository.execute(sqlChecked, [
+      userID,
+    ]);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notCheckedTotal: any =
-      await this.operationRepository.execute(sqlNotChecked);
+    const notCheckedTotal: any = await this.operationRepository.execute(
+      sqlNotChecked,
+      [userID],
+    );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkedTotal = checkedTotal.map((objectCheck: any) => {
@@ -243,28 +327,30 @@ export class OperationController {
     },
   })
   async sumForACompte(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.query.number('id') compteID: number,
-    @param.filter(Operation) filter?: Filter<Operation>,
   ): Promise<AnyObject> {
+    await this.assertCompteOwned(compteID, currentUserProfile);
+
     const sqlChecked =
       'SELECT IDCompte, SUM(MontantOp) as TotalChecked ' +
       'FROM Operation ' +
-      'WHERE IDcompte = ' +
-      compteID +
-      ' AND CheckOp = true ' +
+      'WHERE IDcompte = ? AND CheckOp = true ' +
       'GROUP BY IDCompte';
 
     const sqlNotChecked =
       'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked ' +
       'FROM Operation ' +
-      'WHERE IDcompte = ' +
-      compteID +
-      ' AND CheckOp = false ' +
+      'WHERE IDcompte = ? AND CheckOp = false ' +
       'GROUP BY IDCompte';
 
-    const checkedTotal = await this.operationRepository.execute(sqlChecked);
-    const notCheckedTotal =
-      await this.operationRepository.execute(sqlNotChecked);
+    const checkedTotal = await this.operationRepository.execute(sqlChecked, [
+      compteID,
+    ]);
+    const notCheckedTotal = await this.operationRepository.execute(
+      sqlNotChecked,
+      [compteID],
+    );
 
     return Object.assign(checkedTotal[0] || {}, notCheckedTotal[0] || {});
   }
@@ -282,35 +368,40 @@ export class OperationController {
     },
   })
   async sumByUserByMonth(
-    @param.query.number('userID') userID: number,
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.query.number('monthNumber') monthNumber: number,
     @param.query.number('yearNumber') yearNumber: number,
-    @param.query.number('IDCompte') idCompte: number,
-    @param.filter(Operation) filter?: Filter<Operation>,
+    @param.query.number('IDCompte') idCompte?: number,
   ): Promise<AnyObject> {
+    const userID = getCurrentUserId(currentUserProfile);
+
+    if (idCompte) {
+      await this.assertCompteOwned(idCompte, currentUserProfile);
+    }
+
+    const params: (number | string)[] = [
+      monthNumber,
+      yearNumber,
+      userID,
+      userID,
+    ];
+
     let SQLrequest =
       'SELECT ROUND(SUM(MontantOp), 2) as MonthNegative ' +
       'FROM Operation ' +
       'NATURAL JOIN Compte ' +
-      'WHERE MONTH(DateOp) = ' +
-      monthNumber +
-      ' ' +
-      'AND YEAR(DateOp) = ' +
-      yearNumber +
-      ' ' +
-      'AND Compte.IDuser = ' +
-      userID +
-      ' ' +
+      'WHERE MONTH(DateOp) = ? ' +
+      'AND YEAR(DateOp) = ? ' +
+      'AND Compte.IDuser = ? ' +
       'AND IDcat IN ' +
-      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ' +
-      userID +
-      '))';
+      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ?))';
 
     if (idCompte) {
-      SQLrequest += 'AND IDCompte = ' + idCompte;
+      SQLrequest += ' AND IDCompte = ?';
+      params.push(idCompte);
     }
 
-    return this.operationRepository.execute(SQLrequest);
+    return this.operationRepository.execute(SQLrequest, params);
   }
 
   @get('/operations/sumCategoriesByUserByMonth', {
@@ -326,31 +417,29 @@ export class OperationController {
     },
   })
   async sumCategoriesByUserByMonth(
-    @param.query.number('userID') userID: number,
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.query.number('monthNumber') monthNumber: number,
     @param.query.number('yearNumber') yearNumber: number,
-    @param.filter(Operation) filter?: Filter<Operation>,
   ): Promise<AnyObject> {
+    const userID = getCurrentUserId(currentUserProfile);
+
     const SQLrequest =
       'SELECT ROUND(SUM(MontantOp), 2) as TotalMonth, IDcat ' +
       'FROM Operation ' +
       'NATURAL JOIN Compte ' +
-      'WHERE MONTH(DateOp) = ' +
-      monthNumber +
-      ' ' +
-      'AND YEAR(DateOp) = ' +
-      yearNumber +
-      ' ' +
-      'AND Compte.IDuser = ' +
-      userID +
-      ' ' +
+      'WHERE MONTH(DateOp) = ? ' +
+      'AND YEAR(DateOp) = ? ' +
+      'AND Compte.IDuser = ? ' +
       'AND IDcat IN ' +
-      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ' +
-      userID +
-      ')) ' +
+      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ?)) ' +
       'GROUP BY IDcat';
 
-    return this.operationRepository.execute(SQLrequest);
+    return this.operationRepository.execute(SQLrequest, [
+      monthNumber,
+      yearNumber,
+      userID,
+      userID,
+    ]);
   }
 
   @get('/operations/suggestCategories', {
@@ -385,32 +474,28 @@ export class OperationController {
       return [];
     }
 
-    const userID = currentUserProfile[securityId];
-    const searchName = operationName.trim().toLowerCase().replace(/'/g, "''"); // Échapper les guillemets simples pour MySQL
-    const limitValue = limit ?? 5;
+    const userID = getCurrentUserId(currentUserProfile);
+    const searchName = operationName.trim().toLowerCase();
+    const limitValue = Math.min(Math.max(limit ?? 5, 1), 50);
 
-    // Recherche des opérations avec des noms similaires
-    // On utilise LIKE avec des wildcards pour trouver des correspondances partielles
     const SQLrequest =
       'SELECT IDcat, COUNT(*) as count ' +
       'FROM Operation ' +
       'NATURAL JOIN Compte ' +
-      'WHERE Compte.IDuser = ' +
-      userID +
-      ' ' +
+      'WHERE Compte.IDuser = ? ' +
       'AND IDcat IS NOT NULL AND IDcat > 0 ' +
-      "AND LOWER(NomOp) LIKE '%" +
-      searchName +
-      "%' " +
+      'AND LOWER(NomOp) LIKE ? ' +
       'GROUP BY IDcat ' +
       'ORDER BY count DESC ' +
       'LIMIT ' +
       limitValue;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const results: any = await this.operationRepository.execute(SQLrequest);
+    const results: any = await this.operationRepository.execute(SQLrequest, [
+      userID,
+      `%${searchName}%`,
+    ]);
 
-    // Calcul du poids basé sur la fréquence
     const totalCount = results.reduce(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, item: any) => sum + item.count,

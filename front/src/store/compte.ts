@@ -180,7 +180,7 @@ export default {
     },
 
     generateRecurringOperations ({ rootState }) {
-      generateRecurringOperations(rootState.user.id, rootState.user.token, window.env.VITE_API_URL)
+      generateRecurringOperations(rootState.user.token, window.env.VITE_API_URL)
     },
 
     fetchActiveAccount ({ commit, getters, dispatch, rootState }, accountID) {
@@ -203,7 +203,7 @@ export default {
         .then((accountList) => {
           commit('setAccountList', accountList)
 
-          return sumAllCompteForUser(userID, userToken, APIURL)
+          return sumAllCompteForUser(userToken, APIURL)
         })
         .then((sumList) => {
           commit('setSumAllCompteForUser', sumList)

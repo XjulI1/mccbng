@@ -45,7 +45,6 @@ export default {
           Authorization: 'Bearer ' + rootState.user.token
         },
         params: {
-          userID: rootState.user.id,
           monthNumber: state.currentMonth,
           yearNumber: state.currentYear
         }
@@ -62,7 +61,6 @@ export default {
           Authorization: 'Bearer ' + rootState.user.token
         },
         params: {
-          userID: rootState.user.id,
           monthNumber: state.currentMonth,
           yearNumber: state.currentYear
         }
