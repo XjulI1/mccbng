@@ -1,6 +1,7 @@
 import {
   Count,
   CountSchema,
+  Filter,
   FilterExcludingWhere,
   repository,
   Where,
@@ -14,16 +15,19 @@ import {
   put,
   del,
   requestBody,
+  HttpErrors,
 } from '@loopback/rest';
 import {Credit, Operation} from '../models';
 import {
+  CompteRepository,
   CreditRepository,
   OperationRecurrenteRepository,
   OperationRepository,
 } from '../repositories';
 import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
-import {SecurityBindings, securityId, UserProfile} from '@loopback/security';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {getCurrentUserId} from '../services/current-user';
 
 @authenticate('jwt')
 export class CreditController {
@@ -34,7 +38,45 @@ export class CreditController {
     public operationRecurrenteRepository: OperationRecurrenteRepository,
     @repository(OperationRepository)
     public operationRepository: OperationRepository,
+    @repository(CompteRepository)
+    public compteRepository: CompteRepository,
   ) {}
+
+  private scope(
+    currentUserProfile: UserProfile,
+    where?: Where<Credit>,
+  ): Where<Credit> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const userScope: Where<Credit> = {IDuser};
+    return where ? {and: [where, userScope]} : userScope;
+  }
+
+  private async assertOwned(
+    id: number,
+    currentUserProfile: UserProfile,
+  ): Promise<Credit> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const credit = await this.creditRepository.findOne({
+      where: {IDcredit: id, IDuser},
+    });
+    if (!credit) {
+      throw new HttpErrors.NotFound(`Credit ${id} not found`);
+    }
+    return credit;
+  }
+
+  private async assertCompteOwned(
+    compteID: number,
+    currentUserProfile: UserProfile,
+  ): Promise<void> {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const compte = await this.compteRepository.findOne({
+      where: {IDcompte: compteID, IDuser},
+    });
+    if (!compte) {
+      throw new HttpErrors.NotFound(`Compte ${compteID} not found`);
+    }
+  }
 
   @post('/credits', {
     responses: {
@@ -59,39 +101,34 @@ export class CreditController {
     })
     credit: Omit<Credit, 'IDcredit' | 'IDopRecu' | 'IDuser'>,
   ): Promise<Credit> {
-    // 1. Get the user ID from the JWT token
-    const userID = Number(currentUserProfile[securityId]);
+    const userID = getCurrentUserId(currentUserProfile);
+    await this.assertCompteOwned(credit.IDcompte, currentUserProfile);
 
-    // 2. Create the credit record with the user ID
     const newCredit = await this.creditRepository.create({
       ...credit,
       IDuser: userID,
     });
 
-    // 3. Calculate first payment date
     const dateDebut = new Date(credit.DateDebut);
     const dernierDateOpRecu = dateDebut.toISOString();
 
-    // 4. Auto-create linked OperationRecurrente
     const opRecu = await this.operationRecurrenteRepository.create({
       NomOpRecu: `Mensualité ${credit.NomCredit}`,
       MontantOpRecu: credit.MontantMensuel,
-      JourOpRecu: 1, // Monthly
+      JourOpRecu: 1,
       JourNumOpRecu: dateDebut.getDate(),
       MoisOpRecu: dateDebut.getMonth(),
-      Frequence: 3, // Monthly frequency
+      Frequence: 3,
       DernierDateOpRecu: dernierDateOpRecu,
       IDcompte: credit.IDcompte,
       IDcat: credit.IDcat || 0,
       IDcredit: newCredit.IDcredit,
     });
 
-    // 5. Update credit with IDopRecu
     await this.creditRepository.updateById(newCredit.IDcredit!, {
       IDopRecu: opRecu.IDopRecu,
     });
 
-    // Return updated credit
     return this.creditRepository.findById(newCredit.IDcredit!);
   }
 
@@ -103,8 +140,11 @@ export class CreditController {
       },
     },
   })
-  async count(@param.where(Credit) where?: Where<Credit>): Promise<Count> {
-    return this.creditRepository.count(where);
+  async count(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+    @param.where(Credit) where?: Where<Credit>,
+  ): Promise<Count> {
+    return this.creditRepository.count(this.scope(currentUserProfile, where));
   }
 
   @get('/credits', {
@@ -125,9 +165,12 @@ export class CreditController {
   async find(
     @inject(SecurityBindings.USER)
     currentUserProfile: UserProfile,
+    @param.filter(Credit) filter?: Filter<Credit>,
   ): Promise<Credit[]> {
-    const userID = Number(currentUserProfile[securityId]);
-    return this.creditRepository.find({where: {IDuser: userID}});
+    return this.creditRepository.find({
+      ...filter,
+      where: this.scope(currentUserProfile, filter?.where),
+    });
   }
 
   @patch('/credits', {
@@ -139,6 +182,7 @@ export class CreditController {
     },
   })
   async updateAll(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @requestBody({
       content: {
         'application/json': {
@@ -149,7 +193,14 @@ export class CreditController {
     credit: Credit,
     @param.where(Credit) where?: Where<Credit>,
   ): Promise<Count> {
-    return this.creditRepository.updateAll(credit, where);
+    delete credit.IDuser;
+    if (credit.IDcompte !== undefined) {
+      await this.assertCompteOwned(credit.IDcompte, currentUserProfile);
+    }
+    return this.creditRepository.updateAll(
+      credit,
+      this.scope(currentUserProfile, where),
+    );
   }
 
   @get('/credits/{id}', {
@@ -165,10 +216,12 @@ export class CreditController {
     },
   })
   async findById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @param.filter(Credit, {exclude: 'where'})
     filter?: FilterExcludingWhere<Credit>,
   ): Promise<Credit> {
+    await this.assertOwned(id, currentUserProfile);
     return this.creditRepository.findById(id, filter);
   }
 
@@ -180,6 +233,7 @@ export class CreditController {
     },
   })
   async updateById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody({
       content: {
@@ -190,6 +244,11 @@ export class CreditController {
     })
     credit: Credit,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
+    delete credit.IDuser;
+    if (credit.IDcompte !== undefined) {
+      await this.assertCompteOwned(credit.IDcompte, currentUserProfile);
+    }
     await this.creditRepository.updateById(id, credit);
   }
 
@@ -201,9 +260,13 @@ export class CreditController {
     },
   })
   async replaceById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
     @requestBody() credit: Credit,
   ): Promise<void> {
+    await this.assertOwned(id, currentUserProfile);
+    await this.assertCompteOwned(credit.IDcompte, currentUserProfile);
+    credit.IDuser = getCurrentUserId(currentUserProfile);
     await this.creditRepository.replaceById(id, credit);
   }
 
@@ -214,11 +277,12 @@ export class CreditController {
       },
     },
   })
-  async deleteById(@param.path.number('id') id: number): Promise<void> {
-    // 1. Get the credit
-    const credit = await this.creditRepository.findById(id);
+  async deleteById(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+    @param.path.number('id') id: number,
+  ): Promise<void> {
+    const credit = await this.assertOwned(id, currentUserProfile);
 
-    // 2. Delete linked OperationRecurrente if exists
     if (credit.IDopRecu) {
       try {
         await this.operationRecurrenteRepository.deleteById(credit.IDopRecu);
@@ -227,13 +291,11 @@ export class CreditController {
       }
     }
 
-    // 3. Unlink operations (set IDcredit = NULL) instead of deleting them
     await this.operationRepository.updateAll(
       {IDcredit: undefined},
       {IDcredit: id},
     );
 
-    // 4. Delete the credit
     await this.creditRepository.deleteById(id);
   }
 
@@ -256,21 +318,22 @@ export class CreditController {
     },
   })
   async getRemainingBalance(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
   ): Promise<{solde: number; paye: number}> {
-    const credit = await this.creditRepository.findById(id);
+    const credit = await this.assertOwned(id, currentUserProfile);
 
     const sql = `
       SELECT COALESCE(SUM(MontantOp), 0) as TotalPaye
       FROM Operation
-      WHERE IDcredit = ${id}
+      WHERE IDcredit = ?
     `;
 
-    const result = await this.operationRepository.execute(sql);
+    const result = await this.operationRepository.execute(sql, [id]);
     const totalPaye = result[0]?.TotalPaye || 0;
 
     return {
-      solde: credit.MontantInitial + totalPaye, // totalPaye is negative
+      solde: credit.MontantInitial + totalPaye,
       paye: Math.abs(totalPaye),
     };
   }
@@ -290,34 +353,14 @@ export class CreditController {
       },
     },
   })
-  async getPayments(@param.path.number('id') id: number): Promise<Operation[]> {
+  async getPayments(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+    @param.path.number('id') id: number,
+  ): Promise<Operation[]> {
+    await this.assertOwned(id, currentUserProfile);
     return this.operationRepository.find({
       where: {IDcredit: id},
       order: ['DateOp DESC'],
-    });
-  }
-
-  @get('/credits/by-user/{userID}', {
-    responses: {
-      '200': {
-        description: 'Array of credits for a user',
-        content: {
-          'application/json': {
-            schema: {
-              type: 'array',
-              items: getModelSchemaRef(Credit),
-            },
-          },
-        },
-      },
-    },
-  })
-  async getCreditsByUser(
-    @param.path.number('userID') userID: number,
-  ): Promise<Credit[]> {
-    return this.creditRepository.find({
-      where: {IDuser: userID},
-      order: ['DateDebut DESC'],
     });
   }
 }
