@@ -5,8 +5,12 @@
     :class="{ 'is-login-page': route.name === 'Login' }"
   >
     <account-header :class="{ 'is-login-page': route.name === 'Login' }" />
-    <div class="container-flex">
+    <div
+      class="container-flex"
+      :class="{ 'no-side-panel': !showCompteList }"
+    >
       <div
+        v-if="showCompteList"
         class="left-panel"
         :class="{
           'mask-panel': !displayAccountList,
@@ -18,10 +22,11 @@
       <router-view
         v-touch:swipe.right="openAccountList"
         class="right-panel"
-        :class="{ 'mask-panel': displayAccountList }"
+        :class="{ 'mask-panel': displayAccountList && showCompteList }"
       />
     </div>
     <NavBar />
+    <FabMenu v-if="route.name !== 'Login'" />
   </div>
 </template>
 
@@ -33,6 +38,7 @@
   import { useGlobalDebugTools } from '@/composables/useDebugTools'
 
   import NavBar from '@/components/NavBar.vue'
+  import FabMenu from '@/components/FabMenu.vue'
   import CompteList from '@/components/CompteList/index.vue'
   import AccountHeader from '@/components/AccountHeader.vue'
 
@@ -51,6 +57,20 @@
 
   const userID = computed(() => store.state.user.id)
   const displayAccountList = computed(() => store.state.display.account_list)
+
+  const compteContextPaths = [
+    '/',
+    '/newOperation',
+    '/search',
+    '/transfert',
+    '/retrait'
+  ]
+  const showCompteList = computed(() => {
+    if (route.name === 'Login') return false
+    if (compteContextPaths.includes(route.path)) return true
+    if (route.path.startsWith('/editOperation')) return true
+    return false
+  })
 
   watch(userID, () => {
     store.dispatch('fetchAccountList')
@@ -126,6 +146,10 @@ hr {
   @media all and (min-width: $desktop_BP_min_width) {
     .right-panel {
       width: calc(100% - #{$left-panel-width});
+    }
+
+    .container-flex.no-side-panel .right-panel {
+      width: 100%;
     }
   }
 }
