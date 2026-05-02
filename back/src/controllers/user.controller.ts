@@ -13,6 +13,8 @@ import {
   HttpErrors,
   patch,
   post,
+  Response,
+  RestBindings,
   requestBody,
   SchemaObject,
 } from '@loopback/rest';
@@ -24,6 +26,8 @@ import {User} from '../models';
 import {MyUserService, Credentials} from '../services/user.service';
 import {UserRepository} from '../repositories';
 import {UserServiceBindings} from '../services/keys';
+import {buildAuthCookie, clearAuthCookie} from '../services/auth-cookie';
+
 @model()
 export class NewUserRequest extends User {
   @property({
@@ -35,8 +39,13 @@ export class NewUserRequest extends User {
 
 const CredentialsSchema: SchemaObject = {
   type: 'object',
-  required: ['code'],
+  required: ['email', 'code'],
   properties: {
+    email: {
+      type: 'string',
+      format: 'email',
+      maxLength: 254,
+    },
     code: {
       type: 'string',
       maxLength: 6,
@@ -62,6 +71,7 @@ export class UserController {
     @inject(SecurityBindings.USER, {optional: true})
     public user: UserProfile,
     @repository(UserRepository) protected userRepository: UserRepository,
+    @inject(RestBindings.Http.RESPONSE) protected response: Response,
   ) {}
 
   @post('/users/login', {
@@ -86,14 +96,25 @@ export class UserController {
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
   ): Promise<{id: string; userId: number}> {
-    // ensure the user exists, and the password is correct
     const user = await this.userService.verifyCredentials(credentials);
-    // convert a User object into a UserProfile object (reduced set of properties)
     const userProfile = this.userService.convertToUserProfile(user);
-
-    // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
+
+    this.response.setHeader('Set-Cookie', buildAuthCookie(token));
+
     return {id: token, userId: user.IDuser};
+  }
+
+  @authenticate('jwt')
+  @post('/users/logout', {
+    responses: {
+      '204': {
+        description: 'Logout',
+      },
+    },
+  })
+  async logout(): Promise<void> {
+    this.response.setHeader('Set-Cookie', clearAuthCookie());
   }
 
   @authenticate('jwt')
@@ -255,16 +276,6 @@ export class UserController {
       }
     }
 
-    if (secret_key) {
-      const existingBySecret = await this.userRepository.findOne({
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        where: {secret_key},
-      });
-      if (existingBySecret) {
-        throw new HttpErrors.Conflict('secret_key is already in use');
-      }
-    }
-
     if (IDuser !== undefined && IDuser !== null) {
       const existingById = await this.userRepository.findOne({
         where: {IDuser},
@@ -274,10 +285,19 @@ export class UserController {
       }
     }
 
+    if (!secret_key || secret_key.length !== 6) {
+      throw new HttpErrors.BadRequest(
+        'secret_key must be exactly 6 characters',
+      );
+    }
+
+    const hashedSecretKey = await hash(secret_key, 12);
     const password = await hash(newUserRequest.password, await genSalt());
-    const savedUser = await this.userRepository.create(
-      _.omit(newUserRequest, 'password', 'id'),
-    );
+    const savedUser = await this.userRepository.create({
+      ..._.omit(newUserRequest, 'password', 'id', 'secret_key'),
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      secret_key: hashedSecretKey,
+    });
 
     await this.userRepository.userCredentials(savedUser.id).create({password});
 

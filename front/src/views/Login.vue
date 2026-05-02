@@ -48,6 +48,19 @@
         v-else
         class="auth-content"
       >
+        <div class="email-field">
+          <label for="login-email">Email</label>
+          <input
+            id="login-email"
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            placeholder="votre@email.fr"
+            :disabled="submitting"
+            @keydown.stop
+          >
+        </div>
         <div class="code-display">
           <div class="code-dots">
             <div
@@ -155,9 +168,11 @@
   import {
     auth,
     checkUserAuthentification,
+    getLastEmail,
     getTokenCookie,
     getUserIDCookie,
-    saveCookies
+    saveCookies,
+    setLastEmail
   } from '@/services/auth'
 
   const router = useRouter()
@@ -166,7 +181,9 @@
   const autoAuthProgress = ref(true)
   const buttonList = ref(randomListNumber())
   const code = ref('')
+  const email = ref(getLastEmail())
   const error = ref(false)
+  const submitting = ref(false)
 
   function randomListNumber () {
     return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => {
@@ -184,16 +201,27 @@
   }
 
   watch(code, (value) => {
-    if (value.length === 6) {
-      auth(value, window.env.VITE_API_URL)
-        .then(({ userToken, userID }) => {
-          endAuthentification({ userToken, userID })
-        })
-        .catch(() => {
-          error.value = true
-          code.value = ''
-        })
+    if (value.length !== 6 || submitting.value) {
+      return
     }
+    if (!email.value) {
+      error.value = true
+      code.value = ''
+      return
+    }
+    submitting.value = true
+    auth(email.value.trim(), value, window.env.VITE_API_URL)
+      .then(({ userToken, userID }) => {
+        setLastEmail(email.value.trim())
+        endAuthentification({ userToken, userID })
+      })
+      .catch(() => {
+        error.value = true
+        code.value = ''
+      })
+      .finally(() => {
+        submitting.value = false
+      })
   })
 
   // Equivalent to beforeCreate
@@ -213,6 +241,10 @@
 
   onMounted(() => {
     window.addEventListener('keydown', (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        return
+      }
       if (parseInt(event.key) >= 0 && parseInt(event.key) <= 9) {
         code.value += event.key
       }
@@ -322,6 +354,43 @@
 }
 
 .auth-content {
+  .email-field {
+    margin-bottom: 24px;
+    text-align: left;
+
+    label {
+      display: block;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: var(--font-weight-medium);
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 15px;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+
+      &:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
   .code-display {
     margin-bottom: 40px;
 
