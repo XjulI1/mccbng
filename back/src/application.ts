@@ -11,6 +11,8 @@ import path from 'path';
 import {MySequence} from './sequence';
 import {MyUserService} from './services/user.service';
 import {JwtService} from './services/jwt.service';
+import {jwtTtlSeconds} from './services/jwt-config';
+import {loginRateLimiter} from './services/login-rate-limiter';
 import {UserRepository, UserCredentialsRepository} from './repositories';
 
 import {AuthenticationComponent} from '@loopback/authentication';
@@ -52,9 +54,20 @@ export class ApiLoopbackApplication extends BootMixin(
     this.bind(UserServiceBindings.USER_CREDENTIALS_REPOSITORY).toClass(
       UserCredentialsRepository,
     );
-    this.bind(TokenServiceBindings.TOKEN_SECRET).to(generateUniqueId());
+    // Use a persistent secret from JWT_SECRET when provided (so tokens survive
+    // restarts); otherwise fall back to a fresh per-boot random value, which
+    // intentionally invalidates all existing tokens on restart.
+    this.bind(TokenServiceBindings.TOKEN_SECRET).to(
+      process.env.JWT_SECRET ?? generateUniqueId(),
+    );
+    this.bind(TokenServiceBindings.TOKEN_EXPIRES_IN).to(
+      String(jwtTtlSeconds()),
+    );
     // Override the default JWT service so IDuser survives the token round-trip
     this.bind(TokenServiceBindings.TOKEN_SERVICE).toClass(JwtService);
+
+    // Brute-force protection on the login endpoint.
+    this.expressMiddleware('middleware.loginRateLimiter', loginRateLimiter);
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
