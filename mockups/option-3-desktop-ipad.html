@@ -381,7 +381,7 @@
             </div>
             <div class="rail-tab">
               <i class="fas fa-building"></i>
-              <span>Patrimoine</span>
+              <span>Gestion</span>
             </div>
             <div class="rail-tab">
               <i class="fas fa-chart-pie"></i>
@@ -573,7 +573,7 @@
             </div>
             <div class="rail-tab">
               <i class="fas fa-building"></i>
-              <span>Patrimoine</span>
+              <span>Gestion</span>
             </div>
             <div class="rail-tab">
               <i class="fas fa-chart-pie"></i>
@@ -693,9 +693,9 @@
       </div>
     </div>
 
-    <!-- ========== ÉCRAN 3 : Patrimoine ========== -->
+    <!-- ========== ÉCRAN 3 : Gestion ========== -->
     <div class="screen-wrapper">
-      <div class="screen-label">3. Onglet Patrimoine — hub avec cartes et résumé</div>
+      <div class="screen-label">3. Onglet Gestion — hub avec cartes et résumé</div>
       <div class="ipad">
         <div class="layout">
 
@@ -707,7 +707,7 @@
             </div>
             <div class="rail-tab active">
               <i class="fas fa-building"></i>
-              <span>Patrimoine</span>
+              <span>Gestion</span>
             </div>
             <div class="rail-tab">
               <i class="fas fa-chart-pie"></i>
@@ -721,12 +721,12 @@
             <div class="rail-user">JX</div>
           </div>
 
-          <!-- Pas de panneau "comptes" sur l'onglet Patrimoine : la zone main occupe toute la largeur restante -->
+          <!-- Pas de panneau "comptes" sur l'onglet Gestion : la zone main occupe toute la largeur restante -->
           <div class="main">
             <div class="main-header">
               <div class="mh-left">
                 <div class="mh-title">Vue d'ensemble</div>
-                <div class="mh-account">Patrimoine</div>
+                <div class="mh-account">Gestion</div>
                 <div class="mh-balance">412 580 €</div>
               </div>
               <div class="mh-right">
@@ -796,14 +796,14 @@
                 <div class="pat-card">
                   <div class="pat-icon pi-amort"><i class="fas fa-history"></i></div>
                   <div class="pat-arrow"><i class="fas fa-chevron-right"></i></div>
-                  <div class="pat-label">Amortissement</div>
+                  <div class="pat-label">Coûts d'usage</div>
                   <div class="pat-count">Suivi 2026</div>
                   <div class="pat-amount">62 350 € remboursé</div>
                 </div>
               </div>
             </div>
 
-            <!-- FAB contextuel : sur Patrimoine, le + ouvre les créations Bien/Crédit/Récurrente -->
+            <!-- FAB contextuel : sur Gestion, le + ouvre les créations Bien/Crédit/Récurrente -->
             <div class="fab-container">
               <button class="fab"><i class="fas fa-plus"></i></button>
             </div>
@@ -821,7 +821,7 @@
       <li><strong>Rail vertical fixe à gauche</strong> (84 px) : remplace la barre du bas du mobile. Les 4 onglets sont toujours visibles avec un indicateur lumineux sur l'onglet actif. Le rail est sombre pour faire respirer la zone de contenu.</li>
       <li><strong>Trois colonnes sur l'onglet Comptes</strong> : rail · liste des comptes (300 px) · contenu principal. La liste des comptes apparaît uniquement quand elle est pertinente — sur les autres onglets, le contenu principal s'étale sur toute la largeur.</li>
       <li><strong>Tableau d'opérations enrichi</strong> : sur grand écran on tire parti de la largeur (date · icône · nom · catégorie · montant · check · menu). Sur mobile, ces colonnes s'empilent comme aujourd'hui.</li>
-      <li><strong>Hub Patrimoine</strong> : un header avec patrimoine total et plus-value, 4 cartes de KPI en haut (valeur immo, capital remboursé, mensualités totales, cash-flow locatif) puis la grille des 4 outils. C'est la vue qui justifie le mieux le mode paysage.</li>
+      <li><strong>Hub Gestion</strong> : un header avec patrimoine total et plus-value, 4 cartes de KPI en haut (valeur immo, capital remboursé, mensualités totales, cash-flow locatif) puis la grille des 4 outils. C'est la vue qui justifie le mieux le mode paysage.</li>
       <li><strong>FAB en bas-droite du contenu</strong>, pas de l'écran : il se positionne dans la zone qu'il commande. Speed-dial avec labels textuels (le hover desktop donne plus de place qu'un long-press mobile).</li>
       <li><strong>Avatar utilisateur</strong> en bas du rail : remplace le bouton réglages discret + permet de switcher d'utilisateur ou se déconnecter.</li>
     </ul>
@@ -829,7 +829,7 @@
     <ul>
       <li><code>NavRail.vue</code> (desktop) + <code>BottomTabs.vue</code> (mobile) qui partagent le même contrat de tabs</li>
       <li><code>FabMenu.vue</code> avec slot pour mini-actions contextuelles à chaque vue</li>
-      <li><code>Patrimoine.vue</code> : nouvelle vue hub, KPI calculés à partir des stores existants <code>credit</code> et <code>bien</code></li>
+      <li><code>Gestion.vue</code> : nouvelle vue hub, KPI calculés à partir des stores existants <code>credit</code> et <code>bien</code></li>
       <li>Ajustement de <code>App.vue</code> : layout en grid (rail / accounts / main) plutôt qu'en flex avec navbar bottom</li>
     </ul>
   </div>
