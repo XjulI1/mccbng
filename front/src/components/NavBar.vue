@@ -1,25 +1,23 @@
 <template>
-  <nav
+  <div
     v-if="route.name !== 'Login'"
-    class="tab-bar"
-    role="navigation"
+    class="nav-bar btn-group"
+    role="group"
     aria-label="Navigation principale"
   >
     <button
       v-for="tab in tabs"
       :key="tab.path"
       type="button"
-      class="tab"
-      :class="{ active: tab.match(route) }"
+      class="btn"
+      :class="[tab.colorClass, { active: tab.match(route) }]"
+      :aria-label="tab.label"
+      :aria-current="tab.match(route) ? 'page' : undefined"
       @click="goTo(tab.path)"
     >
-      <font-awesome-icon
-        class="tab-icon"
-        :icon="tab.icon"
-      />
-      <span class="tab-label">{{ tab.label }}</span>
+      <font-awesome-icon :icon="tab.icon" />
     </button>
-  </nav>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -35,34 +33,53 @@
     label: string
     icon: string
     path: string
+    colorClass: string
     match: (r: RouteLocationNormalizedLoaded) => boolean
   }
 
-  const gestionPaths = ['/gestion', '/credits', '/biens', '/recurrOperation', '/amortissement']
-  const settingsPaths = ['/config', '/editUser']
+  const isGestionRoute = (r: RouteLocationNormalizedLoaded) => {
+    const p = r.path
+    return (
+      p === '/gestion' ||
+      p === '/credits' || p === '/newCredit' || p.startsWith('/editCredit') ||
+      p === '/biens' || p === '/newBien' || p.startsWith('/editBien') ||
+      p === '/recurrOperation' || p === '/newRecurrOperation' || p.startsWith('/editRecurrOperation') ||
+      p === '/amortissement'
+    )
+  }
 
-  const isHomeRoute = (r: RouteLocationNormalizedLoaded) =>
-    r.path === '/' ||
-    r.path === '/newOperation' ||
-    r.path.startsWith('/editOperation') ||
-    r.path === '/search' ||
-    r.path === '/transfert' ||
-    r.path === '/retrait'
-
-  const isGestionRoute = (r: RouteLocationNormalizedLoaded) =>
-    gestionPaths.some((p) => r.path === p || r.path.startsWith(p + '/')) ||
-    r.path === '/newRecurrOperation' ||
-    r.path.startsWith('/editRecurrOperation') ||
-    r.path === '/newCredit' ||
-    r.path.startsWith('/editCredit') ||
-    r.path === '/newBien' ||
-    r.path.startsWith('/editBien')
+  const isSettingsRoute = (r: RouteLocationNormalizedLoaded) =>
+    r.path === '/config' || r.path === '/editUser'
 
   const tabs: Tab[] = [
-    { label: 'Comptes', icon: 'wallet', path: '/', match: isHomeRoute },
-    { label: 'Gestion', icon: 'building', path: '/gestion', match: isGestionRoute },
-    { label: 'Stats', icon: 'chart-pie', path: '/stats', match: (r) => r.path === '/stats' },
-    { label: 'Réglages', icon: 'cogs', path: '/config', match: (r) => settingsPaths.includes(r.path) }
+    {
+      label: 'Recherche',
+      icon: 'search',
+      path: '/search',
+      colorClass: 'btn-info',
+      match: (r) => r.path === '/search'
+    },
+    {
+      label: 'Gestion',
+      icon: 'building',
+      path: '/gestion',
+      colorClass: 'btn-credit',
+      match: isGestionRoute
+    },
+    {
+      label: 'Stats',
+      icon: 'chart-pie',
+      path: '/stats',
+      colorClass: 'btn-warning',
+      match: (r) => r.path === '/stats'
+    },
+    {
+      label: 'Réglages',
+      icon: 'cogs',
+      path: '/config',
+      colorClass: 'btn-danger',
+      match: isSettingsRoute
+    }
   ]
 
   const goTo = (path: string) => {
@@ -74,61 +91,137 @@
 </script>
 
 <style lang="scss" scoped>
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: $navbar-height;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: var(--bg-glass, rgba(255, 255, 255, 0.95));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
-  display: flex;
-  justify-content: space-around;
-  align-items: stretch;
-  z-index: 100;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-}
-
-.tab {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 6px 4px;
-  background: transparent;
-  border: none;
+.btn {
+  display: inline-block;
+  font-weight: 400;
+  color: #fff;
+  text-align: center;
+  vertical-align: middle;
   cursor: pointer;
-  color: var(--text-secondary, #a0aec0);
-  transition: color 0.2s ease, transform 0.2s ease;
-  font: inherit;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border-radius: 0.25rem;
+  transition:
+    color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out,
+    transform 0.15s ease-in-out;
+  text-decoration: none;
 }
 
-.tab:hover {
-  color: var(--text-primary, #4a5568);
+.btn-warning {
+  color: #212529;
+  background-color: #ffc107;
+  border-color: #ffc107;
 }
 
-.tab.active {
-  color: var(--primary-color, #667eea);
+.btn-warning:hover {
+  color: #212529;
+  background-color: #e0a800;
+  border-color: #d39e00;
 }
 
-.tab.active .tab-icon {
-  transform: scale(1.1);
+.btn-danger {
+  color: #fff;
+  background-color: #dc3545;
+  border-color: #dc3545;
 }
 
-.tab-icon {
-  font-size: 20px;
-  transition: transform 0.2s ease;
+.btn-danger:hover {
+  color: #fff;
+  background-color: #c82333;
+  border-color: #bd2130;
 }
 
-.tab-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
+.btn-credit {
+  color: #fff;
+  background-color: #6f42c1;
+  border-color: #6f42c1;
+}
+
+.btn-credit:hover {
+  color: #fff;
+  background-color: #5a32a3;
+  border-color: #4e2a8e;
+}
+
+.btn-info {
+  color: #fff;
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+}
+
+.btn-info:hover {
+  color: #fff;
+  background-color: #138496;
+  border-color: #117a8b;
+}
+
+.nav-bar {
+  padding: 8px 16px;
+  height: auto;
+  width: fit-content;
+  max-width: 90%;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  text-align: center;
+  z-index: 100;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  @media screen and (max-width: $mobile_BP_max_width) {
+    width: fit-content;
+    max-width: 95%;
+    bottom: 16px;
+    padding: 6px 12px;
+  }
+
+  &.btn-group {
+    .btn {
+      margin: 0;
+      height: $navbar-height;
+      width: 3rem;
+      border: none;
+      backdrop-filter: blur(5px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 1.2rem;
+      font-weight: 600;
+      border-radius: 0;
+
+      &:first-child {
+        border-top-left-radius: 14px;
+        border-bottom-left-radius: 14px;
+      }
+
+      &:last-child {
+        border-top-right-radius: 14px;
+        border-bottom-right-radius: 14px;
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      &.active {
+        transform: translateY(-1px);
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85),
+          0 4px 12px rgba(0, 0, 0, 0.25);
+      }
+    }
+  }
 }
 </style>

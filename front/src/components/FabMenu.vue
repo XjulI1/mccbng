@@ -56,7 +56,6 @@
   const expanded = ref(false)
 
   const homeActions: Action[] = [
-    { label: 'Rechercher', icon: 'search', color: 'fab-info', path: '/search' },
     { label: 'Nouvelle opération', icon: 'plus', color: 'fab-primary', path: '/newOperation' },
     { label: 'Virement', icon: 'exchange-alt', color: 'fab-warning', path: '/transfert' }
   ]
@@ -136,7 +135,7 @@
 
 .fab-stack {
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   align-items: flex-end;
   gap: 12px;
   pointer-events: auto;
