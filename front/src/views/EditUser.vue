@@ -87,9 +87,13 @@
             id="user-favoris"
             v-model="form.favoris"
             class="form-input"
+            required
           >
-            <option :value="null">
-              Aucun
+            <option
+              :value="null"
+              disabled
+            >
+              Sélectionnez un compte
             </option>
             <option
               v-for="account in accountList"
@@ -177,7 +181,12 @@
   const successMessage = ref('')
 
   const isFormValid = computed(() => {
-    return form.email && form.email.trim().length > 0
+    return (
+      form.email &&
+      form.email.trim().length > 0 &&
+      form.favoris !== null &&
+      form.favoris !== undefined
+    )
   })
 
   const loadUser = () => {
