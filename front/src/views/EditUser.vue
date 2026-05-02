@@ -78,6 +78,29 @@
           </div>
         </div>
 
+        <div class="form-group">
+          <label
+            for="user-favoris"
+            class="form-label"
+          >Compte favori</label>
+          <select
+            id="user-favoris"
+            v-model="form.favoris"
+            class="form-input"
+          >
+            <option :value="null">
+              Aucun
+            </option>
+            <option
+              v-for="account in accountList"
+              :key="'favoris-' + account.IDcompte"
+              :value="account.IDcompte"
+            >
+              {{ account.NomCompte }}
+            </option>
+          </select>
+        </div>
+
         <div
           v-if="errorMessage"
           class="form-error"
@@ -141,8 +164,13 @@
     username: '' as string,
     email: '' as string,
     warningTotal: null as number | null,
-    warningCompte: null as number | null
+    warningCompte: null as number | null,
+    favoris: null as number | null
   })
+
+  const accountList = computed(() =>
+    (store.state.compte.accountList || []).filter((account) => account.visible)
+  )
 
   const isSubmitting = ref(false)
   const errorMessage = ref('')
@@ -157,6 +185,7 @@
     form.email = store.state.user.email || ''
     form.warningTotal = store.state.user.warningTotal
     form.warningCompte = store.state.user.warningCompte
+    form.favoris = store.state.user.favoris ?? null
   }
 
   onMounted(() => {
@@ -180,7 +209,8 @@
         username: form.username || undefined,
         email: form.email,
         warningTotal: form.warningTotal,
-        warningCompte: form.warningCompte
+        warningCompte: form.warningCompte,
+        favoris: form.favoris
       })
       successMessage.value = 'Vos informations ont été mises à jour.'
     } catch (err) {

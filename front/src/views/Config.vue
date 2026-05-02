@@ -266,8 +266,8 @@
       }
 
       &.account-icon {
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--color-success);
       }
     }
 
@@ -372,7 +372,7 @@
     }
 
     &.account-btn {
-      background: var(--primary-gradient);
+      background: var(--success-gradient);
       color: white;
     }
   }
