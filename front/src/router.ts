@@ -8,6 +8,7 @@ const EditUser = () => import(/* webpackChunkName: "edituser" */ './views/EditUs
 const OperationsRecurrentes = () => import(/* webpackChunkName: "operecur" */ './views/OperationsRecurrentes.vue')
 const Amortissement = () => import(/* webpackChunkName: "operecur" */ './views/Amortissement.vue')
 const Credits = () => import(/* webpackChunkName: "credits" */ './views/Credits.vue')
+const Biens = () => import(/* webpackChunkName: "biens" */ './views/Biens.vue')
 const RouteOverTheContent = () => import(/* webpackChunkName: "othercontent" */ './views/RouteOverTheContent.vue')
 
 export default createRouter({
@@ -101,6 +102,28 @@ export default createRouter({
       component: RouteOverTheContent,
       props: {
         componentName: 'credit-form'
+      }
+    }]
+  }, {
+    path: '/biens',
+    name: 'Biens',
+    component: Biens,
+    meta: {
+      disabledTotalHeader: true
+    },
+    children: [{
+      path: '/newBien',
+      name: 'Nouveau bien',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'bien-form'
+      }
+    }, {
+      path: '/editBien/:id',
+      name: 'Edition bien',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'bien-form'
       }
     }]
   }, {

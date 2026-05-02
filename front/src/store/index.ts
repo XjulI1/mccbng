@@ -7,6 +7,7 @@ import Dispay from './display'
 import Stats from './stats'
 import Compte from './compte'
 import Credit from './credit'
+import Bien from './bien'
 
 export default createStore({
   modules: {
@@ -16,6 +17,7 @@ export default createStore({
     display: Dispay,
     stats: Stats,
     compte: Compte,
-    credit: Credit
+    credit: Credit,
+    bien: Bien
   }
 })

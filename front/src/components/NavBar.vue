@@ -19,7 +19,7 @@
     </button>
     <button
       class="btn btn-primary new-operation-button"
-      :disabled="disabled.valueOf() && route.name !== 'Opérations récurrentes' && route.name !== 'Crédits'"
+      :disabled="disabled.valueOf() && route.name !== 'Opérations récurrentes' && route.name !== 'Crédits' && route.name !== 'Biens'"
       @click="addOperation"
     >
       <font-awesome-icon icon="plus" />
@@ -44,6 +44,13 @@
       @click="getCredits"
     >
       <font-awesome-icon icon="credit-card" />
+    </button>
+    <button
+      class="btn btn-bien bien-button"
+      :disabled="route.name === 'Login'"
+      @click="getBiens"
+    >
+      <font-awesome-icon icon="home" />
     </button>
     <button
       class="btn btn-danger params-button"
@@ -79,6 +86,8 @@
       router.push('/newRecurrOperation')
     } else if (route.name === 'Crédits') {
       router.push('/newCredit')
+    } else if (route.name === 'Biens') {
+      router.push('/newBien')
     } else {
       router.push('/newOperation')
     }
@@ -102,6 +111,11 @@
   const getCredits = () => {
     store.dispatch('toggleAccountList', false)
     router.push('/credits')
+  }
+
+  const getBiens = () => {
+    store.dispatch('toggleAccountList', false)
+    router.push('/biens')
   }
 
   const changeParams = () => {
@@ -256,6 +270,45 @@
 .btn-success:not(:disabled):not(.disabled):active:focus,
 .btn-success:not(:disabled):not(.disabled).active:focus {
   box-shadow: 0 0 0 0.2rem rgba(72, 180, 97, 0.5);
+}
+
+.btn-bien {
+  color: #fff;
+  background-color: #e83e8c;
+  border-color: #e83e8c;
+}
+
+.btn-bien:hover {
+  color: #fff;
+  background-color: #d6336c;
+  border-color: #c42a60;
+}
+
+.btn-bien:focus,
+.btn-bien.focus {
+  color: #fff;
+  background-color: #d6336c;
+  border-color: #c42a60;
+  box-shadow: 0 0 0 0.2rem rgba(232, 62, 140, 0.5);
+}
+
+.btn-bien.disabled,
+.btn-bien:disabled {
+  color: #fff;
+  background-color: #e83e8c;
+  border-color: #e83e8c;
+}
+
+.btn-bien:not(:disabled):not(.disabled):active,
+.btn-bien:not(:disabled):not(.disabled).active {
+  color: #fff;
+  background-color: #c42a60;
+  border-color: #ad2354;
+}
+
+.btn-bien:not(:disabled):not(.disabled):active:focus,
+.btn-bien:not(:disabled):not(.disabled).active:focus {
+  box-shadow: 0 0 0 0.2rem rgba(232, 62, 140, 0.5);
 }
 
 .btn-credit {
@@ -499,6 +552,14 @@
         margin-right: 0;
       }
       &.credit-button {
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+        border-top-right-radius: 0px;
+        border-bottom-right-radius: 0px;
+        margin-left: 0;
+        margin-right: 0;
+      }
+      &.bien-button {
         border-top-left-radius: 0px;
         border-bottom-left-radius: 0px;
         margin-left: 0;

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mockup — Option 3 : Bottom tabs + FAB</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2d3748;
+      margin-bottom: 8px;
+      font-size: 28px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #718096;
+      margin-bottom: 32px;
+      font-size: 15px;
+    }
+
+    .phones {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .phone-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .phone-label {
+      background: #2d3748;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .phone {
+      width: 360px;
+      height: 720px;
+      background: #f8fafc;
+      border-radius: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      border: 8px solid #1a202c;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Status bar */
+    .status-bar {
+      height: 32px;
+      background: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+    .status-bar .right { display: flex; gap: 6px; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 16px 20px;
+      color: white;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .header-title {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .header-account {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .header-balance {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .header-meta {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+
+    /* Content area */
+    .content {
+      height: calc(100% - 32px - 130px - 80px);
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    /* Operation row */
+    .op-row {
+      display: flex;
+      align-items: center;
+      background: white;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .op-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #edf2f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4a5568;
+      margin-right: 12px;
+      font-size: 14px;
+    }
+    .op-body { flex: 1; }
+    .op-name { font-size: 14px; font-weight: 600; color: #2d3748; }
+    .op-cat { font-size: 12px; color: #a0aec0; margin-top: 2px; }
+    .op-amount {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .pos { color: #38a169; }
+    .neg { color: #e53e3e; }
+
+    /* Patrimoine landing */
+    .patrimoine-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 8px;
+    }
+    .patrimoine-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .patrimoine-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .patrimoine-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+    .pi-credit { background: linear-gradient(135deg, #6f42c1 0%, #4e2a8e 100%); }
+    .pi-bien { background: linear-gradient(135deg, #e83e8c 0%, #c42a60 100%); }
+    .pi-amort { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
+    .pi-recur { background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%); }
+
+    .patrimoine-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+    .patrimoine-count {
+      font-size: 12px;
+      color: #a0aec0;
+    }
+
+    /* Bottom tab bar */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 10px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+    }
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      cursor: pointer;
+      color: #a0aec0;
+      transition: color 0.2s;
+      flex: 1;
+      max-width: 80px;
+    }
+    .tab i { font-size: 22px; }
+    .tab span { font-size: 11px; font-weight: 600; }
+    .tab.active { color: #667eea; }
+    .tab.active i {
+      transform: scale(1.1);
+    }
+
+    /* FAB */
+    .fab-container {
+      position: absolute;
+      right: 20px;
+      bottom: 96px;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+    }
+    .fab {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-size: 22px;
+      border: none;
+    }
+    .fab:hover { transform: scale(1.05); }
+    .fab.expanded { transform: rotate(45deg); }
+
+    .mini-fab {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      position: relative;
+      animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    }
+    .mini-fab:nth-child(1) { animation-delay: 0.05s; background: linear-gradient(135deg, #ffc107, #e0a800); color: #212529; }
+    .mini-fab:nth-child(2) { animation-delay: 0.1s; background: linear-gradient(135deg, #007bff, #0056b3); }
+    .mini-fab:nth-child(3) { animation-delay: 0.15s; background: linear-gradient(135deg, #17a2b8, #117a8b); }
+
+    .mini-fab .label {
+      position: absolute;
+      right: 60px;
+      background: #2d3748;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.5) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Section headers */
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 16px 8px;
+    }
+
+    /* Backdrop for expanded FAB */
+    .fab-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(2px);
+      z-index: 50;
+    }
+
+    /* Description below */
+    .description {
+      max-width: 1100px;
+      margin: 48px auto 0;
+      background: white;
+      padding: 28px 32px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .description h2 {
+      color: #2d3748;
+      margin-bottom: 16px;
+      font-size: 20px;
+    }
+    .description ul { padding-left: 24px; line-height: 1.9; color: #4a5568; }
+    .description strong { color: #2d3748; }
+  </style>
+</head>
+<body>
+  <h1>Option 3 — Bottom tabs + Floating Action Button</h1>
+  <p class="subtitle">3 écrans : navigation par onglets · FAB déployé · Vue Patrimoine</p>
+
+  <div class="phones">
+
+    <!-- ===== PHONE 1 : Home avec tab bar ===== -->
+    <div class="phone-wrapper">
+      <div class="phone-label">1. Accueil — onglet Comptes</div>
+      <div class="phone">
+        <div class="status-bar">
+          <span>9:41</span>
+          <div class="right">
+            <i class="fas fa-signal"></i>
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-battery-three-quarters"></i>
+          </div>
+        </div>
+
+        <div class="header">
+          <div class="header-top">
+            <span class="header-title">Compte courant</span>
+            <i class="fas fa-eye"></i>
+          </div>
+          <div class="header-balance">2 458,32 €</div>
+          <div class="header-meta">À pointer : -120,50 €</div>
+        </div>
+
+        <div class="content">
+          <div class="op-row">
+            <div class="op-icon"><i class="fas fa-shopping-cart"></i></div>
+            <div class="op-body">
+              <div class="op-name">Carrefour</div>
+              <div class="op-cat">Courses · 02/05</div>
+            </div>
+            <div class="op-amount neg">-58,40 €</div>
+          </div>
+          <div class="op-row">
+            <div class="op-icon"><i class="fas fa-money-bill-wave"></i></div>
+            <div class="op-body">
+              <div class="op-name">Salaire avril</div>
+              <div class="op-cat">Revenus · 30/04</div>
+            </div>
+            <div class="op-amount pos">+2 800,00 €</div>
+          </div>
+          <div class="op-row">
+            <div class="op-icon"><i class="fas fa-bolt"></i></div>
+            <div class="op-body">
+              <div class="op-name">EDF</div>
+              <div class="op-cat">Énergie · 28/04</div>
+            </div>
+            <div class="op-amount neg">-89,12 €</div>
+          </div>
+          <div class="op-row">
+            <div class="op-icon"><i class="fas fa-utensils"></i></div>
+            <div class="op-body">
+              <div class="op-name">Restaurant Le Bistrot</div>
+              <div class="op-cat">Restaurants · 27/04</div>
+            </div>
+            <div class="op-amount neg">-42,00 €</div>
+          </div>
+          <div class="op-row">
+            <div class="op-icon"><i class="fas fa-gas-pump"></i></div>
+            <div class="op-body">
+              <div class="op-name">Total</div>
+              <div class="op-cat">Carburant · 25/04</div>
+            </div>
+            <div class="op-amount neg">-72,80 €</div>
+          </div>
+        </div>
+
+        <!-- FAB -->
+        <div class="fab-container">
+          <button class="fab"><i class="fas fa-plus"></i></button>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <div class="tab active">
+            <i class="fas fa-wallet"></i>
+            <span>Comptes</span>
+          </div>
+          <div class="tab">
+            <i class="fas fa-building"></i>
+            <span>Patrimoine</span>
+          </div>
+          <div class="tab">
+            <i class="fas fa-chart-pie"></i>
+            <span>Stats</span>
+          </div>
+          <div class="tab">
+            <i class="fas fa-cog"></i>
+            <span>Réglages</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PHONE 2 : FAB déployé ===== -->
+    <div class="phone-wrapper">
+      <div class="phone-label">2. FAB déployé — actions rapides</div>
+      <div class="phone">
+        <div class="status-bar">
+          <span>9:41</span>
+          <div class="right">
+            <i class="fas fa-signal"></i>
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-battery-three-quarters"></i>
+          </div>
+        </div>
+
+        <div class="header">
+          <div class="header-top">
+            <span class="header-title">Compte courant</span>
+            <i class="fas fa-eye"></i>
+          </div>
+          <div class="header-balance">2 458,32 €</div>
+          <div class="header-meta">À pointer : -120,50 €</div>
+        </div>
+
+        <div class="content">
+          <div class="op-row">
+            <div class="op-icon"><i class="fas fa-shopping-cart"></i></div>
+            <div class="op-body">
+              <div class="op-name">Carrefour</div>
+              <div class="op-cat">Courses · 02/05</div>
+            </div>
+            <div class="op-amount neg">-58,40 €</div>
+          </div>
+          <div class="op-row">
+            <div class="op-icon"><i class="fas fa-money-bill-wave"></i></div>
+            <div class="op-body">
+              <div class="op-name">Salaire avril</div>
+              <div class="op-cat">Revenus · 30/04</div>
+            </div>
+            <div class="op-amount pos">+2 800,00 €</div>
+          </div>
+        </div>
+
+        <div class="fab-backdrop"></div>
+
+        <!-- FAB expanded -->
+        <div class="fab-container">
+          <button class="fab expanded"><i class="fas fa-plus"></i></button>
+          <div class="mini-fab">
+            <i class="fas fa-exchange-alt"></i>
+            <span class="label">Virement</span>
+          </div>
+          <div class="mini-fab">
+            <i class="fas fa-pen"></i>
+            <span class="label">Nouvelle opération</span>
+          </div>
+          <div class="mini-fab">
+            <i class="fas fa-search"></i>
+            <span class="label">Rechercher</span>
+          </div>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <div class="tab active">
+            <i class="fas fa-wallet"></i>
+            <span>Comptes</span>
+          </div>
+          <div class="tab">
+            <i class="fas fa-building"></i>
+            <span>Patrimoine</span>
+          </div>
+          <div class="tab">
+            <i class="fas fa-chart-pie"></i>
+            <span>Stats</span>
+          </div>
+          <div class="tab">
+            <i class="fas fa-cog"></i>
+            <span>Réglages</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PHONE 3 : Patrimoine ===== -->
+    <div class="phone-wrapper">
+      <div class="phone-label">3. Onglet Patrimoine — hub</div>
+      <div class="phone">
+        <div class="status-bar">
+          <span>9:41</span>
+          <div class="right">
+            <i class="fas fa-signal"></i>
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-battery-three-quarters"></i>
+          </div>
+        </div>
+
+        <div class="header">
+          <div class="header-top">
+            <span class="header-title">Patrimoine total</span>
+            <i class="fas fa-eye"></i>
+          </div>
+          <div class="header-balance">412 580 €</div>
+          <div class="header-meta">+18 200 € de plus-value latente</div>
+        </div>
+
+        <div class="content" style="padding: 4px;">
+          <div class="section-title">Mes outils</div>
+          <div class="patrimoine-grid">
+            <div class="patrimoine-card">
+              <div class="patrimoine-icon pi-bien">
+                <i class="fas fa-home"></i>
+              </div>
+              <div class="patrimoine-label">Biens</div>
+              <div class="patrimoine-count">2 biens · 385 k€</div>
+            </div>
+            <div class="patrimoine-card">
+              <div class="patrimoine-icon pi-credit">
+                <i class="fas fa-credit-card"></i>
+              </div>
+              <div class="patrimoine-label">Crédits</div>
+              <div class="patrimoine-count">3 actifs · -187 k€</div>
+            </div>
+            <div class="patrimoine-card">
+              <div class="patrimoine-icon pi-recur">
+                <i class="fas fa-retweet"></i>
+              </div>
+              <div class="patrimoine-label">Récurrentes</div>
+              <div class="patrimoine-count">12 opérations</div>
+            </div>
+            <div class="patrimoine-card">
+              <div class="patrimoine-icon pi-amort">
+                <i class="fas fa-history"></i>
+              </div>
+              <div class="patrimoine-label">Amortissement</div>
+              <div class="patrimoine-count">Suivi 2026</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAB - contextuel pour Patrimoine -->
+        <div class="fab-container">
+          <button class="fab"><i class="fas fa-plus"></i></button>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <div class="tab">
+            <i class="fas fa-wallet"></i>
+            <span>Comptes</span>
+          </div>
+          <div class="tab active">
+            <i class="fas fa-building"></i>
+            <span>Patrimoine</span>
+          </div>
+          <div class="tab">
+            <i class="fas fa-chart-pie"></i>
+            <span>Stats</span>
+          </div>
+          <div class="tab">
+            <i class="fas fa-cog"></i>
+            <span>Réglages</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="description">
+    <h2>Ce que change ce design</h2>
+    <ul>
+      <li><strong>4 onglets de navigation</strong> en bas, fixes : <em>Comptes</em>, <em>Patrimoine</em>, <em>Stats</em>, <em>Réglages</em>. Plus on ajoute de fonctionnalités, plus on les regroupe sous un onglet — la navbar n'enfle plus jamais.</li>
+      <li><strong>Un FAB rond en bas à droite</strong> pour les actions de création. Il est <em>contextuel</em> : sur Comptes il propose Opération / Virement / Recherche ; sur Patrimoine il proposera Bien / Crédit / Récurrente.</li>
+      <li><strong>Onglet Patrimoine = hub visuel</strong> avec une grille de cartes (Biens, Crédits, Récurrentes, Amortissement). Chaque carte affiche un compteur ou un total. C'est plus découvrable qu'une liste de boutons.</li>
+      <li><strong>Le hamburger disparaît</strong> sur mobile : la liste des comptes peut basculer en horizontal scrollable au-dessus des opérations, ou rester en panneau swipeable mais sans bouton dédié (geste seul).</li>
+    </ul>
+    <h2 style="margin-top: 24px;">Effort d'implémentation</h2>
+    <ul>
+      <li>Refonte de <code>NavBar.vue</code> (tab bar) + nouveau composant <code>FabMenu.vue</code> (speed-dial)</li>
+      <li>Nouvelle vue <code>Patrimoine.vue</code> qui sert de hub + ajustement des routes (les 4 vues actuelles deviennent enfants)</li>
+      <li>Adaptation du layout dans <code>App.vue</code> pour le panneau gauche</li>
+      <li>Pas de changement backend</li>
+    </ul>
+  </div>
+</body>
+</html>

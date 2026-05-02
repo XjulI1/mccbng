@@ -16,13 +16,15 @@
   import Search from '@/components/Search.vue'
   import TransfertForm from '@/components/TransfertForm.vue'
   import CreditForm from '@/components/CreditForm.vue'
+  import BienForm from '@/components/BienForm.vue'
 
   const components = {
     'operation-form': OperationForm,
     'operation-recurrente-form': OperationRecurrenteForm,
     search: Search,
     'transfert-form': TransfertForm,
-    'credit-form': CreditForm
+    'credit-form': CreditForm,
+    'bien-form': BienForm
   }
 
   const props = defineProps({
@@ -41,6 +43,8 @@
       router.push('/recurrOperation')
     } else if (props.componentName === 'credit-form') {
       router.push('/credits')
+    } else if (props.componentName === 'bien-form') {
+      router.push('/biens')
     } else {
       router.push('/')
     }
