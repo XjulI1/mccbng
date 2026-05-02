@@ -32,7 +32,13 @@ import {
   faSpinner,
   faInfoCircle,
   faExclamationCircle,
-  faCheckCircle
+  faCheckCircle,
+  faHome,
+  faMapMarkerAlt,
+  faCalendar,
+  faWallet,
+  faBuilding,
+  faPercent
 } from '@fortawesome/free-solid-svg-icons'
 
 const FontAwesome = {
@@ -70,7 +76,13 @@ const FontAwesome = {
       faSpinner,
       faInfoCircle,
       faExclamationCircle,
-      faCheckCircle
+      faCheckCircle,
+      faHome,
+      faMapMarkerAlt,
+      faCalendar,
+      faWallet,
+      faBuilding,
+      faPercent
     } as any)
   }
 }
