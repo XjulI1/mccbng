@@ -1,19 +1,25 @@
-import { fetchUser } from '@/services/user'
+import { fetchUser, updateUser } from '@/services/user'
 
 export default {
   state: {
     id: null,
     favoris: null,
     warningTotal: null,
+    warningCompte: null,
+    email: null,
+    username: null,
     token: null,
     maskAmount: false
   },
 
   mutations: {
-    setUser (state, { id, favoris, warningTotal }) {
+    setUser (state, { id, favoris, warningTotal, warningCompte, email, username }) {
       state.id = id
       state.favoris = favoris
       state.warningTotal = warningTotal
+      state.warningCompte = warningCompte
+      state.email = email
+      state.username = username
     },
 
     setToken (state, token) {
@@ -31,6 +37,11 @@ export default {
         .then((response) => {
           commit('setUser', response)
         })
+    },
+
+    updateUser ({ state, dispatch }, updates) {
+      return updateUser(updates, state.token, window.env.VITE_API_URL)
+        .then(() => dispatch('fetchUser', state.id))
     },
 
     saveUserToken ({ commit }, token) {

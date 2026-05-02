@@ -11,6 +11,7 @@ import {
   get,
   getModelSchemaRef,
   HttpErrors,
+  patch,
   post,
   requestBody,
   SchemaObject,
@@ -113,15 +114,80 @@ export class UserController {
   async whoAmI(
     @inject(SecurityBindings.USER)
     currentUserProfile: UserProfile,
-  ): Promise<{favoris?: number; warningTotal?: number; IDuser: number}> {
-    const {favoris, warningTotal, IDuser} = await this.userService.findUserById(
-      currentUserProfile[securityId],
-    );
+  ): Promise<{
+    favoris?: number;
+    warningTotal?: number;
+    warningCompte?: number;
+    IDuser: number;
+    email: string;
+    username?: string;
+  }> {
+    const {favoris, warningTotal, warningCompte, IDuser, email, username} =
+      await this.userService.findUserById(currentUserProfile[securityId]);
     return {
       favoris,
       warningTotal,
+      warningCompte,
       IDuser,
+      email,
+      username,
     };
+  }
+
+  @authenticate('jwt')
+  @patch('/users/me', {
+    responses: {
+      '204': {
+        description: 'Update current user info',
+      },
+    },
+  })
+  async updateMe(
+    @inject(SecurityBindings.USER)
+    currentUserProfile: UserProfile,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              email: {type: 'string'},
+              username: {type: 'string'},
+              warningTotal: {type: 'number'},
+              warningCompte: {type: 'number'},
+              favoris: {type: 'number'},
+            },
+            additionalProperties: false,
+          },
+        },
+      },
+    })
+    updates: Partial<
+      Pick<
+        User,
+        'email' | 'username' | 'warningTotal' | 'warningCompte' | 'favoris'
+      >
+    >,
+  ): Promise<void> {
+    const userId = currentUserProfile[securityId];
+    const allowed = _.pick(updates, [
+      'email',
+      'username',
+      'warningTotal',
+      'warningCompte',
+      'favoris',
+    ]);
+
+    if (allowed.email) {
+      const existingByEmail = await this.userRepository.findOne({
+        where: {email: allowed.email},
+      });
+      if (existingByEmail && existingByEmail.id !== userId) {
+        throw new HttpErrors.Conflict('A user with this email already exists');
+      }
+    }
+
+    await this.userRepository.updateById(userId, allowed);
   }
 
   @authenticate('jwt')

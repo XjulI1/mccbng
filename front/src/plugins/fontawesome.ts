@@ -25,7 +25,14 @@ import {
   faHamburger,
   faBug,
   faToggleOn,
-  faToggleOff
+  faToggleOff,
+  faUserEdit,
+  faUserCog,
+  faSave,
+  faSpinner,
+  faInfoCircle,
+  faExclamationCircle,
+  faCheckCircle
 } from '@fortawesome/free-solid-svg-icons'
 
 const FontAwesome = {
@@ -56,7 +63,14 @@ const FontAwesome = {
       faHamburger,
       faBug,
       faToggleOn,
-      faToggleOff
+      faToggleOff,
+      faUserEdit,
+      faUserCog,
+      faSave,
+      faSpinner,
+      faInfoCircle,
+      faExclamationCircle,
+      faCheckCircle
     } as any)
   }
 }
