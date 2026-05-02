@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mockup — Option 3 (Desktop / iPad paysage)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    h1 { text-align: center; color: #2d3748; margin-bottom: 8px; font-size: 28px; }
+    .subtitle { text-align: center; color: #718096; margin-bottom: 32px; font-size: 15px; }
+
+    .screens { display: flex; flex-direction: column; align-items: center; gap: 40px; }
+
+    .screen-wrapper { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+    .screen-label {
+      background: #2d3748; color: white; padding: 6px 18px;
+      border-radius: 20px; font-size: 13px; font-weight: 600;
+    }
+
+    /* iPad landscape frame */
+    .ipad {
+      width: 1180px;
+      height: 820px;
+      background: #f8fafc;
+      border-radius: 24px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+      border: 14px solid #1a202c;
+      position: relative;
+      overflow: hidden;
+      max-width: 100%;
+    }
+
+    .layout {
+      display: flex;
+      height: 100%;
+    }
+
+    /* === LEFT RAIL (vertical nav) === */
+    .nav-rail {
+      width: 84px;
+      background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+      gap: 8px;
+    }
+    .nav-rail .logo {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 800; font-size: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+    }
+    .rail-tab {
+      width: 60px; padding: 10px 0;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; border-radius: 12px;
+      color: #a0aec0; cursor: pointer;
+      transition: all 0.2s; position: relative;
+    }
+    .rail-tab i { font-size: 20px; }
+    .rail-tab span { font-size: 10px; font-weight: 600; }
+    .rail-tab:hover { background: rgba(255,255,255,0.05); color: #cbd5e0; }
+    .rail-tab.active {
+      color: #fff;
+      background: rgba(102,126,234,0.15);
+    }
+    .rail-tab.active::before {
+      content: ''; position: absolute; left: -12px; top: 12px; bottom: 12px;
+      width: 4px; border-radius: 0 4px 4px 0;
+      background: linear-gradient(180deg, #667eea, #764ba2);
+    }
+    .rail-spacer { flex: 1; }
+    .rail-user {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: #4a5568; color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* === ACCOUNTS PANEL === */
+    .accounts {
+      width: 300px;
+      background: #fff;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+    .accounts-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .accounts-title {
+      font-size: 11px; font-weight: 700; color: #a0aec0;
+      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px;
+    }
+    .accounts-total {
+      font-size: 22px; font-weight: 700; color: #2d3748;
+    }
+    .accounts-sub { font-size: 12px; color: #718096; margin-top: 2px; }
+
+    .accounts-list { flex: 1; overflow-y: auto; padding: 12px 8px; }
+    .account-group-title {
+      padding: 10px 12px 6px; font-size: 11px; font-weight: 700;
+      color: #a0aec0; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .account-item {
+      padding: 10px 12px; border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      transition: background 0.15s;
+    }
+    .account-item:hover { background: #f7fafc; }
+    .account-item.active { background: #edf2ff; }
+    .account-item.active .account-name { color: #5a67d8; font-weight: 600; }
+    .account-color {
+      width: 8px; height: 32px; border-radius: 4px;
+      background: linear-gradient(180deg, #667eea, #764ba2);
+    }
+    .account-body { flex: 1; min-width: 0; }
+    .account-name {
+      font-size: 13px; font-weight: 500; color: #2d3748;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .account-bank { font-size: 11px; color: #a0aec0; }
+    .account-amount { font-size: 13px; font-weight: 600; color: #2d3748; }
+    .account-amount.neg { color: #e53e3e; }
+
+    /* === MAIN CONTENT === */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .main-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 22px 32px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .mh-left .mh-title { font-size: 13px; opacity: 0.85; margin-bottom: 4px; }
+    .mh-left .mh-account { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .mh-left .mh-balance { font-size: 36px; font-weight: 800; line-height: 1; }
+    .mh-right { display: flex; gap: 24px; align-items: flex-end; }
+    .mh-stat {
+      display: flex; flex-direction: column; align-items: flex-end;
+    }
+    .mh-stat-label { font-size: 11px; opacity: 0.85; }
+    .mh-stat-value { font-size: 16px; font-weight: 700; }
+    .mh-actions { display: flex; gap: 10px; }
+    .mh-icon-btn {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      color: white; cursor: pointer; transition: background 0.15s;
+    }
+    .mh-icon-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* Operations table (like a desktop view) */
+    .ops-toolbar {
+      padding: 14px 28px; display: flex; justify-content: space-between;
+      align-items: center; border-bottom: 1px solid #edf2f7; background: #fff;
+    }
+    .ops-tabs { display: flex; gap: 8px; }
+    .ops-tab {
+      padding: 6px 14px; border-radius: 18px; font-size: 13px;
+      color: #718096; cursor: pointer; font-weight: 500;
+    }
+    .ops-tab.active { background: #edf2ff; color: #5a67d8; font-weight: 600; }
+    .ops-search {
+      width: 240px; padding: 8px 12px 8px 34px; border-radius: 8px;
+      border: 1px solid #e2e8f0; font-size: 13px; background: #f7fafc url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23a0aec0'><path d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/></svg>") no-repeat 10px center;
+      background-size: 14px;
+    }
+
+    .ops-list { flex: 1; overflow-y: auto; background: #f8fafc; padding: 12px 20px 80px; }
+    .op-row {
+      display: grid;
+      grid-template-columns: 80px 36px 1fr 120px 90px 110px 36px;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .op-row:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.06); transform: translateY(-1px); }
+    .op-date { font-size: 12px; color: #a0aec0; font-weight: 500; }
+    .op-icon {
+      width: 36px; height: 36px; border-radius: 50%; background: #edf2f7;
+      display: flex; align-items: center; justify-content: center;
+      color: #4a5568; font-size: 14px;
+    }
+    .op-name { font-size: 14px; font-weight: 600; color: #2d3748; }
+    .op-cat-pill {
+      display: inline-block; padding: 3px 10px; border-radius: 12px;
+      font-size: 11px; font-weight: 600; background: #edf2f7; color: #4a5568;
+    }
+    .op-amount { font-size: 14px; font-weight: 700; text-align: right; }
+    .op-amount.pos { color: #38a169; }
+    .op-amount.neg { color: #e53e3e; }
+    .op-check {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 2px solid #cbd5e0; display: flex;
+      align-items: center; justify-content: center;
+      color: transparent; transition: all 0.15s;
+    }
+    .op-check.checked {
+      background: #38a169; border-color: #38a169; color: white;
+    }
+    .op-check.checked i { font-size: 11px; }
+    .op-action { color: #cbd5e0; font-size: 14px; }
+
+    /* === FAB === */
+    .fab-container {
+      position: absolute; right: 32px; bottom: 32px;
+      display: flex; flex-direction: column-reverse; align-items: flex-end;
+      gap: 14px; z-index: 100;
+    }
+    .fab {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 12px 28px rgba(102,126,234,0.45);
+      font-size: 24px;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .fab:hover { transform: scale(1.05); }
+    .fab.expanded { transform: rotate(45deg); }
+    .mini-fab {
+      display: flex; align-items: center; gap: 12px;
+      animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    }
+    .mini-fab .label {
+      background: #2d3748; color: white;
+      padding: 8px 14px; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .mini-fab .btn {
+      width: 50px; height: 50px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 18px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+    .mini-fab:nth-of-type(1) { animation-delay: 0.05s; }
+    .mini-fab:nth-of-type(2) { animation-delay: 0.1s; }
+    .mini-fab:nth-of-type(3) { animation-delay: 0.15s; }
+    .mini-fab:nth-of-type(1) .btn { background: linear-gradient(135deg, #ffc107, #e0a800); color: #212529; }
+    .mini-fab:nth-of-type(2) .btn { background: linear-gradient(135deg, #007bff, #0056b3); }
+    .mini-fab:nth-of-type(3) .btn { background: linear-gradient(135deg, #17a2b8, #117a8b); }
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.85); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .fab-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(2px);
+      z-index: 50;
+    }
+
+    /* === PATRIMOINE HUB === */
+    .patrimoine-content {
+      flex: 1; padding: 28px 36px 100px; overflow-y: auto; background: #f8fafc;
+    }
+    .pat-section-title {
+      font-size: 12px; font-weight: 700; color: #a0aec0;
+      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px;
+    }
+
+    .pat-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 14px; margin-bottom: 28px;
+    }
+    .pat-summary-card {
+      background: white; padding: 18px 20px; border-radius: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .pat-summary-label {
+      font-size: 12px; color: #718096; margin-bottom: 6px;
+    }
+    .pat-summary-value {
+      font-size: 22px; font-weight: 700; color: #2d3748;
+    }
+    .pat-summary-delta {
+      font-size: 11px; font-weight: 600; margin-top: 4px;
+    }
+    .pat-summary-delta.pos { color: #38a169; }
+    .pat-summary-delta.neg { color: #e53e3e; }
+
+    .pat-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .pat-card {
+      background: white; border-radius: 16px; padding: 22px;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      position: relative; overflow: hidden;
+    }
+    .pat-card:hover {
+      transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    }
+    .pat-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 22px; margin-bottom: 14px;
+    }
+    .pi-bien { background: linear-gradient(135deg, #e83e8c 0%, #c42a60 100%); }
+    .pi-credit { background: linear-gradient(135deg, #6f42c1 0%, #4e2a8e 100%); }
+    .pi-recur { background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%); }
+    .pi-amort { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
+
+    .pat-label { font-size: 16px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+    .pat-count { font-size: 13px; color: #a0aec0; margin-bottom: 12px; }
+    .pat-amount { font-size: 18px; font-weight: 700; color: #2d3748; }
+    .pat-arrow {
+      position: absolute; top: 22px; right: 22px;
+      color: #cbd5e0; font-size: 14px;
+    }
+
+    /* === DESCRIPTION === */
+    .description {
+      max-width: 1180px;
+      margin: 48px auto 0;
+      background: white;
+      padding: 32px 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .description h2 {
+      color: #2d3748; margin-bottom: 14px; font-size: 20px;
+    }
+    .description ul { padding-left: 24px; line-height: 1.9; color: #4a5568; }
+    .description strong { color: #2d3748; }
+    .description code {
+      background: #edf2f7; padding: 2px 6px; border-radius: 4px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Option 3 — Desktop / iPad paysage</h1>
+  <p class="subtitle">Rail vertical à gauche · panneau comptes · contenu principal · FAB contextuel</p>
+
+  <div class="screens">
+
+    <!-- ========== ÉCRAN 1 : Comptes ========== -->
+    <div class="screen-wrapper">
+      <div class="screen-label">1. Onglet Comptes — vue desktop classique</div>
+      <div class="ipad">
+        <div class="layout">
+
+          <!-- Rail nav -->
+          <div class="nav-rail">
+            <div class="logo">M</div>
+            <div class="rail-tab active">
+              <i class="fas fa-wallet"></i>
+              <span>Comptes</span>
+            </div>
+            <div class="rail-tab">
+              <i class="fas fa-building"></i>
+              <span>Patrimoine</span>
+            </div>
+            <div class="rail-tab">
+              <i class="fas fa-chart-pie"></i>
+              <span>Stats</span>
+            </div>
+            <div class="rail-tab">
+              <i class="fas fa-cog"></i>
+              <span>Réglages</span>
+            </div>
+            <div class="rail-spacer"></div>
+            <div class="rail-user">JX</div>
+          </div>
+
+          <!-- Comptes panel -->
+          <div class="accounts">
+            <div class="accounts-header">
+              <div class="accounts-title">Solde global</div>
+              <div class="accounts-total">14 832,11 €</div>
+              <div class="accounts-sub">8 comptes · 3 banques</div>
+            </div>
+            <div class="accounts-list">
+              <div class="account-group-title">Disponible</div>
+              <div class="account-item active">
+                <div class="account-color"></div>
+                <div class="account-body">
+                  <div class="account-name">Compte courant</div>
+                  <div class="account-bank">BNP Paribas</div>
+                </div>
+                <div class="account-amount">2 458 €</div>
+              </div>
+              <div class="account-item">
+                <div class="account-color" style="background: linear-gradient(180deg, #38a169, #2f855a);"></div>
+                <div class="account-body">
+                  <div class="account-name">Livret A</div>
+                  <div class="account-bank">BNP Paribas</div>
+                </div>
+                <div class="account-amount">12 200 €</div>
+              </div>
+              <div class="account-item">
+                <div class="account-color" style="background: linear-gradient(180deg, #ed8936, #dd6b20);"></div>
+                <div class="account-body">
+                  <div class="account-name">Compte joint</div>
+                  <div class="account-bank">Crédit Agricole</div>
+                </div>
+                <div class="account-amount">3 290 €</div>
+              </div>
+              <div class="account-group-title" style="margin-top: 8px;">Bloqué</div>
+              <div class="account-item">
+                <div class="account-color" style="background: linear-gradient(180deg, #4299e1, #2b6cb0);"></div>
+                <div class="account-body">
+                  <div class="account-name">PEA</div>
+                  <div class="account-bank">Boursorama</div>
+                </div>
+                <div class="account-amount">8 410 €</div>
+              </div>
+              <div class="account-item">
+                <div class="account-color" style="background: linear-gradient(180deg, #9f7aea, #6b46c1);"></div>
+                <div class="account-body">
+                  <div class="account-name">Assurance vie</div>
+                  <div class="account-bank">Boursorama</div>
+                </div>
+                <div class="account-amount">22 100 €</div>
+              </div>
+              <div class="account-group-title" style="margin-top: 8px;">Retraite</div>
+              <div class="account-item">
+                <div class="account-color" style="background: linear-gradient(180deg, #ec4899, #be185d);"></div>
+                <div class="account-body">
+                  <div class="account-name">PER</div>
+                  <div class="account-bank">Boursorama</div>
+                </div>
+                <div class="account-amount">5 220 €</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main -->
+          <div class="main">
+            <div class="main-header">
+              <div class="mh-left">
+                <div class="mh-title">BNP Paribas · Compte courant</div>
+                <div class="mh-account">Compte courant</div>
+                <div class="mh-balance">2 458,32 €</div>
+              </div>
+              <div class="mh-right">
+                <div class="mh-stat">
+                  <span class="mh-stat-label">Pointé</span>
+                  <span class="mh-stat-value">2 578,82 €</span>
+                </div>
+                <div class="mh-stat">
+                  <span class="mh-stat-label">À pointer</span>
+                  <span class="mh-stat-value">-120,50 €</span>
+                </div>
+                <div class="mh-actions">
+                  <div class="mh-icon-btn"><i class="fas fa-eye"></i></div>
+                  <div class="mh-icon-btn"><i class="fas fa-ellipsis-h"></i></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ops-toolbar">
+              <div class="ops-tabs">
+                <div class="ops-tab active">Toutes</div>
+                <div class="ops-tab">À pointer</div>
+                <div class="ops-tab">Pointées</div>
+              </div>
+              <input class="ops-search" placeholder="Rechercher une opération..." />
+            </div>
+
+            <div class="ops-list">
+              <div class="op-row">
+                <div class="op-date">02/05/2026</div>
+                <div class="op-icon"><i class="fas fa-shopping-cart"></i></div>
+                <div>
+                  <div class="op-name">Carrefour</div>
+                </div>
+                <div><span class="op-cat-pill">Courses</span></div>
+                <div class="op-amount neg">-58,40 €</div>
+                <div class="op-check"><i class="fas fa-check"></i></div>
+                <div class="op-action"><i class="fas fa-ellipsis-v"></i></div>
+              </div>
+              <div class="op-row">
+                <div class="op-date">30/04/2026</div>
+                <div class="op-icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div><div class="op-name">Salaire avril</div></div>
+                <div><span class="op-cat-pill">Revenus</span></div>
+                <div class="op-amount pos">+2 800,00 €</div>
+                <div class="op-check checked"><i class="fas fa-check"></i></div>
+                <div class="op-action"><i class="fas fa-ellipsis-v"></i></div>
+              </div>
+              <div class="op-row">
+                <div class="op-date">28/04/2026</div>
+                <div class="op-icon"><i class="fas fa-bolt"></i></div>
+                <div><div class="op-name">EDF</div></div>
+                <div><span class="op-cat-pill">Énergie</span></div>
+                <div class="op-amount neg">-89,12 €</div>
+                <div class="op-check checked"><i class="fas fa-check"></i></div>
+                <div class="op-action"><i class="fas fa-ellipsis-v"></i></div>
+              </div>
+              <div class="op-row">
+                <div class="op-date">27/04/2026</div>
+                <div class="op-icon"><i class="fas fa-utensils"></i></div>
+                <div><div class="op-name">Restaurant Le Bistrot</div></div>
+                <div><span class="op-cat-pill">Restaurants</span></div>
+                <div class="op-amount neg">-42,00 €</div>
+                <div class="op-check checked"><i class="fas fa-check"></i></div>
+                <div class="op-action"><i class="fas fa-ellipsis-v"></i></div>
+              </div>
+              <div class="op-row">
+                <div class="op-date">25/04/2026</div>
+                <div class="op-icon"><i class="fas fa-gas-pump"></i></div>
+                <div><div class="op-name">Total Énergies</div></div>
+                <div><span class="op-cat-pill">Carburant</span></div>
+                <div class="op-amount neg">-72,80 €</div>
+                <div class="op-check checked"><i class="fas fa-check"></i></div>
+                <div class="op-action"><i class="fas fa-ellipsis-v"></i></div>
+              </div>
+              <div class="op-row">
+                <div class="op-date">24/04/2026</div>
+                <div class="op-icon"><i class="fas fa-home"></i></div>
+                <div><div class="op-name">Loyer mai 2026</div></div>
+                <div><span class="op-cat-pill">Logement</span></div>
+                <div class="op-amount neg">-850,00 €</div>
+                <div class="op-check checked"><i class="fas fa-check"></i></div>
+                <div class="op-action"><i class="fas fa-ellipsis-v"></i></div>
+              </div>
+            </div>
+
+            <!-- FAB -->
+            <div class="fab-container">
+              <button class="fab"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== ÉCRAN 2 : FAB déployé ========== -->
+    <div class="screen-wrapper">
+      <div class="screen-label">2. FAB déployé — actions contextuelles (onglet Comptes)</div>
+      <div class="ipad">
+        <div class="layout">
+
+          <div class="nav-rail">
+            <div class="logo">M</div>
+            <div class="rail-tab active">
+              <i class="fas fa-wallet"></i>
+              <span>Comptes</span>
+            </div>
+            <div class="rail-tab">
+              <i class="fas fa-building"></i>
+              <span>Patrimoine</span>
+            </div>
+            <div class="rail-tab">
+              <i class="fas fa-chart-pie"></i>
+              <span>Stats</span>
+            </div>
+            <div class="rail-tab">
+              <i class="fas fa-cog"></i>
+              <span>Réglages</span>
+            </div>
+            <div class="rail-spacer"></div>
+            <div class="rail-user">JX</div>
+          </div>
+
+          <div class="accounts">
+            <div class="accounts-header">
+              <div class="accounts-title">Solde global</div>
+              <div class="accounts-total">14 832,11 €</div>
+              <div class="accounts-sub">8 comptes · 3 banques</div>
+            </div>
+            <div class="accounts-list">
+              <div class="account-group-title">Disponible</div>
+              <div class="account-item active">
+                <div class="account-color"></div>
+                <div class="account-body">
+                  <div class="account-name">Compte courant</div>
+                  <div class="account-bank">BNP Paribas</div>
+                </div>
+                <div class="account-amount">2 458 €</div>
+              </div>
+              <div class="account-item">
+                <div class="account-color" style="background: linear-gradient(180deg, #38a169, #2f855a);"></div>
+                <div class="account-body">
+                  <div class="account-name">Livret A</div>
+                  <div class="account-bank">BNP Paribas</div>
+                </div>
+                <div class="account-amount">12 200 €</div>
+              </div>
+              <div class="account-item">
+                <div class="account-color" style="background: linear-gradient(180deg, #ed8936, #dd6b20);"></div>
+                <div class="account-body">
+                  <div class="account-name">Compte joint</div>
+                  <div class="account-bank">Crédit Agricole</div>
+                </div>
+                <div class="account-amount">3 290 €</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="main">
+            <div class="main-header">
+              <div class="mh-left">
+                <div class="mh-title">BNP Paribas · Compte courant</div>
+                <div class="mh-account">Compte courant</div>
+                <div class="mh-balance">2 458,32 €</div>
+              </div>
+              <div class="mh-right">
+                <div class="mh-stat">
+                  <span class="mh-stat-label">Pointé</span>
+                  <span class="mh-stat-value">2 578,82 €</span>
+                </div>
+                <div class="mh-stat">
+                  <span class="mh-stat-label">À pointer</span>
+                  <span class="mh-stat-value">-120,50 €</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ops-toolbar">
+              <div class="ops-tabs">
+                <div class="ops-tab active">Toutes</div>
+                <div class="ops-tab">À pointer</div>
+                <div class="ops-tab">Pointées</div>
+              </div>
+              <input class="ops-search" placeholder="Rechercher une opération..." />
+            </div>
+
+            <div class="ops-list">
+              <div class="op-row">
+                <div class="op-date">02/05/2026</div>
+                <div class="op-icon"><i class="fas fa-shopping-cart"></i></div>
+                <div><div class="op-name">Carrefour</div></div>
+                <div><span class="op-cat-pill">Courses</span></div>
+                <div class="op-amount neg">-58,40 €</div>
+                <div class="op-check"><i class="fas fa-check"></i></div>
+                <div class="op-action"><i class="fas fa-ellipsis-v"></i></div>
+              </div>
+              <div class="op-row">
+                <div class="op-date">30/04/2026</div>
+                <div class="op-icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div><div class="op-name">Salaire avril</div></div>
+                <div><span class="op-cat-pill">Revenus</span></div>
+                <div class="op-amount pos">+2 800,00 €</div>
+                <div class="op-check checked"><i class="fas fa-check"></i></div>
+                <div class="op-action"><i class="fas fa-ellipsis-v"></i></div>
+              </div>
+            </div>
+
+            <div class="fab-backdrop"></div>
+            <div class="fab-container">
+              <button class="fab expanded"><i class="fas fa-plus"></i></button>
+              <div class="mini-fab">
+                <span class="label">Virement entre comptes</span>
+                <div class="btn"><i class="fas fa-exchange-alt"></i></div>
+              </div>
+              <div class="mini-fab">
+                <span class="label">Nouvelle opération</span>
+                <div class="btn"><i class="fas fa-pen"></i></div>
+              </div>
+              <div class="mini-fab">
+                <span class="label">Rechercher</span>
+                <div class="btn"><i class="fas fa-search"></i></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== ÉCRAN 3 : Patrimoine ========== -->
+    <div class="screen-wrapper">
+      <div class="screen-label">3. Onglet Patrimoine — hub avec cartes et résumé</div>
+      <div class="ipad">
+        <div class="layout">
+
+          <div class="nav-rail">
+            <div class="logo">M</div>
+            <div class="rail-tab">
+              <i class="fas fa-wallet"></i>
+              <span>Comptes</span>
+            </div>
+            <div class="rail-tab active">
+              <i class="fas fa-building"></i>
+              <span>Patrimoine</span>
+            </div>
+            <div class="rail-tab">
+              <i class="fas fa-chart-pie"></i>
+              <span>Stats</span>
+            </div>
+            <div class="rail-tab">
+              <i class="fas fa-cog"></i>
+              <span>Réglages</span>
+            </div>
+            <div class="rail-spacer"></div>
+            <div class="rail-user">JX</div>
+          </div>
+
+          <!-- Pas de panneau "comptes" sur l'onglet Patrimoine : la zone main occupe toute la largeur restante -->
+          <div class="main">
+            <div class="main-header">
+              <div class="mh-left">
+                <div class="mh-title">Vue d'ensemble</div>
+                <div class="mh-account">Patrimoine</div>
+                <div class="mh-balance">412 580 €</div>
+              </div>
+              <div class="mh-right">
+                <div class="mh-stat">
+                  <span class="mh-stat-label">Plus-value latente</span>
+                  <span class="mh-stat-value">+18 200 €</span>
+                </div>
+                <div class="mh-stat">
+                  <span class="mh-stat-label">Reste à rembourser</span>
+                  <span class="mh-stat-value">-187 400 €</span>
+                </div>
+                <div class="mh-actions">
+                  <div class="mh-icon-btn"><i class="fas fa-eye"></i></div>
+                  <div class="mh-icon-btn"><i class="fas fa-download"></i></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="patrimoine-content">
+              <div class="pat-section-title">Aperçu</div>
+              <div class="pat-summary">
+                <div class="pat-summary-card">
+                  <div class="pat-summary-label">Valeur immobilière</div>
+                  <div class="pat-summary-value">385 000 €</div>
+                  <div class="pat-summary-delta pos">+ 4,9 % YTD</div>
+                </div>
+                <div class="pat-summary-card">
+                  <div class="pat-summary-label">Capital remboursé</div>
+                  <div class="pat-summary-value">62 350 €</div>
+                  <div class="pat-summary-delta pos">+ 8 200 € en 2026</div>
+                </div>
+                <div class="pat-summary-card">
+                  <div class="pat-summary-label">Mensualités totales</div>
+                  <div class="pat-summary-value">1 480 €</div>
+                  <div class="pat-summary-delta">3 crédits actifs</div>
+                </div>
+                <div class="pat-summary-card">
+                  <div class="pat-summary-label">Cash-flow locatif</div>
+                  <div class="pat-summary-value">+ 220 €</div>
+                  <div class="pat-summary-delta pos">par mois</div>
+                </div>
+              </div>
+
+              <div class="pat-section-title">Mes outils</div>
+              <div class="pat-grid">
+                <div class="pat-card">
+                  <div class="pat-icon pi-bien"><i class="fas fa-home"></i></div>
+                  <div class="pat-arrow"><i class="fas fa-chevron-right"></i></div>
+                  <div class="pat-label">Biens</div>
+                  <div class="pat-count">2 biens immobiliers</div>
+                  <div class="pat-amount">385 000 €</div>
+                </div>
+                <div class="pat-card">
+                  <div class="pat-icon pi-credit"><i class="fas fa-credit-card"></i></div>
+                  <div class="pat-arrow"><i class="fas fa-chevron-right"></i></div>
+                  <div class="pat-label">Crédits</div>
+                  <div class="pat-count">3 crédits actifs</div>
+                  <div class="pat-amount">- 187 400 €</div>
+                </div>
+                <div class="pat-card">
+                  <div class="pat-icon pi-recur"><i class="fas fa-retweet"></i></div>
+                  <div class="pat-arrow"><i class="fas fa-chevron-right"></i></div>
+                  <div class="pat-label">Récurrentes</div>
+                  <div class="pat-count">12 opérations</div>
+                  <div class="pat-amount">- 1 920 € / mois</div>
+                </div>
+                <div class="pat-card">
+                  <div class="pat-icon pi-amort"><i class="fas fa-history"></i></div>
+                  <div class="pat-arrow"><i class="fas fa-chevron-right"></i></div>
+                  <div class="pat-label">Amortissement</div>
+                  <div class="pat-count">Suivi 2026</div>
+                  <div class="pat-amount">62 350 € remboursé</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAB contextuel : sur Patrimoine, le + ouvre les créations Bien/Crédit/Récurrente -->
+            <div class="fab-container">
+              <button class="fab"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="description">
+    <h2>Adaptation Desktop / iPad paysage</h2>
+    <ul>
+      <li><strong>Rail vertical fixe à gauche</strong> (84 px) : remplace la barre du bas du mobile. Les 4 onglets sont toujours visibles avec un indicateur lumineux sur l'onglet actif. Le rail est sombre pour faire respirer la zone de contenu.</li>
+      <li><strong>Trois colonnes sur l'onglet Comptes</strong> : rail · liste des comptes (300 px) · contenu principal. La liste des comptes apparaît uniquement quand elle est pertinente — sur les autres onglets, le contenu principal s'étale sur toute la largeur.</li>
+      <li><strong>Tableau d'opérations enrichi</strong> : sur grand écran on tire parti de la largeur (date · icône · nom · catégorie · montant · check · menu). Sur mobile, ces colonnes s'empilent comme aujourd'hui.</li>
+      <li><strong>Hub Patrimoine</strong> : un header avec patrimoine total et plus-value, 4 cartes de KPI en haut (valeur immo, capital remboursé, mensualités totales, cash-flow locatif) puis la grille des 4 outils. C'est la vue qui justifie le mieux le mode paysage.</li>
+      <li><strong>FAB en bas-droite du contenu</strong>, pas de l'écran : il se positionne dans la zone qu'il commande. Speed-dial avec labels textuels (le hover desktop donne plus de place qu'un long-press mobile).</li>
+      <li><strong>Avatar utilisateur</strong> en bas du rail : remplace le bouton réglages discret + permet de switcher d'utilisateur ou se déconnecter.</li>
+    </ul>
+    <h2 style="margin-top: 24px;">Composants à créer / refactorer</h2>
+    <ul>
+      <li><code>NavRail.vue</code> (desktop) + <code>BottomTabs.vue</code> (mobile) qui partagent le même contrat de tabs</li>
+      <li><code>FabMenu.vue</code> avec slot pour mini-actions contextuelles à chaque vue</li>
+      <li><code>Patrimoine.vue</code> : nouvelle vue hub, KPI calculés à partir des stores existants <code>credit</code> et <code>bien</code></li>
+      <li>Ajustement de <code>App.vue</code> : layout en grid (rail / accounts / main) plutôt qu'en flex avec navbar bottom</li>
+    </ul>
+  </div>
+</body>
+</html>
