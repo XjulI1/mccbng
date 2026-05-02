@@ -14,7 +14,7 @@
   store.dispatch('fetchOperations', {
     amortissement: 1
   })
-  store.commit('setActiveAccount', { NomCompte: 'Amortissement' })
+  store.commit('setActiveAccount', { NomCompte: "Coûts d'usage" })
 </script>
 
 <style lang="scss" scoped>
