@@ -186,14 +186,16 @@ export class CreditController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Credit, {partial: true}),
+          schema: getModelSchemaRef(Credit, {
+            partial: true,
+            exclude: ['IDuser'],
+          }),
         },
       },
     })
-    credit: Credit,
+    credit: Omit<Credit, 'IDuser'>,
     @param.where(Credit) where?: Where<Credit>,
   ): Promise<Count> {
-    delete credit.IDuser;
     if (credit.IDcompte !== undefined) {
       await this.assertCompteOwned(credit.IDcompte, currentUserProfile);
     }
@@ -238,14 +240,16 @@ export class CreditController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Credit, {partial: true}),
+          schema: getModelSchemaRef(Credit, {
+            partial: true,
+            exclude: ['IDuser'],
+          }),
         },
       },
     })
-    credit: Credit,
+    credit: Omit<Credit, 'IDuser'>,
   ): Promise<void> {
     await this.assertOwned(id, currentUserProfile);
-    delete credit.IDuser;
     if (credit.IDcompte !== undefined) {
       await this.assertCompteOwned(credit.IDcompte, currentUserProfile);
     }
