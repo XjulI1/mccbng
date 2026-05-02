@@ -26,6 +26,29 @@
 
       <div class="config-card">
         <div class="card-header">
+          <div class="card-icon account-icon">
+            <font-awesome-icon icon="user-cog" />
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">
+              Mon compte
+            </h3>
+            <p class="card-description">
+              Modifier les informations de votre compte utilisateur
+            </p>
+          </div>
+        </div>
+        <router-link
+          class="config-btn account-btn"
+          to="/editUser"
+        >
+          <font-awesome-icon icon="user-edit" />
+          Modifier mes informations
+        </router-link>
+      </div>
+
+      <div class="config-card">
+        <div class="card-header">
           <div class="card-icon privacy-icon">
             <font-awesome-icon icon="eye-slash" />
           </div>
@@ -241,6 +264,11 @@
         background: rgba(111, 66, 193, 0.1);
         color: #6f42c1;
       }
+
+      &.account-icon {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+      }
     }
 
     .card-content {
@@ -340,6 +368,11 @@
 
     &.debug-active-btn {
       background: linear-gradient(135deg, #6f42c1 0%, #9c6fe4 100%);
+      color: white;
+    }
+
+    &.account-btn {
+      background: var(--primary-gradient);
       color: white;
     }
   }

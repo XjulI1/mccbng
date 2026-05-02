@@ -4,6 +4,7 @@ const Home = () => import(/* webpackChunkName: "home" */ './views/Home.vue')
 const Stats = () => import(/* webpackChunkName: "stats" */ './views/Stats.vue')
 const Login = () => import(/* webpackChunkName: "login" */ './views/Login.vue')
 const Config = () => import(/* webpackChunkName: "config" */ './views/Config.vue')
+const EditUser = () => import(/* webpackChunkName: "edituser" */ './views/EditUser.vue')
 const OperationsRecurrentes = () => import(/* webpackChunkName: "operecur" */ './views/OperationsRecurrentes.vue')
 const Amortissement = () => import(/* webpackChunkName: "operecur" */ './views/Amortissement.vue')
 const Credits = () => import(/* webpackChunkName: "credits" */ './views/Credits.vue')
@@ -120,6 +121,13 @@ export default createRouter({
     path: '/config',
     name: 'Config',
     component: Config,
+    meta: {
+      disabledTotalHeader: true
+    }
+  }, {
+    path: '/editUser',
+    name: 'Mon compte',
+    component: EditUser,
     meta: {
       disabledTotalHeader: true
     }
