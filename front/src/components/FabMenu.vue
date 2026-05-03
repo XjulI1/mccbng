@@ -163,13 +163,17 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.fab:not(:disabled):hover {
+.fab:not(:disabled):not(.expanded):hover {
   transform: scale(1.05);
 }
 
 .fab.expanded {
   transform: rotate(45deg);
   color: #667eea;
+}
+
+.fab.expanded:hover {
+  transform: rotate(45deg) scale(1.05);
 }
 
 .fab:disabled {
