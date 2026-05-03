@@ -196,16 +196,12 @@
   }
 
   .tab {
-    width: 54px;
+    width: 56px;
     padding: 5px 2px;
   }
 
   .tab-icon {
     font-size: 19px;
-  }
-
-  .tab-label {
-    font-size: 9px;
   }
 
   .tab-burger {

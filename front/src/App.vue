@@ -178,17 +178,16 @@ hr {
 
 .bottom-dock {
   position: fixed;
-  bottom: 16px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 10px;
   z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 
   @media screen and (max-width: $mobile_BP_max_width) {
-    bottom: 12px;
+    bottom: 8px;
     gap: 6px;
   }
 }
