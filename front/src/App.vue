@@ -207,7 +207,7 @@ hr {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--bg-glass, rgba(255, 255, 255, 0.75));
+  background: var(--bg-dock, rgba(255, 255, 255, 0.55));
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   color: var(--text-primary, #2d3748);
