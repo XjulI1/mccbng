@@ -6,6 +6,20 @@
     aria-label="Navigation principale"
   >
     <button
+      v-if="!displayAccountList"
+      type="button"
+      class="tab tab-burger"
+      :style="{ '--tab-color': '#4a5568' }"
+      aria-label="Ouvrir la liste des comptes"
+      @click="openAccountList"
+    >
+      <font-awesome-icon
+        class="tab-icon"
+        icon="hamburger"
+      />
+      <span class="tab-label">Comptes</span>
+    </button>
+    <button
       v-for="tab in tabs"
       :key="tab.path"
       type="button"
@@ -25,6 +39,7 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useStore } from 'vuex'
   import type { RouteLocationNormalizedLoaded } from 'vue-router'
@@ -32,6 +47,8 @@
   const route = useRoute()
   const router = useRouter()
   const store = useStore()
+
+  const displayAccountList = computed(() => store.state.display.account_list)
 
   type Tab = {
     label: string
@@ -91,6 +108,10 @@
     if (route.path !== path) {
       router.push(path)
     }
+  }
+
+  const openAccountList = () => {
+    store.dispatch('toggleAccountList', true)
   }
 </script>
 
@@ -163,6 +184,10 @@
   text-overflow: ellipsis;
 }
 
+.tab-burger {
+  display: none;
+}
+
 @media screen and (max-width: $mobile_BP_max_width) {
   .tab {
     width: 58px;
@@ -170,6 +195,10 @@
 
   .tab-icon {
     font-size: 19px;
+  }
+
+  .tab-burger {
+    display: flex;
   }
 }
 </style>
