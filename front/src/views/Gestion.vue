@@ -23,50 +23,6 @@
       <button
         type="button"
         class="gestion-card"
-        @click="goTo('/biens')"
-      >
-        <div class="gestion-icon icon-bien">
-          <font-awesome-icon icon="home" />
-        </div>
-        <div class="gestion-label">
-          Biens
-        </div>
-        <div class="gestion-count">
-          {{ biensCount }} bien{{ biensCount > 1 ? 's' : '' }}
-        </div>
-        <div
-          v-if="totalBiens > 0"
-          class="gestion-amount"
-        >
-          <Currency :amount="totalBiens" />
-        </div>
-      </button>
-
-      <button
-        type="button"
-        class="gestion-card"
-        @click="goTo('/credits')"
-      >
-        <div class="gestion-icon icon-credit">
-          <font-awesome-icon icon="credit-card" />
-        </div>
-        <div class="gestion-label">
-          Crédits
-        </div>
-        <div class="gestion-count">
-          {{ creditsCount }} actif{{ creditsCount > 1 ? 's' : '' }}
-        </div>
-        <div
-          v-if="totalCreditsRemaining > 0"
-          class="gestion-amount neg"
-        >
-          <Currency :amount="-totalCreditsRemaining" />
-        </div>
-      </button>
-
-      <button
-        type="button"
-        class="gestion-card"
         @click="goTo('/recurrOperation')"
       >
         <div class="gestion-icon icon-recur">
@@ -95,18 +51,67 @@
           Suivi des achats
         </div>
       </button>
+
+      <button
+        type="button"
+        class="gestion-card"
+        @click="goTo('/credits')"
+      >
+        <div class="gestion-icon icon-credit">
+          <font-awesome-icon icon="credit-card" />
+        </div>
+        <div class="gestion-label">
+          Crédits
+        </div>
+        <div class="gestion-count">
+          {{ creditsCount }} actif{{ creditsCount > 1 ? 's' : '' }}
+        </div>
+        <div
+          v-if="totalCreditsRemaining > 0"
+          class="gestion-amount neg"
+        >
+          <Currency :amount="-totalCreditsRemaining" />
+        </div>
+      </button>
+
+      <button
+        type="button"
+        class="gestion-card"
+        @click="goTo('/biens')"
+      >
+        <div class="gestion-icon icon-bien">
+          <font-awesome-icon icon="home" />
+        </div>
+        <div class="gestion-label">
+          Biens
+        </div>
+        <div class="gestion-count">
+          {{ biensCount }} bien{{ biensCount > 1 ? 's' : '' }}
+        </div>
+        <div
+          v-if="totalBiens > 0"
+          class="gestion-amount"
+        >
+          <Currency :amount="totalBiens" />
+        </div>
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted } from 'vue'
+  import { computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { useStore } from 'vuex'
   import Currency from '@/components/Currency.vue'
 
   const store = useStore()
   const router = useRouter()
+
+  store.commit('setActiveAccount', { NomCompte: 'Gestion' })
+  store.dispatch('fetchBiens')
+  store.dispatch('fetchCredits')
+  store.dispatch('fetchRecurrOperation')
 
   const biens = computed(() => store.state.bien.bienList || [])
   const credits = computed(() => store.state.credit.creditList || [])
@@ -142,13 +147,6 @@
   const goTo = (path: string) => {
     router.push(path)
   }
-
-  onMounted(() => {
-    store.commit('setActiveAccount', { NomCompte: 'Gestion' })
-    store.dispatch('fetchBiens')
-    store.dispatch('fetchCredits')
-    store.dispatch('fetchRecurrOperation')
-  })
 </script>
 
 <style lang="scss" scoped>

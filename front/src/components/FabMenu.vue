@@ -129,11 +129,13 @@
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
-  z-index: 105;
+  z-index: 1;
   pointer-events: auto;
 }
 
 .fab-stack {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
