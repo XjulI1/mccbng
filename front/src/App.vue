@@ -25,6 +25,15 @@
       v-if="route.name !== 'Login'"
       class="bottom-dock"
     >
+      <button
+        v-if="!displayAccountList"
+        type="button"
+        class="dock-burger"
+        aria-label="Ouvrir la liste des comptes"
+        @click="openAccountList"
+      >
+        <font-awesome-icon icon="hamburger" />
+      </button>
       <NavBar />
       <FabMenu />
     </div>
@@ -190,6 +199,34 @@ hr {
   @media screen and (max-width: $mobile_BP_max_width) {
     bottom: 12px;
     gap: 8px;
+  }
+}
+
+.dock-burger {
+  display: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-glass, rgba(255, 255, 255, 0.75));
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  color: var(--text-primary, #2d3748);
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  font-size: 20px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  @media screen and (max-width: $mobile_BP_max_width) {
+    display: flex;
   }
 }
 

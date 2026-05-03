@@ -1,15 +1,14 @@
 <template>
-  <div
-    v-if="actions.length > 0"
-    class="fab-wrapper"
-  >
-    <transition name="fade">
-      <div
-        v-if="expanded"
-        class="fab-backdrop"
-        @click="close"
-      />
-    </transition>
+  <div class="fab-wrapper">
+    <Teleport to="body">
+      <transition name="fade">
+        <div
+          v-if="expanded"
+          class="fab-backdrop"
+          @click="close"
+        />
+      </transition>
+    </Teleport>
 
     <transition-group
       v-if="expanded"
@@ -34,7 +33,10 @@
       type="button"
       class="fab"
       :class="{ expanded }"
-      :aria-label="expanded ? 'Fermer le menu' : 'Ouvrir le menu d\'actions'"
+      :disabled="actions.length === 0"
+      :aria-label="actions.length === 0
+        ? 'Aucune action disponible'
+        : (expanded ? 'Fermer le menu' : 'Ouvrir le menu d\'actions')"
       :aria-expanded="expanded"
       @click="toggle"
     >
@@ -101,6 +103,7 @@
   }
 
   const toggle = () => {
+    if (actions.value.length === 0) return
     expanded.value = !expanded.value
   }
 
@@ -120,16 +123,13 @@
 <style lang="scss" scoped>
 .fab-wrapper {
   position: relative;
-  z-index: 1;
 }
 
 .fab-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index: 1;
+  background: transparent;
+  z-index: 90;
 }
 
 .mini-fabs {
@@ -140,12 +140,10 @@
   flex-direction: column-reverse;
   align-items: flex-end;
   gap: 12px;
-  z-index: 3;
 }
 
 .fab {
   position: relative;
-  z-index: 2;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -165,13 +163,18 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.fab:hover {
+.fab:not(:disabled):hover {
   transform: scale(1.05);
 }
 
 .fab.expanded {
   transform: rotate(45deg);
   color: #667eea;
+}
+
+.fab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .mini-fab {

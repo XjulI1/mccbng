@@ -11,6 +11,7 @@
       type="button"
       class="tab"
       :class="{ active: tab.match(route) }"
+      :style="{ '--tab-color': tab.color }"
       :aria-current="tab.match(route) ? 'page' : undefined"
       @click="goTo(tab.path)"
     >
@@ -36,6 +37,7 @@
     label: string
     icon: string
     path: string
+    color: string
     match: (r: RouteLocationNormalizedLoaded) => boolean
   }
 
@@ -58,24 +60,28 @@
       label: 'Recherche',
       icon: 'search',
       path: '/search',
+      color: '#17a2b8',
       match: (r) => r.path === '/search'
     },
     {
       label: 'Gestion',
       icon: 'building',
       path: '/gestion',
+      color: '#6f42c1',
       match: isGestionRoute
     },
     {
       label: 'Stats',
       icon: 'chart-pie',
       path: '/stats',
+      color: '#e0a800',
       match: (r) => r.path === '/stats'
     },
     {
       label: 'Réglages',
       icon: 'cogs',
       path: '/config',
+      color: '#dc3545',
       match: isSettingsRoute
     }
   ]
@@ -104,6 +110,7 @@
 }
 
 .tab {
+  --tab-color: #2d3748;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -117,7 +124,6 @@
   border-radius: 22px;
   color: var(--text-primary, #2d3748);
   transition:
-    color 0.2s ease,
     background-color 0.2s ease,
     transform 0.2s ease;
   font: inherit;
@@ -125,11 +131,11 @@
 }
 
 .tab:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: color-mix(in srgb, var(--tab-color) 12%, transparent);
 }
 
 .tab.active {
-  color: #667eea;
+  background: color-mix(in srgb, var(--tab-color) 16%, transparent);
 }
 
 .tab.active .tab-icon {
@@ -137,11 +143,13 @@
 }
 
 .tab.active .tab-label {
+  color: var(--tab-color);
   font-weight: 700;
 }
 
 .tab-icon {
   font-size: 20px;
+  color: var(--tab-color);
   transition: transform 0.2s ease;
 }
 
