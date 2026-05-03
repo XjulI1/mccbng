@@ -189,7 +189,7 @@ hr {
 
   @media screen and (max-width: $mobile_BP_max_width) {
     bottom: 12px;
-    gap: 8px;
+    gap: 6px;
   }
 }
 

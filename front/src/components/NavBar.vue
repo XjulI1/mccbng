@@ -190,12 +190,22 @@
 }
 
 @media screen and (max-width: $mobile_BP_max_width) {
+  .tab-bar {
+    gap: 0;
+    padding: 5px 6px;
+  }
+
   .tab {
-    width: 58px;
+    width: 54px;
+    padding: 5px 2px;
   }
 
   .tab-icon {
     font-size: 19px;
+  }
+
+  .tab-label {
+    font-size: 9px;
   }
 
   .tab-burger {
