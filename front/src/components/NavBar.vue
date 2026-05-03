@@ -1,23 +1,26 @@
 <template>
-  <div
+  <nav
     v-if="route.name !== 'Login'"
-    class="nav-bar btn-group"
-    role="group"
+    class="tab-bar"
+    role="navigation"
     aria-label="Navigation principale"
   >
     <button
       v-for="tab in tabs"
       :key="tab.path"
       type="button"
-      class="btn"
-      :class="[tab.colorClass, { active: tab.match(route) }]"
-      :aria-label="tab.label"
+      class="tab"
+      :class="{ active: tab.match(route) }"
       :aria-current="tab.match(route) ? 'page' : undefined"
       @click="goTo(tab.path)"
     >
-      <font-awesome-icon :icon="tab.icon" />
+      <font-awesome-icon
+        class="tab-icon"
+        :icon="tab.icon"
+      />
+      <span class="tab-label">{{ tab.label }}</span>
     </button>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
@@ -33,7 +36,6 @@
     label: string
     icon: string
     path: string
-    colorClass: string
     match: (r: RouteLocationNormalizedLoaded) => boolean
   }
 
@@ -56,28 +58,24 @@
       label: 'Recherche',
       icon: 'search',
       path: '/search',
-      colorClass: 'btn-info',
       match: (r) => r.path === '/search'
     },
     {
       label: 'Gestion',
       icon: 'building',
       path: '/gestion',
-      colorClass: 'btn-credit',
       match: isGestionRoute
     },
     {
       label: 'Stats',
       icon: 'chart-pie',
       path: '/stats',
-      colorClass: 'btn-warning',
       match: (r) => r.path === '/stats'
     },
     {
       label: 'Réglages',
       icon: 'cogs',
       path: '/config',
-      colorClass: 'btn-danger',
       match: isSettingsRoute
     }
   ]
@@ -91,132 +89,79 @@
 </script>
 
 <style lang="scss" scoped>
-.btn {
-  display: inline-block;
-  font-weight: 400;
-  color: #fff;
-  text-align: center;
-  vertical-align: middle;
-  cursor: pointer;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  background-color: transparent;
-  border: 1px solid transparent;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  border-radius: 0.25rem;
-  transition:
-    color 0.15s ease-in-out,
-    background-color 0.15s ease-in-out,
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out,
-    transform 0.15s ease-in-out;
-  text-decoration: none;
-}
-
-.btn-warning {
-  color: #212529;
-  background-color: #ffc107;
-  border-color: #ffc107;
-}
-
-.btn-warning:hover {
-  color: #212529;
-  background-color: #e0a800;
-  border-color: #d39e00;
-}
-
-.btn-danger {
-  color: #fff;
-  background-color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-danger:hover {
-  color: #fff;
-  background-color: #c82333;
-  border-color: #bd2130;
-}
-
-.btn-credit {
-  color: #fff;
-  background-color: #6f42c1;
-  border-color: #6f42c1;
-}
-
-.btn-credit:hover {
-  color: #fff;
-  background-color: #5a32a3;
-  border-color: #4e2a8e;
-}
-
-.btn-info {
-  color: #fff;
-  background-color: #17a2b8;
-  border-color: #17a2b8;
-}
-
-.btn-info:hover {
-  color: #fff;
-  background-color: #138496;
-  border-color: #117a8b;
-}
-
-.nav-bar {
-  padding: 6px 10px;
-  height: auto;
-  width: fit-content;
-  max-width: 90%;
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+.tab-bar {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-  z-index: 100;
-  border-radius: 18px;
-  background-color: var(--bg-glass, rgba(255, 255, 255, 0.6));
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  align-items: stretch;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 28px;
+  background: var(--bg-glass, rgba(255, 255, 255, 0.75));
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
 
-  @media screen and (max-width: $mobile_BP_max_width) {
-    width: fit-content;
-    max-width: 95%;
-    bottom: 16px;
-    padding: 5px 8px;
-    gap: 6px;
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 64px;
+  padding: 6px 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 22px;
+  color: var(--text-primary, #2d3748);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.tab.active {
+  color: #667eea;
+}
+
+.tab.active .tab-icon {
+  transform: scale(1.05);
+}
+
+.tab.active .tab-label {
+  font-weight: 700;
+}
+
+.tab-icon {
+  font-size: 20px;
+  transition: transform 0.2s ease;
+}
+
+.tab-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media screen and (max-width: $mobile_BP_max_width) {
+  .tab {
+    width: 58px;
   }
 
-  &.btn-group {
-    .btn {
-      margin: 0;
-      height: $navbar-height;
-      width: 3rem;
-      border: none;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      font-size: 1.2rem;
-      font-weight: 600;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      }
-
-      &.active {
-        transform: translateY(-1px);
-        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.9),
-          0 4px 12px rgba(0, 0, 0, 0.25);
-      }
-    }
+  .tab-icon {
+    font-size: 19px;
   }
 }
 </style>

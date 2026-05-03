@@ -21,8 +21,13 @@
         :class="{ 'mask-panel': displayAccountList }"
       />
     </div>
-    <NavBar />
-    <FabMenu v-if="route.name !== 'Login'" />
+    <div
+      v-if="route.name !== 'Login'"
+      class="bottom-dock"
+    >
+      <NavBar />
+      <FabMenu />
+    </div>
   </div>
 </template>
 
@@ -169,6 +174,23 @@ hr {
 
 .app-header.is-login-page {
   display: none !important;
+}
+
+.bottom-dock {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  @media screen and (max-width: $mobile_BP_max_width) {
+    bottom: 12px;
+    gap: 8px;
+  }
 }
 
 @media screen and (max-width: $mobile_BP_max_width) {

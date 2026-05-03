@@ -11,32 +11,35 @@
       />
     </transition>
 
-    <div class="fab-stack">
-      <transition-group name="pop">
-        <button
-          v-for="action in expanded ? actions : []"
-          :key="action.label"
-          type="button"
-          class="mini-fab"
-          :class="action.color"
-          @click="run(action)"
-        >
-          <span class="mini-fab-label">{{ action.label }}</span>
-          <font-awesome-icon :icon="action.icon" />
-        </button>
-      </transition-group>
-
+    <transition-group
+      v-if="expanded"
+      name="pop"
+      tag="div"
+      class="mini-fabs"
+    >
       <button
+        v-for="action in actions"
+        :key="action.label"
         type="button"
-        class="fab"
-        :class="{ expanded }"
-        :aria-label="expanded ? 'Fermer le menu' : 'Ouvrir le menu d\'actions'"
-        :aria-expanded="expanded"
-        @click="toggle"
+        class="mini-fab"
+        :class="action.color"
+        @click="run(action)"
       >
-        <font-awesome-icon icon="plus" />
+        <span class="mini-fab-label">{{ action.label }}</span>
+        <font-awesome-icon :icon="action.icon" />
       </button>
-    </div>
+    </transition-group>
+
+    <button
+      type="button"
+      class="fab"
+      :class="{ expanded }"
+      :aria-label="expanded ? 'Fermer le menu' : 'Ouvrir le menu d\'actions'"
+      :aria-expanded="expanded"
+      @click="toggle"
+    >
+      <font-awesome-icon icon="plus" />
+    </button>
   </div>
 </template>
 
@@ -116,11 +119,8 @@
 
 <style lang="scss" scoped>
 .fab-wrapper {
-  position: fixed;
-  right: 16px;
-  bottom: calc(#{$navbar-height-and-margin} + env(safe-area-inset-bottom, 0px));
-  z-index: 110;
-  pointer-events: none;
+  position: relative;
+  z-index: 1;
 }
 
 .fab-backdrop {
@@ -130,33 +130,38 @@
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   z-index: 1;
-  pointer-events: auto;
 }
 
-.fab-stack {
-  position: relative;
-  z-index: 2;
+.mini-fabs {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: flex-end;
   gap: 12px;
-  pointer-events: auto;
+  z-index: 3;
 }
 
 .fab {
+  position: relative;
+  z-index: 2;
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
-  color: #fff;
+  background: var(--bg-glass, rgba(255, 255, 255, 0.75));
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  color: var(--text-primary, #2d3748);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   cursor: pointer;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  font-size: 22px;
-  border: none;
+  font-size: 20px;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -166,6 +171,7 @@
 
 .fab.expanded {
   transform: rotate(45deg);
+  color: #667eea;
 }
 
 .mini-fab {
@@ -196,11 +202,15 @@
 .fab-bien { background: linear-gradient(135deg, #e83e8c, #c42a60); }
 
 .pop-enter-active {
-  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .pop-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .pop-enter-from {
