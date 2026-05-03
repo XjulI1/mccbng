@@ -12,6 +12,9 @@
 
   const store = useStore()
 
+  store.commit('setOperationsOfActiveAccount', [])
+  store.commit('setActiveAccount', { NomCompte: 'Opérations récurrentes' })
+
   const userToken = computed(() => store.state.user.token)
   const operationsOfActiveAccount = computed(
     () => store.state.operation.operationsOfActiveAccount
