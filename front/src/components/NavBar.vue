@@ -6,12 +6,15 @@
     aria-label="Navigation principale"
   >
     <button
-      v-if="!displayAccountList"
       type="button"
       class="tab tab-burger"
+      :class="{ active: displayAccountList }"
       :style="{ '--tab-color': '#4a5568' }"
-      aria-label="Ouvrir la liste des comptes"
-      @click="openAccountList"
+      :aria-label="displayAccountList
+        ? 'Fermer la liste des comptes'
+        : 'Ouvrir la liste des comptes'"
+      :aria-pressed="displayAccountList"
+      @click="toggleCompteList"
     >
       <font-awesome-icon
         class="tab-icon"
@@ -110,8 +113,8 @@
     }
   }
 
-  const openAccountList = () => {
-    store.dispatch('toggleAccountList', true)
+  const toggleCompteList = () => {
+    store.dispatch('toggleAccountList')
   }
 </script>
 
