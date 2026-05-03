@@ -178,7 +178,7 @@ hr {
 
 .bottom-dock {
   position: fixed;
-  bottom: 12px;
+  bottom: 15px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -187,7 +187,6 @@ hr {
   z-index: 100;
 
   @media screen and (max-width: $mobile_BP_max_width) {
-    bottom: 8px;
     gap: 6px;
   }
 }
