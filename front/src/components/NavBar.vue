@@ -125,12 +125,10 @@
   gap: 4px;
   padding: 6px 8px;
   border-radius: 28px;
-  background: var(--bg-dock, rgba(255, 255, 255, 0.55));
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12),
-    0 1px 0 rgba(255, 255, 255, 0.4) inset;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .tab {
