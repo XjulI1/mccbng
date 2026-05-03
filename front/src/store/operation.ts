@@ -160,9 +160,6 @@ export default {
     },
 
     fetchRecurrOperation ({ rootState, commit }) {
-      commit('setOperationsOfActiveAccount', {})
-      commit('setActiveAccount', { NomCompte: 'Opérations récurrentes' })
-
       fetchRecurrOperation(
         rootState.user.token,
         window.env.VITE_API_URL

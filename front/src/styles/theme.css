@@ -34,6 +34,7 @@
   --bg-muted: #f1f5f9;
   --bg-glass: rgba(255, 255, 255, 0.95);
   --bg-glass-dark: rgba(255, 255, 255, 0.8);
+  --bg-dock: rgba(255, 255, 255, 0.55);
   --bg-overlay: rgba(0, 0, 0, 0.25);
   --bg-overlay-light: rgba(0, 0, 0, 0.05);
   --bg-overlay-medium: rgba(0, 0, 0, 0.075);
@@ -211,7 +212,8 @@
     --bg-muted: #4a5568;
     --bg-glass: rgba(45, 55, 72, 0.95);
     --bg-glass-dark: rgba(45, 55, 72, 0.8);
-    
+    --bg-dock: rgba(45, 55, 72, 0.55);
+
     /* Bordures adaptées */
     --border-color: #4a5568;
     --border-color-light: #2d3748;
@@ -260,7 +262,8 @@ html.light-theme {
   --bg-muted: #f1f5f9;
   --bg-glass: rgba(255, 255, 255, 0.95);
   --bg-glass-dark: rgba(255, 255, 255, 0.8);
-  
+  --bg-dock: rgba(255, 255, 255, 0.55);
+
   --border-color: #e2e8f0;
   --border-color-light: #f1f5f9;
   --border-color-input: #ced4da;
@@ -298,7 +301,8 @@ html.dark-theme {
   --bg-muted: #4a5568;
   --bg-glass: rgba(45, 55, 72, 0.95);
   --bg-glass-dark: rgba(45, 55, 72, 0.8);
-  
+  --bg-dock: rgba(45, 55, 72, 0.55);
+
   --border-color: #4a5568;
   --border-color-light: #2d3748;
   --border-color-input: #4a5568;

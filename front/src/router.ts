@@ -7,6 +7,7 @@ const Config = () => import(/* webpackChunkName: "config" */ './views/Config.vue
 const EditUser = () => import(/* webpackChunkName: "edituser" */ './views/EditUser.vue')
 const OperationsRecurrentes = () => import(/* webpackChunkName: "operecur" */ './views/OperationsRecurrentes.vue')
 const Amortissement = () => import(/* webpackChunkName: "operecur" */ './views/Amortissement.vue')
+const Gestion = () => import(/* webpackChunkName: "gestion" */ './views/Gestion.vue')
 const Credits = () => import(/* webpackChunkName: "credits" */ './views/Credits.vue')
 const Biens = () => import(/* webpackChunkName: "biens" */ './views/Biens.vue')
 const RouteOverTheContent = () => import(/* webpackChunkName: "othercontent" */ './views/RouteOverTheContent.vue')
@@ -79,6 +80,13 @@ export default createRouter({
     path: '/amortissement',
     name: 'Amortissement',
     component: Amortissement,
+    meta: {
+      disabledTotalHeader: true
+    }
+  }, {
+    path: '/gestion',
+    name: 'Gestion',
+    component: Gestion,
     meta: {
       disabledTotalHeader: true
     }

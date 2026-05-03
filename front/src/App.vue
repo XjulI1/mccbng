@@ -21,7 +21,13 @@
         :class="{ 'mask-panel': displayAccountList }"
       />
     </div>
-    <NavBar />
+    <div
+      v-if="route.name !== 'Login'"
+      class="bottom-dock"
+    >
+      <NavBar />
+      <FabMenu />
+    </div>
   </div>
 </template>
 
@@ -33,6 +39,7 @@
   import { useGlobalDebugTools } from '@/composables/useDebugTools'
 
   import NavBar from '@/components/NavBar.vue'
+  import FabMenu from '@/components/FabMenu.vue'
   import CompteList from '@/components/CompteList/index.vue'
   import AccountHeader from '@/components/AccountHeader.vue'
 
@@ -167,6 +174,21 @@ hr {
 
 .app-header.is-login-page {
   display: none !important;
+}
+
+.bottom-dock {
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+
+  @media screen and (max-width: $mobile_BP_max_width) {
+    gap: 6px;
+  }
 }
 
 @media screen and (max-width: $mobile_BP_max_width) {

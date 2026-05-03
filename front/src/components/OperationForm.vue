@@ -137,7 +137,7 @@
               for="Amortissement"
             >
               <span class="checkbox-custom" />
-              Amortissement
+              Coûts d'usage
             </label>
           </div>
         </div>

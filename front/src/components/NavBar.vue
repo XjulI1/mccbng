@@ -1,570 +1,211 @@
 <template>
-  <div
-    class="nav-bar btn-group"
-    role="group"
+  <nav
+    v-if="route.name !== 'Login'"
+    class="tab-bar"
+    role="navigation"
+    aria-label="Navigation principale"
   >
     <button
-      class="btn btn-secondary left-panel-button"
-      :disabled="route.name === 'Login'"
-      @click="burgerMenuClick"
+      type="button"
+      class="tab tab-burger"
+      :class="{ active: displayAccountList }"
+      :style="{ '--tab-color': '#4a5568' }"
+      :aria-label="displayAccountList
+        ? 'Fermer la liste des comptes'
+        : 'Ouvrir la liste des comptes'"
+      :aria-pressed="displayAccountList"
+      @click="toggleCompteList"
     >
-      <font-awesome-icon icon="hamburger" />
+      <font-awesome-icon
+        class="tab-icon"
+        icon="hamburger"
+      />
+      <span class="tab-label">Comptes</span>
     </button>
     <button
-      class="btn btn-warning virement-button"
-      :disabled="disabled.valueOf()"
-      @click="doTransfert"
+      v-for="tab in tabs"
+      :key="tab.path"
+      type="button"
+      class="tab"
+      :class="{ active: tab.match(route) }"
+      :style="{ '--tab-color': tab.color }"
+      :aria-current="tab.match(route) ? 'page' : undefined"
+      @click="goTo(tab.path)"
     >
-      <font-awesome-icon icon="exchange-alt" />
+      <font-awesome-icon
+        class="tab-icon"
+        :icon="tab.icon"
+      />
+      <span class="tab-label">{{ tab.label }}</span>
     </button>
-    <button
-      class="btn btn-primary new-operation-button"
-      :disabled="disabled.valueOf() && route.name !== 'Opérations récurrentes' && route.name !== 'Crédits' && route.name !== 'Biens'"
-      @click="addOperation"
-    >
-      <font-awesome-icon icon="plus" />
-    </button>
-    <button
-      class="btn btn-info operation-recurrente-button"
-      :disabled="route.name === 'Login'"
-      @click="getRecurrenteOp"
-    >
-      <font-awesome-icon icon="retweet" />
-    </button>
-    <button
-      class="btn btn-success amortissement-button"
-      :disabled="route.name === 'Login'"
-      @click="getAmortissement"
-    >
-      <font-awesome-icon icon="history" />
-    </button>
-    <button
-      class="btn btn-credit credit-button"
-      :disabled="route.name === 'Login'"
-      @click="getCredits"
-    >
-      <font-awesome-icon icon="credit-card" />
-    </button>
-    <button
-      class="btn btn-bien bien-button"
-      :disabled="route.name === 'Login'"
-      @click="getBiens"
-    >
-      <font-awesome-icon icon="home" />
-    </button>
-    <button
-      class="btn btn-danger params-button"
-      @click="changeParams"
-    >
-      <font-awesome-icon icon="cogs" />
-    </button>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
-  import { computed, type ComputedRef } from 'vue'
+  import { computed } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useStore } from 'vuex'
+  import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
   const route = useRoute()
   const router = useRouter()
   const store = useStore()
 
-  const disabled: ComputedRef<boolean> = computed(() => {
-    return route.meta.disabledTotalHeader === undefined
-      ? false
-      : Boolean(route.meta.disabledTotalHeader)
-  })
+  const displayAccountList = computed(() => store.state.display.account_list)
 
-  const burgerMenuClick = () => {
-    store.dispatch('toggleAccountList')
+  type Tab = {
+    label: string
+    icon: string
+    path: string
+    color: string
+    match: (r: RouteLocationNormalizedLoaded) => boolean
   }
 
-  const addOperation = () => {
+  const isGestionRoute = (r: RouteLocationNormalizedLoaded) => {
+    const p = r.path
+    return (
+      p === '/gestion' ||
+      p === '/credits' || p === '/newCredit' || p.startsWith('/editCredit') ||
+      p === '/biens' || p === '/newBien' || p.startsWith('/editBien') ||
+      p === '/recurrOperation' || p === '/newRecurrOperation' || p.startsWith('/editRecurrOperation') ||
+      p === '/amortissement'
+    )
+  }
+
+  const isSettingsRoute = (r: RouteLocationNormalizedLoaded) =>
+    r.path === '/config' || r.path === '/editUser'
+
+  const tabs: Tab[] = [
+    {
+      label: 'Recherche',
+      icon: 'search',
+      path: '/search',
+      color: '#17a2b8',
+      match: (r) => r.path === '/search'
+    },
+    {
+      label: 'Gestion',
+      icon: 'building',
+      path: '/gestion',
+      color: '#6f42c1',
+      match: isGestionRoute
+    },
+    {
+      label: 'Stats',
+      icon: 'chart-pie',
+      path: '/stats',
+      color: '#e0a800',
+      match: (r) => r.path === '/stats'
+    },
+    {
+      label: 'Réglages',
+      icon: 'cogs',
+      path: '/config',
+      color: '#dc3545',
+      match: isSettingsRoute
+    }
+  ]
+
+  const goTo = (path: string) => {
     store.dispatch('toggleAccountList', false)
-    if (route.name === 'Opérations récurrentes') {
-      router.push('/newRecurrOperation')
-    } else if (route.name === 'Crédits') {
-      router.push('/newCredit')
-    } else if (route.name === 'Biens') {
-      router.push('/newBien')
-    } else {
-      router.push('/newOperation')
+    if (route.path !== path) {
+      router.push(path)
     }
   }
 
-  const doTransfert = () => {
-    store.dispatch('toggleAccountList', false)
-    router.push('/transfert')
-  }
-
-  const getRecurrenteOp = () => {
-    store.dispatch('toggleAccountList', false)
-    router.push('/recurrOperation')
-  }
-
-  const getAmortissement = () => {
-    store.dispatch('toggleAccountList', false)
-    router.push('/amortissement')
-  }
-
-  const getCredits = () => {
-    store.dispatch('toggleAccountList', false)
-    router.push('/credits')
-  }
-
-  const getBiens = () => {
-    store.dispatch('toggleAccountList', false)
-    router.push('/biens')
-  }
-
-  const changeParams = () => {
-    store.dispatch('toggleAccountList', false)
-    router.push('/config')
+  const toggleCompteList = () => {
+    store.dispatch('toggleAccountList')
   }
 </script>
 
 <style lang="scss" scoped>
-.btn {
-  display: inline-block;
-  font-weight: 400;
-  color: #212529;
-  text-align: center;
-  vertical-align: middle;
-  cursor: pointer;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  background-color: transparent;
-  border: 1px solid transparent;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  border-radius: 0.25rem;
-  transition:
-    color 0.15s ease-in-out,
-    background-color 0.15s ease-in-out,
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out;
-  text-decoration: none;
-}
-
-.btn.disabled,
-.btn:disabled {
-  opacity: 0.65;
-}
-
-.btn-warning {
-  color: #212529;
-  background-color: #ffc107;
-  border-color: #ffc107;
-}
-
-.btn-warning:hover {
-  color: #212529;
-  background-color: #e0a800;
-  border-color: #d39e00;
-}
-
-.btn-warning:focus,
-.btn-warning.focus {
-  color: #212529;
-  background-color: #e0a800;
-  border-color: #d39e00;
-  box-shadow: 0 0 0 0.2rem rgba(222, 170, 12, 0.5);
-}
-
-.btn-warning.disabled,
-.btn-warning:disabled {
-  color: #212529;
-  background-color: #ffc107;
-  border-color: #ffc107;
-}
-
-.btn-warning:not(:disabled):not(.disabled):active,
-.btn-warning:not(:disabled):not(.disabled).active {
-  color: #212529;
-  background-color: #d39e00;
-  border-color: #c69500;
-}
-
-.btn-warning:not(:disabled):not(.disabled):active:focus,
-.btn-warning:not(:disabled):not(.disabled).active:focus {
-  box-shadow: 0 0 0 0.2rem rgba(222, 170, 12, 0.5);
-}
-
-.btn-danger {
-  color: #fff;
-  background-color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-danger:hover {
-  color: #fff;
-  background-color: #c82333;
-  border-color: #bd2130;
-}
-
-.btn-danger:focus,
-.btn-danger.focus {
-  color: #fff;
-  background-color: #c82333;
-  border-color: #bd2130;
-  box-shadow: 0 0 0 0.2rem rgba(225, 83, 97, 0.5);
-}
-
-.btn-danger.disabled,
-.btn-danger:disabled {
-  color: #fff;
-  background-color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-danger:not(:disabled):not(.disabled):active,
-.btn-danger:not(:disabled):not(.disabled).active {
-  color: #fff;
-  background-color: #bd2130;
-  border-color: #b21f2d;
-}
-
-.btn-danger:not(:disabled):not(.disabled):active:focus,
-.btn-danger:not(:disabled):not(.disabled).active:focus {
-  box-shadow: 0 0 0 0.2rem rgba(225, 83, 97, 0.5);
-}
-
-.btn-success {
-  color: #fff;
-  background-color: #28a745;
-  border-color: #28a745;
-}
-
-.btn-success:hover {
-  color: #fff;
-  background-color: #218838;
-  border-color: #1e7e34;
-}
-
-.btn-success:focus,
-.btn-success.focus {
-  color: #fff;
-  background-color: #218838;
-  border-color: #1e7e34;
-  box-shadow: 0 0 0 0.2rem rgba(72, 180, 97, 0.5);
-}
-
-.btn-success.disabled,
-.btn-success:disabled {
-  color: #fff;
-  background-color: #28a745;
-  border-color: #28a745;
-}
-
-.btn-success:not(:disabled):not(.disabled):active,
-.btn-success:not(:disabled):not(.disabled).active {
-  color: #fff;
-  background-color: #1e7e34;
-  border-color: #1c7430;
-}
-
-.btn-success:not(:disabled):not(.disabled):active:focus,
-.btn-success:not(:disabled):not(.disabled).active:focus {
-  box-shadow: 0 0 0 0.2rem rgba(72, 180, 97, 0.5);
-}
-
-.btn-bien {
-  color: #fff;
-  background-color: #e83e8c;
-  border-color: #e83e8c;
-}
-
-.btn-bien:hover {
-  color: #fff;
-  background-color: #d6336c;
-  border-color: #c42a60;
-}
-
-.btn-bien:focus,
-.btn-bien.focus {
-  color: #fff;
-  background-color: #d6336c;
-  border-color: #c42a60;
-  box-shadow: 0 0 0 0.2rem rgba(232, 62, 140, 0.5);
-}
-
-.btn-bien.disabled,
-.btn-bien:disabled {
-  color: #fff;
-  background-color: #e83e8c;
-  border-color: #e83e8c;
-}
-
-.btn-bien:not(:disabled):not(.disabled):active,
-.btn-bien:not(:disabled):not(.disabled).active {
-  color: #fff;
-  background-color: #c42a60;
-  border-color: #ad2354;
-}
-
-.btn-bien:not(:disabled):not(.disabled):active:focus,
-.btn-bien:not(:disabled):not(.disabled).active:focus {
-  box-shadow: 0 0 0 0.2rem rgba(232, 62, 140, 0.5);
-}
-
-.btn-credit {
-  color: #fff;
-  background-color: #6f42c1;
-  border-color: #6f42c1;
-}
-
-.btn-credit:hover {
-  color: #fff;
-  background-color: #5a32a3;
-  border-color: #4e2a8e;
-}
-
-.btn-credit:focus,
-.btn-credit.focus {
-  color: #fff;
-  background-color: #5a32a3;
-  border-color: #4e2a8e;
-  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.5);
-}
-
-.btn-credit.disabled,
-.btn-credit:disabled {
-  color: #fff;
-  background-color: #6f42c1;
-  border-color: #6f42c1;
-}
-
-.btn-credit:not(:disabled):not(.disabled):active,
-.btn-credit:not(:disabled):not(.disabled).active {
-  color: #fff;
-  background-color: #4e2a8e;
-  border-color: #432578;
-}
-
-.btn-credit:not(:disabled):not(.disabled):active:focus,
-.btn-credit:not(:disabled):not(.disabled).active:focus {
-  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.5);
-}
-
-.btn-info {
-  color: #fff;
-  background-color: #17a2b8;
-  border-color: #17a2b8;
-}
-
-.btn-info:hover {
-  color: #fff;
-  background-color: #138496;
-  border-color: #117a8b;
-}
-
-.btn-info:focus,
-.btn-info.focus {
-  color: #fff;
-  background-color: #138496;
-  border-color: #117a8b;
-  box-shadow: 0 0 0 0.2rem rgba(58, 176, 195, 0.5);
-}
-
-.btn-info.disabled,
-.btn-info:disabled {
-  color: #fff;
-  background-color: #17a2b8;
-  border-color: #17a2b8;
-}
-
-.btn-info:not(:disabled):not(.disabled):active,
-.btn-info:not(:disabled):not(.disabled).active {
-  color: #fff;
-  background-color: #117a8b;
-  border-color: #10707f;
-}
-
-.btn-info:not(:disabled):not(.disabled):active:focus,
-.btn-info:not(:disabled):not(.disabled).active:focus {
-  box-shadow: 0 0 0 0.2rem rgba(58, 176, 195, 0.5);
-}
-
-.btn-primary {
-  color: #fff;
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-primary:hover {
-  color: #fff;
-  background-color: #0069d9;
-  border-color: #0062cc;
-}
-
-.btn-primary:focus,
-.btn-primary.focus {
-  color: #fff;
-  background-color: #0069d9;
-  border-color: #0062cc;
-  box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
-}
-
-.btn-primary.disabled,
-.btn-primary:disabled {
-  color: #fff;
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-primary:not(:disabled):not(.disabled):active,
-.btn-primary:not(:disabled):not(.disabled).active {
-  color: #fff;
-  background-color: #0062cc;
-  border-color: #005cbf;
-}
-
-.btn-primary:not(:disabled):not(.disabled):active:focus,
-.btn-primary:not(:disabled):not(.disabled).active:focus {
-  box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
-}
-
-.btn-secondary {
-  color: #fff;
-  background-color: #6c757d;
-  border-color: #6c757d;
-}
-
-.btn-secondary:hover {
-  color: #fff;
-  background-color: #5a6268;
-  border-color: #545b62;
-}
-
-.btn-secondary:focus,
-.btn-secondary.focus {
-  color: #fff;
-  background-color: #5a6268;
-  border-color: #545b62;
-  box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5);
-}
-
-.btn-secondary.disabled,
-.btn-secondary:disabled {
-  color: #fff;
-  background-color: #6c757d;
-  border-color: #6c757d;
-}
-
-.btn-secondary:not(:disabled):not(.disabled):active,
-.btn-secondary:not(:disabled):not(.disabled).active {
-  color: #fff;
-  background-color: #545b62;
-  border-color: #4e555b;
-}
-
-.btn-secondary:not(:disabled):not(.disabled):active:focus,
-.btn-secondary:not(:disabled):not(.disabled).active:focus {
-  box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5);
-}
-
-.nav-bar {
-  padding: 8px 16px;
-  height: auto;
-  width: fit-content;
-  max-width: 90%;
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+.tab-bar {
   display: inline-flex;
-  text-align: center;
-  z-index: 100;
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  align-items: stretch;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 28px;
   backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
 
-  @media screen and (max-width: $mobile_BP_max_width) {
-    width: fit-content;
-    max-width: 95%;
-    bottom: 16px;
-    padding: 6px 12px;
+.tab {
+  --tab-color: #2d3748;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 64px;
+  padding: 6px 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 22px;
+  color: var(--text-primary, #2d3748);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab:hover {
+  background: color-mix(in srgb, var(--tab-color) 12%, transparent);
+}
+
+.tab.active {
+  background: color-mix(in srgb, var(--tab-color) 16%, transparent);
+}
+
+.tab.active .tab-icon {
+  transform: scale(1.05);
+}
+
+.tab.active .tab-label {
+  color: var(--tab-color);
+  font-weight: 700;
+}
+
+.tab-icon {
+  font-size: 20px;
+  color: var(--tab-color);
+  transition: transform 0.2s ease;
+}
+
+.tab-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-burger {
+  display: none;
+}
+
+@media screen and (max-width: $mobile_BP_max_width) {
+  .tab-bar {
+    gap: 0;
+    padding: 5px 6px;
   }
 
-  a {
-    svg {
-      margin-top: 4px;
-    }
+  .tab {
+    width: 56px;
+    padding: 5px 2px;
   }
 
-  &.btn-group {
-    position: fixed;
+  .tab-icon {
+    font-size: 19px;
+  }
 
-    .btn {
-      border-radius: 14px;
-      margin: 0 6px;
-      height: $navbar-height;
-      width: 3rem;
-      border: none;
-      backdrop-filter: blur(5px);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      font-size: 1.2rem;
-      font-weight: 600;
-      border-top-right-radius: 14px;
-      border-bottom-right-radius: 14px;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      }
-
-      @media screen and (max-width: $mobile_BP_max_width) {
-        padding-bottom: 18px;
-      }
-
-      @media screen and (min-width: $mobile_BP_max_width) {
-        &.left-panel-button {
-          display: none;
-        }
-      }
-
-      &.virement-button {
-        border-top-right-radius: 0px;
-        border-bottom-right-radius: 0px;
-        margin-right: 0;
-      }
-      &.new-operation-button {
-        border-top-left-radius: 0px;
-        border-bottom-left-radius: 0px;
-        margin-left: 0;
-      }
-      &.operation-recurrente-button {
-        border-top-right-radius: 0px;
-        border-bottom-right-radius: 0px;
-        margin-right: 0;
-      }
-      &.amortissement-button {
-        border-top-left-radius: 0px;
-        border-bottom-left-radius: 0px;
-        border-top-right-radius: 0px;
-        border-bottom-right-radius: 0px;
-        margin-left: 0;
-        margin-right: 0;
-      }
-      &.credit-button {
-        border-top-left-radius: 0px;
-        border-bottom-left-radius: 0px;
-        border-top-right-radius: 0px;
-        border-bottom-right-radius: 0px;
-        margin-left: 0;
-        margin-right: 0;
-      }
-      &.bien-button {
-        border-top-left-radius: 0px;
-        border-bottom-left-radius: 0px;
-        margin-left: 0;
-      }
-    }
+  .tab-burger {
+    display: flex;
   }
 }
 </style>

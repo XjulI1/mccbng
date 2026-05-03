@@ -63,6 +63,9 @@ export class Operation extends Entity {
   @property({
     type: 'number',
     required: false,
+    jsonSchema: {
+      nullable: true,
+    },
   })
   IDcredit?: number;
 

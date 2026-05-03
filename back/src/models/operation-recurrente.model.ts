@@ -75,6 +75,9 @@ export class OperationRecurrente extends Entity {
   @property({
     type: 'number',
     required: false,
+    jsonSchema: {
+      nullable: true,
+    },
   })
   IDcredit?: number;
 

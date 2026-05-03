@@ -333,7 +333,7 @@
 </head>
 <body>
   <h1>Option 3 — Bottom tabs + Floating Action Button</h1>
-  <p class="subtitle">3 écrans : navigation par onglets · FAB déployé · Vue Patrimoine</p>
+  <p class="subtitle">3 écrans : navigation par onglets · FAB déployé · Vue Gestion</p>
 
   <div class="phones">
 
@@ -415,7 +415,7 @@
           </div>
           <div class="tab">
             <i class="fas fa-building"></i>
-            <span>Patrimoine</span>
+            <span>Gestion</span>
           </div>
           <div class="tab">
             <i class="fas fa-chart-pie"></i>
@@ -497,7 +497,7 @@
           </div>
           <div class="tab">
             <i class="fas fa-building"></i>
-            <span>Patrimoine</span>
+            <span>Gestion</span>
           </div>
           <div class="tab">
             <i class="fas fa-chart-pie"></i>
@@ -511,9 +511,9 @@
       </div>
     </div>
 
-    <!-- ===== PHONE 3 : Patrimoine ===== -->
+    <!-- ===== PHONE 3 : Gestion ===== -->
     <div class="phone-wrapper">
-      <div class="phone-label">3. Onglet Patrimoine — hub</div>
+      <div class="phone-label">3. Onglet Gestion — hub</div>
       <div class="phone">
         <div class="status-bar">
           <span>9:41</span>
@@ -561,13 +561,13 @@
               <div class="patrimoine-icon pi-amort">
                 <i class="fas fa-history"></i>
               </div>
-              <div class="patrimoine-label">Amortissement</div>
+              <div class="patrimoine-label">Coûts d'usage</div>
               <div class="patrimoine-count">Suivi 2026</div>
             </div>
           </div>
         </div>
 
-        <!-- FAB - contextuel pour Patrimoine -->
+        <!-- FAB - contextuel pour Gestion -->
         <div class="fab-container">
           <button class="fab"><i class="fas fa-plus"></i></button>
         </div>
@@ -580,7 +580,7 @@
           </div>
           <div class="tab active">
             <i class="fas fa-building"></i>
-            <span>Patrimoine</span>
+            <span>Gestion</span>
           </div>
           <div class="tab">
             <i class="fas fa-chart-pie"></i>
@@ -599,15 +599,15 @@
   <div class="description">
     <h2>Ce que change ce design</h2>
     <ul>
-      <li><strong>4 onglets de navigation</strong> en bas, fixes : <em>Comptes</em>, <em>Patrimoine</em>, <em>Stats</em>, <em>Réglages</em>. Plus on ajoute de fonctionnalités, plus on les regroupe sous un onglet — la navbar n'enfle plus jamais.</li>
-      <li><strong>Un FAB rond en bas à droite</strong> pour les actions de création. Il est <em>contextuel</em> : sur Comptes il propose Opération / Virement / Recherche ; sur Patrimoine il proposera Bien / Crédit / Récurrente.</li>
-      <li><strong>Onglet Patrimoine = hub visuel</strong> avec une grille de cartes (Biens, Crédits, Récurrentes, Amortissement). Chaque carte affiche un compteur ou un total. C'est plus découvrable qu'une liste de boutons.</li>
+      <li><strong>4 onglets de navigation</strong> en bas, fixes : <em>Comptes</em>, <em>Gestion</em>, <em>Stats</em>, <em>Réglages</em>. Plus on ajoute de fonctionnalités, plus on les regroupe sous un onglet — la navbar n'enfle plus jamais.</li>
+      <li><strong>Un FAB rond en bas à droite</strong> pour les actions de création. Il est <em>contextuel</em> : sur Comptes il propose Opération / Virement / Recherche ; sur Gestion il proposera Bien / Crédit / Récurrente.</li>
+      <li><strong>Onglet Gestion = hub visuel</strong> avec une grille de cartes (Biens, Crédits, Récurrentes, Coûts d'usage). Chaque carte affiche un compteur ou un total. C'est plus découvrable qu'une liste de boutons.</li>
       <li><strong>Le hamburger disparaît</strong> sur mobile : la liste des comptes peut basculer en horizontal scrollable au-dessus des opérations, ou rester en panneau swipeable mais sans bouton dédié (geste seul).</li>
     </ul>
     <h2 style="margin-top: 24px;">Effort d'implémentation</h2>
     <ul>
       <li>Refonte de <code>NavBar.vue</code> (tab bar) + nouveau composant <code>FabMenu.vue</code> (speed-dial)</li>
-      <li>Nouvelle vue <code>Patrimoine.vue</code> qui sert de hub + ajustement des routes (les 4 vues actuelles deviennent enfants)</li>
+      <li>Nouvelle vue <code>Gestion.vue</code> qui sert de hub + ajustement des routes (les 4 vues actuelles deviennent enfants)</li>
       <li>Adaptation du layout dans <code>App.vue</code> pour le panneau gauche</li>
       <li>Pas de changement backend</li>
     </ul>
