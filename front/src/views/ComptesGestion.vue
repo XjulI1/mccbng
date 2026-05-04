@@ -4,13 +4,6 @@
       <h1 class="page-title">
         Mes comptes
       </h1>
-      <button
-        type="button"
-        class="btn-new"
-        @click="goNew"
-      >
-        <font-awesome-icon icon="plus" /> Nouveau
-      </button>
     </div>
 
     <div
@@ -112,10 +105,6 @@
     })
   }
 
-  const goNew = () => {
-    router.push('/newCompte')
-  }
-
   const goEdit = (IDcompte) => {
     router.push(`/editCompte/${IDcompte}`)
   }
@@ -138,9 +127,6 @@
 }
 
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 16px 4px;
 }
 
@@ -149,26 +135,6 @@
   font-weight: 700;
   color: var(--text-primary, #2d3748);
   margin: 0;
-}
-
-.btn-new {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 0.6rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.btn-new:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
 }
 
 .empty-state {

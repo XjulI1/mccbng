@@ -66,6 +66,7 @@
   ]
 
   const gestionActions: Action[] = [
+    { label: 'Nouveau compte', icon: 'wallet', color: 'fab-compte', path: '/newCompte' },
     { label: 'Nouvelle récurrente', icon: 'retweet', color: 'fab-info', path: '/newRecurrOperation' },
     { label: 'Nouveau crédit', icon: 'credit-card', color: 'fab-credit', path: '/newCredit' },
     { label: 'Nouveau bien', icon: 'home', color: 'fab-bien', path: '/newBien' }
@@ -85,12 +86,15 @@
     path === '/biens' ||
     path === '/recurrOperation' ||
     path === '/amortissement' ||
+    path === '/comptesGestion' ||
     path === '/newRecurrOperation' ||
     path.startsWith('/editRecurrOperation') ||
     path === '/newCredit' ||
     path.startsWith('/editCredit') ||
     path === '/newBien' ||
-    path.startsWith('/editBien')
+    path.startsWith('/editBien') ||
+    path === '/newCompte' ||
+    path.startsWith('/editCompte')
 
   const actions = computed<Action[]>(() => {
     if (isHomeContext(route.path)) return homeActions
@@ -206,6 +210,7 @@
 .fab-info { background: linear-gradient(135deg, #17a2b8, #117a8b); }
 .fab-credit { background: linear-gradient(135deg, #6f42c1, #4e2a8e); }
 .fab-bien { background: linear-gradient(135deg, #e83e8c, #c42a60); }
+.fab-compte { background: linear-gradient(135deg, #f59e0b, #d97706); }
 
 .pop-enter-active {
   transition:
