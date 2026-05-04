@@ -1,5 +1,13 @@
 import { generateRecurringOperations } from '@/services/operation'
-import { fetchAccountList, sumAllCompteForUser, sumForACompte } from '@/services/compte'
+import {
+  createCompte,
+  deleteCompte,
+  fetchAccountList,
+  fetchComptesManagementInfo,
+  sumAllCompteForUser,
+  sumForACompte,
+  updateCompte
+} from '@/services/compte'
 
 // Utility functions for mutations and actions
 
@@ -42,7 +50,8 @@ export default {
   state: {
     activeAccount: {},
     accountList: [],
-    currency: '€'
+    currency: '€',
+    managementInfo: [] as Array<{ IDcompte: number; lastOpDate: string | null; hasReferences: boolean }>
   },
 
   getters: {
@@ -169,6 +178,10 @@ export default {
 
     setSumAllCompteForUser (state, sumList) {
       state.accountList = setSumAllAccountForUser(state.accountList, sumList)
+    },
+
+    setComptesManagementInfo (state, info) {
+      state.managementInfo = info
     }
   },
 
@@ -207,6 +220,54 @@ export default {
         })
         .then((sumList) => {
           commit('setSumAllCompteForUser', sumList)
+        })
+    },
+
+    fetchComptesManagementInfo ({ rootState, commit }) {
+      const userToken = rootState.user.token
+      const APIURL = window.env.VITE_API_URL
+
+      return fetchComptesManagementInfo(userToken, APIURL)
+        .then((info) => {
+          commit('setComptesManagementInfo', info)
+          return info
+        })
+    },
+
+    createCompte ({ rootState, dispatch }, compte) {
+      const userToken = rootState.user.token
+      const APIURL = window.env.VITE_API_URL
+      const payload = { ...compte, solde: 0 }
+      delete payload.IDcompte
+
+      return createCompte(payload, userToken, APIURL)
+        .then((created) => {
+          dispatch('fetchAccountList')
+          return created
+        })
+    },
+
+    updateCompte ({ rootState, dispatch }, compte) {
+      const userToken = rootState.user.token
+      const APIURL = window.env.VITE_API_URL
+      const { IDcompte, ...rest } = compte
+      const payload = { ...rest }
+      delete payload.solde
+      delete payload.banque
+
+      return updateCompte(IDcompte, payload, userToken, APIURL)
+        .then(() => {
+          dispatch('fetchAccountList')
+        })
+    },
+
+    deleteCompte ({ rootState, dispatch }, compte) {
+      const userToken = rootState.user.token
+      const APIURL = window.env.VITE_API_URL
+
+      return deleteCompte(compte.IDcompte, userToken, APIURL)
+        .then(() => {
+          dispatch('fetchAccountList')
         })
     }
   }

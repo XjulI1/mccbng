@@ -23,6 +23,22 @@
       <button
         type="button"
         class="gestion-card"
+        @click="goTo('/comptesGestion')"
+      >
+        <div class="gestion-icon icon-comptes">
+          <font-awesome-icon icon="wallet" />
+        </div>
+        <div class="gestion-label">
+          Comptes
+        </div>
+        <div class="gestion-count">
+          {{ comptesCount }} compte{{ comptesCount > 1 ? 's' : '' }}
+        </div>
+      </button>
+
+      <button
+        type="button"
+        class="gestion-card"
         @click="goTo('/recurrOperation')"
       >
         <div class="gestion-icon icon-recur">
@@ -119,10 +135,12 @@
   const recurringOperations = computed(
     () => store.state.operation.recurringOperations || []
   )
+  const comptes = computed(() => store.state.compte.accountList || [])
 
   const biensCount = computed(() => biens.value.length)
   const creditsCount = computed(() => credits.value.length)
   const recurringCount = computed(() => recurringOperations.value.length)
+  const comptesCount = computed(() => comptes.value.length)
 
   const totalBiens = computed(() =>
     biens.value.reduce((sum, b) => {
@@ -251,6 +269,7 @@
 .icon-credit { background: linear-gradient(135deg, #6f42c1 0%, #4e2a8e 100%); }
 .icon-recur { background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%); }
 .icon-amort { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
+.icon-comptes { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
 
 .gestion-label {
   font-size: 14px;
