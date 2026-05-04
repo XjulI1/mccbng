@@ -8,6 +8,7 @@ const EditUser = () => import(/* webpackChunkName: "edituser" */ './views/EditUs
 const OperationsRecurrentes = () => import(/* webpackChunkName: "operecur" */ './views/OperationsRecurrentes.vue')
 const Amortissement = () => import(/* webpackChunkName: "operecur" */ './views/Amortissement.vue')
 const Gestion = () => import(/* webpackChunkName: "gestion" */ './views/Gestion.vue')
+const ComptesGestion = () => import(/* webpackChunkName: "gestion" */ './views/ComptesGestion.vue')
 const Credits = () => import(/* webpackChunkName: "credits" */ './views/Credits.vue')
 const Biens = () => import(/* webpackChunkName: "biens" */ './views/Biens.vue')
 const RouteOverTheContent = () => import(/* webpackChunkName: "othercontent" */ './views/RouteOverTheContent.vue')
@@ -90,6 +91,28 @@ export default createRouter({
     meta: {
       disabledTotalHeader: true
     }
+  }, {
+    path: '/comptesGestion',
+    name: 'Mes comptes',
+    component: ComptesGestion,
+    meta: {
+      disabledTotalHeader: true
+    },
+    children: [{
+      path: '/newCompte',
+      name: 'Nouveau compte',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'compte-form'
+      }
+    }, {
+      path: '/editCompte/:id',
+      name: 'Edition compte',
+      component: RouteOverTheContent,
+      props: {
+        componentName: 'compte-form'
+      }
+    }]
   }, {
     path: '/credits',
     name: 'Crédits',

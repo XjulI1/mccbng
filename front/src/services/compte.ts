@@ -44,8 +44,52 @@ export const sumForACompte = (userToken, IDcompte, APIURL) => {
   })
 }
 
+export const createCompte = (compte, userToken, APIURL) => {
+  return axios.post(APIURL + '/api/comptes', compte, {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    }
+  }).then((response) => {
+    return response.data
+  })
+}
+
+export const updateCompte = (IDcompte, compte, userToken, APIURL) => {
+  return axios.patch(APIURL + '/api/comptes/' + IDcompte, compte, {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    }
+  }).then((response) => {
+    return response.data
+  })
+}
+
+export const deleteCompte = (IDcompte, userToken, APIURL) => {
+  return axios.delete(APIURL + '/api/comptes/' + IDcompte, {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    }
+  }).then((response) => {
+    return response.data
+  })
+}
+
+export const fetchComptesManagementInfo = (userToken, APIURL) => {
+  return axios.get(APIURL + '/api/comptes/management-info', {
+    headers: {
+      Authorization: 'Bearer ' + userToken
+    }
+  }).then((response) => {
+    return response.data
+  })
+}
+
 export default {
   fetchAccountList,
   sumAllCompteForUser,
-  sumForACompte
+  sumForACompte,
+  createCompte,
+  updateCompte,
+  deleteCompte,
+  fetchComptesManagementInfo
 }

@@ -8,6 +8,7 @@ import Stats from './stats'
 import Compte from './compte'
 import Credit from './credit'
 import Bien from './bien'
+import Banque from './banque'
 
 export default createStore({
   modules: {
@@ -18,6 +19,7 @@ export default createStore({
     stats: Stats,
     compte: Compte,
     credit: Credit,
-    bien: Bien
+    bien: Bien,
+    banque: Banque
   }
 })

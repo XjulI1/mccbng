@@ -17,6 +17,7 @@
   import TransfertForm from '@/components/TransfertForm.vue'
   import CreditForm from '@/components/CreditForm.vue'
   import BienForm from '@/components/BienForm.vue'
+  import CompteForm from '@/components/CompteForm.vue'
 
   const components = {
     'operation-form': OperationForm,
@@ -24,7 +25,8 @@
     search: Search,
     'transfert-form': TransfertForm,
     'credit-form': CreditForm,
-    'bien-form': BienForm
+    'bien-form': BienForm,
+    'compte-form': CompteForm
   }
 
   const props = defineProps({
@@ -45,6 +47,8 @@
       router.push('/credits')
     } else if (props.componentName === 'bien-form') {
       router.push('/biens')
+    } else if (props.componentName === 'compte-form') {
+      router.push('/comptesGestion')
     } else {
       router.push('/')
     }

@@ -18,7 +18,12 @@ import {
   HttpErrors,
 } from '@loopback/rest';
 import {Compte} from '../models';
-import {CompteRepository} from '../repositories';
+import {
+  CompteRepository,
+  CreditRepository,
+  OperationRecurrenteRepository,
+  OperationRepository,
+} from '../repositories';
 import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {SecurityBindings, UserProfile} from '@loopback/security';
@@ -29,7 +34,22 @@ export class CompteController {
   constructor(
     @repository(CompteRepository)
     public compteRepository: CompteRepository,
+    @repository(OperationRepository)
+    public operationRepository: OperationRepository,
+    @repository(OperationRecurrenteRepository)
+    public operationRecurrenteRepository: OperationRecurrenteRepository,
+    @repository(CreditRepository)
+    public creditRepository: CreditRepository,
   ) {}
+
+  private async hasReferences(compteId: number): Promise<boolean> {
+    const [opCount, recurCount, creditCount] = await Promise.all([
+      this.operationRepository.count({IDcompte: compteId}),
+      this.operationRecurrenteRepository.count({IDcompte: compteId}),
+      this.creditRepository.count({IDcompte: compteId}),
+    ]);
+    return opCount.count + recurCount.count + creditCount.count > 0;
+  }
 
   private scope(
     currentUserProfile: UserProfile,
@@ -78,6 +98,70 @@ export class CompteController {
       ...compte,
       IDuser: getCurrentUserId(currentUserProfile),
     });
+  }
+
+  @get('/comptes/management-info', {
+    responses: {
+      '200': {
+        description:
+          'Per-account management info: last operation date and whether the account is referenced by an Operation, OperationRecurrente or Credit (i.e. cannot be deleted).',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  IDcompte: {type: 'number'},
+                  lastOpDate: {type: 'string', nullable: true},
+                  hasReferences: {type: 'boolean'},
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async managementInfo(
+    @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
+  ): Promise<
+    Array<{IDcompte: number; lastOpDate: string | null; hasReferences: boolean}>
+  > {
+    const IDuser = getCurrentUserId(currentUserProfile);
+    const comptes = await this.compteRepository.find({
+      where: {IDuser},
+      fields: {IDcompte: true},
+    });
+    const ids = comptes
+      .map(c => c.IDcompte)
+      .filter((id): id is number => id !== undefined);
+
+    if (ids.length === 0) return [];
+
+    const results = await Promise.all(
+      ids.map(async compteId => {
+        const [lastOp, recurCount, creditCount] = await Promise.all([
+          this.operationRepository.findOne({
+            where: {IDcompte: compteId},
+            order: ['DateOp DESC'],
+            fields: {DateOp: true},
+          }),
+          this.operationRecurrenteRepository.count({IDcompte: compteId}),
+          this.creditRepository.count({IDcompte: compteId}),
+        ]);
+        const hasOperations = !!lastOp;
+        return {
+          IDcompte: compteId,
+          lastOpDate: lastOp?.DateOp
+            ? new Date(lastOp.DateOp).toISOString()
+            : null,
+          hasReferences:
+            hasOperations || recurCount.count > 0 || creditCount.count > 0,
+        };
+      }),
+    );
+    return results;
   }
 
   @get('/comptes/count', {
@@ -226,6 +310,11 @@ export class CompteController {
     @param.path.number('id') id: number,
   ): Promise<void> {
     await this.assertOwned(id, currentUserProfile);
+    if (await this.hasReferences(id)) {
+      throw new HttpErrors.Conflict(
+        `Compte ${id} cannot be deleted: it is referenced by at least one Operation, OperationRecurrente or Credit. Hide it instead by setting visible=false.`,
+      );
+    }
     await this.compteRepository.deleteById(id);
   }
 }
