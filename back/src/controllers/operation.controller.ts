@@ -23,7 +23,7 @@ import {CompteRepository, OperationRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import {getCurrentUserId} from '../services/current-user';
+import {getCurrentUserId, getUserCompteIds} from '../services/current-user';
 
 // Operations have no IDuser column; ownership is derived from the parent
 // Compte. Every endpoint must therefore resolve the user's accounts first
@@ -37,24 +37,14 @@ export class OperationController {
     public compteRepository: CompteRepository,
   ) {}
 
-  private async userCompteIds(
-    currentUserProfile: UserProfile,
-  ): Promise<number[]> {
-    const IDuser = getCurrentUserId(currentUserProfile);
-    const comptes = await this.compteRepository.find({
-      where: {IDuser},
-      fields: {IDcompte: true},
-    });
-    return comptes
-      .map(c => c.IDcompte)
-      .filter((id): id is number => id !== undefined);
-  }
-
   private async scope(
     currentUserProfile: UserProfile,
     where?: Where<Operation>,
   ): Promise<Where<Operation>> {
-    const ids = await this.userCompteIds(currentUserProfile);
+    const ids = await getUserCompteIds(
+      this.compteRepository,
+      currentUserProfile,
+    );
     const userScope: Where<Operation> = {IDcompte: {inq: ids}};
     return where ? {and: [where, userScope]} : userScope;
   }
