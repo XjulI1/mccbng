@@ -75,9 +75,10 @@ export class StatsRepository extends DefaultCrudRepository<
     };
   }
 
-  // Sum of MontantOp grouped by month for two years, restricted to the user's
-  // accounts and to categories flagged for stats. Returns 12-slot arrays
-  // (Jan -> Dec) plus the percentage delta of yearB vs yearA per month.
+  // Net dépense by month for two years (categories of Type='depense' only,
+  // including any positive operations in those categories such as a Sécu
+  // refund tagged on the medical category — they correctly net the expense).
+  // Returns 12-slot arrays (Jan -> Dec) plus the percentage delta yearB vs yearA.
   async yearComparison(
     userID: number,
     compteIds: number[],
@@ -99,7 +100,7 @@ export class StatsRepository extends DefaultCrudRepository<
       `WHERE IDcompte IN (${placeholders}) ` +
       'AND YEAR(DateOp) IN (?, ?) ' +
       'AND IDcat IN ' +
-      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ?)) ' +
+      "(SELECT IDcat FROM Categorie WHERE Type = 'depense' AND IDuser IN (0, ?)) " +
       'GROUP BY YEAR(DateOp), MONTH(DateOp)';
 
     const params = [...compteIds, yearA, yearB, userID];
@@ -126,7 +127,7 @@ export class StatsRepository extends DefaultCrudRepository<
   }
 
   // Top spending categories on a date range. Expenses are negative so we sort
-  // ASC (largest expense first). Filters out non-stats categories.
+  // ASC (largest expense first). Restricted to Type='depense' categories.
   async topCategories(
     userID: number,
     compteIds: number[],
@@ -143,7 +144,7 @@ export class StatsRepository extends DefaultCrudRepository<
       'INNER JOIN Categorie c ON c.IDcat = o.IDcat ' +
       `WHERE o.IDcompte IN (${placeholders}) ` +
       'AND o.DateOp >= ? AND o.DateOp <= ? ' +
-      'AND c.Stats = 1 AND c.IDuser IN (0, ?) ' +
+      "AND c.Type = 'depense' AND c.IDuser IN (0, ?) " +
       'GROUP BY o.IDcat, c.Nom ' +
       'ORDER BY total ASC ' +
       'LIMIT ?';
@@ -151,7 +152,9 @@ export class StatsRepository extends DefaultCrudRepository<
     return this.execute(sql, [...compteIds, from, to, userID, limit]);
   }
 
-  // Splits monthly totals into income (MontantOp > 0) and expense (< 0).
+  // Splits monthly totals by category Type rather than by operation sign so
+  // that a refund (e.g. Sécu reimbursement) tagged on a Type='depense'
+  // category correctly nets the expense instead of inflating income.
   async incomeVsExpense(
     userID: number,
     compteIds: number[],
@@ -165,15 +168,15 @@ export class StatsRepository extends DefaultCrudRepository<
     }
     const placeholders = new Array(compteIds.length).fill('?').join(',');
     const sql =
-      'SELECT MONTH(DateOp) AS m, ' +
-      'ROUND(SUM(CASE WHEN MontantOp > 0 THEN MontantOp ELSE 0 END), 2) AS income, ' +
-      'ROUND(SUM(CASE WHEN MontantOp < 0 THEN MontantOp ELSE 0 END), 2) AS expense ' +
-      'FROM Operation ' +
-      `WHERE IDcompte IN (${placeholders}) ` +
-      'AND YEAR(DateOp) = ? ' +
-      'AND IDcat IN ' +
-      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ?)) ' +
-      'GROUP BY MONTH(DateOp)';
+      'SELECT MONTH(o.DateOp) AS m, ' +
+      "ROUND(SUM(CASE WHEN c.Type = 'revenu' THEN o.MontantOp ELSE 0 END), 2) AS income, " +
+      "ROUND(SUM(CASE WHEN c.Type = 'depense' THEN o.MontantOp ELSE 0 END), 2) AS expense " +
+      'FROM Operation o ' +
+      'INNER JOIN Categorie c ON c.IDcat = o.IDcat ' +
+      `WHERE o.IDcompte IN (${placeholders}) ` +
+      'AND YEAR(o.DateOp) = ? ' +
+      "AND c.Type IN ('depense','revenu') AND c.IDuser IN (0, ?) " +
+      'GROUP BY MONTH(o.DateOp)';
 
     const rows = (await this.execute(sql, [
       ...compteIds,
@@ -195,8 +198,10 @@ export class StatsRepository extends DefaultCrudRepository<
     return {income, expense};
   }
 
-  // Largest operations (in absolute value) over a date range.
+  // Largest operations (in absolute value) over a date range. Excludes
+  // transfers so internal moves don't dominate the ranking.
   async topOperations(
+    userID: number,
     compteIds: number[],
     from: string,
     to: string,
@@ -205,14 +210,16 @@ export class StatsRepository extends DefaultCrudRepository<
     if (compteIds.length === 0) return [];
     const placeholders = new Array(compteIds.length).fill('?').join(',');
     const sql =
-      'SELECT IDop, NomOp, MontantOp, DateOp, IDcat, IDcompte ' +
-      'FROM Operation ' +
-      `WHERE IDcompte IN (${placeholders}) ` +
-      'AND DateOp >= ? AND DateOp <= ? ' +
-      'ORDER BY ABS(MontantOp) DESC ' +
+      'SELECT o.IDop, o.NomOp, o.MontantOp, o.DateOp, o.IDcat, o.IDcompte ' +
+      'FROM Operation o ' +
+      'INNER JOIN Categorie c ON c.IDcat = o.IDcat ' +
+      `WHERE o.IDcompte IN (${placeholders}) ` +
+      'AND o.DateOp >= ? AND o.DateOp <= ? ' +
+      "AND c.Type IN ('depense','revenu') AND c.IDuser IN (0, ?) " +
+      'ORDER BY ABS(o.MontantOp) DESC ' +
       'LIMIT ?';
 
-    return this.execute(sql, [...compteIds, from, to, limit]);
+    return this.execute(sql, [...compteIds, from, to, userID, limit]);
   }
 
   // Heatmap matrix: month (0-11) x category. Returns the per-cell total
@@ -234,7 +241,7 @@ export class StatsRepository extends DefaultCrudRepository<
       'INNER JOIN Categorie c ON c.IDcat = o.IDcat ' +
       `WHERE o.IDcompte IN (${placeholders}) ` +
       'AND YEAR(o.DateOp) = ? ' +
-      'AND c.Stats = 1 AND c.IDuser IN (0, ?) ' +
+      "AND c.Type = 'depense' AND c.IDuser IN (0, ?) " +
       'GROUP BY MONTH(o.DateOp), o.IDcat, c.Nom';
 
     const rows = (await this.execute(sql, [

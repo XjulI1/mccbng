@@ -30,10 +30,14 @@ export class Categorie extends Entity {
   IDuser: number;
 
   @property({
-    type: 'boolean',
-    default: true,
+    type: 'string',
+    required: true,
+    default: 'depense',
+    jsonSchema: {
+      enum: ['depense', 'revenu', 'transfert'],
+    },
   })
-  Stats?: boolean;
+  Type: 'depense' | 'revenu' | 'transfert';
 
   // Define well-known properties here
 

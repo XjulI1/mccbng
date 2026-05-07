@@ -384,7 +384,7 @@ export class OperationController {
       'AND YEAR(DateOp) = ? ' +
       'AND Compte.IDuser = ? ' +
       'AND IDcat IN ' +
-      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ?))';
+      "(SELECT IDcat FROM Categorie WHERE Type = 'depense' AND IDuser IN (0, ?))";
 
     if (idCompte) {
       SQLrequest += ' AND IDCompte = ?';
@@ -421,7 +421,7 @@ export class OperationController {
       'AND YEAR(DateOp) = ? ' +
       'AND Compte.IDuser = ? ' +
       'AND IDcat IN ' +
-      '(SELECT IDcat FROM Categorie WHERE Stats = 1 AND IDuser IN (0, ?)) ' +
+      "(SELECT IDcat FROM Categorie WHERE Type = 'depense' AND IDuser IN (0, ?)) " +
       'GROUP BY IDcat';
 
     return this.operationRepository.execute(SQLrequest, [

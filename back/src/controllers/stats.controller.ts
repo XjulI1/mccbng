@@ -148,11 +148,18 @@ export class StatsController {
     @param.query.number('limit') limit?: number,
   ): Promise<AnyObject> {
     assertValidRange(from, to);
+    const userID = getCurrentUserId(currentUserProfile);
     const ids = await getUserCompteIds(
       this.compteRepository,
       currentUserProfile,
     );
-    return this.statsRepository.topOperations(ids, from, to, clampLimit(limit));
+    return this.statsRepository.topOperations(
+      userID,
+      ids,
+      from,
+      to,
+      clampLimit(limit),
+    );
   }
 
   @get('/stats/categoryHeatmap', {

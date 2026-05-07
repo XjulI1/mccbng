@@ -80,7 +80,7 @@ pnpm lint:check         # ESLint check only (no auto-fix)
 | **Compte** | `IDcompte` | Bank account. Type flags: `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible`. belongsTo `Banque`. |
 | **Operation** | `IDop` | Single transaction. Belongs to a `Compte`, optionally tied to a `Categorie` and a `Credit`. `CheckOp` = pointed/checked status, `amortissement` flag. |
 | **OperationRecurrente** | `IDopRecu` | Recurring template. `Frequence`: 3 = monthly, 7 = yearly. `DernierDateOpRecu` tracks last generation. |
-| **Categorie** | `IDcat` | User-defined classification. `Stats` flag toggles inclusion in monthly stats. |
+| **Categorie** | `IDcat` | User-defined classification. `Type` ENUM (`depense` / `revenu` / `transfert`) drives how the category is counted in each graph. |
 | **Credit** | `IDcredit` | Loan / mortgage. Auto-creates a monthly `OperationRecurrente` when created. |
 | **Bien** | `IDbien` | Real-estate asset. Optionally linked to a `Credit` (mortgage). |
 | **Stats** | `userID` | Support entity used by the analytics endpoints. |
