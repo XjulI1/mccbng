@@ -1,44 +1,36 @@
 <template>
-  <div>
-    <table
-      v-if="items && items.length"
-      class="top-operations__table"
+  <ul
+    v-if="items && items.length"
+    class="top-operations__list"
+  >
+    <li
+      v-for="op in items"
+      :key="op.IDop"
+      class="row"
+      @click="goToEdit(op.IDop)"
     >
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Nom</th>
-          <th>Catégorie</th>
-          <th class="amount">
-            Montant
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="op in items"
-          :key="op.IDop"
-          class="row"
-          @click="goToEdit(op.IDop)"
+      <div class="row__main">
+        <span class="row__name">{{ op.NomOp }}</span>
+        <span
+          class="row__amount"
+          :class="{ 'row__amount--negative': op.MontantOp < 0 }"
         >
-          <td>{{ formatDate(op.DateOp) }}</td>
-          <td class="name">
-            {{ op.NomOp }}
-          </td>
-          <td>{{ categoryName(op.IDcat) }}</td>
-          <td class="amount">
-            <Currency :amount="op.MontantOp" />
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <p
-      v-else
-      class="empty"
-    >
-      Aucune opération sur la période sélectionnée.
-    </p>
-  </div>
+          <Currency :amount="op.MontantOp" />
+        </span>
+      </div>
+      <div class="row__meta">
+        <span class="row__category">{{ categoryName(op.IDcat) }}</span>
+        <span class="row__separator">·</span>
+        <span class="row__date">{{ formatDate(op.DateOp) }}</span>
+      </div>
+    </li>
+  </ul>
+  <p
+    v-else
+    class="empty"
+  >
+    Aucune opération sur la période sélectionnée.
+  </p>
 </template>
 
 <script setup lang="ts">
@@ -63,7 +55,7 @@
 
   const categoryName = (IDcat: number) => {
     const cat = store.getters.getCategoryName?.(IDcat)
-    return cat?.Nom ?? '-'
+    return cat?.Nom ?? 'Sans catégorie'
   }
 
   const formatDate = (date: string) => {
@@ -77,30 +69,68 @@
 </script>
 
 <style scoped>
-  .top-operations__table {
-    width: 100%;
-    border-collapse: collapse;
-    color: var(--text-primary);
-  }
-  .top-operations__table th,
-  .top-operations__table td {
-    padding: var(--spacing-sm);
-    border-bottom: 1px solid var(--border-color);
-    text-align: left;
-  }
-  .top-operations__table th.amount,
-  .top-operations__table td.amount {
-    text-align: right;
+  .top-operations__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
   .row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md) var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background var(--transition-normal);
+  }
+  .row:last-child {
+    border-bottom: none;
   }
   .row:hover {
     background: var(--bg-muted);
   }
-  .name {
+  .row__main {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+  }
+  .row__name {
     font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .row__amount {
+    flex: 0 0 auto;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-success, #2e7d32);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .row__amount--negative {
+    color: var(--color-danger, #c62828);
+  }
+  .row__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+  }
+  .row__category {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .row__separator {
+    opacity: 0.6;
+  }
+  .row__date {
+    flex: 0 0 auto;
   }
   .empty {
     color: var(--text-secondary);
