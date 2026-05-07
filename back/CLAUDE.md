@@ -59,7 +59,7 @@ Controllers  →  Repositories  →  DataSource (MySQL)
 | **Compte** | `IDcompte` (auto-inc) | `NomCompte`, `solde` (FLOAT), `IDuser`, `IDbanque`, `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible` | belongsTo Banque |
 | **Operation** | `IDop` (auto-inc) | `NomOp`, `MontantOp` (FLOAT), `DateOp`, `CheckOp` (def `false`), `IDcompte`, `IDcat` (def `0`), `amortissement` (def `false`), `IDcredit?` | scoped via Compte |
 | **OperationRecurrente** | `IDopRecu` (auto-inc) | `NomOpRecu`, `MontantOpRecu` (FLOAT), `JourOpRecu`, `JourNumOpRecu` (def `1`), `MoisOpRecu` (def `1`), `Frequence` (def `3`: 3=monthly, 7=yearly), `DernierDateOpRecu`, `IDcompte`, `IDcat` (def `0`), `IDcredit?` | scoped via Compte |
-| **Categorie** | `IDcat` (auto-inc) | `Nom`, `IDuser`, `Stats` (bool, def `true`) | — |
+| **Categorie** | `IDcat` (auto-inc) | `Nom`, `IDuser`, `Type` (ENUM `depense`/`revenu`/`transfert`, def `depense`) | — |
 | **Credit** | `IDcredit` (auto-inc) | `NomCredit`, `NomPreteur?`, `MontantInitial` (FLOAT), `MontantMensuel` (FLOAT), `TauxInteret?` (FLOAT), `DateDebut`, `DateFin`, `IDcompte`, `IDopRecu?`, `IDuser`, `Statut` (def `'actif'`), `IDcat` (def `0`) | — |
 | **Bien** | `IDbien` (auto-inc) | `NomBien`, `Ville`, `TypeBien`, `Surface?` (FLOAT), `Usage` (def `'principale'`), `DateAchat`, `PrixBienNu` (FLOAT), `FraisNotaire` (FLOAT), `FraisAgence?` (FLOAT, def `0`), `ApportCash?` (FLOAT, def `0`), `ValeurActuelle?` (FLOAT), `IDcredit?`, `IDuser` | — |
 | **Stats** | `userID` | — | view-like model used by analytics |
@@ -89,11 +89,25 @@ All controllers except the public `POST /users/login`, `POST /signup`, and `GET 
 
 **Notable `OperationController` analytics endpoints:**
 
-- `GET /operations/sumAllCompteForUser` — checked / unchecked totals grouped by account.
-- `GET /operations/sumForACompte?id=<IDcompte>` — checked / unchecked totals for a single account.
-- `GET /operations/sumByUserByMonth?monthNumber=&yearNumber=&IDCompte=` — monthly total restricted to categories with `Stats=1`.
-- `GET /operations/sumCategoriesByUserByMonth?monthNumber=&yearNumber=` — per-category totals for a month.
-- `GET /operations/suggestCategories?operationName=&limit=` — category suggestions ranked by frequency of past operations whose name matches (LIKE), defaults to 5, clamped 1-50, name min length 2.
+- `GET /operations/sumAllCompteForUser` — checked / unchecked totals grouped by account (no category filter — reflects real account balances).
+- `GET /operations/sumForACompte?id=<IDcompte>` — checked / unchecked totals for a single account (no category filter).
+- `GET /operations/sumByUserByMonth?monthNumber=&yearNumber=&IDCompte=` — monthly total restricted to `Type='depense'` categories.
+- `GET /operations/sumCategoriesByUserByMonth?monthNumber=&yearNumber=` — per-category totals for a month, restricted to `Type='depense'`.
+- `GET /operations/suggestCategories?operationName=&limit=` — category suggestions ranked by frequency of past operations whose name matches (LIKE), defaults to 5, clamped 1-50, name min length 2. No Type filter (data-entry helper).
+
+### Categorie.Type and statistics
+
+`Categorie.Type` declares whether a category is a real expense, a revenue, or an internal transfer. Each statistics endpoint picks the relevant types:
+
+| Concern | Endpoints | Filter |
+|---------|-----------|--------|
+| Real account balances | `evolutionSolde`, `sumAllCompteForUser`, `sumForACompte` | none (all types — must match the bank) |
+| Pure expense analytics | `sumByUserByMonth`, `sumCategoriesByUserByMonth`, `topCategories`, `categoryHeatmap`, `yearComparison` | `Type='depense'` |
+| Income vs expense | `incomeVsExpense` (groups by Type, not by sign of `MontantOp`) | `Type IN ('depense','revenu')` |
+| Largest operations | `topOperations` | `Type IN ('depense','revenu')` (excludes transfers) |
+| Data-entry suggestions | `suggestCategories` | none |
+
+Grouping `incomeVsExpense` by `Type` rather than by the sign of `MontantOp` ensures that a refund (e.g. Sécu reimbursement) tagged on a `depense` category nets the expense correctly instead of inflating income.
 
 ### Repositories (`src/repositories/`)
 
