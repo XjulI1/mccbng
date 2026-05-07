@@ -52,6 +52,7 @@
     MontantOp: number
     DateOp: string
     IDcat: number
+    IDcompte: number
   }[]>([])
 
   const reload = async () => {

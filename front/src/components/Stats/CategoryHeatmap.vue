@@ -8,6 +8,7 @@
       v-if="selectedCellOp"
       class="category-heatmap__operation-list"
       :OperationRenderer="OperationRenderer"
+      :read-only="true"
     />
   </div>
 </template>
@@ -18,7 +19,7 @@
   import Highcharts from 'highcharts'
   import 'highcharts/modules/heatmap'
   import OperationList from '../OperationList.vue'
-  import OperationRenderer from './Operation.vue'
+  import OperationRenderer from '../Home/Operation.vue'
 
   type HeatmapCategory = { IDcat: number; libelle: string }
   type HeatmapData = {

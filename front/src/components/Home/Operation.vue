@@ -1,7 +1,10 @@
 <template>
   <div class="operation-card">
     <div class="operation-row">
-      <div class="operation-checkbox">
+      <div
+        v-if="!readOnly"
+        class="operation-checkbox"
+      >
         <input
           :id="checkBoxIDValue"
           v-model="modelValue"
@@ -11,7 +14,7 @@
       </div>
       <div class="operation-info">
         <label
-          :for="checkBoxIDValue"
+          :for="readOnly ? undefined : checkBoxIDValue"
           :data-id="operation.IDop"
           class="operation-name"
           :class="css.category"
@@ -32,7 +35,10 @@
       >
         <span class="account-badge">{{ accountName }}</span>
       </div>
-      <div class="operation-actions">
+      <div
+        v-if="!readOnly"
+        class="operation-actions"
+      >
         <router-link
           :to="'/editOperation/' + operation.IDop"
           class="edit-btn"
@@ -54,6 +60,10 @@
     operation: {
       type: Object,
       default: () => {}
+    },
+    readOnly: {
+      type: Boolean,
+      default: false
     }
   })
 

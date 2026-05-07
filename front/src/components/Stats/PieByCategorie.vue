@@ -5,6 +5,7 @@
       v-if="selectedCatId"
       class="pie-by-categorie__operation-list"
       :OperationRenderer="OperationRenderer"
+      :read-only="true"
     />
   </div>
 </template>
@@ -14,7 +15,7 @@
   import { useStore } from 'vuex'
   import Highcharts from 'highcharts'
   import OperationList from '../OperationList.vue'
-  import OperationRenderer from './Operation.vue'
+  import OperationRenderer from '../Home/Operation.vue'
 
   const store = useStore()
   const chartEl = ref<HTMLElement | null>(null)
