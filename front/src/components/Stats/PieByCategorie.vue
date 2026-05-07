@@ -5,6 +5,7 @@
       v-if="selectedCatId"
       class="pie-by-categorie__operation-list"
       :OperationRenderer="OperationRenderer"
+      :read-only="true"
     />
   </div>
 </template>

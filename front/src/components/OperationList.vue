@@ -4,7 +4,7 @@
       :is="OperationRenderer"
       v-for="operation in operationsList"
       :key="'operation-' + operation.IDop"
-      v-bind="{ operation }"
+      v-bind="{ operation, readOnly }"
     />
     <div
       v-if="isLoadingOperations"
@@ -30,7 +30,8 @@
   import { useStore } from 'vuex'
 
   defineProps({
-    OperationRenderer: { type: Object, required: true }
+    OperationRenderer: { type: Object, required: true },
+    readOnly: { type: Boolean, default: false }
   })
 
   const store = useStore()

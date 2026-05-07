@@ -1,23 +1,43 @@
 <template>
-  <div ref="chartEl" class="evolutionSoldes" />
+  <div
+    ref="chartEl"
+    class="evolutionSoldes"
+  />
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { useStore } from 'vuex'
   import Highcharts from 'highcharts'
   import { fetchEvolutionSolde } from '@/services/stats'
 
+  const props = defineProps<{
+    year?: number
+  }>()
+
   const store = useStore()
   const chartEl = ref<HTMLElement | null>(null)
 
-  let chart // Initialize chart variable
+  let chart: Highcharts.Chart | null = null
 
-  const global = ref([])
-  const dispo = ref([])
-  const retraite = ref([])
+  const global = ref<[number, number][]>([])
+  const dispo = ref<[number, number][]>([])
+  const retraite = ref<[number, number][]>([])
 
   const userToken = computed(() => store.state.user.token)
+  const targetYear = computed(() => props.year ?? new Date().getFullYear())
+
+  const applyExtremes = () => {
+    if (!chart) return
+    chart.xAxis[0].setExtremes(
+      Date.UTC(targetYear.value, 0, 1),
+      Date.UTC(targetYear.value, 11, 31)
+    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(chart as any).resetZoomButton) {
+      chart.showResetZoom()
+    }
+  }
 
   const buildChart = () => {
     chart = Highcharts.chart(
@@ -73,7 +93,7 @@
           headerFormat:
             '<span style="font-size: 10px">{point.key:%d-%m-%Y}</span><br/>',
           pointFormat:
-            '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y} €</b><br/>'
+            '<span style="color:{point.color}">●</span> {series.name}: <b>{point.y} €</b><br/>'
         },
         series: [
           {
@@ -95,38 +115,35 @@
       } as Highcharts.Options
     )
 
-    chart.xAxis[0].setExtremes(
-      Date.UTC(new Date().getFullYear(), 0, 1),
-      Date.UTC(new Date().getFullYear(), 11, 31)
-    )
-
-    if (!chart.resetZoomButton) {
-      chart.showResetZoom()
-    }
+    applyExtremes()
   }
 
-  fetchEvolutionSolde(
-    userToken.value,
-    window.env.VITE_API_URL
-  ).then((results) => {
-    let sum = results.soldeGlobal
-    global.value = results.global.map((data) => {
-      sum += data.montant
-      return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
-    })
+  watch(() => props.year, applyExtremes)
 
-    sum = results.soldeDispo
-    dispo.value = results.dispo.map((data) => {
-      sum += data.montant
-      return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
-    })
+  onMounted(() => {
+    fetchEvolutionSolde(
+      userToken.value,
+      window.env.VITE_API_URL
+    ).then((results) => {
+      let sum = results.soldeGlobal
+      global.value = results.global.map((data: { date: string; montant: number }) => {
+        sum += data.montant
+        return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
+      })
 
-    sum = results.soldeRetraite
-    retraite.value = results.retraite.map((data) => {
-      sum += data.montant
-      return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
+      sum = results.soldeDispo
+      dispo.value = results.dispo.map((data: { date: string; montant: number }) => {
+        sum += data.montant
+        return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
+      })
+
+      sum = results.soldeRetraite
+      retraite.value = results.retraite.map((data: { date: string; montant: number }) => {
+        sum += data.montant
+        return [new Date(data.date).getTime(), Math.round(sum * 100) / 100]
+      })
+      buildChart()
     })
-    buildChart()
   })
 </script>
 
