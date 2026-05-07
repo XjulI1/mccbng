@@ -1,29 +1,25 @@
 <template>
-  <div class="savings-rate">
-    <h4>Taux d'épargne ({{ year }})</h4>
-    <div
-      ref="chartEl"
-      class="savings-rate__chart"
-    />
-  </div>
+  <div
+    ref="chartEl"
+    class="savings-rate__chart"
+  />
 </template>
 
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
-  import { useStore } from 'vuex'
   import Highcharts from 'highcharts'
 
-  const store = useStore()
+  const props = defineProps<{
+    rates:(number | null)[]
+  }>()
+
   const chartEl = ref<HTMLElement | null>(null)
-
-  const rates = computed<(number | null)[]>(() => store.getters.getSavingsRate)
-  const userID = computed(() => store.state.user.id)
-  const year = computed(() => store.state.stats.currentYear)
-
   const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 
   const average = computed(() => {
-    const valid = rates.value.filter((r): r is number => typeof r === 'number')
+    const valid = (props.rates ?? []).filter(
+      (r): r is number => typeof r === 'number'
+    )
     if (valid.length === 0) return null
     return Math.round((valid.reduce((s, r) => s + r, 0) / valid.length) * 100) / 100
   })
@@ -53,36 +49,18 @@
         {
           type: 'line',
           name: "Taux d'épargne",
-          data: rates.value,
+          data: props.rates ?? [],
           marker: { enabled: true }
         }
       ]
     } as Highcharts.Options)
   }
 
-  watch(rates, buildChart, { deep: true })
-  watch(userID, () => store.dispatch('fetchIncomeVsExpense'))
-  watch(year, () => store.dispatch('fetchIncomeVsExpense'))
-
-  onMounted(() => {
-    if (userID.value) store.dispatch('fetchIncomeVsExpense')
-    buildChart()
-  })
+  watch(() => props.rates, buildChart, { deep: true })
+  onMounted(buildChart)
 </script>
 
 <style scoped>
-  .savings-rate {
-    margin: 10px;
-    background: var(--bg-card);
-    padding: var(--spacing-lg);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
-  }
-  .savings-rate h4 {
-    margin: 0 0 var(--spacing-md) 0;
-    color: var(--text-primary);
-  }
   .savings-rate__chart {
     width: 100%;
     height: 280px;

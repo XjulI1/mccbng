@@ -2,68 +2,50 @@
   <div class="stats-view">
     <div class="stats-view__tabs">
       <button
+        v-for="tab in tabs"
+        :key="tab.id"
         type="button"
         class="tab"
-        :class="{ active: activeTab === 'monthly' }"
-        @click="setTab('monthly')"
+        :class="{ active: activeTab === tab.id }"
+        @click="activeTab = tab.id"
       >
-        Mensuel
-      </button>
-      <button
-        type="button"
-        class="tab"
-        :class="{ active: activeTab === 'comparisons' }"
-        @click="setTab('comparisons')"
-      >
-        Comparaisons
+        {{ tab.label }}
       </button>
     </div>
 
-    <div v-if="activeTab === 'monthly'">
-      <TimeSeriesEvolutionSoldes />
-      <SumByMonth />
-      <PieByCategorie />
-    </div>
-
-    <div v-else>
-      <PeriodPicker />
-      <YearComparison />
-      <div class="stats-view__row">
-        <IncomeVsExpense class="stats-view__half" />
-        <SavingsRateChart class="stats-view__half" />
-      </div>
-      <TopCategories />
-      <CategoryHeatmap />
-      <TopOperations />
-    </div>
+    <component :is="currentTabComponent" />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import { useStore } from 'vuex'
-  import SumByMonth from '@/components/Stats/SumByMonth.vue'
-  import PieByCategorie from '@/components/Stats/PieByCategorie.vue'
-  import TimeSeriesEvolutionSoldes from '@/components/Stats/TimeSeriesEvolutionSoldes.vue'
-  import PeriodPicker from '@/components/Stats/PeriodPicker.vue'
-  import YearComparison from '@/components/Stats/YearComparison.vue'
-  import TopCategories from '@/components/Stats/TopCategories.vue'
-  import IncomeVsExpense from '@/components/Stats/IncomeVsExpense.vue'
-  import SavingsRateChart from '@/components/Stats/SavingsRateChart.vue'
-  import TopOperations from '@/components/Stats/TopOperations.vue'
-  import CategoryHeatmap from '@/components/Stats/CategoryHeatmap.vue'
+  import MonthlyTab from '@/components/Stats/MonthlyTab.vue'
+  import AnnualTab from '@/components/Stats/AnnualTab.vue'
+  import ComparisonTab from '@/components/Stats/ComparisonTab.vue'
+  import PeriodTab from '@/components/Stats/PeriodTab.vue'
+
+  type TabId = 'monthly' | 'annual' | 'comparison' | 'period'
 
   const store = useStore()
 
-  const TAB_KEY = 'stats.activeTab'
-  const activeTab = ref<'monthly' | 'comparisons'>(
-    (localStorage.getItem(TAB_KEY) as 'monthly' | 'comparisons') ?? 'monthly'
-  )
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'monthly', label: 'Mensuel' },
+    { id: 'annual', label: 'Annuel' },
+    { id: 'comparison', label: 'Comparaison' },
+    { id: 'period', label: 'Période libre' }
+  ]
 
-  const setTab = (tab: 'monthly' | 'comparisons') => {
-    activeTab.value = tab
-    localStorage.setItem(TAB_KEY, tab)
-  }
+  const activeTab = ref<TabId>('monthly')
+
+  const currentTabComponent = computed(() => {
+    switch (activeTab.value) {
+    case 'annual': return AnnualTab
+    case 'comparison': return ComparisonTab
+    case 'period': return PeriodTab
+    default: return MonthlyTab
+    }
+  })
 
   onMounted(() => {
     store.commit('setActiveAccount', { NomCompte: 'Stats' })
@@ -75,9 +57,10 @@
     display: flex;
     gap: var(--spacing-sm);
     margin: 10px;
+    flex-wrap: wrap;
   }
   .tab {
-    flex: 1;
+    flex: 1 1 80px;
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -94,13 +77,5 @@
     background: var(--color-primary);
     color: white;
     border-color: var(--color-primary);
-  }
-  .stats-view__row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0;
-  }
-  .stats-view__half {
-    flex: 1 1 320px;
   }
 </style>

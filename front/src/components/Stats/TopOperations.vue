@@ -1,8 +1,7 @@
 <template>
-  <div class="top-operations">
-    <h4>Plus grosses opérations de la période</h4>
+  <div>
     <table
-      v-if="list.length"
+      v-if="items && items.length"
       class="top-operations__table"
     >
       <thead>
@@ -17,7 +16,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="op in list"
+          v-for="op in items"
           :key="op.IDop"
           class="row"
           @click="goToEdit(op.IDop)"
@@ -43,16 +42,24 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, watch, onMounted } from 'vue'
   import { useStore } from 'vuex'
   import { useRouter } from 'vue-router'
   import Currency from '../Currency.vue'
 
+  type OperationItem = {
+    IDop: number
+    NomOp: string
+    MontantOp: number
+    DateOp: string
+    IDcat: number
+  }
+
+  defineProps<{
+    items: OperationItem[]
+  }>()
+
   const store = useStore()
   const router = useRouter()
-
-  const list = computed<any[]>(() => store.state.stats.topOperations ?? [])
-  const userID = computed(() => store.state.user.id)
 
   const categoryName = (IDcat: number) => {
     const cat = store.getters.getCategoryName?.(IDcat)
@@ -61,34 +68,15 @@
 
   const formatDate = (date: string) => {
     if (!date) return ''
-    const d = new Date(date)
-    return d.toLocaleDateString('fr-FR')
+    return new Date(date).toLocaleDateString('fr-FR')
   }
 
   const goToEdit = (id: number) => {
     router.push(`/editOperation/${id}`)
   }
-
-  watch(userID, () => store.dispatch('fetchTopOperations'))
-
-  onMounted(() => {
-    if (userID.value) store.dispatch('fetchTopOperations')
-  })
 </script>
 
 <style scoped>
-  .top-operations {
-    margin: 10px;
-    background: var(--bg-card);
-    padding: var(--spacing-lg);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
-  }
-  .top-operations h4 {
-    margin: 0 0 var(--spacing-md) 0;
-    color: var(--text-primary);
-  }
   .top-operations__table {
     width: 100%;
     border-collapse: collapse;

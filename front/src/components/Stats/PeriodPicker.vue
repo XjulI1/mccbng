@@ -34,12 +34,20 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
-  import { useStore } from 'vuex'
+  import { ref, onMounted } from 'vue'
 
-  const store = useStore()
+  const props = defineProps<{
+    from: string
+    to: string
+  }>()
+
+  const emit = defineEmits<{
+    'update:from': [value: string]
+    'update:to': [value: string]
+    change: [range: { from: string; to: string }]
+  }>()
+
   const activePreset = ref<string>('year')
-
   const presets = [
     { id: 'month', label: 'Mois' },
     { id: 'quarter', label: 'Trimestre' },
@@ -48,10 +56,13 @@
     { id: 'custom', label: 'Personnalisé' }
   ]
 
-  const from = computed(() => store.state.stats.periodFrom)
-  const to = computed(() => store.state.stats.periodTo)
-
   const toISO = (d: Date) => d.toISOString().slice(0, 10)
+
+  const emitRange = (from: string, to: string) => {
+    emit('update:from', from)
+    emit('update:to', to)
+    emit('change', { from, to })
+  }
 
   const applyPreset = (id: string) => {
     activePreset.value = id
@@ -69,27 +80,23 @@
     } else if (id === 'rolling') {
       start = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
     }
-    store.dispatch('changePeriod', { from: toISO(start), to: toISO(end) })
+    emitRange(toISO(start), toISO(end))
   }
 
   const onFromChange = (e: Event) => {
     activePreset.value = 'custom'
-    store.dispatch('changePeriod', {
-      from: (e.target as HTMLInputElement).value,
-      to: to.value
-    })
+    emitRange((e.target as HTMLInputElement).value, props.to)
   }
 
   const onToChange = (e: Event) => {
     activePreset.value = 'custom'
-    store.dispatch('changePeriod', {
-      from: from.value,
-      to: (e.target as HTMLInputElement).value
-    })
+    emitRange(props.from, (e.target as HTMLInputElement).value)
   }
 
   onMounted(() => {
-    applyPreset('year')
+    if (!props.from || !props.to) {
+      applyPreset('year')
+    }
   })
 </script>
 
