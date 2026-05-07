@@ -18,7 +18,7 @@
   import Highcharts from 'highcharts'
   import 'highcharts/modules/heatmap'
   import OperationList from '../OperationList.vue'
-  import OperationRenderer from '../Home/Operation.vue'
+  import OperationRenderer from './Operation.vue'
 
   type HeatmapCategory = { IDcat: number; libelle: string }
   type HeatmapData = {

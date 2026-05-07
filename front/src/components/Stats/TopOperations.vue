@@ -7,7 +7,6 @@
       v-for="op in items"
       :key="op.IDop"
       class="row"
-      @click="goToEdit(op.IDop)"
     >
       <div class="row__main">
         <span class="row__name">{{ op.NomOp }}</span>
@@ -35,7 +34,6 @@
 
 <script setup lang="ts">
   import { useStore } from 'vuex'
-  import { useRouter } from 'vue-router'
   import Currency from '../Currency.vue'
 
   type OperationItem = {
@@ -51,7 +49,6 @@
   }>()
 
   const store = useStore()
-  const router = useRouter()
 
   const categoryName = (IDcat: number) => {
     const cat = store.getters.getCategoryName?.(IDcat)
@@ -61,10 +58,6 @@
   const formatDate = (date: string) => {
     if (!date) return ''
     return new Date(date).toLocaleDateString('fr-FR')
-  }
-
-  const goToEdit = (id: number) => {
-    router.push(`/editOperation/${id}`)
   }
 </script>
 
@@ -80,14 +73,9 @@
     gap: var(--spacing-xs);
     padding: var(--spacing-md) var(--spacing-sm);
     border-bottom: 1px solid var(--border-color);
-    cursor: pointer;
-    transition: background var(--transition-normal);
   }
   .row:last-child {
     border-bottom: none;
-  }
-  .row:hover {
-    background: var(--bg-muted);
   }
   .row__main {
     display: flex;

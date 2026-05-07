@@ -17,7 +17,7 @@
   import { useStore } from 'vuex'
   import Highcharts from 'highcharts'
   import OperationList from '../OperationList.vue'
-  import OperationRenderer from '../Home/Operation.vue'
+  import OperationRenderer from './Operation.vue'
 
   type TopCategoryItem = { IDcat: number; libelle: string; total: number }
 
