@@ -1,88 +1,44 @@
-import axios from 'axios'
+import { apiDelete, apiGet, apiPatch, apiPost } from './http'
 
-export const fetchAccountList = (userID, userToken, APIURL) => {
-  const filter = { include: [{ relation: 'banque' }], where: { IDuser: userID }, order: 'NomCompte ASC' }
+export const fetchAccountList = async (userID, userToken, APIURL) => {
+  const filter = {
+    include: [{ relation: 'banque' }],
+    where: { IDuser: userID },
+    order: 'NomCompte ASC'
+  }
 
-  return axios.get(APIURL + '/api/comptes', {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    },
-    params: {
-      filter
-    }
-  }).then((response) => {
-    return response.data.map((account) => {
-      return {
-        ...account,
-        soldeNotChecked: 0,
-        soldeChecked: 0
-      }
-    })
+  const data = await apiGet<any[]>(APIURL + '/api/comptes', {
+    token: userToken,
+    params: { filter }
   })
+
+  return data.map((account) => ({
+    ...account,
+    soldeNotChecked: 0,
+    soldeChecked: 0
+  }))
 }
 
-export const sumAllCompteForUser = (userToken, APIURL) => {
-  return axios.get(APIURL + '/api/operations/sumAllCompteForUser', {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  }).then((response) => {
-    return response.data
-  })
-}
+export const sumAllCompteForUser = (userToken, APIURL) =>
+  apiGet(APIURL + '/api/operations/sumAllCompteForUser', { token: userToken })
 
-export const sumForACompte = (userToken, IDcompte, APIURL) => {
-  return axios.get(APIURL + '/api/operations/sumForACompte', {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    },
-    params: {
-      id: IDcompte
-    }
-  }).then((response) => {
-    return response.data
+export const sumForACompte = (userToken, IDcompte, APIURL) =>
+  apiGet(APIURL + '/api/operations/sumForACompte', {
+    token: userToken,
+    params: { id: IDcompte }
   })
-}
 
-export const createCompte = (compte, userToken, APIURL) => {
-  return axios.post(APIURL + '/api/comptes', compte, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  }).then((response) => {
-    return response.data
-  })
-}
+export const createCompte = (compte, userToken, APIURL) =>
+  apiPost(APIURL + '/api/comptes', compte, { token: userToken })
 
-export const updateCompte = (IDcompte, compte, userToken, APIURL) => {
-  return axios.patch(APIURL + '/api/comptes/' + IDcompte, compte, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  }).then((response) => {
-    return response.data
-  })
-}
+export const updateCompte = (IDcompte, compte, userToken, APIURL) =>
+  apiPatch(APIURL + '/api/comptes/' + IDcompte, compte, { token: userToken })
 
-export const deleteCompte = (IDcompte, userToken, APIURL) => {
-  return axios.delete(APIURL + '/api/comptes/' + IDcompte, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  }).then((response) => {
-    return response.data
-  })
-}
+export const deleteCompte = (IDcompte, userToken, APIURL) =>
+  apiDelete(APIURL + '/api/comptes/' + IDcompte, { token: userToken })
 
-export const fetchComptesManagementInfo = (userToken, APIURL) => {
-  return axios.get(APIURL + '/api/comptes/management-info', {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  }).then((response) => {
-    return response.data
-  })
-}
+export const fetchComptesManagementInfo = (userToken, APIURL) =>
+  apiGet(APIURL + '/api/comptes/management-info', { token: userToken })
 
 export default {
   fetchAccountList,

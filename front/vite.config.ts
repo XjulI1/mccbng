@@ -61,7 +61,7 @@ export default defineConfig({
             },
             {
               name: "vendor",
-              test: /[\\/]node_modules[\\/](axios|highcharts)[\\/]/,
+              test: /[\\/]node_modules[\\/]highcharts[\\/]/,
             },
           ],
         },

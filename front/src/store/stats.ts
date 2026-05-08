@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { apiGet } from '@/services/http'
 
 export default {
   state: {
@@ -40,32 +40,34 @@ export default {
 
   actions: {
     fetchSumByUserByMonth ({ state, commit, rootState }) {
-      axios.get(window.env.VITE_API_URL + '/api/operations/sumByUserByMonth', {
-        headers: {
-          Authorization: 'Bearer ' + rootState.user.token
-        },
-        params: {
-          monthNumber: state.currentMonth,
-          yearNumber: state.currentYear
+      apiGet<Array<{ MonthNegative: number }>>(
+        window.env.VITE_API_URL + '/api/operations/sumByUserByMonth',
+        {
+          token: rootState.user.token,
+          params: {
+            monthNumber: state.currentMonth,
+            yearNumber: state.currentYear
+          }
         }
-      }).then((response) => {
-        commit('setNegativeMonth', response.data[0].MonthNegative)
+      ).then((data) => {
+        commit('setNegativeMonth', data[0].MonthNegative)
       })
     },
 
     fetchSumCategoriesByUserByMonth ({ dispatch, commit, state, rootState }) {
       dispatch('fetchCategoryList')
 
-      axios.get(window.env.VITE_API_URL + '/api/operations/sumCategoriesByUserByMonth', {
-        headers: {
-          Authorization: 'Bearer ' + rootState.user.token
-        },
-        params: {
-          monthNumber: state.currentMonth,
-          yearNumber: state.currentYear
+      apiGet(
+        window.env.VITE_API_URL + '/api/operations/sumCategoriesByUserByMonth',
+        {
+          token: rootState.user.token,
+          params: {
+            monthNumber: state.currentMonth,
+            yearNumber: state.currentYear
+          }
         }
-      }).then((response) => {
-        commit('setCategoriesForMonth', response.data)
+      ).then((data) => {
+        commit('setCategoriesForMonth', data)
       })
     },
 

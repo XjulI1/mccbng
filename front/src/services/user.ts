@@ -1,33 +1,27 @@
-import axios from 'axios'
+import { apiGet, apiPatch } from './http'
 
-export const fetchUser = (_, userToken, apiUrl) => {
-  return axios.get(apiUrl + '/api/users/whoAmI', {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  }).then((response) => {
-    return {
-      id: response.data.IDuser,
-      favoris: response.data.favoris,
-      warningTotal: response.data.warningTotal,
-      warningCompte: response.data.warningCompte,
-      email: response.data.email,
-      username: response.data.username
-    }
-  }).catch((error) => {
-    throw new Error(error)
-  })
+export const fetchUser = async (_, userToken, apiUrl) => {
+  const data = await apiGet<{
+    IDuser: number
+    favoris: unknown
+    warningTotal: unknown
+    warningCompte: unknown
+    email: string
+    username: string
+  }>(apiUrl + '/api/users/whoAmI', { token: userToken })
+
+  return {
+    id: data.IDuser,
+    favoris: data.favoris,
+    warningTotal: data.warningTotal,
+    warningCompte: data.warningCompte,
+    email: data.email,
+    username: data.username
+  }
 }
 
-export const updateUser = (updates, userToken, apiUrl) => {
-  return axios.patch(apiUrl + '/api/users/me', updates, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  }).catch((error) => {
-    throw new Error(error)
-  })
-}
+export const updateUser = (updates, userToken, apiUrl) =>
+  apiPatch(apiUrl + '/api/users/me', updates, { token: userToken })
 
 export default {
   fetchUser,

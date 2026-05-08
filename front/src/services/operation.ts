@@ -1,6 +1,12 @@
-import axios from 'axios'
+import { apiDelete, apiGet, apiPost, apiPut } from './http'
 
-export const fetchOperationsForAccount = (IDcompte, userToken, APIURL, skip = 0, limit = 35) => {
+export const fetchOperationsForAccount = (
+  IDcompte,
+  userToken,
+  APIURL,
+  skip = 0,
+  limit = 35
+) => {
   const filter = {
     where: { IDcompte },
     order: 'CheckOp ASC, DateOp DESC',
@@ -8,51 +14,30 @@ export const fetchOperationsForAccount = (IDcompte, userToken, APIURL, skip = 0,
     skip
   }
 
-  return axios
-    .get(APIURL + '/api/operations', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      },
-      params: {
-        filter
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
+  return apiGet(APIURL + '/api/operations', {
+    token: userToken,
+    params: { filter }
+  })
 }
 
 export const updateOperation = (operation, userToken, APIURL) => {
   if (operation.IDop) {
-    return axios.put(
+    return apiPut(
       APIURL + '/api/operations/' + operation.IDop,
       { ...operation, IDop: undefined },
-      {
-        headers: {
-          Authorization: 'Bearer ' + userToken
-        }
-      }
-    )
-  } else {
-    return axios.post(
-      APIURL + '/api/operations/',
-      { ...operation, IDcompteCredit: undefined, IDcompteDebit: undefined },
-      {
-        headers: {
-          Authorization: 'Bearer ' + userToken
-        }
-      }
+      { token: userToken }
     )
   }
+
+  return apiPost(
+    APIURL + '/api/operations/',
+    { ...operation, IDcompteCredit: undefined, IDcompteDebit: undefined },
+    { token: userToken }
+  )
 }
 
-export const deleteOperation = (IDoperation, userToken, APIURL) => {
-  return axios.delete(APIURL + '/api/operations/' + IDoperation, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  })
-}
+export const deleteOperation = (IDoperation, userToken, APIURL) =>
+  apiDelete(APIURL + '/api/operations/' + IDoperation, { token: userToken })
 
 export const fetchSearchOperations = (
   searchTerms,
@@ -75,30 +60,16 @@ export const fetchSearchOperations = (
     skip
   }
 
-  return axios
-    .get(APIURL + '/api/operations', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      },
-      params: {
-        filter
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
+  return apiGet(APIURL + '/api/operations', {
+    token: userToken,
+    params: { filter }
+  })
 }
 
 export const generateRecurringOperations = (userToken, APIURL) => {
-  axios.post(
-    APIURL + '/api/operation-recurrentes/auto-generation',
-    {},
-    {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      }
-    }
-  )
+  apiPost(APIURL + '/api/operation-recurrentes/auto-generation', {}, {
+    token: userToken
+  })
 }
 
 export const fetchRecurrOperation = (userToken, APIURL) => {
@@ -106,51 +77,32 @@ export const fetchRecurrOperation = (userToken, APIURL) => {
     order: 'DernierDateOpRecu DESC, NomOpRecu ASC'
   }
 
-  return axios
-    .get(APIURL + '/api/operation-recurrentes', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      },
-      params: {
-        filter
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
+  return apiGet(APIURL + '/api/operation-recurrentes', {
+    token: userToken,
+    params: { filter }
+  })
 }
 
 export const updateRecurringOperation = (operationRecurrente, userToken, APIURL) => {
   if (operationRecurrente.IDopRecu) {
-    return axios.put(
+    return apiPut(
       APIURL + '/api/operation-recurrentes/' + operationRecurrente.IDopRecu,
       { ...operationRecurrente, IDopRecu: undefined },
-      {
-        headers: {
-          Authorization: 'Bearer ' + userToken
-        }
-      }
-    )
-  } else {
-    return axios.post(
-      APIURL + '/api/operation-recurrentes/',
-      operationRecurrente,
-      {
-        headers: {
-          Authorization: 'Bearer ' + userToken
-        }
-      }
+      { token: userToken }
     )
   }
+
+  return apiPost(
+    APIURL + '/api/operation-recurrentes/',
+    operationRecurrente,
+    { token: userToken }
+  )
 }
 
-export const deleteRecurringOperation = (IDopRecu, userToken, APIURL) => {
-  return axios.delete(APIURL + '/api/operation-recurrentes/' + IDopRecu, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
+export const deleteRecurringOperation = (IDopRecu, userToken, APIURL) =>
+  apiDelete(APIURL + '/api/operation-recurrentes/' + IDopRecu, {
+    token: userToken
   })
-}
 
 export const fetchOperations = (where, userToken, APIURL) => {
   const filter = {
@@ -158,37 +110,26 @@ export const fetchOperations = (where, userToken, APIURL) => {
     order: 'DateOp DESC'
   }
 
-  return axios
-    .get(APIURL + '/api/operations', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      },
-      params: {
-        filter
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
+  return apiGet(APIURL + '/api/operations', {
+    token: userToken,
+    params: { filter }
+  })
 }
 
-export const suggestCategories = (operationName, userToken, APIURL, limit = 5) => {
-  return axios
-    .get(APIURL + '/api/operations/suggestCategories', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      },
-      params: {
-        operationName,
-        limit
-      }
+export const suggestCategories = async (
+  operationName,
+  userToken,
+  APIURL,
+  limit = 5
+) => {
+  try {
+    return await apiGet(APIURL + '/api/operations/suggestCategories', {
+      token: userToken,
+      params: { operationName, limit }
     })
-    .then((response) => {
-      return response.data
-    })
-    .catch(() => {
-      return []
-    })
+  } catch {
+    return []
+  }
 }
 
 export default {

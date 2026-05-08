@@ -1,57 +1,22 @@
-import axios from 'axios'
+import { apiDelete, apiGet, apiPost, apiPut } from './http'
 
-export const fetchBiens = (userToken, APIURL) => {
-  return axios
-    .get(APIURL + '/api/biens', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
-}
+export const fetchBiens = (userToken, APIURL) =>
+  apiGet(APIURL + '/api/biens', { token: userToken })
 
-export const fetchBienById = (IDbien, userToken, APIURL) => {
-  return axios
-    .get(APIURL + '/api/biens/' + IDbien, {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
-}
+export const fetchBienById = (IDbien, userToken, APIURL) =>
+  apiGet(APIURL + '/api/biens/' + IDbien, { token: userToken })
 
 export const updateBien = (bien, userToken, APIURL) => {
   if (bien.IDbien) {
-    return axios.put(
+    return apiPut(
       APIURL + '/api/biens/' + bien.IDbien,
       { ...bien, IDbien: undefined },
-      {
-        headers: {
-          Authorization: 'Bearer ' + userToken
-        }
-      }
-    )
-  } else {
-    return axios.post(
-      APIURL + '/api/biens/',
-      bien,
-      {
-        headers: {
-          Authorization: 'Bearer ' + userToken
-        }
-      }
+      { token: userToken }
     )
   }
+
+  return apiPost(APIURL + '/api/biens/', bien, { token: userToken })
 }
 
-export const deleteBien = (IDbien, userToken, APIURL) => {
-  return axios.delete(APIURL + '/api/biens/' + IDbien, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  })
-}
+export const deleteBien = (IDbien, userToken, APIURL) =>
+  apiDelete(APIURL + '/api/biens/' + IDbien, { token: userToken })

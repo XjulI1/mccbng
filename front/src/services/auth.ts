@@ -1,5 +1,6 @@
-import axios from 'axios'
 import Cookies from 'universal-cookie'
+
+import { apiGet, apiPost } from './http'
 
 const COOKIE_TOKEN = 'userToken'
 const COOKIE_USER_ID = 'userID'
@@ -50,25 +51,17 @@ export const clearLastEmail = () => {
   }
 }
 
-export const auth = (email: string, code: string, apiUrl: string) => {
-  return axios
-    .post(apiUrl + '/api/users/login', {
-      email,
-      code
-    })
-    .then((response) => {
-      if (response.status === 200) {
-        return {
-          userToken: response.data.id,
-          ttl: response.data.ttl,
-          userID: response.data.userId
-        }
-      }
-      throw new Error('Authentication failed')
-    })
-    .catch((error) => {
-      throw new Error(error)
-    })
+export const auth = async (email: string, code: string, apiUrl: string) => {
+  const data = await apiPost<{ id: string; ttl: number; userId: number }>(
+    apiUrl + '/api/users/login',
+    { email, code }
+  )
+
+  return {
+    userToken: data.id,
+    ttl: data.ttl,
+    userID: data.userId
+  }
 }
 
 export const saveCookies = ({ userToken, userID }) => {
@@ -86,21 +79,16 @@ export const removeCookies = () => {
   cookie.remove(COOKIE_USER_ID, opts)
 }
 
-export const checkUserAuthentification = ({ userToken, apiUrl }) => {
-  return axios
-    .get(apiUrl + '/api/users/exists', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      }
-    })
-    .then(() => {
-      return true
-    })
-    .catch(() => {
-      removeCookies()
+export const checkUserAuthentification = async ({ userToken, apiUrl }) => {
+  try {
+    await apiGet(apiUrl + '/api/users/exists', { token: userToken })
 
-      return false
-    })
+    return true
+  } catch {
+    removeCookies()
+
+    return false
+  }
 }
 
 export default {
