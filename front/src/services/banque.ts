@@ -1,29 +1,16 @@
-import axios from 'axios'
+import { apiGet, apiPost } from './http'
 
 export const fetchBanques = (userToken, APIURL) => {
   const filter = { order: 'NomBanque ASC' }
 
-  return axios.get(APIURL + '/api/banques', {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    },
-    params: {
-      filter
-    }
-  }).then((response) => {
-    return response.data
+  return apiGet(APIURL + '/api/banques', {
+    token: userToken,
+    params: { filter }
   })
 }
 
-export const createBanque = (banque, userToken, APIURL) => {
-  return axios.post(APIURL + '/api/banques', banque, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
-  }).then((response) => {
-    return response.data
-  })
-}
+export const createBanque = (banque, userToken, APIURL) =>
+  apiPost(APIURL + '/api/banques', banque, { token: userToken })
 
 export default {
   fetchBanques,

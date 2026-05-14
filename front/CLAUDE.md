@@ -122,7 +122,7 @@ Eight modules, no namespacing — accessed as `store.state.<module>.<prop>` and 
 
 ### Services (`src/services/`)
 
-API layer using Axios. Each function accepts `token` and `apiUrl` so services stay stateless.
+API layer built on the native `fetch` API via the small wrapper in `services/http.ts` (`apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`). Each function accepts `token` and `apiUrl` so services stay stateless.
 
 | Service | Functions | API Endpoints |
 |---------|-----------|---------------|
@@ -248,7 +248,7 @@ Configured via `vite-plugin-pwa` in `vite.config.ts`:
 ### Vite Configuration (`vite.config.ts`)
 
 - **Dev server**: port 8080, proxies `/api` to `VITE_API_URL` (default `http://localhost:3000`).
-- **Build**: manual chunks — `vue` (vue / vue-router / vuex), `vendor` (axios / highcharts).
+- **Build**: manual chunks — `vue` (vue / vue-router / vuex), `vendor` (highcharts).
 - **SCSS**: modern compiler API, global variables injection.
 - **Aliases**: `@` → `src/`.
 - **Vue flags**: Options API enabled, prod devtools disabled.
@@ -267,7 +267,6 @@ Configured via `vite-plugin-pwa` in `vite.config.ts`:
 
 ### Runtime
 - `vue` ^3.5, `vue-router` ^4.5, `vuex` ^4.1 — core framework
-- `axios` ^1.13 — HTTP client
 - `highcharts` ^12.2 — charts
 - `@fortawesome/fontawesome-svg-core`, `@fortawesome/free-solid-svg-icons`, `@fortawesome/vue-fontawesome` — icons
 - `universal-cookie` ^4 — cookie management for auth
@@ -312,7 +311,7 @@ front/
 │   │   ├── display.ts                # UI panel toggle
 │   │   ├── credit.ts                 # loans + remaining balances
 │   │   └── bien.ts                   # real-estate assets
-│   ├── services/                     # axios services per domain (auth, user, compte, operation, category, stats, credit, bien)
+│   ├── services/                     # fetch-based services per domain (auth, user, compte, operation, category, stats, credit, bien) + http.ts wrapper
 │   ├── composables/
 │   │   ├── useTheme.ts               # theme system (light/dark/system)
 │   │   └── useDebugTools.ts          # Eruda lazy load
@@ -354,8 +353,8 @@ front/
 ## Conventions When Editing
 
 - Use `<script setup lang="ts">` and the Composition API in new components.
-- Add a new domain by creating: a `services/<domain>.ts` (axios), a `store/<domain>.ts` (module registered in `store/index.ts`), and components under `components/`.
+- Add a new domain by creating: a `services/<domain>.ts` (using `services/http.ts`), a `store/<domain>.ts` (module registered in `store/index.ts`), and components under `components/`.
 - Modal-style flows should be modeled as **child routes** with `RouteOverTheContent` and a `componentName` prop, not as imperative components.
 - For currency display, prefer `<Currency :amount="…" />` so the locale and symbol stay centralised.
 - Read auth from `getTokenCookie()` / `getUserIDCookie()` rather than from the Vuex store when calling services from outside Vue components.
-- Keep state mutations free of axios calls — services do the I/O, actions orchestrate.
+- Keep state mutations free of HTTP calls — services do the I/O, actions orchestrate.

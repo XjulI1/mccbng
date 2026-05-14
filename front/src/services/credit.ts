@@ -1,81 +1,32 @@
-import axios from 'axios'
+import { apiDelete, apiGet, apiPost, apiPut } from './http'
 
-export const fetchCredits = (userToken, APIURL) => {
-  return axios
-    .get(APIURL + '/api/credits', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
-}
+export const fetchCredits = (userToken, APIURL) =>
+  apiGet(APIURL + '/api/credits', { token: userToken })
 
-export const fetchCreditById = (IDcredit, userToken, APIURL) => {
-  return axios
-    .get(APIURL + '/api/credits/' + IDcredit, {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
-}
+export const fetchCreditById = (IDcredit, userToken, APIURL) =>
+  apiGet(APIURL + '/api/credits/' + IDcredit, { token: userToken })
 
 export const updateCredit = (credit, userToken, APIURL) => {
   if (credit.IDcredit) {
-    return axios.put(
+    return apiPut(
       APIURL + '/api/credits/' + credit.IDcredit,
       { ...credit, IDcredit: undefined },
-      {
-        headers: {
-          Authorization: 'Bearer ' + userToken
-        }
-      }
-    )
-  } else {
-    return axios.post(
-      APIURL + '/api/credits/',
-      credit,
-      {
-        headers: {
-          Authorization: 'Bearer ' + userToken
-        }
-      }
+      { token: userToken }
     )
   }
+
+  return apiPost(APIURL + '/api/credits/', credit, { token: userToken })
 }
 
-export const deleteCredit = (IDcredit, userToken, APIURL) => {
-  return axios.delete(APIURL + '/api/credits/' + IDcredit, {
-    headers: {
-      Authorization: 'Bearer ' + userToken
-    }
+export const deleteCredit = (IDcredit, userToken, APIURL) =>
+  apiDelete(APIURL + '/api/credits/' + IDcredit, { token: userToken })
+
+export const fetchCreditRemainingBalance = (IDcredit, userToken, APIURL) =>
+  apiGet(APIURL + '/api/credits/' + IDcredit + '/remaining-balance', {
+    token: userToken
   })
-}
 
-export const fetchCreditRemainingBalance = (IDcredit, userToken, APIURL) => {
-  return axios
-    .get(APIURL + '/api/credits/' + IDcredit + '/remaining-balance', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
-}
-
-export const fetchCreditPayments = (IDcredit, userToken, APIURL) => {
-  return axios
-    .get(APIURL + '/api/credits/' + IDcredit + '/payments', {
-      headers: {
-        Authorization: 'Bearer ' + userToken
-      }
-    })
-    .then((response) => {
-      return response.data
-    })
-}
+export const fetchCreditPayments = (IDcredit, userToken, APIURL) =>
+  apiGet(APIURL + '/api/credits/' + IDcredit + '/payments', {
+    token: userToken
+  })
