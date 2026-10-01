@@ -54,7 +54,13 @@
         </div>
         <div class="progress-details">
           <span>{{ progressPercent.toFixed(1) }}% remboursé</span>
-          <span>{{ formatAmount(balance.paye) }} payé</span>
+          <span>{{ formatAmount(balance.paye) }} de capital payé</span>
+        </div>
+        <div
+          v-if="balance.interets"
+          class="progress-details"
+        >
+          <span>dont {{ formatAmount(balance.interets) }} d'intérêts versés</span>
         </div>
       </div>
 

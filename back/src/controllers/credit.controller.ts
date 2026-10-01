@@ -314,6 +314,7 @@ export class CreditController {
               properties: {
                 solde: {type: 'number'},
                 paye: {type: 'number'},
+                interets: {type: 'number'},
               },
             },
           },
@@ -324,21 +325,38 @@ export class CreditController {
   async getRemainingBalance(
     @inject(SecurityBindings.USER) currentUserProfile: UserProfile,
     @param.path.number('id') id: number,
-  ): Promise<{solde: number; paye: number}> {
+  ): Promise<{solde: number; paye: number; interets: number}> {
     const credit = await this.assertOwned(id, currentUserProfile);
 
-    const sql = `
-      SELECT COALESCE(SUM(MontantOp), 0) as TotalPaye
-      FROM Operation
-      WHERE IDcredit = ?
-    `;
+    const payments = await this.operationRepository.find({
+      where: {IDcredit: id},
+      order: ['DateOp ASC'],
+    });
 
-    const result = await this.operationRepository.execute(sql, [id]);
-    const totalPaye = result[0]?.TotalPaye || 0;
+    // Amortization: each payment first covers the interest accrued on the
+    // outstanding balance for the period, only the remainder reduces the
+    // principal. Summing raw payments (as before) ignored this split and
+    // made the balance drop by the full mensualité, interest included.
+    const monthlyRate = (credit.TauxInteret ?? 0) / 100 / 12;
+
+    let solde = credit.MontantInitial;
+    let paye = 0;
+    let interets = 0;
+
+    for (const payment of payments) {
+      const montant = Math.abs(payment.MontantOp);
+      const interet = solde * monthlyRate;
+      const principal = Math.min(solde, Math.max(0, montant - interet));
+
+      interets += interet;
+      paye += principal;
+      solde -= principal;
+    }
 
     return {
-      solde: credit.MontantInitial + totalPaye,
-      paye: Math.abs(totalPaye),
+      solde: Math.round(solde * 100) / 100,
+      paye: Math.round(paye * 100) / 100,
+      interets: Math.round(interets * 100) / 100,
     };
   }
 
