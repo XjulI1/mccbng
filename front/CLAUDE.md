@@ -1,43 +1,50 @@
-# CLAUDE.md — Frontend (Vue 3 SPA)
+# CLAUDE.md — Frontend (Nuxt 4 SPA)
 
 ## Overview
 
-Single Page Application for the mccbng personal finance app. Built with **Vue 3.5 + TypeScript + Vite + Vuex 4 + Vue Router 4**, with light/dark theme support, touch gestures, and PWA packaging. Covers banks, accounts, operations, recurring operations, categories, statistics, **loans (Credit)** and **real-estate assets (Bien)**.
+Single Page Application for the mccbng personal finance app. Built with **Nuxt 4 (`ssr: false`, `future.compatibilityVersion: 5`) + Vue 3.5 + TypeScript + Pinia**, with **auto-imports disabled**, light/dark theme support, touch gestures, and PWA packaging. Covers banks, accounts, operations, recurring operations, categories, statistics, **loans (Credit)** and **real-estate assets (Bien)**.
+
+Nitro (Nuxt's server) serves the SPA and proxies `/api/**` to the LoopBack back-end. A later change will move the API itself into `front/server/`.
 
 ## Commands
 
 ```bash
-pnpm dev                # Vite dev server (port 8080, proxies /api to backend)
-pnpm build              # Production build (dist/)
-pnpm build:staging      # Staging build (--mode test)
-pnpm test               # Run Jest tests
-pnpm test:unit          # Unit tests only
-pnpm test:watch         # Tests in watch mode
+pnpm dev                # Nuxt dev server (port 8080, /api proxied to API_URL)
+pnpm build              # Production build (.output/ — Nitro server + public assets)
+pnpm build:staging      # Staging build (--envName test)
+pnpm preview            # Serve the production build locally
+pnpm test               # Vitest (unit + integration, Nuxt environment)
+pnpm test:watch         # Vitest in watch mode
 pnpm test:coverage      # Tests with coverage report
-pnpm type-check         # TypeScript type checking (vue-tsc --noEmit)
-pnpm lint               # ESLint with auto-fix (.vue, .js, .jsx, .ts, .tsx)
+pnpm type-check         # nuxt typecheck (vue-tsc)
+pnpm lint               # ESLint (@nuxt/eslint, flat config) with --fix
 pnpm lint:check         # ESLint check only
 ```
 
+`pnpm install` runs `nuxt prepare` (postinstall) to generate `.nuxt/` (types, aliases).
+
 ## Architecture
 
-### Application Bootstrap
+### Application bootstrap
 
 ```
-src/main.ts             → Creates Vue app, registers store, router, vue3-touch-events, FontAwesome
-src/App.vue             → Root layout: AccountHeader (top) + CompteList (left) + RouterView + NavBar (bottom)
-src/router.ts           → Vue Router 4 with lazy-loaded routes
-src/store/index.ts      → Vuex 4 store with 8 modules (no namespacing)
+nuxt.config.ts          → ssr:false, compatibilityVersion 5, imports.autoImport:false, components:{dirs:[]},
+                          SCSS additionalData, PWA (@vite-pwa/nuxt), head metadata, devServer port 8080
+app/app.vue             → Root layout: AccountHeader (top) + CompteList (left) + <NuxtPage /> + NavBar (bottom)
+app/pages/              → File-based routes (see below)
+app/middleware/auth.global.ts → Global auth guard
+app/plugins/            → fontawesome.ts (global <FontAwesomeIcon>), touch-events.client.ts (vue3-touch-events)
+app/stores/             → 9 Pinia setup stores
+server/api/[...path].ts → Nitro proxy /api/** → process.env.API_URL
 ```
 
-**Plugin registration order (`main.ts`):**
+**No auto-imports.** Import everything explicitly:
+- `ref`, `computed`, `watch`, `onMounted`… from `vue`;
+- `useRoute`, `useRouter`, `definePageMeta`, `defineNuxtPlugin`, `defineNuxtRouteMiddleware`, `navigateTo` from `#imports`;
+- Nuxt components such as `NuxtPage`, `NuxtPwaManifest` from `#components`;
+- stores from `@/stores/<name>`, services from `@/services/<name>`. `@` is `app/`.
 
-1. Vuex store
-2. Vue Router
-3. `vue3-touch-events` (npm package — replaces the former local `vue-touch-events/` workspace)
-4. FontAwesome (registered globally as `<FontAwesomeIcon>` via `plugins/fontawesome.ts`)
-
-`App.vue` calls `useGlobalTheme()` and `useGlobalDebugTools().initDebugTools()` on setup, watches `store.state.user.id` to fetch the account list and categories on login, and force-pushes `/login` on init.
+`app.vue` calls `useGlobalTheme()` and `useGlobalDebugTools().initDebugTools()` on setup. The user, account list and categories are loaded by `hydrateSession` (`app/services/session.ts`), called from the auth middleware and from `login.vue`, so pages and forms (deep links included) find the stores filled at setup.
 
 ### Layout
 
@@ -45,7 +52,7 @@ src/store/index.ts      → Vuex 4 store with 8 modules (no namespacing)
 ┌──────────────────────────────────────────────┐
 │              AccountHeader                    │  ← active account, balances, totals, mask toggle
 ├──────────────┬───────────────────────────────┤
-│  CompteList  │        RouterView              │
+│  CompteList  │        <NuxtPage />            │
 │  (left)      │      (Home / Stats / …)        │
 │              │                                │
 │  swipe ←     │        swipe →                 │
@@ -58,69 +65,76 @@ src/store/index.ts      → Vuex 4 store with 8 modules (no namespacing)
 - **Desktop** (≥ 768 px): left panel always visible at 33 % width, right panel takes the rest.
 - **Mobile** (< 768 px): left panel slides in/out with CSS transitions and swipe gestures, full-width when open.
 
-### Routes (`src/router.ts`)
+### Routes (`app/pages/`)
 
-All routes use lazy loading via `import()` with `webpackChunkName` hints. Child routes use the **overlay pattern**: every child path renders the same `RouteOverTheContent` view, which in turn renders a form (`OperationForm`, `TransfertForm`, `Search`, `OperationRecurrenteForm`, `CreditForm`, `BienForm`) based on the `componentName` prop.
+File-based routing, but **public URLs and route names are unchanged** from the former `router.ts` (the code reads `route.name`, e.g. `TransfertForm` distinguishes `Virement` / `Retrait`, `app.vue` / `NavBar` test `'Login'`). Each page sets its name (and `disabledTotalHeader`) with `definePageMeta`.
 
-| Path | View | Chunk | Children |
-|------|------|-------|----------|
-| `/` | `Home` | `home` | `/newOperation`, `/editOperation/:id`, `/search`, `/transfert`, `/retrait` |
-| `/recurrOperation` | `OperationsRecurrentes` | `operecur` | `/newRecurrOperation`, `/editRecurrOperation/:id` |
-| `/amortissement` | `Amortissement` | `operecur` | — |
-| `/credits` | `Credits` | `credits` | `/newCredit`, `/editCredit/:id` |
-| `/biens` | `Biens` | `biens` | `/newBien`, `/editBien/:id` |
-| `/stats` | `Stats` | `stats` | — |
-| `/login` | `Login` | `login` | — |
-| `/config` | `Config` | `config` | — |
-| `/editUser` | `EditUser` | `edituser` | — |
+Child routes use the **overlay pattern**: each overlay is a tiny page that renders `RouteOverTheContent`, with an absolute `path`, a `name` and a `componentName` declared in `definePageMeta`. `RouteOverTheContent` reads `route.meta.componentName` to pick the form (`operation-form`, `transfert-form`, `search`, `operation-recurrente-form`, `compte-form`, `credit-form`, `bien-form`).
 
-Routes with `meta.disabledTotalHeader: true` hide the global totals in `AccountHeader`.
+| Path | Page file | Overlay children (pages in the sibling folder) |
+|------|-----------|-----------------------------------------------|
+| `/` | `index.vue` | `/newOperation`, `/editOperation/:id`, `/search`, `/transfert`, `/retrait` |
+| `/recurrOperation` | `recurrOperation.vue` | `/newRecurrOperation`, `/editRecurrOperation/:id` |
+| `/amortissement` | `amortissement.vue` | — |
+| `/gestion` | `gestion.vue` | — |
+| `/comptesGestion` | `comptesGestion.vue` | `/newCompte`, `/editCompte/:id` |
+| `/credits` | `credits.vue` | `/newCredit`, `/editCredit/:id` |
+| `/biens` | `biens.vue` | `/newBien`, `/editBien/:id` |
+| `/stats` | `stats.vue` | — |
+| `/login` | `login.vue` | — |
+| `/config` | `config.vue` | — |
+| `/editUser` | `editUser.vue` | — |
 
-### Vuex Store (`src/store/`)
+`meta.disabledTotalHeader: true` (inherited by the overlays of a page) hides the global totals in `AccountHeader`.
 
-Eight modules, no namespacing — accessed as `store.state.<module>.<prop>` and via root-level dispatch.
+The reference route table lives in `tests/fixtures/routes.ts` and is enforced by `tests/integration/routes.spec.ts`: **when you add or rename a route, update the fixture.**
 
-#### `user`
+### Authentication
+
+- Cookies `userToken` and `userID` are read/written through `document.cookie` in `app/services/auth.ts` (`getTokenCookie`, `getUserIDCookie`, `saveCookies`, `removeCookies`), in the same format as `useCookie` (URI-encoded JSON, `SameSite=Strict`, `Secure` over HTTPS) and as the former `universal-cookie` implementation. `useCookie` is deliberately not used: each call would create a ref + watcher outside any effect scope.
+- `app/middleware/auth.global.ts`: for any route other than `/login`, if the user store has no token, it reads the cookies, validates them with `GET /api/users/exists` (`checkUserAuthentification`, which clears invalid cookies), then calls `hydrateSession` (user, accounts, categories). It redirects to `/login` when cookies are missing, the token is invalid or hydration fails (cookies are then cleared), and redirects an already-authenticated user from `/login` to `/`. The requested deep link is preserved.
+- `login.vue` has no auto-authentication of its own (the middleware handles existing sessions): after `auth(...)` it calls `hydrateSession`, saves the cookies, then `router.replace({ name: 'Home' })`.
+- Logout (`config.vue`): clears storage and cookies, then reloads the page.
+
+### Pinia stores (`app/stores/`)
+
+Nine **setup stores** (`defineStore('x', () => { … })`); state is `ref`, getters are `computed`, actions are plain functions. Names mirror the former Vuex modules. Use `useXStore()` and, in components, `storeToRefs` when you need reactive destructuring. **Call `useOtherStore()` inside actions, never at module top level** (stores reference each other: `compte` ↔ `operation`).
+
+#### `user` (`stores/user.ts`)
 - **State**: `id`, `username`, `email`, `token`, `favoris`, `warningTotal`, `warningCompte`, `maskAmount`
-- **Actions**: `fetchUser(userID)`, `updateUser(updates)`, `saveUserToken(token)`, `toggleMaskAmount()`
-- `maskAmount` hides monetary values throughout the UI.
+- **Actions**: `setUser`, `fetchUser(userID)`, `updateUser(updates)`, `saveUserToken(token)`, `toggleMaskAmount()`
 
 #### `compte`
-- **State**: `activeAccount`, `accountList`, `currency` (default `'€'`)
-- **Getters**: `bloquedCompte`, `retraiteCompte`, `availableCompte`, `porteFeuilleCompte`, `jointCompte`, `childrenCompte`, `totalAvailable`, `totalGlobal`, `totalRetraite`, `totalJoint`, `totalChildren`, `getAccount(IDcompte)`, `visibleAccounts`
-- **Actions**: `fetchUserByIDAndGenerateRecurringOp(userID)`, `generateRecurringOperations()`, `fetchActiveAccount(accountID)`, `fetchAccountList()`
-- Computes checked / unchecked balances per account; filters by account-type flags.
+- **State**: `activeAccount`, `accountList`, `currency` (default `'€'`), `managementInfo`
+- **Getters**: `visibleAccounts`, `bloquedCompte`, `retraiteCompte`, `availableCompte`, `porteFeuilleCompte`, `jointCompte`, `childrenCompte`, `totalAvailable`, `totalGlobal`, `totalRetraite`, `totalJoint`, `totalChildren`, `getAccount(IDcompte)`
+- **Actions**: `setActiveAccount`, `setNewBalances`, `setAccountList`, `fetchUserByIDAndGenerateRecurringOp(userID)`, `generateRecurringOperations()`, `fetchActiveAccount(accountID)`, `fetchAccountList()`, `fetchComptesManagementInfo()`, `createCompte`, `updateCompte`, `deleteCompte`
 
 #### `operation`
-- **State**: `operationsOfActiveAccount`, `recurringOperations`, `hasMoreOperations`, `isLoadingOperations`, `operationsSkip`, `operationsLimit` (35), `isSearchMode`, `currentSearchTerms`
-- **Actions**: `fetchOperationsOfActiveAccount()`, `loadMoreOperations()` (infinite scroll), `updateOperation(op)`, `deleteOperation(op)`, `createTransfert(op)` (creates a debit + credit pair), `fetchRecurrOperation()`, `updateRecurringOperation(op)`, `deleteRecurringOperation(op)`, `getSearchOperations(terms)`, `loadMoreSearchOperations()`, `fetchOperations(where)`
-- Skip/limit pagination, 35 items per page.
+- **State**: `operationsOfActiveAccount` (starts `undefined`), `recurringOperations`, `hasMoreOperations`, `isLoadingOperations`, `operationsSkip`, `operationsLimit` (35), `isSearchMode`, `currentSearchTerms`
+- **Actions**: `setOperationsOfActiveAccount`, `fetchOperationsOfActiveAccount()`, `loadMoreOperations()` (infinite scroll), `updateOperation(op)`, `deleteOperation(op)`, `createTransfert(op)` (debit + credit pair), `fetchRecurrOperation()`, `updateRecurringOperation(op)`, `deleteRecurringOperation(op)`, `getSearchOperations(terms)`, `loadMoreSearchOperations()`, `fetchOperations(where)`, `operationFromCurrentList(id)`
 
 #### `category`
-- **State**: `list`
-- **Getters**: `getCategoryName(IDcat)`
-- **Actions**: `fetchCategoryList()` — lazy loads (only fetches if list is empty / very small).
+- **State**: `list` — **Getter**: `getCategoryName(IDcat)` — **Actions**: `setCategoryList`, `fetchCategoryList()` (lazy: only fetches when the list has fewer than 2 entries)
 
 #### `stats`
 - **State**: `negativeMonth`, `currentMonth`, `currentYear`, `categoriesTotal`
-- **Getters**: `getCategoriesTotalForHighchartPie` (transforms data for Highcharts pie format)
+- **Getter**: `getCategoriesTotalForHighchartPie`
 - **Actions**: `fetchSumByUserByMonth()`, `fetchSumCategoriesByUserByMonth()`, `changeStatsCurrentYear(year)`, `changeStatsCurrentMonth(month)`
 
 #### `display`
-- **State**: `account_list` (boolean, toggles left panel visibility on mobile)
-- **Actions**: `toggleAccountList(force?)`
+- **State**: `account_list` (left panel visibility on mobile) — **Action**: `toggleAccountList(force?)`
 
 #### `credit`
 - **State**: `creditList`, `activeCredit`, `creditBalances` (dict by `IDcredit`), `isLoadingCredits`
-- **Getters**: `creditFromList(creditID)`
-- **Actions**: `fetchCredits()` (also fetches remaining balances for each), `updateCredit(credit)`, `deleteCredit(credit)`, `fetchCreditDetails(IDcredit)`
+- **Actions**: `fetchCredits()` (also fetches remaining balances), `updateCredit`, `deleteCredit`, `fetchCreditDetails(IDcredit)`, `creditFromList(id)`, `setCreditBalance`
 
 #### `bien`
-- **State**: `bienList`, `activeBien`, `isLoadingBiens`
-- **Getters**: `bienFromList(bienID)`
-- **Actions**: `fetchBiens()`, `updateBien(bien)`, `deleteBien(bien)`, `fetchBienDetails(IDbien)`
+- **State**: `bienList`, `activeBien`, `isLoadingBiens` — **Actions**: `fetchBiens()`, `updateBien`, `deleteBien`, `fetchBienDetails(IDbien)`, `bienFromList(id)`
 
-### Services (`src/services/`)
+#### `banque`
+- **State**: `banqueList` — **Actions**: `setBanqueList`, `addBanque`, `fetchBanques()`, `createBanque(banque)` (used by `CompteForm`)
+
+### Services (`app/services/`)
 
 API layer built on the native `fetch` API via the small wrapper in `services/http.ts` (`apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`). Each function accepts `token` and `apiUrl` so services stay stateless.
 
@@ -135,9 +149,9 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 | **credit.ts** | `fetchCredits()`, `fetchCreditById()`, `updateCredit()`, `deleteCredit()`, `fetchCreditRemainingBalance()`, `fetchCreditPayments()` | `GET/POST /api/credits`, `GET/PUT/DEL /api/credits/:id`, `GET /api/credits/:id/remaining-balance`, `GET /api/credits/:id/payments` |
 | **bien.ts** | `fetchBiens()`, `fetchBienById()`, `updateBien()`, `deleteBien()` | `GET/POST /api/biens`, `GET/PUT/DEL /api/biens/:id` |
 
-**Authentication**: token stored in cookies (`userToken`, `userID`) via `universal-cookie`. The app force-pushes to `/login` on startup; `Login.vue` validates the 6-char code, stores the cookies, then routes to `/`.
+**Authentication**: see the Authentication section above. The API base URL is the empty string (`app/services/config.ts` → `API_URL`) so every call is relative to `/api/**`, which Nitro proxies to the back-end.
 
-### Components (`src/components/`)
+### Components (`app/components/`)
 
 #### Layout / navigation
 
@@ -192,169 +206,103 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 | **Stats/PieByCategorie.vue** | Highcharts pie chart by category |
 | **Stats/TimeSeriesEvolutionSoldes.vue** | Highcharts time series (global / retraite / dispo) |
 
-### Views (`src/views/`)
+### Pages (`app/pages/`)
 
-| View | Description |
+| Page | Description |
 |------|-------------|
-| **Login.vue** | 6-character code input → `auth(code)` → save cookies, dispatch `fetchUser` |
-| **Home.vue** | Active account `OperationList`; child routes overlay forms |
-| **OperationsRecurrentes.vue** | Recurring operations list and management |
-| **Amortissement.vue** | Operations filtered with `amortissement: 1` (loan principal repayments) |
-| **Credits.vue** | Loans dashboard |
-| **Biens.vue** | Real-estate assets dashboard |
-| **Stats.vue** | Dashboard composing the three Stats components |
-| **Config.vue** | Settings: reload, edit account, theme toggle, debug-tools toggle, logout |
-| **EditUser.vue** | Form to update profile (`PATCH /api/users/me`) |
-| **RouteOverTheContent.vue** | Dynamic overlay wrapper — reads `componentName` prop and renders the matching form |
+| **login.vue** | Email + 6-character code → `auth(...)` → save cookies, load user |
+| **index.vue** | Active account `OperationList`; child routes overlay forms |
+| **recurrOperation.vue** | Recurring operations list and management |
+| **amortissement.vue** | Operations filtered with `amortissement: 1` (loan principal repayments) |
+| **gestion.vue**, **comptesGestion.vue** | Management hub and account management |
+| **credits.vue** | Loans dashboard |
+| **biens.vue** | Real-estate assets dashboard |
+| **stats.vue** | Statistics dashboard |
+| **config.vue** | Settings: reload, edit account, theme toggle, debug-tools toggle, logout |
+| **editUser.vue** | Form to update profile (`PATCH /api/users/me`) |
 
-### Composables (`src/composables/`)
+`components/RouteOverTheContent.vue` is the overlay wrapper (reads `route.meta.componentName`).
 
-- **`useTheme.ts`** — theme management.
-  - Modes: `light`, `dark`, `system`.
-  - Persists choice to `localStorage` under `theme`.
-  - Listens to `prefers-color-scheme` changes.
-  - Sets `data-theme` attribute and `dark-theme` class on `<html>`.
-  - Singleton via `useGlobalTheme()` for shared state.
-- **`useDebugTools.ts`** — optional Eruda integration.
-  - `localStorage` key: `debugToolsEnabled`.
-  - `initDebugTools()` reads the flag and lazy-loads Eruda (`eruda` npm package) when enabled.
-  - `toggleDebugTools()` flips the flag.
-  - Singleton via `useGlobalDebugTools()`.
-  - Toggled from `Config.vue` to enable a mobile dev console.
+### Composables (`app/composables/`)
 
-### Plugins (`src/plugins/`)
+- **`useTheme.ts`** — modes `light` / `dark` / `system`, persisted in `localStorage` (`theme`), follows `prefers-color-scheme`, sets `data-theme` and the `dark-theme` class on `<html>`. Singleton via `useGlobalTheme()`.
+- **`useDebugTools.ts`** — optional Eruda console, `localStorage` key `debugToolsEnabled`, lazy `import('eruda')`. Singleton via `useGlobalDebugTools()`.
 
-- **`fontawesome.ts`** — registers a curated set of FontAwesome solid icons; the resulting component is exposed globally as `<FontAwesomeIcon>`.
+### Styles (`app/assets/styles/`)
 
-### Styles (`src/styles/`)
+- **`variables.scss`** — SCSS variables injected globally via `vite.css.preprocessorOptions.scss.additionalData` in `nuxt.config.ts` (breakpoints, header / navbar / left-panel sizes).
+- **`theme.css`** — CSS custom properties for light + dark (`@media (prefers-color-scheme: dark)` and `html[data-theme="dark"]`).
+- **`main.css`** — global resets and utilities, registered in `nuxt.config.ts` `css`.
 
-- **`variables.scss`** — SCSS variables globally injected via Vite `additionalData` (breakpoints, layout):
-  - `$desktop_BP_min_width: 768px`, `$mobile_BP_max_width: 767px`
-  - `$header-height: 70px`, `$header-height-and-margin: 80px`
-  - `$left-panel-width: 33%`, `$navbar-height: 40px`, `$navbar-height-and-margin: 70px`
-- **`theme.css`** — CSS custom properties for the full theme system: gradients, base colors, text, backgrounds (incl. glass-morphism), borders, button states, z-index. Light + dark via `@media (prefers-color-scheme: dark)` and `html[data-theme="dark"]`.
-- **`main.css`** — global resets, font stack, container/grid utilities.
+### PWA (`@vite-pwa/nuxt`)
 
-### PWA Configuration
+Configured under `pwa` in `nuxt.config.ts`: manifest `mCloud Compte and Budget` / `mCcBng` (`fullscreen`, portrait, theme `#4DBA87`, background `#000000`, icons 48 to 512), service worker `service-worker.js` with `registerType: 'autoUpdate'`, `navigateFallback: '/'` with `/api/**` denied. The SPA shell is prerendered (`nitro.prerender.routes: ['/']`) so the service worker can precache it. `<NuxtPwaManifest />` in `app.vue` injects the manifest link. `public/` holds the icons and favicon.
 
-Configured via `vite-plugin-pwa` in `vite.config.ts`:
+### API proxy and runtime config
 
-- Manifest: name `MCCB NG`, short name `MCCB`, display `standalone`.
-- Icons: 192×192 and 512×512 PNG.
-- Service worker: `service-worker.js` registered with `autoUpdate`.
-- Workbox for caching strategies.
-- `src/registerServiceWorker.js` performs the runtime registration.
-
-### Vite Configuration (`vite.config.ts`)
-
-- **Dev server**: port 8080, proxies `/api` to `VITE_API_URL` (default `http://localhost:3000`).
-- **Build**: manual chunks — `vue` (vue / vue-router / vuex), `vendor` (highcharts).
-- **SCSS**: modern compiler API, global variables injection.
-- **Aliases**: `@` → `src/`.
-- **Vue flags**: Options API enabled, prod devtools disabled.
+`server/api/[...path].ts` forwards every `/api/**` request (method, path, query, headers except `cookie`, body; 30 s timeout, 502 JSON error if the back is unreachable) to `process.env.API_URL` (default `http://localhost:3000`). `API_URL` is read **at runtime**, so it can change without rebuilding. In dev, put it in `front/.env`.
 
 ### Testing
 
-- **Framework**: Jest with `jest-environment-jsdom`.
-- **Vue testing**: `@vue/test-utils` + `@vue/vue3-jest`.
-- **TypeScript**: `ts-jest`.
-- **CSS**: `identity-obj-proxy` for CSS module mocking.
-- **Config**: `jest.config.js`.
-- **Tests**: `tests/unit/`.
-- **lint-staged**: ESLint auto-fix on commit for `.js, .jsx, .ts, .tsx, .vue`.
+- **Framework**: Vitest with `@nuxt/test-utils` (`environment: 'nuxt'`, see `vitest.config.ts`); `h3-next` is required as an optional peer.
+- **Tests**: `tests/unit/` (stores), `tests/integration/` (route table, auth service + middleware), `tests/fixtures/routes.ts` (route contract).
+- `useRouter()` and other Nuxt composables need the Nuxt context: call them inside tests, not at collection time.
 
 ## Dependencies
 
 ### Runtime
-- `vue` ^3.5, `vue-router` ^4.5, `vuex` ^4.1 — core framework
+- `nuxt` 4, `vue` ^3.5, `pinia` + `@pinia/nuxt`, `@vite-pwa/nuxt`
 - `highcharts` ^12.2 — charts
-- `@fortawesome/fontawesome-svg-core`, `@fortawesome/free-solid-svg-icons`, `@fortawesome/vue-fontawesome` — icons
-- `universal-cookie` ^4 — cookie management for auth
-- `vue3-touch-events` ^4 — Vue 3 touch / swipe gestures (replaces former local workspace)
-- `eruda` ^3 — optional in-page mobile dev console (lazy-loaded)
-- `register-service-worker`, `core-js`
+- `@fortawesome/*` — icons
+- `vue3-touch-events` ^4 — swipe gestures (client plugin)
+- `eruda` ^3 — optional mobile dev console (lazy-loaded)
 
 ### Dev
-- `vite` ^6.3, `@vitejs/plugin-vue`
-- `vite-plugin-pwa`, `workbox-build`, `workbox-window`
-- `typescript` ^5.8, `vue-tsc` ^2.2
-- `sass` ^1.86
-- `jest` ^29.7, `@vue/test-utils` ^2.4, `@vue/vue3-jest`, `ts-jest`, `babel-jest`
-- `eslint` ^8.57 + Vue / TS / Standard plugins, `lint-staged`
+- `typescript`, `vue-tsc`, `sass`
+- `vitest`, `@nuxt/test-utils`, `@vue/test-utils`, `happy-dom`, `h3-next`
+- `eslint` 9 + `@nuxt/eslint`, `lint-staged`
 
 ## Docker
 
-Multi-stage build:
+Build context is the **repo root** (the pnpm lockfile lives there): `docker build -f front/Dockerfile .` (the `docker:*:build` scripts do this).
 
-1. **Build stage** (`node:22-slim`): install deps with pnpm, run `pnpm build`.
-2. **Production stage** (`nginx`): copy `dist/` to nginx html, custom `nginx.conf` with SPA fallback (`try_files $uri /index.html`).
+1. **Build stage** (`node:22-slim`): corepack + `pnpm install --frozen-lockfile --ignore-scripts --filter @mccbng/front...`, then `pnpm --filter @mccbng/front build`.
+2. **Runtime stage** (`node:22-slim`): copies `.output/` only, runs `node .output/server/index.mjs` as user `node` on port **8080** (`NITRO_PORT`), with a healthcheck. `API_URL` is **required** at run time (the container exits at startup if it is unset).
 
-Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`.
+Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps port 8080 and sets `API_URL`.
 
 ## File Structure
 
 ```
 front/
-├── src/
-│   ├── main.ts                       # App entry point
-│   ├── App.vue                       # Root layout
-│   ├── router.ts                     # Vue Router config (lazy + overlay child routes)
-│   ├── registerServiceWorker.js      # PWA SW registration
-│   ├── shims-vue.d.ts                # Vue SFC type declarations
-│   ├── store/
-│   │   ├── index.ts                  # Vuex store wiring
-│   │   ├── user.ts                   # auth, profile, maskAmount
-│   │   ├── compte.ts                 # accounts + balances
-│   │   ├── operation.ts              # operations + pagination + search
-│   │   ├── category.ts               # categories (lazy)
-│   │   ├── stats.ts                  # monthly stats + charts
-│   │   ├── display.ts                # UI panel toggle
-│   │   ├── credit.ts                 # loans + remaining balances
-│   │   └── bien.ts                   # real-estate assets
-│   ├── services/                     # fetch-based services per domain (auth, user, compte, operation, category, stats, credit, bien) + http.ts wrapper
-│   ├── composables/
-│   │   ├── useTheme.ts               # theme system (light/dark/system)
-│   │   └── useDebugTools.ts          # Eruda lazy load
-│   ├── components/
-│   │   ├── AccountHeader.vue
-│   │   ├── NavBar.vue
-│   │   ├── CompteList/{index,Compte}.vue
-│   │   ├── OperationList.vue
-│   │   ├── OperationForm.vue
-│   │   ├── TransfertForm.vue
-│   │   ├── Search.vue
-│   │   ├── OperationRecurrente{,List,Form}.vue
-│   │   ├── CreditCard.vue / CreditForm.vue / CreditList.vue
-│   │   ├── BienCard.vue / BienForm.vue / BienList.vue
-│   │   ├── Currency.vue
-│   │   ├── Home/Operation.vue
-│   │   ├── Amortissement/Operation.vue
-│   │   └── Stats/{SumByMonth,PieByCategorie,TimeSeriesEvolutionSoldes}.vue
-│   ├── views/                        # Login, Home, OperationsRecurrentes, Amortissement, Credits, Biens, Stats, Config, EditUser, RouteOverTheContent
-│   ├── plugins/
-│   │   └── fontawesome.ts
-│   └── styles/
-│       ├── variables.scss
-│       ├── theme.css
-│       └── main.css
-├── tests/
-│   ├── setup.js
-│   └── unit/
-│       └── example.spec.js
-├── public/                           # static assets (icons, favicon)
-├── vite.config.ts
-├── jest.config.js
-├── tsconfig.json
-├── Dockerfile
-├── nginx.conf
+├── nuxt.config.ts
+├── app/
+│   ├── app.vue                       # Root layout
+│   ├── pages/                        # File-based routes (+ overlay children in sibling folders)
+│   ├── components/                   # + RouteOverTheContent.vue
+│   ├── composables/                  # useTheme, useDebugTools
+│   ├── middleware/auth.global.ts
+│   ├── plugins/                      # fontawesome.ts, touch-events.client.ts
+│   ├── services/                     # fetch-based services per domain + http.ts, config.ts
+│   ├── stores/                       # user, compte, operation, category, stats, display, credit, bien, banque
+│   └── assets/styles/                # variables.scss, theme.css, main.css
+├── server/api/[...path].ts           # Nitro proxy /api/** → API_URL
+├── public/                           # icons, favicon
+├── tests/{unit,integration,fixtures}/
+├── vitest.config.ts
+├── eslint.config.mjs
+├── tsconfig.json                     # references .nuxt/tsconfig.*.json
+├── Dockerfile / Dockerfile.dockerignore
 └── package.json
 ```
 
 ## Conventions When Editing
 
-- Use `<script setup lang="ts">` and the Composition API in new components.
-- Add a new domain by creating: a `services/<domain>.ts` (using `services/http.ts`), a `store/<domain>.ts` (module registered in `store/index.ts`), and components under `components/`.
-- Modal-style flows should be modeled as **child routes** with `RouteOverTheContent` and a `componentName` prop, not as imperative components.
-- For currency display, prefer `<Currency :amount="…" />` so the locale and symbol stay centralised.
-- Read auth from `getTokenCookie()` / `getUserIDCookie()` rather than from the Vuex store when calling services from outside Vue components.
+- Use `<script setup lang="ts">` and the Composition API in new components, with **explicit imports** (no auto-imports).
+- Add a new domain by creating: `app/services/<domain>.ts` (using `services/http.ts` and `API_URL` from `services/config.ts`), `app/stores/<domain>.ts` (a setup store), and components under `app/components/`.
+- Model modal-style flows as **child pages** (absolute `path`, `name`, `componentName` in `definePageMeta`) rendering `RouteOverTheContent`, and update `tests/fixtures/routes.ts`.
+- Keep route names stable: the code reads `route.name`.
+- For currency display, prefer `<Currency :amount="…" />`.
+- Read auth through `getTokenCookie()` / `getUserIDCookie()` (or the user store) rather than touching cookies directly, and use `hydrateSession` to load a session.
 - Keep state mutations free of HTTP calls — services do the I/O, actions orchestrate.
+- Never call `useXStore()` at module top level in a store file.

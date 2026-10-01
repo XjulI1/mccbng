@@ -1,0 +1,74 @@
+<template>
+  <div
+    class="route-other-the-content"
+    @click="returnToHome"
+  >
+    <div class="component-content">
+      <component :is="components[componentName]" />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+  import { computed } from 'vue'
+  import { useRoute, useRouter } from '#imports'
+  import OperationForm from '@/components/OperationForm.vue'
+  import OperationRecurrenteForm from '@/components/OperationRecurrenteForm.vue'
+  import Search from '@/components/Search.vue'
+  import TransfertForm from '@/components/TransfertForm.vue'
+  import CreditForm from '@/components/CreditForm.vue'
+  import BienForm from '@/components/BienForm.vue'
+  import CompteForm from '@/components/CompteForm.vue'
+
+  const components = {
+    'operation-form': OperationForm,
+    'operation-recurrente-form': OperationRecurrenteForm,
+    search: Search,
+    'transfert-form': TransfertForm,
+    'credit-form': CreditForm,
+    'bien-form': BienForm,
+    'compte-form': CompteForm
+  }
+
+  const route = useRoute()
+  const router = useRouter()
+
+  // Défini par definePageMeta({ componentName }) dans chaque page overlay
+  const componentName = computed(() => String(route.meta.componentName ?? ''))
+
+  function returnToHome (event) {
+    if (event.target.className !== 'route-other-the-content') return
+
+    if (componentName.value === 'operation-recurrente-form') {
+      router.push('/recurrOperation')
+    } else if (componentName.value === 'credit-form') {
+      router.push('/credits')
+    } else if (componentName.value === 'bien-form') {
+      router.push('/biens')
+    } else if (componentName.value === 'compte-form') {
+      router.push('/comptesGestion')
+    } else {
+      router.push('/')
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+.route-other-the-content {
+  background-color: rgba(0, 0, 0, 0.25);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  position: fixed;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.component-content {
+  margin: ($header-height-and-margin + 5px) auto 20px;
+  max-width: 600px;
+  padding: 0 10px;
+}
+</style>

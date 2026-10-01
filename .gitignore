@@ -13,3 +13,8 @@ tests/e2e/reports/
 .yarn/
 **.local.**
 **/config.js
+# Nuxt
+.nuxt
+.output
+.data
+.pnpm-store
