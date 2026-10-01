@@ -46,11 +46,7 @@
 
   const totalValeurActuelle = computed(() => {
     return biensList.value.reduce((sum, bien) => {
-      const value =
-        bien.ValeurActuelle ||
-        (bien.PrixBienNu || 0) +
-        (bien.FraisNotaire || 0) +
-        (bien.FraisAgence || 0)
+      const value = bien.ValeurActuelle || bien.PrixBienNu || 0
       return sum + value
     }, 0)
   })
