@@ -35,8 +35,8 @@ describe('cookies de session (useCookie)', () => {
   })
 
   it('relit des cookies posés avant la migration (format universal-cookie)', () => {
-    document.cookie = 'userToken=old.jwt.token; path=/'
-    document.cookie = 'userID=7; path=/'
+    document.cookie = 'userToken=old.jwt.token; path=/; secure'
+    document.cookie = 'userID=7; path=/; secure'
 
     expect(auth.getTokenCookie()).toBe('old.jwt.token')
     expect(String(auth.getUserIDCookie())).toBe('7')
