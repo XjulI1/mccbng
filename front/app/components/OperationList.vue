@@ -101,11 +101,12 @@
     }
   })
 
-  watch(() => accountList.value, () => {
-    if (!activeAccount.value?.IDcompte) {
+  // immediate : la liste des comptes est déjà chargée (hydrateSession) quand la page s'affiche
+  watch(() => accountList.value, (list) => {
+    if (list?.length && !activeAccount.value?.IDcompte) {
       compteStore.fetchActiveAccount(userFavoris.value)
     }
-  })
+  }, { immediate: true })
 </script>
 <style lang="scss" scoped>
 .operation-list {
