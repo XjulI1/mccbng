@@ -42,13 +42,18 @@ export default defineNuxtConfig({
     registerType: 'autoUpdate',
     includeAssets: ['favicon.ico', 'icon/*.png'],
     manifest: {
-      name: 'MCCB NG',
-      short_name: 'MCCB',
+      name: 'mCloud Compte and Budget',
+      short_name: 'mCcBng',
       description: 'mCloud Compte and Budget Next Generation',
-      theme_color: '#ffffff',
-      background_color: '#ffffff',
-      display: 'standalone',
+      start_url: '/',
+      display: 'fullscreen',
+      orientation: 'portrait',
+      theme_color: '#4DBA87',
+      background_color: '#000000',
       icons: [
+        { src: 'icon/app-icon-48.png', sizes: '48x48', type: 'image/png' },
+        { src: 'icon/app-icon-96.png', sizes: '96x96', type: 'image/png' },
+        { src: 'icon/app-icon-144.png', sizes: '144x144', type: 'image/png' },
         { src: 'icon/app-icon-192.png', sizes: '192x192', type: 'image/png' },
         { src: 'icon/app-icon-512.png', sizes: '512x512', type: 'image/png' }
       ]

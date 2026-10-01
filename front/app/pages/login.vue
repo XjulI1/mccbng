@@ -36,18 +36,7 @@
         <h2>Authentification</h2>
       </div>
 
-      <div
-        v-if="autoAuthProgress"
-        class="auto-auth"
-      >
-        <div class="loading-spinner" />
-        <p>Authentification automatique en cours...</p>
-      </div>
-
-      <div
-        v-else
-        class="auth-content"
-      >
+      <div class="auth-content">
         <div class="email-field">
           <label for="login-email">Email</label>
           <input
@@ -164,24 +153,16 @@
 <script setup lang="ts">
   import { API_URL } from '@/services/config'
   import { definePageMeta, useRouter } from '#imports'
-  import { ref, watch, onMounted } from 'vue'
-  import { useCompteStore } from '@/stores/compte'
-  import { useUserStore } from '@/stores/user'
+  import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+  import { hydrateSession } from '@/services/session'
   import {
     auth,
-    checkUserAuthentification,
     getLastEmail,
-    getTokenCookie,
-    getUserIDCookie,
     saveCookies,
     setLastEmail
   } from '@/services/auth'
 
   const router = useRouter()
-  const compteStore = useCompteStore()
-  const userStore = useUserStore()
-
-  const autoAuthProgress = ref(true)
   const buttonList = ref(randomListNumber())
   const code = ref('')
   const email = ref(getLastEmail())
@@ -194,10 +175,8 @@
     })
   }
 
-  const endAuthentification = ({ userToken, userID }) => {
-    userStore.saveUserToken(userToken)
-    compteStore.fetchUserByIDAndGenerateRecurringOp(userID)
-
+  const endAuthentification = async ({ userToken, userID }) => {
+    await hydrateSession(userToken, userID)
     saveCookies({ userToken, userID })
 
     router.replace({ name: 'Home' })
@@ -216,7 +195,7 @@
     auth(email.value.trim(), value, API_URL)
       .then(({ userToken, userID }) => {
         setLastEmail(email.value.trim())
-        endAuthentification({ userToken, userID })
+        return endAuthentification({ userToken, userID })
       })
       .catch(() => {
         error.value = true
@@ -227,31 +206,23 @@
       })
   })
 
-  // Equivalent to beforeCreate
-  const userToken = getTokenCookie()
-  const userID = getUserIDCookie()
-
-  checkUserAuthentification({
-    userToken,
-    apiUrl: API_URL
-  }).then((isExist) => {
-    if (isExist) {
-      endAuthentification({ userID, userToken })
-    } else {
-      autoAuthProgress.value = false
+  // La session existante est déjà gérée (et redirigée) par le middleware global auth.global.ts
+  const onKeydown = (event: KeyboardEvent) => {
+    const target = event.target as HTMLElement | null
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+      return
     }
-  })
+    if (parseInt(event.key) >= 0 && parseInt(event.key) <= 9) {
+      code.value += event.key
+    }
+  }
 
   onMounted(() => {
-    window.addEventListener('keydown', (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-        return
-      }
-      if (parseInt(event.key) >= 0 && parseInt(event.key) <= 9) {
-        code.value += event.key
-      }
-    })
+    window.addEventListener('keydown', onKeydown)
+  })
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onKeydown)
   })
 
   const addNumber = (event) => {

@@ -359,16 +359,28 @@
   })
 
   // Equivalent to created
-  if (operationID.value) {
+  const loadExistingOperation = () => {
     const existingOperation = operationStore.operationFromCurrentList(
       operationID.value
     )
-    if (existingOperation) {
-      operation.value = { ...existingOperation }
-      operation.value.DateOp = new Date(existingOperation.DateOp)
-        .toISOString()
-        .split('T')[0]
-      montantOpIsPositive.value = operation.value.MontantOp > 0
+    if (!existingOperation) return false
+    operation.value = { ...existingOperation }
+    operation.value.DateOp = new Date(existingOperation.DateOp)
+      .toISOString()
+      .split('T')[0]
+    montantOpIsPositive.value = operation.value.MontantOp > 0
+    return true
+  }
+
+  if (operationID.value) {
+    // Lien profond : la liste des opérations peut arriver après le setup
+    if (!loadExistingOperation()) {
+      const stop = watch(
+        () => operationStore.operationsOfActiveAccount,
+        () => {
+          if (loadExistingOperation()) stop()
+        }
+      )
     }
   } else {
     operation.value.DateOp = new Date().toISOString().split('T')[0]

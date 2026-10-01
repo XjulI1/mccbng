@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
-import { navigateTo, useRouter } from '#imports'
+import { setActivePinia, type Pinia } from 'pinia'
+import { navigateTo, useNuxtApp, useRouter } from '#imports'
 
 vi.mock('@/services/auth', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/services/auth')>()),
@@ -8,13 +8,20 @@ vi.mock('@/services/auth', async (importOriginal) => ({
 }))
 vi.mock('@/services/user', () => ({ fetchUser: vi.fn().mockResolvedValue({ id: 'u1' }), updateUser: vi.fn() }))
 vi.mock('@/services/operation', () => ({ generateRecurringOperations: vi.fn() }))
+vi.mock('@/services/compte', () => ({
+  fetchAccountList: vi.fn().mockResolvedValue([]),
+  sumAllCompteForUser: vi.fn().mockResolvedValue([])
+}))
+vi.mock('@/services/category', () => ({ fetchCategoryList: vi.fn().mockResolvedValue([]) }))
 
 const auth = await import('@/services/auth')
 const { useUserStore } = await import('@/stores/user')
 
 beforeEach(() => {
-  setActivePinia(createPinia())
+  // Le middleware utilise le pinia de l'app Nuxt : on le garde actif et on remet la session à zéro
+  setActivePinia(useNuxtApp().$pinia as Pinia)
   auth.removeCookies()
+  useUserStore().saveUserToken(null)
   vi.clearAllMocks()
 })
 
@@ -69,6 +76,19 @@ describe('middleware d\'authentification global', () => {
 
     expect(useRouter().currentRoute.value.path).toBe('/stats')
     expect(useUserStore().token).toBe('good')
+  })
+
+  it('redirige vers /login et supprime la session si le chargement de l\'utilisateur échoue', async () => {
+    auth.saveCookies({ userToken: 'good', userID: 1 })
+    vi.mocked(auth.checkUserAuthentification).mockResolvedValue(true)
+    const { fetchUser } = await import('@/services/user')
+    vi.mocked(fetchUser).mockRejectedValueOnce(new Error('HTTP 500'))
+
+    await navigateTo('/config')
+
+    expect(useRouter().currentRoute.value.path).toBe('/login')
+    expect(useUserStore().token).toBeNull()
+    expect(auth.getTokenCookie()).toBeFalsy()
   })
 
   it('laisse toujours passer /login', async () => {

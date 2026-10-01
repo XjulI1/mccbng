@@ -147,7 +147,7 @@ export const useCompteStore = defineStore('compte', () => {
   function fetchAccountList () {
     const user = useUserStore()
 
-    fetchAccountListService(user.id, user.token, API_URL)
+    return fetchAccountListService(user.id, user.token, API_URL)
       .then((list) => {
         setAccountList(list)
 

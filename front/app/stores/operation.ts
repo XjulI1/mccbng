@@ -25,7 +25,7 @@ export const useOperationStore = defineStore('operation', () => {
   const currentSearchTerms = ref('')
 
   function operationFromCurrentList (operationID) {
-    return operationsOfActiveAccount.value!.find(
+    return operationsOfActiveAccount.value?.find(
       (operation) => parseInt(operationID) === operation.IDop
     )
   }

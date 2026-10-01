@@ -38,13 +38,9 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, watch } from 'vue'
   import { useRoute } from '#imports'
   import { NuxtPage, NuxtPwaManifest } from '#components'
-  import { useCategoryStore } from '@/stores/category'
-  import { useCompteStore } from '@/stores/compte'
   import { useDisplayStore } from '@/stores/display'
-  import { useUserStore } from '@/stores/user'
   import { useGlobalTheme } from '@/composables/useTheme'
   import { useGlobalDebugTools } from '@/composables/useDebugTools'
 
@@ -54,10 +50,7 @@
   import AccountHeader from '@/components/AccountHeader.vue'
 
   const route = useRoute()
-  const categoryStore = useCategoryStore()
-  const compteStore = useCompteStore()
   const displayStore = useDisplayStore()
-  const userStore = useUserStore()
 
   // Initialisation du système de thème
   useGlobalTheme()
@@ -66,13 +59,7 @@
   const { initDebugTools } = useGlobalDebugTools()
   initDebugTools()
 
-  const userID = computed(() => userStore.id)
   const displayAccountList = computed(() => displayStore.account_list)
-
-  watch(userID, () => {
-    compteStore.fetchAccountList()
-    categoryStore.fetchCategoryList()
-  })
 
   const openAccountList = () => {
     displayStore.toggleAccountList(true)

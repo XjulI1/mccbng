@@ -240,7 +240,7 @@ Configured under `pwa` in `nuxt.config.ts`: manifest `MCCB NG` / `MCCB` (`standa
 
 ### API proxy and runtime config
 
-`server/api/[...path].ts` forwards every `/api/**` request (method, path, query, headers, body) to `process.env.API_URL` (default `http://localhost:3000`). `API_URL` is read **at runtime**, so it can change without rebuilding. In dev, put it in `front/.env`.
+`server/api/[...path].ts` forwards every `/api/**` request (method, path, query, headers except `cookie`, body; 30 s timeout, 502 JSON error if the back is unreachable) to `process.env.API_URL` (default `http://localhost:3000`). `API_URL` is read **at runtime**, so it can change without rebuilding. In dev, put it in `front/.env`.
 
 ### Testing
 
@@ -267,7 +267,7 @@ Configured under `pwa` in `nuxt.config.ts`: manifest `MCCB NG` / `MCCB` (`standa
 Build context is the **repo root** (the pnpm lockfile lives there): `docker build -f front/Dockerfile .` (the `docker:*:build` scripts do this).
 
 1. **Build stage** (`node:22-slim`): corepack + `pnpm install --frozen-lockfile --ignore-scripts --filter @mccbng/front...`, then `pnpm --filter @mccbng/front build`.
-2. **Runtime stage** (`node:22-slim`): copies `.output/` only, runs `node .output/server/index.mjs` as user `node` on port **8080** (`NITRO_PORT`), with a healthcheck. Provide `API_URL` at run time.
+2. **Runtime stage** (`node:22-slim`): copies `.output/` only, runs `node .output/server/index.mjs` as user `node` on port **8080** (`NITRO_PORT`), with a healthcheck. `API_URL` is **required** at run time (the container exits at startup if it is unset).
 
 Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps port 8080 and sets `API_URL`.
 

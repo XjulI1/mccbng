@@ -280,8 +280,15 @@
       return
     }
 
-    const save = compte.value.IDcompte ? compteStore.updateCompte : compteStore.createCompte
-    save({ ...compte.value })
+    if (compteID.value && !compte.value.IDcompte) {
+      alert('Le compte à modifier n\'est pas encore chargé, veuillez réessayer')
+      return
+    }
+
+    const request = compte.value.IDcompte
+      ? compteStore.updateCompte({ ...compte.value })
+      : compteStore.createCompte({ ...compte.value })
+    request
       .then(() => {
         returnToList()
       })

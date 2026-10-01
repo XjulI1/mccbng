@@ -1,5 +1,3 @@
-import { useCookie } from '#imports'
-
 import { apiGet, apiPost } from './http'
 
 const COOKIE_TOKEN = 'userToken'
@@ -9,21 +7,32 @@ const LOCAL_STORAGE_EMAIL = 'mccbng.lastEmail'
 const isHttps = (): boolean =>
   typeof window !== 'undefined' && window.location?.protocol === 'https:'
 
-const cookieOptions = () => ({
-  path: '/',
-  sameSite: 'strict' as const,
-  secure: isHttps()
-})
-
-// useCookie est appelé à chaque lecture/écriture : en SPA, l'instance Nuxt est globale côté client,
-// ces fonctions restent donc utilisables hors setup (handlers, callbacks asynchrones).
-export const getTokenCookie = () => {
-  return useCookie<string | null>(COOKIE_TOKEN, { path: '/' }).value
+// Cookies manipulés directement via document.cookie (même format que useCookie : JSON encodé en URI)
+// pour éviter de créer un ref + watcher useCookie à chaque appel hors setup.
+const readCookie = <T>(name: string): T | null => {
+  if (typeof document === 'undefined') return null
+  const entry = document.cookie.split('; ').find(c => c.startsWith(name + '='))
+  if (!entry) return null
+  const raw = decodeURIComponent(entry.slice(name.length + 1))
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return raw as unknown as T
+  }
 }
 
-export const getUserIDCookie = () => {
-  return useCookie<string | number | null>(COOKIE_USER_ID, { path: '/' }).value
+const writeCookie = (name: string, value: unknown) => {
+  const secure = isHttps() ? '; Secure' : ''
+  document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; Path=/; SameSite=Strict${secure}`
 }
+
+const deleteCookie = (name: string) => {
+  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Strict`
+}
+
+export const getTokenCookie = () => readCookie<string>(COOKIE_TOKEN)
+
+export const getUserIDCookie = () => readCookie<string | number>(COOKIE_USER_ID)
 
 export const getLastEmail = (): string => {
   try {
@@ -63,17 +72,13 @@ export const auth = async (email: string, code: string, apiUrl: string) => {
 }
 
 export const saveCookies = ({ userToken, userID }) => {
-  const opts = cookieOptions()
-
-  useCookie(COOKIE_TOKEN, opts).value = userToken
-  useCookie(COOKIE_USER_ID, opts).value = userID
+  writeCookie(COOKIE_TOKEN, userToken)
+  writeCookie(COOKIE_USER_ID, userID)
 }
 
 export const removeCookies = () => {
-  const opts = { path: '/' }
-
-  useCookie(COOKIE_TOKEN, opts).value = null
-  useCookie(COOKIE_USER_ID, opts).value = null
+  deleteCookie(COOKIE_TOKEN)
+  deleteCookie(COOKIE_USER_ID)
 }
 
 export const checkUserAuthentification = async ({ userToken, apiUrl }) => {

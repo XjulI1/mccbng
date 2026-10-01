@@ -33,8 +33,7 @@ COPY --from=build /app/front/.output ./.output
 ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0
 ENV NITRO_PORT=8080
-# URL du back LoopBack, lue à l'exécution par le proxy /api (à surcharger au déploiement)
-ENV API_URL=http://localhost:3000
+# API_URL (URL du back LoopBack, lue à l'exécution par le proxy /api) est OBLIGATOIRE au déploiement
 
 USER node
 
@@ -43,4 +42,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:8080/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
-CMD ["node", ".output/server/index.mjs"]
+CMD ["sh", "-c", "if [ -z \"$API_URL\" ]; then echo 'ERREUR: la variable API_URL doit être définie (ex: http://api:3000)' >&2; exit 1; fi; exec node .output/server/index.mjs"]

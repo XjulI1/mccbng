@@ -20,11 +20,12 @@ export const useCategoryStore = defineStore('category', () => {
   function fetchCategoryList () {
     if (list.value.length < 2) {
       const user = useUserStore()
-      fetchCategoryListService(user.id, user.token, API_URL)
+      return fetchCategoryListService(user.id, user.token, API_URL)
         .then((categories) => {
           setCategoryList(categories)
         })
     }
+    return Promise.resolve()
   }
 
   return { list, getCategoryName, setCategoryList, fetchCategoryList }

@@ -117,22 +117,10 @@
         </button>
       </div>
     </div>
-
-    <div class="config-footer">
-      <div class="api-info">
-        <div class="api-label">
-          URL de l'API
-        </div>
-        <div class="api-url">
-          {{ apiURL }}
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { API_URL } from '@/services/config'
   import { definePageMeta } from '#imports'
   import { onMounted, computed } from 'vue'
   import { useCompteStore } from '@/stores/compte'
@@ -144,7 +132,6 @@
   const userStore = useUserStore()
   const { isDebugEnabled, toggleDebugTools } = useGlobalDebugTools()
 
-  const apiURL = API_URL
 
   // Computed properties pour les textes dynamiques
   const maskAmountText = computed(() => {
@@ -394,43 +381,6 @@
   }
   50% {
     background-position: 100% 50%;
-  }
-}
-
-.config-footer {
-  background: var(--bg-glass-dark);
-  backdrop-filter: var(--glass-blur);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-xl);
-  border: var(--glass-border);
-  text-align: center;
-
-  .api-info {
-    .api-label {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: var(--spacing-sm);
-    }
-
-    .api-url {
-      font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
-      background: var(--bg-secondary);
-      padding: 0.75rem var(--spacing-lg);
-      border-radius: var(--radius-lg);
-      border: 2px solid var(--border-color);
-      color: var(--text-secondary);
-      font-size: var(--font-size-sm);
-      word-break: break-all;
-      transition: all var(--transition-normal);
-
-      &:hover {
-        border-color: var(--text-muted);
-        background: var(--bg-muted);
-      }
-    }
   }
 }
 
