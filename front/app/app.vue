@@ -38,6 +38,7 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue'
   import { useRoute } from '#imports'
   import { NuxtPage, NuxtPwaManifest } from '#components'
   import { useDisplayStore } from '@/stores/display'
