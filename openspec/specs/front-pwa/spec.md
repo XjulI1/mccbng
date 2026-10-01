@@ -1,7 +1,10 @@
-## ADDED Requirements
+# front-pwa Specification
 
+## Purpose
+TBD - created by archiving change migrate-front-to-nuxt. Update Purpose after archive.
+## Requirements
 ### Requirement: Manifeste PWA conservé
-L'application SHALL publier un manifeste via `@vite-pwa/nuxt` avec le nom « MCCB NG », le nom court « MCCB », la description « mCloud Compte and Budget Next Generation », `display: standalone`, `theme_color` et `background_color` `#ffffff`, et les icônes 192×192 et 512×512.
+L'application SHALL publier un manifeste via `@vite-pwa/nuxt` avec le nom « mCloud Compte and Budget », le nom court « mCcBng », `start_url: /`, `display: fullscreen`, `orientation: portrait`, `theme_color` `#4DBA87`, `background_color` `#000000`, et les icônes 48, 96, 144, 192 et 512 px. Le lien `<link rel="manifest">` MUST être injecté par un `useHead` synchrone (et non par le composant à setup asynchrone `NuxtPwaManifest`, qui plante au démontage lors de la redirection initiale vers `/login`).
 
 #### Scenario: Installation
 - **WHEN** un navigateur évalue l'installabilité de l'application
@@ -24,3 +27,4 @@ Les requêtes vers `/api/**` SHALL NOT être servies par un fallback de navigati
 #### Scenario: Appel API hors ligne
 - **WHEN** l'application est hors ligne et appelle `/api/comptes`
 - **THEN** la requête échoue côté réseau et n'est pas remplacée par le shell HTML
+

@@ -1,7 +1,10 @@
-## ADDED Requirements
+# front-auth-session Specification
 
-### Requirement: Session par cookies useCookie
-Le token et l'identifiant utilisateur SHALL être stockés dans les cookies `userToken` et `userID` via `useCookie`, avec les mêmes noms qu'avant la migration. `universal-cookie` MUST être retiré.
+## Purpose
+TBD - created by archiving change migrate-front-to-nuxt. Update Purpose after archive.
+## Requirements
+### Requirement: Session par cookies
+Le token et l'identifiant utilisateur SHALL être stockés dans les cookies `userToken` et `userID` via `document.cookie` (JSON encodé en URI, `SameSite=Strict`, `Secure` en HTTPS, même format que `useCookie`), avec les mêmes noms qu'avant la migration. `universal-cookie` MUST être retiré et `useCookie` MUST NOT être appelé hors `setup` (un ref + watcher par appel).
 
 #### Scenario: Connexion réussie
 - **WHEN** l'utilisateur saisit un code valide de 6 caractères sur `/login`
@@ -24,14 +27,22 @@ Un middleware de route global SHALL rediriger vers `/login` toute navigation ver
 
 #### Scenario: Utilisateur connecté sur /login
 - **WHEN** un utilisateur authentifié ouvre `/login`
-- **THEN** il reste autorisé à y accéder sans boucle de redirection
+- **THEN** il est redirigé vers `/` sans boucle de redirection et sans second contrôle d'authentification dans `login.vue`
 
-### Requirement: Chargement des données après authentification
-Après authentification, l'application SHALL charger la liste des comptes et des catégories de l'utilisateur, comme le faisait la surveillance de `store.state.user.id`.
+### Requirement: Chargement des données avant l'affichage
+Après authentification (middleware ou login), l'application SHALL charger l'utilisateur, la liste des comptes et les catégories (`hydrateSession`) avant d'afficher la page demandée, liens profonds compris. En cas d'échec du chargement, les cookies MUST être supprimés et l'utilisateur redirigé vers `/login`.
 
 #### Scenario: Arrivée sur l'accueil
 - **WHEN** l'utilisateur authentifié arrive sur `/`
-- **THEN** la liste des comptes et les catégories sont récupérées et affichées
+- **THEN** la liste des comptes et les catégories sont récupérées, le compte favori est sélectionné et affiché
+
+#### Scenario: Rechargement sur un lien profond
+- **WHEN** l'utilisateur recharge la page sur `/editOperation/12`
+- **THEN** les stores sont chargés avant le formulaire, qui affiche l'opération sans erreur
+
+#### Scenario: Échec du chargement de l'utilisateur
+- **WHEN** `GET /api/users/:id` échoue pendant la réhydratation
+- **THEN** les cookies sont supprimés et `/login` s'affiche
 
 ### Requirement: Déconnexion
 La déconnexion SHALL supprimer les cookies `userToken` et `userID` et rediriger vers `/login`.
@@ -39,3 +50,4 @@ La déconnexion SHALL supprimer les cookies `userToken` et `userID` et rediriger
 #### Scenario: Logout depuis Config
 - **WHEN** l'utilisateur déclenche la déconnexion dans `/config`
 - **THEN** les cookies sont supprimés et `/login` s'affiche
+

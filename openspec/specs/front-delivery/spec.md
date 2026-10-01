@@ -1,5 +1,8 @@
-## ADDED Requirements
+# front-delivery Specification
 
+## Purpose
+TBD - created by archiving change migrate-front-to-nuxt. Update Purpose after archive.
+## Requirements
 ### Requirement: Scripts de développement et de build
 `front/package.json` SHALL fournir `dev` (port 8080), `build` (`nuxt build`), `build:staging` (mode `test`), `preview`, `test`, `type-check`, `lint` et `lint:check`, ainsi que les scripts `docker:*` existants.
 
@@ -13,6 +16,10 @@
 
 ### Requirement: Image Docker Node/Nitro
 L'image front SHALL être construite en multi-stage depuis `node:22-slim` avec pnpm (et non yarn), ne contenir que `.output/` au runtime, et démarrer le serveur Nitro. `nginx.conf` MUST être supprimé. Les tags `dockregistry.xju.fr/mccbng/front:{staging,latest}` sont conservés.
+
+#### Scenario: Démarrage sans API_URL
+- **WHEN** le conteneur est lancé sans `API_URL`
+- **THEN** il s'arrête immédiatement avec un message d'erreur explicite
 
 #### Scenario: Exécution de l'image
 - **WHEN** le conteneur est lancé avec `API_URL` défini
@@ -30,7 +37,7 @@ Le serveur Nitro de l'image front SHALL écouter sur le port 8080, comme le serv
 - **THEN** l'application répond sur le port 8080
 
 ### Requirement: Configuration d'exécution
-L'URL de l'API SHALL être fournie via variable d'environnement au runtime (`API_URL`), sans reconstruire l'image, et `window.env.VITE_API_URL` MUST ne plus être utilisé.
+L'URL de l'API SHALL être fournie obligatoirement via variable d'environnement au runtime (`API_URL`, sans valeur par défaut dans l'image), sans reconstruire l'image, et `window.env.VITE_API_URL` MUST ne plus être utilisé.
 
 #### Scenario: Changement d'environnement
 - **WHEN** `API_URL` est modifié et le conteneur redémarré
@@ -56,3 +63,4 @@ Le lint SHALL utiliser `@nuxt/eslint` en flat config sur `app/`, `.vue` et `.ts`
 #### Scenario: Lecture de la documentation
 - **WHEN** un développeur consulte `front/CLAUDE.md`
 - **THEN** il n'y trouve plus de référence à Vuex, `router.ts`, `vite.config.ts`, nginx ou Jest
+
