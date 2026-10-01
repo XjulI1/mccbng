@@ -40,11 +40,11 @@ server/api/[...path].ts → Nitro proxy /api/** → process.env.API_URL
 
 **No auto-imports.** Import everything explicitly:
 - `ref`, `computed`, `watch`, `onMounted`… from `vue`;
-- `useRoute`, `useRouter`, `useCookie`, `definePageMeta`, `defineNuxtPlugin`, `defineNuxtRouteMiddleware`, `navigateTo` from `#imports`;
+- `useRoute`, `useRouter`, `definePageMeta`, `defineNuxtPlugin`, `defineNuxtRouteMiddleware`, `navigateTo` from `#imports`;
 - Nuxt components such as `NuxtPage`, `NuxtPwaManifest` from `#components`;
 - stores from `@/stores/<name>`, services from `@/services/<name>`. `@` is `app/`.
 
-`app.vue` calls `useGlobalTheme()` and `useGlobalDebugTools().initDebugTools()` on setup and watches `userStore.id` to fetch the account list and categories after login.
+`app.vue` calls `useGlobalTheme()` and `useGlobalDebugTools().initDebugTools()` on setup. The user, account list and categories are loaded by `hydrateSession` (`app/services/session.ts`), called from the auth middleware and from `login.vue`, so pages and forms (deep links included) find the stores filled at setup.
 
 ### Layout
 
@@ -91,9 +91,9 @@ The reference route table lives in `tests/fixtures/routes.ts` and is enforced by
 
 ### Authentication
 
-- Cookies `userToken` and `userID` are read/written with `useCookie` in `app/services/auth.ts` (`getTokenCookie`, `getUserIDCookie`, `saveCookies`, `removeCookies`; same names and format as the former `universal-cookie` implementation). These helpers are safe to call outside `setup` (client-only SPA).
-- `app/middleware/auth.global.ts`: for any route other than `/login`, if the user store has no token, it reads the cookies, validates them with `GET /api/users/exists` (`checkUserAuthentification`, which clears invalid cookies), then hydrates the user store and loads the user; otherwise it redirects to `/login`. The requested deep link is preserved.
-- `login.vue` keeps its own auto-authentication for an already-signed-in user opening `/login`, then `router.replace({ name: 'Home' })`.
+- Cookies `userToken` and `userID` are read/written through `document.cookie` in `app/services/auth.ts` (`getTokenCookie`, `getUserIDCookie`, `saveCookies`, `removeCookies`), in the same format as `useCookie` (URI-encoded JSON, `SameSite=Strict`, `Secure` over HTTPS) and as the former `universal-cookie` implementation. `useCookie` is deliberately not used: each call would create a ref + watcher outside any effect scope.
+- `app/middleware/auth.global.ts`: for any route other than `/login`, if the user store has no token, it reads the cookies, validates them with `GET /api/users/exists` (`checkUserAuthentification`, which clears invalid cookies), then calls `hydrateSession` (user, accounts, categories). It redirects to `/login` when cookies are missing, the token is invalid or hydration fails (cookies are then cleared), and redirects an already-authenticated user from `/login` to `/`. The requested deep link is preserved.
+- `login.vue` has no auto-authentication of its own (the middleware handles existing sessions): after `auth(...)` it calls `hydrateSession`, saves the cookies, then `router.replace({ name: 'Home' })`.
 - Logout (`config.vue`): clears storage and cookies, then reloads the page.
 
 ### Pinia stores (`app/stores/`)
@@ -236,7 +236,7 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 
 ### PWA (`@vite-pwa/nuxt`)
 
-Configured under `pwa` in `nuxt.config.ts`: manifest `MCCB NG` / `MCCB` (`standalone`, icons 192/512), service worker `service-worker.js` with `registerType: 'autoUpdate'`, `navigateFallback: '/'` with `/api/**` denied. The SPA shell is prerendered (`nitro.prerender.routes: ['/']`) so the service worker can precache it. `<NuxtPwaManifest />` in `app.vue` injects the manifest link. `public/` holds the icons and favicon.
+Configured under `pwa` in `nuxt.config.ts`: manifest `mCloud Compte and Budget` / `mCcBng` (`fullscreen`, portrait, theme `#4DBA87`, background `#000000`, icons 48 to 512), service worker `service-worker.js` with `registerType: 'autoUpdate'`, `navigateFallback: '/'` with `/api/**` denied. The SPA shell is prerendered (`nitro.prerender.routes: ['/']`) so the service worker can precache it. `<NuxtPwaManifest />` in `app.vue` injects the manifest link. `public/` holds the icons and favicon.
 
 ### API proxy and runtime config
 
@@ -303,6 +303,6 @@ front/
 - Model modal-style flows as **child pages** (absolute `path`, `name`, `componentName` in `definePageMeta`) rendering `RouteOverTheContent`, and update `tests/fixtures/routes.ts`.
 - Keep route names stable: the code reads `route.name`.
 - For currency display, prefer `<Currency :amount="…" />`.
-- Read auth through `getTokenCookie()` / `getUserIDCookie()` (or the user store) rather than touching cookies directly.
+- Read auth through `getTokenCookie()` / `getUserIDCookie()` (or the user store) rather than touching cookies directly, and use `hydrateSession` to load a session.
 - Keep state mutations free of HTTP calls — services do the I/O, actions orchestrate.
 - Never call `useXStore()` at module top level in a store file.

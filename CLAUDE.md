@@ -67,7 +67,7 @@ pnpm lint:check         # ESLint check only (no auto-fix)
 
 1. The frontend authenticates via `POST /api/users/login` with a 6-character `code` (the user's `secret_key`).
 2. The API returns a JWT token issued by the custom `JwtService` (which preserves the numeric `IDuser` field through the token round-trip).
-3. The token is stored in cookies (`userToken`, `userID`) via `useCookie`. All subsequent API calls include `Authorization: Bearer <token>`.
+3. The token is stored in cookies (`userToken`, `userID`) via `document.cookie` (`front/app/services/auth.ts`). All subsequent API calls include `Authorization: Bearer <token>`.
 4. The Nitro server (`front/server/api/[...path].ts`) proxies `/api/**` to the backend (`API_URL`), in dev and in production. This handler goes away when the API moves into Nuxt's `./server`.
 5. The JWT secret is regenerated on every backend restart (`generateUniqueId()` bound to `TokenServiceBindings.TOKEN_SECRET`) — tokens are invalidated when the API restarts.
 
@@ -133,7 +133,7 @@ Each package exposes the scripts `docker:staging:build`, `docker:staging:push`, 
 - Backend uses LoopBack 4 decorators (`@model`, `@property`, `@repository`, `@authenticate('jwt')`).
 - Every protected endpoint resolves the current user via `getCurrentUserId(profile)` from `src/services/current-user.ts`, then either `scope(...)` or `assertOwned(...)` to enforce ownership before reading or writing.
 - Frontend uses Vue 3 Composition API with `<script setup lang="ts">`.
-- Auto-imports are disabled in the front: import `ref`/`computed` from `vue`, `useRoute`/`useRouter`/`definePageMeta`/`useCookie` from `#imports`, stores from `@/stores/*`, and Nuxt components such as `NuxtPage` from `#components`.
+- Auto-imports are disabled in the front: import `ref`/`computed` from `vue`, `useRoute`/`useRouter`/`definePageMeta` from `#imports`, stores from `@/stores/*`, and Nuxt components such as `NuxtPage` from `#components`.
 - SCSS variables (`front/app/assets/styles/variables.scss`) are globally injected via Vite's `additionalData` (set in `nuxt.config.ts`).
 - CSS custom properties drive light/dark theming (`front/app/assets/styles/theme.css`).
 - Domain naming is in French (Banque, Compte, Operation, Categorie, Credit, Bien) — keep field/property names consistent with existing models when adding endpoints.
