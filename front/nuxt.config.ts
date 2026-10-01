@@ -66,12 +66,12 @@ export default defineNuxtConfig({
   },
 
   // En-têtes de sécurité (helmet-like) + rate-limit du login. Le rate-limit global est désactivé : seule la route de login est limitée.
-  // CSP en report-only le temps de la recette sur staging (tâche 8.5 : repasser à false pour l'appliquer).
+  // CSP appliquée (un report-only sans point de collecte `report-to` n'a aucun effet). Staging et prod sont servis en HTTPS :
+  // `upgrade-insecure-requests` (défaut du module) reste actif. Servir l'app en HTTP simple casserait les sous-ressources.
   security: {
     rateLimiter: false,
     // Validateur XSS inutile pour une API JSON (risque de faux positifs sur les libellés d'opérations)
-    xssValidator: false,
-    contentSecurityPolicyReportOnly: true
+    xssValidator: false
   },
 
   routeRules: {
