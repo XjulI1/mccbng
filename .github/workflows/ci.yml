@@ -89,8 +89,6 @@ jobs:
 
       - name: Build
         run: pnpm --filter @mccbng/front build
-        env:
-          VITE_API_URL: http://localhost:3001
 
       - name: Test
         run: pnpm --filter @mccbng/front test

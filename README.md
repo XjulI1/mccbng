@@ -5,7 +5,7 @@
 L'application est organisée en monorepo `pnpm` avec deux packages :
 
 - **`back/`** — API REST [LoopBack 4](https://loopback.io/) (Node.js / TypeScript) sur MySQL, authentification JWT.
-- **`front/`** — SPA Vue 3 (TypeScript / Vite / Vuex / PWA), avec mode sombre et gestes tactiles.
+- **`front/`** — SPA Nuxt 4 (Vue 3, TypeScript, Pinia, PWA ; SSR désactivé), avec mode sombre et gestes tactiles.
 
 ---
 
@@ -76,7 +76,7 @@ L'application est organisée en monorepo `pnpm` avec deux packages :
 
 ### Configuration et UX
 - **Thèmes** : clair / sombre / système (composable `useTheme`), persistance `localStorage`, suivi du `prefers-color-scheme`, attribut `data-theme` sur `<html>`.
-- **PWA** : manifeste « MCCB NG », mode `standalone`, service worker `autoUpdate` via `vite-plugin-pwa`.
+- **PWA** : manifeste « MCCB NG », mode `standalone`, service worker `autoUpdate` via `@vite-pwa/nuxt`.
 - **Mobile** : panneau gauche escamotable au swipe, layout responsive (breakpoint 768 px).
 - **Outils de debug** : intégration optionnelle d'Eruda (panneau dev mobile) chargé à la demande via `useDebugTools` et togglée dans `/config`.
 - Vue `/config` : recharger l'application, éditer le compte, basculer le thème, activer les outils de debug, se déconnecter.
@@ -89,22 +89,22 @@ L'application est organisée en monorepo `pnpm` avec deux packages :
 
 | Couche       | Technologies |
 |--------------|--------------|
-| Frontend     | Vue 3.5, Vue Router 4, Vuex 4, TypeScript 5, Vite 6+, SCSS, Highcharts 12, FontAwesome, `vue3-touch-events`, `vite-plugin-pwa`, `universal-cookie` |
+| Frontend     | Nuxt 4 (SPA, `ssr: false`, `compatibilityVersion: 5`, auto-imports désactivés), Vue 3.5, Pinia, TypeScript 5, SCSS, Highcharts 12, FontAwesome, `vue3-touch-events`, `@vite-pwa/nuxt`, Vitest |
 | Backend      | LoopBack 4 (Node.js ≥ 20, TypeScript 5), `@loopback/authentication-jwt`, Express, MySQL via `loopback-connector-mysql`, `bcryptjs`, `jsonwebtoken` |
 | Base données | MySQL (charset `utf8mb4_unicode_ci`) |
-| Build / déploiement | Docker (multi-stage), nginx (front), `pnpm` workspace |
+| Build / déploiement | Docker (multi-stage), Node/Nitro (front), `pnpm` workspace |
 
 ### Vue d'ensemble
 
 ```
                      ┌─────────────────────┐
                      │   Browser / PWA     │
-                     │  (vue3 + vuex)      │
+                     │  (nuxt spa + pinia) │
                      └──────────┬──────────┘
-                                │ Axios, Bearer JWT
+                                │ fetch, Bearer JWT
                                 ▼
    ┌──────────────────────────────────────────────────┐
-   │   Vite dev server (port 8080) — proxy /api       │
+   │   Nuxt / Nitro (port 8080) — proxy /api → API_URL│
    └──────────────────────────────┬───────────────────┘
                                   ▼
    ┌──────────────────────────────────────────────────┐
@@ -150,33 +150,35 @@ Controllers  →  Repositories  →  DataSource (MySQL)
 ### Architecture frontend (`front/`)
 
 ```
-src/main.ts          → createApp + register store, router, vue3-touch-events, FontAwesome
-src/App.vue          → layout : AccountHeader (top) + CompteList (gauche) + RouterView + NavBar (bas)
-src/router.ts        → Vue Router en lazy loading, child routes en overlay via RouteOverTheContent
-src/store/index.ts   → Vuex avec 8 modules (sans namespacing)
-src/services/*.ts    → couche API (axios) — un fichier par domaine
-src/composables/     → useTheme, useDebugTools (singletons via useGlobal*)
-src/components/      → cartes / formulaires / listes par domaine
-src/views/           → vues routées
-src/styles/          → variables.scss + theme.css (custom properties) + main.css
+nuxt.config.ts          → ssr:false, compatibilityVersion 5, auto-imports off, PWA, SCSS global
+server/api/[...path].ts → proxy Nitro /api/** → API_URL (sera remplacé par l'API dans ./server)
+app/app.vue            → layout : AccountHeader (top) + CompteList (gauche) + NuxtPage + NavBar (bas)
+app/pages/             → routes file-based ; les overlays sont des pages enfants (RouteOverTheContent)
+app/middleware/        → auth.global.ts : redirection /login, réhydratation de la session
+app/stores/            → Pinia, 9 stores (setup stores)
+app/services/*.ts      → couche API (fetch) — un fichier par domaine
+app/composables/       → useTheme, useDebugTools (singletons via useGlobal*)
+app/components/        → cartes / formulaires / listes par domaine
+app/plugins/           → FontAwesome (global), vue3-touch-events (client)
+app/assets/styles/     → variables.scss + theme.css (custom properties) + main.css
 ```
 
-**Modules Vuex** (8) : `user`, `compte`, `operation`, `category`, `stats`, `display`, `credit`, `bien`.
+**Stores Pinia** (9) : `user`, `compte`, `operation`, `category`, `stats`, `display`, `credit`, `bien`, `banque`.
 
-**Pattern d'overlay** : les routes enfant (`/newOperation`, `/editCredit/:id`, `/newBien`, etc.) instancient toutes le même composant `RouteOverTheContent` qui rend dynamiquement le formulaire (`operation-form`, `credit-form`, `bien-form`, `transfert-form`, `operation-recurrente-form`, `search`) via la prop `componentName`. Cela évite de gérer un état modal ailleurs.
+**Pattern d'overlay** : les routes enfant (`/newOperation`, `/editCredit/:id`, `/newBien`, etc.) instancient toutes le même composant `RouteOverTheContent` qui rend dynamiquement le formulaire (`operation-form`, `credit-form`, `bien-form`, `transfert-form`, `operation-recurrente-form`, `search`, `compte-form`) selon le `componentName` déclaré dans la meta de la page (`definePageMeta`). Cela évite de gérer un état modal ailleurs.
 
-**Vite / PWA** :
-- Proxy `/api` → `VITE_API_URL` (par défaut `http://localhost:3000`).
-- Manual chunks : `vue` (vue + router + vuex) et `vendor` (axios + highcharts).
-- Service worker auto-update, manifeste `MCCB NG` / `MCCB`, icônes 192/512.
-- Production : image `nginx` avec fallback SPA `try_files $uri /index.html`.
+**Nuxt / PWA** :
+- Proxy `/api` → `API_URL` (par défaut `http://localhost:3000`), lu à l'exécution par le handler Nitro `server/api/[...path].ts`.
+- Aucun auto-import : tous les `ref`, `useRoute`, `defineStore`, composants… sont importés explicitement.
+- Service worker auto-update (`service-worker.js`), manifeste `MCCB NG` / `MCCB`, icônes 192/512 ; le shell SPA est prérendu pour le fallback de navigation.
+- Production : image Node qui exécute la sortie Nitro (`.output/server/index.mjs`), port 8080.
 
 ### Flux d'authentification
 
 1. Le front appelle `POST /api/users/login` avec `{ code: "XXXXXX" }`.
 2. `MyUserService.verifyCredentials` recherche l'utilisateur par `secret_key`.
 3. `JwtService.generateToken` signe un JWT avec `{ id, name, email, IDuser }`.
-4. Le front stocke `id` (token) et `userId` (`IDuser`) dans des cookies (`universal-cookie`).
+4. Le front stocke `id` (token) et `userId` (`IDuser`) dans les cookies `userToken` / `userID` (`useCookie`).
 5. Toute requête authentifiée envoie `Authorization: Bearer <token>`.
 6. Côté serveur, `JwtService.verifyToken` reconstruit le `UserProfile` ; `getCurrentUserId` est utilisé dans chaque contrôleur pour scoper les requêtes à l'utilisateur.
 
@@ -255,7 +257,7 @@ pnpm start                  # build + node .
 
 ```bash
 cd front
-echo "VITE_API_URL=http://localhost:3000" > .env
+echo "API_URL=http://localhost:3000" > .env   # optionnel, valeur par défaut identique
 pnpm dev
 ```
 
@@ -290,13 +292,13 @@ pnpm --filter @mccbng/front type-check
 }
 ```
 
-### Frontend (`.env` / `.env.test` / `.env.production`)
+### Frontend (`.env`)
 
 ```
-VITE_API_URL=http://localhost:3000
+API_URL=http://localhost:3000
 ```
 
-`VITE_API_URL` sert à la fois pour le proxy Vite en dev et au runtime via `window.env.VITE_API_URL`.
+`API_URL` est lu à l'exécution par le proxy Nitro (`/api/**`) : en dev via `.env`, en production via la variable d'environnement du conteneur, sans reconstruire l'image. Le front appelle toujours `/api` en chemin relatif.
 
 ---
 
@@ -312,10 +314,14 @@ pnpm --filter @mccbng/front docker:latest:build  && pnpm --filter @mccbng/front 
 ```
 
 - **Back** : image `node:22-slim`, build TypeScript, suppression de `dist/datasources/*config.json` et de `src/` pour réduire la surface, lance `node .` (port 3000).
-- **Front** : multi-stage `node:22-slim` → `nginx`, sert le dossier `dist/` avec un fallback SPA (`nginx.conf`).
+- **Front** : multi-stage `node:22-slim` (pnpm) → `node:22-slim` qui exécute `.output/server/index.mjs` sur le port 8080 ; `API_URL` est fourni à l'exécution. Le contexte de build est la **racine du dépôt** (`docker build -f front/Dockerfile .`) car le lockfile pnpm est à la racine.
 - Registre : `dockregistry.xju.fr/mccbng/{api,front}:{staging,latest}`.
 
 Un `docker-compose.build.yml` et un script `build-and-push.sh` sont disponibles à la racine pour orchestrer les builds.
+
+### Rollback du front
+
+Le front a migré de nginx statique vers Node/Nitro. Le back et les cookies de session sont inchangés : pour revenir en arrière, redéployer l'image nginx précédente (le tag précédent de `dockregistry.xju.fr/mccbng/front`, ex. `docker pull` du digest antérieur puis retag `latest`/`staging`). L'ancienne image lisait `window.env.VITE_API_URL` depuis `config.js` ; la nouvelle lit `API_URL`.
 
 ---
 

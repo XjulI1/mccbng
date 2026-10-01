@@ -33,7 +33,8 @@ git clone --branch "${GIT_BRANCH}" --depth 1 "${GIT_REPO}" "${WORK_DIR}"
 # Build front image
 echo ""
 echo "=> Building front image: ${REGISTRY}/front:${IMAGE_TAG}"
-docker build -t "${REGISTRY}/front:${IMAGE_TAG}" "${WORK_DIR}/front"
+# Context = repo root (pnpm workspace lockfile lives at the root)
+docker build -f "${WORK_DIR}/front/Dockerfile" -t "${REGISTRY}/front:${IMAGE_TAG}" "${WORK_DIR}"
 
 # Create a dummy datasource config for the build (gitignored, removed during Docker build)
 cat > "${WORK_DIR}/back/src/datasources/mccb-mysql.datasource.config.json" <<'DSCFG'

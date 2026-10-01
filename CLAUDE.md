@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **mccbng** (mCloud Compte and Budget Next Generation) is a personal finance and budgeting application. It is structured as a **pnpm workspaces** monorepo with two packages:
 
 - `back/` — LoopBack 4 REST API with JWT authentication and MySQL database.
-- `front/` — Vue 3 SPA with TypeScript, Vite, Vuex 4, and PWA support.
+- `front/` — Nuxt 4 SPA (`ssr: false`, `compatibilityVersion: 5`, auto-imports disabled) with TypeScript, Pinia, and PWA support.
 
 > The `vue-touch-events/` workspace mentioned in older docs has been removed: the front-end now depends on the published `vue3-touch-events` npm package.
 
@@ -42,13 +42,13 @@ pnpm openapi-spec       # Generate OpenAPI spec
 
 ```bash
 cd front
-pnpm dev                # Development server with Vite (port 8080)
-pnpm build              # Production build
-pnpm build:staging      # Staging build (--mode test)
-pnpm test               # Run Jest tests
-pnpm test:unit          # Unit tests only
+pnpm dev                # Nuxt dev server (port 8080, /api proxied by Nitro)
+pnpm build              # Production build (.output/, Nitro server)
+pnpm build:staging      # Staging build (--envName test)
+pnpm preview            # Serve the production build locally
+pnpm test               # Run Vitest (unit + integration)
 pnpm test:coverage      # Tests with coverage
-pnpm type-check         # TypeScript type checking (vue-tsc --noEmit)
+pnpm type-check         # TypeScript type checking (nuxt typecheck)
 pnpm lint               # ESLint with auto-fix
 pnpm lint:check         # ESLint check only (no auto-fix)
 ```
@@ -61,14 +61,14 @@ pnpm lint:check         # ESLint check only (no auto-fix)
 [Browser / PWA]
       │
       ▼
-[Vue 3 Frontend]  ──── Axios ────►  [LoopBack 4 API]  ────►  [MySQL Database]
+[Nuxt SPA + Nitro] ─── proxy ───►  [LoopBack 4 API]  ────►  [MySQL Database]
   (port 8080)          /api            (port 3000)
 ```
 
 1. The frontend authenticates via `POST /api/users/login` with a 6-character `code` (the user's `secret_key`).
 2. The API returns a JWT token issued by the custom `JwtService` (which preserves the numeric `IDuser` field through the token round-trip).
-3. The token is stored in cookies (`userToken`, `userID`) via `universal-cookie`. All subsequent API calls include `Authorization: Bearer <token>`.
-4. The Vite dev server proxies `/api` to the backend (`VITE_API_URL`).
+3. The token is stored in cookies (`userToken`, `userID`) via `useCookie`. All subsequent API calls include `Authorization: Bearer <token>`.
+4. The Nitro server (`front/server/api/[...path].ts`) proxies `/api/**` to the backend (`API_URL`), in dev and in production. This handler goes away when the API moves into Nuxt's `./server`.
 5. The JWT secret is regenerated on every backend restart (`generateUniqueId()` bound to `TokenServiceBindings.TOKEN_SECRET`) — tokens are invalidated when the API restarts.
 
 ### Domain Model
@@ -110,11 +110,11 @@ User scoping uses two patterns:
 - **Node.js**: ≥ 20 (see `.nvmrc`)
 - **Package Manager**: `pnpm@10.33.0` (see `packageManager` in root `package.json`); workspace config in `pnpm-workspace.yaml`.
 - **Backend**: port 3000 (configurable via `HOST` / `PORT` env vars). API mounted at `/api`. Swagger UI at `/explorer`.
-- **Frontend**: dev server on port 8080 with `/api` proxy to `VITE_API_URL` (default `http://localhost:3000`).
+- **Frontend**: Nuxt/Nitro on port 8080 (dev and Docker image) with `/api` proxy to `API_URL` (default `http://localhost:3000`).
 
 ### Environment Configuration
 
-- **Frontend**: `VITE_API_URL` — Backend base URL (used both by the Vite proxy in dev and at runtime via `window.env.VITE_API_URL`).
+- **Frontend**: `API_URL` — Backend base URL, read at runtime by the Nitro proxy (`.env` in dev, container env var in production). The browser always calls `/api` relatively.
 - **Backend**: `back/src/datasources/mccb-mysql.datasource.config.json` — MySQL connection config (host, port, user, password, database).
 
 ## Docker Deployments
@@ -122,7 +122,7 @@ User scoping uses two patterns:
 Both packages have Dockerfiles for containerized deployment:
 
 - **Backend**: `node:22-slim` base, builds TypeScript, removes `dist/datasources/*config.json` and `src/` from the image for security, runs on port 3000.
-- **Frontend**: Multi-stage `node:22-slim` → `nginx`, serves static files via nginx with SPA fallback (`try_files $uri /index.html`).
+- **Frontend**: Multi-stage `node:22-slim` (pnpm) → `node:22-slim` running the Nitro output (`.output/server/index.mjs`) on port 8080. The build context is the **repo root** (`docker build -f front/Dockerfile .`) because the pnpm lockfile lives there.
 
 Registry: `dockregistry.xju.fr/mccbng/{api,front}` with `staging` and `latest` tags.
 
@@ -133,18 +133,19 @@ Each package exposes the scripts `docker:staging:build`, `docker:staging:push`, 
 - Backend uses LoopBack 4 decorators (`@model`, `@property`, `@repository`, `@authenticate('jwt')`).
 - Every protected endpoint resolves the current user via `getCurrentUserId(profile)` from `src/services/current-user.ts`, then either `scope(...)` or `assertOwned(...)` to enforce ownership before reading or writing.
 - Frontend uses Vue 3 Composition API with `<script setup lang="ts">`.
-- SCSS variables (`src/styles/variables.scss`) are globally injected via Vite's `additionalData`.
-- CSS custom properties drive light/dark theming (`src/styles/theme.css`).
+- Auto-imports are disabled in the front: import `ref`/`computed` from `vue`, `useRoute`/`useRouter`/`definePageMeta`/`useCookie` from `#imports`, stores from `@/stores/*`, and Nuxt components such as `NuxtPage` from `#components`.
+- SCSS variables (`front/app/assets/styles/variables.scss`) are globally injected via Vite's `additionalData` (set in `nuxt.config.ts`).
+- CSS custom properties drive light/dark theming (`front/app/assets/styles/theme.css`).
 - Domain naming is in French (Banque, Compte, Operation, Categorie, Credit, Bien) — keep field/property names consistent with existing models when adding endpoints.
 - All financial amounts use the SQL `FLOAT` type with manual rounding to 2 decimal places.
-- Vue Router child routes that need a modal-style overlay should use `RouteOverTheContent` with a `componentName` prop.
+- Overlay (modal-style) flows are child pages under `front/app/pages/` that render `RouteOverTheContent`; the form is selected by `componentName` declared in `definePageMeta`. Route names are part of the contract (`route.name` is read by the code) and are checked by `front/tests/integration/routes.spec.ts`.
 
 ## Repository Layout
 
 ```
 mccbng/
 ├── back/                # LoopBack 4 API (see back/CLAUDE.md)
-├── front/               # Vue 3 SPA (see front/CLAUDE.md)
+├── front/               # Nuxt 4 SPA (see front/CLAUDE.md)
 ├── docs/                # Functional documentation (e.g. recette-non-regression-multiuser.md)
 ├── mockups/             # Standalone HTML UI mockups
 ├── package.json         # Workspace root, declares pnpm packageManager
