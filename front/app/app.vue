@@ -4,7 +4,6 @@
     class="root-app"
     :class="{ 'is-login-page': route.name === 'Login' }"
   >
-    <NuxtPwaManifest />
     <account-header :class="{ 'is-login-page': route.name === 'Login' }" />
     <div class="container-flex">
       <div
@@ -39,8 +38,9 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { useRoute } from '#imports'
-  import { NuxtPage, NuxtPwaManifest } from '#components'
+  import { useHead, useRoute } from '#imports'
+  import { NuxtPage } from '#components'
+  import { pwaInfo } from 'virtual:pwa-info'
   import { useDisplayStore } from '@/stores/display'
   import { useGlobalTheme } from '@/composables/useTheme'
   import { useGlobalDebugTools } from '@/composables/useDebugTools'
@@ -51,6 +51,15 @@
   import AccountHeader from '@/components/AccountHeader.vue'
 
   const route = useRoute()
+
+  // Lien vers le manifest PWA. Le composant <NuxtPwaManifest /> a un setup asynchrone qui fait planter
+  // le démontage lors de la redirection initiale vers /login, d'où ce useHead synchrone.
+  if (pwaInfo?.webManifest) {
+    const { href, useCredentials } = pwaInfo.webManifest
+    useHead({
+      link: [{ rel: 'manifest', href, ...(useCredentials ? { crossorigin: 'use-credentials' as const } : {}) }]
+    })
+  }
   const displayStore = useDisplayStore()
 
   // Initialisation du système de thème
