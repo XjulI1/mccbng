@@ -2,7 +2,7 @@
 set -e
 
 # -------------------------------------------------------
-# Build & Push script for mccbng front and back images.
+# Build & Push script for the mccbng image (Nuxt/Nitro : front + API).
 # Runs inside a Docker container with access to a Docker
 # daemon (via socket mount or DinD).
 # -------------------------------------------------------
@@ -36,33 +36,10 @@ echo "=> Building front image: ${REGISTRY}/front:${IMAGE_TAG}"
 # Context = repo root (pnpm workspace lockfile lives at the root)
 docker build -f "${WORK_DIR}/front/Dockerfile" -t "${REGISTRY}/front:${IMAGE_TAG}" "${WORK_DIR}"
 
-# Create a dummy datasource config for the build (gitignored, removed during Docker build)
-cat > "${WORK_DIR}/back/src/datasources/mccb-mysql.datasource.config.json" <<'DSCFG'
-{
-  "name": "mccb_mysql",
-  "connector": "mysql",
-  "url": "",
-  "host": "",
-  "port": 3306,
-  "user": "",
-  "password": "",
-  "database": ""
-}
-DSCFG
-
-# Build back (api) image
-echo ""
-echo "=> Building api image: ${REGISTRY}/api:${IMAGE_TAG}"
-docker build -t "${REGISTRY}/api:${IMAGE_TAG}" "${WORK_DIR}/back"
-
 # Push images to registry
 echo ""
 echo "=> Pushing ${REGISTRY}/front:${IMAGE_TAG}"
 docker push "${REGISTRY}/front:${IMAGE_TAG}"
-
-echo ""
-echo "=> Pushing ${REGISTRY}/api:${IMAGE_TAG}"
-docker push "${REGISTRY}/api:${IMAGE_TAG}"
 
 # Cleanup
 rm -rf "${WORK_DIR}"
@@ -71,5 +48,4 @@ echo ""
 echo "============================================"
 echo " Done!"
 echo "  - ${REGISTRY}/front:${IMAGE_TAG}"
-echo "  - ${REGISTRY}/api:${IMAGE_TAG}"
 echo "============================================"

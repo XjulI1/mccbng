@@ -29,11 +29,15 @@ FROM node:22-slim
 WORKDIR /app
 
 COPY --from=build /app/front/.output ./.output
+COPY --from=build /app/front/docker-entrypoint.sh ./docker-entrypoint.sh
 
 ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0
 ENV NITRO_PORT=8080
-# API_URL (URL du back LoopBack, lue à l'exécution par le proxy /api) est OBLIGATOIRE au déploiement
+# Configuration lue à l'exécution (aucun secret dans l'image) :
+#   DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME  (MySQL, obligatoires)
+#   JWT_SECRET (obligatoire), JWT_TTL_SECONDS (défaut 3600)
+# Les migrations SQL (front/scripts/db-migrate.mjs) se lancent depuis le poste / la CI, pas depuis cette image.
 
 USER node
 
@@ -42,4 +46,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:8080/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
-CMD ["sh", "-c", "if [ -z \"$API_URL\" ]; then echo 'ERREUR: la variable API_URL doit être définie (ex: http://api:3000)' >&2; exit 1; fi; exec node .output/server/index.mjs"]
+CMD ["sh", "docker-entrypoint.sh"]

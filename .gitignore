@@ -18,3 +18,4 @@ tests/e2e/reports/
 .output
 .data
 .pnpm-store
+tmp
