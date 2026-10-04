@@ -2,10 +2,7 @@
 
 **mccbng** (mCloud Compte and Budget Next Generation) est une application web de gestion de finances personnelles : suivi multi-banques et multi-comptes, opérations bancaires, opérations récurrentes, budget par catégorie, statistiques, suivi de crédits et de biens immobiliers.
 
-L'application est organisée en monorepo `pnpm` avec deux packages :
-
-- **`back/`** — API REST [LoopBack 4](https://loopback.io/) (Node.js / TypeScript) sur MySQL, authentification JWT.
-- **`front/`** — SPA Nuxt 4 (Vue 3, TypeScript, Pinia, PWA ; SSR désactivé), avec mode sombre et gestes tactiles.
+L'application est un workspace `pnpm` composé d'un seul package, **`front/`** : une SPA Nuxt 4 (Vue 3, TypeScript, Pinia, PWA ; SSR désactivé, mode sombre, gestes tactiles) dont le serveur Nitro héberge aussi l'**API REST** (`front/server/`), sur MySQL, avec authentification JWT. Un seul processus et une seule image Docker servent donc le front et l'API.
 
 ---
 
@@ -90,9 +87,9 @@ L'application est organisée en monorepo `pnpm` avec deux packages :
 | Couche       | Technologies |
 |--------------|--------------|
 | Frontend     | Nuxt 4 (SPA, `ssr: false`, `compatibilityVersion: 5`, auto-imports désactivés), Vue 3.5, Pinia, TypeScript 5, SCSS, Highcharts 12, FontAwesome, `vue3-touch-events`, `@vite-pwa/nuxt`, Vitest |
-| Backend      | LoopBack 4 (Node.js ≥ 20, TypeScript 5), `@loopback/authentication-jwt`, Express, MySQL via `loopback-connector-mysql`, `bcryptjs`, `jsonwebtoken` |
-| Base données | MySQL (charset `utf8mb4_unicode_ci`) |
-| Build / déploiement | Docker (multi-stage), Node/Nitro (front), `pnpm` workspace |
+| API          | Serveur Nitro de Nuxt (Node.js ≥ 26, TypeScript 5), Drizzle ORM + `mysql2`, Zod, `jsonwebtoken`, `bcryptjs`, `nuxt-security` |
+| Base données | MySQL / MariaDB (schéma de production : MyISAM et InnoDB, voir `docs/db-migrations.md`) |
+| Build / déploiement | Docker (multi-stage), Node/Nitro, `pnpm` workspace |
 
 ### Vue d'ensemble
 
@@ -104,54 +101,50 @@ L'application est organisée en monorepo `pnpm` avec deux packages :
                                 │ fetch, Bearer JWT
                                 ▼
    ┌──────────────────────────────────────────────────┐
-   │   Nuxt / Nitro (port 8080) — proxy /api → API_URL│
-   └──────────────────────────────┬───────────────────┘
-                                  ▼
-   ┌──────────────────────────────────────────────────┐
-   │   LoopBack 4 API (Express, port 3000, mount /api)│
-   │   - AuthenticationComponent + JWTAuthn           │
-   │   - REST Explorer  /explorer                     │
-   │   - Custom JwtService (préserve IDuser)          │
-   │   - Controllers : auto-discovery dans dist/      │
+   │   Nuxt / Nitro (port 8080)                       │
+   │   - SPA + service worker                         │
+   │   - API REST /api/**  (front/server/api)         │
+   │   - middleware JWT, validation Zod, erreurs JSON │
+   │   - nuxt-security : en-têtes, CSP, rate-limit    │
    └──────────────────────────────┬───────────────────┘
                                   ▼
                         ┌──────────────────┐
-                        │     MySQL        │
+                        │  MySQL / MariaDB │
                         └──────────────────┘
 ```
 
-### Architecture backend (`back/`)
-
-Architecture en couches typique LoopBack 4 :
+### API serveur (`front/server/`)
 
 ```
-Controllers  →  Repositories  →  DataSource (MySQL)
-     ↑               ↑
-  Services        Models (Entities)
+server/
+├── api/                    # une route par fichier (file-based routing Nitro)
+│   ├── [resource]/*.ts     #   CRUD générique : banques, categories, biens
+│   ├── comptes|operations|operation-recurrentes|credits/*.ts   # CRUD + routes spécifiques
+│   ├── users/*.ts, signup.post.ts, ping.get.ts
+│   ├── stats/*.ts          #   statistiques
+│   └── [...path].ts        #   404 JSON pour toute route /api inconnue
+├── middleware/auth.ts      # vérifie le JWT sur /api/** (sauf ping et login)
+├── plugins/                # contrôle de la configuration au démarrage, fermeture du pool MySQL
+├── db/                     # schema.ts (Drizzle), client.ts (pool mysql2), migrations/*.sql
+└── utils/                  # auth, config, crud, filter, resources, scope, sql, stats, errors…
 ```
 
-- **`src/index.ts`** crée un `ExpressServer` (`src/server.ts`) qui monte l'application LB4 sur `/api`.
-- **`src/application.ts`** (`ApiLoopbackApplication`) :
-  - Étend `BootMixin(ServiceMixin(RepositoryMixin(RestApplication)))`.
-  - Monte `AuthenticationComponent`, `JWTAuthenticationComponent`, `RestExplorerComponent`.
-  - Surcharge le `TokenService` par défaut par `JwtService` pour propager `IDuser` à travers le token.
-  - `TOKEN_SECRET = generateUniqueId()` — nouveau secret à chaque démarrage (les tokens sont invalides après redémarrage).
-  - Boot auto-discovery des contrôleurs (`./controllers/**/*.controller.js`).
-- **`src/sequence.ts`** : `MySequence extends MiddlewareSequence` (séquence par défaut).
-- **`src/services/`** :
-  - `MyUserService.verifyCredentials({code})` : recherche l'utilisateur par `secret_key` (6 caractères). Le code de `bcryptjs` est en place mais commenté — la connexion par mot de passe n'est pas active.
-  - `JwtService` : signe et vérifie le JWT en y conservant `id`, `name`, `email`, `IDuser`.
-  - `getCurrentUserId(profile)` : utilitaire qui extrait l'`IDuser` numérique du `UserProfile` ; jette `Unauthorized` sinon.
-- **Sécurité par scope** :
-  - **Direct** : `Bien`, `Credit`, `Compte`, `Categorie` portent un champ `IDuser`. Les contrôleurs ajoutent un `where { IDuser }` à toute requête (`scope()` / `assertOwned()`).
-  - **Hérité** : `Operation`, `OperationRecurrente` n'ont pas d'`IDuser`. Les contrôleurs résolvent d'abord la liste des `IDcompte` de l'utilisateur, puis filtrent (`{ IDcompte: { inq: ids } }`).
-- **Migrations** : `src/migrate.ts` (LB4) ; un script SQL ad hoc `migrations/2026-05-02-create-bien.sql` crée la table `Bien`.
+- **Configuration** (`utils/config.ts`) : lue dans `process.env` à l'exécution (voir [Configuration](#configuration)) ; le serveur refuse de démarrer en production si une variable obligatoire manque.
+- **CRUD générique** (`utils/crud.ts`, `utils/resources.ts`) : chaque ressource est décrite une fois (table, scope, schémas Zod, défauts, hooks de cascade) et expose les 8 routes standard (`POST /`, `GET /count`, `GET /`, `PATCH /`, `GET|PATCH|PUT|DELETE /{id}`).
+- **Filtre de liste** (`utils/filter.ts`) : le paramètre `filter` (`where`, `order`, `limit`, `skip`, `include`) est interprété avec une liste blanche de colonnes et d'opérateurs (jamais interpolé dans le SQL).
+- **Sécurité par scope** (`utils/scope.ts`) :
+  - **Direct** : `Bien`, `Credit`, `Compte`, `Categorie` portent un champ `IDuser` ; toute requête est combinée à `IDuser = <utilisateur du JWT>`. Les catégories partagées (`IDuser = 0`) sont lisibles par tous mais non modifiables.
+  - **Hérité** : `Operation` et `OperationRecurrente` n'ont pas d'`IDuser` ; on filtre sur `IDcompte ∈ comptes de l'utilisateur`. Une ressource d'autrui répond **404**.
+- **Authentification** : l'utilisateur courant est toujours retrouvé par `IDuser` (clé primaire), jamais par la colonne `id`, non unique en production.
+- **Erreurs** : format uniforme `{ "error": { "statusCode", "name", "message" } }` (`defineApiHandler`) ; une erreur inattendue renvoie un 500 générique, détaillée seulement dans les logs.
+- **SQL analytique** (`utils/sql.ts`, `utils/stats.ts`) : requêtes brutes paramétrées pour les agrégats et les statistiques.
+- **Migrations** : fichiers SQL versionnés (`server/db/migrations`), appliqués par `front/scripts/db-migrate.mjs` (voir `docs/db-migrations.md`).
 
 ### Architecture frontend (`front/`)
 
 ```
 nuxt.config.ts          → ssr:false, compatibilityVersion 5, auto-imports off, PWA, SCSS global
-server/api/[...path].ts → proxy Nitro /api/** → API_URL (sera remplacé par l'API dans ./server)
+server/                → API REST hébergée par Nitro (voir plus haut)
 app/app.vue            → layout : AccountHeader (top) + CompteList (gauche) + NuxtPage + NavBar (bas)
 app/pages/             → routes file-based ; les overlays sont des pages enfants (RouteOverTheContent)
 app/middleware/        → auth.global.ts : redirection /login, réhydratation de la session
@@ -168,19 +161,19 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 **Pattern d'overlay** : les routes enfant (`/newOperation`, `/editCredit/:id`, `/newBien`, etc.) instancient toutes le même composant `RouteOverTheContent` qui rend dynamiquement le formulaire (`operation-form`, `credit-form`, `bien-form`, `transfert-form`, `operation-recurrente-form`, `search`, `compte-form`) selon le `componentName` déclaré dans la meta de la page (`definePageMeta`). Cela évite de gérer un état modal ailleurs.
 
 **Nuxt / PWA** :
-- Proxy `/api` → `API_URL` (par défaut `http://localhost:3000`), lu à l'exécution par le handler Nitro `server/api/[...path].ts`.
+- Le front appelle l'API en chemin relatif (`/api/**`), servie par le même serveur Nitro.
 - Aucun auto-import : tous les `ref`, `useRoute`, `defineStore`, composants… sont importés explicitement.
 - Service worker auto-update (`service-worker.js`), manifeste `MCCB NG` / `MCCB`, icônes 192/512 ; le shell SPA est prérendu pour le fallback de navigation.
 - Production : image Node qui exécute la sortie Nitro (`.output/server/index.mjs`), port 8080.
 
 ### Flux d'authentification
 
-1. Le front appelle `POST /api/users/login` avec `{ code: "XXXXXX" }`.
-2. `MyUserService.verifyCredentials` recherche l'utilisateur par `secret_key`.
-3. `JwtService.generateToken` signe un JWT avec `{ id, name, email, IDuser }`.
-4. Le front stocke `id` (token) et `userId` (`IDuser`) dans les cookies `userToken` / `userID` (`useCookie`).
-5. Toute requête authentifiée envoie `Authorization: Bearer <token>`.
-6. Côté serveur, `JwtService.verifyToken` reconstruit le `UserProfile` ; `getCurrentUserId` est utilisé dans chaque contrôleur pour scoper les requêtes à l'utilisateur.
+1. Le front appelle `POST /api/users/login` avec `{ email, code }` (code de 6 caractères).
+2. Le serveur retrouve l'utilisateur par email et compare le code à `secret_key` (bcrypt ; une `secret_key` encore en clair est acceptée puis re-hashée à la première connexion réussie). Une comparaison factice est faite si l'email est inconnu pour égaliser les temps de réponse.
+3. Un JWT est signé avec `{ id, name, email, IDuser }` (`JWT_SECRET`, durée `JWT_TTL_SECONDS`, 1 h par défaut) ; la réponse contient `{ id: <token>, userId: <IDuser> }` et un cookie `mccbngAuth` (`HttpOnly`, `SameSite=Strict`, `Secure` en production).
+4. Le front stocke le token et `IDuser` dans les cookies `userToken` / `userID`.
+5. Toute requête authentifiée envoie `Authorization: Bearer <token>` ; le middleware `server/middleware/auth.ts` vérifie le JWT, et `getCurrentUserId` scope chaque requête à l'utilisateur.
+6. Le login est limité à 5 essais par IP et par fenêtre de 15 minutes (`nuxt-security`). Les en-têtes de sécurité et la CSP sont appliqués à toutes les réponses.
 
 ---
 
@@ -188,13 +181,13 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 
 | Entité | Clé primaire | Champs principaux | Liens |
 |--------|--------------|-------------------|-------|
-| **User** | `id` (UUID) | `IDuser`, `email`, `username`, `secret_key`, `favoris`, `warningTotal`, `warningCompte`, `emailVerified`, `verificationToken` | `hasOne UserCredentials` |
+| **User** | `IDuser` (non auto-incrémenté) | `id` (identifiant applicatif, **non unique**), `email` (unique), `username`, `secret_key` (bcrypt), `favoris`, `warningTotal`, `warningCompte`, `emailVerified`, `verificationToken` | `UserCredentials` |
 | **UserCredentials** | `id` (UUID) | `password`, `userId` | `belongsTo User` |
 | **Banque** | `IDbanque` | `NomBanque` | `hasMany Compte` |
 | **Compte** | `IDcompte` | `NomCompte`, `solde` (FLOAT), `IDuser`, `IDbanque`, `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible` | `belongsTo Banque` |
 | **Operation** | `IDop` | `NomOp`, `MontantOp` (FLOAT), `DateOp`, `CheckOp`, `IDcompte`, `IDcat`, `amortissement`, `IDcredit?` | scopée via `Compte` |
 | **OperationRecurrente** | `IDopRecu` | `NomOpRecu`, `MontantOpRecu` (FLOAT), `JourOpRecu`, `JourNumOpRecu`, `MoisOpRecu`, `Frequence` (3=mensuel, 7=annuel), `DernierDateOpRecu`, `IDcompte`, `IDcat`, `IDcredit?` | scopée via `Compte` |
-| **Categorie** | `IDcat` | `Nom`, `IDuser`, `Stats` (bool) | — |
+| **Categorie** | `IDcat` | `Nom`, `IDuser` (0 = catégorie partagée), `Type` (`depense` / `revenu` / `transfert`) | — |
 | **Credit** | `IDcredit` | `NomCredit`, `NomPreteur?`, `MontantInitial` (FLOAT), `MontantMensuel`, `TauxInteret?`, `DateDebut`, `DateFin`, `IDcompte`, `IDopRecu?`, `IDuser`, `Statut` (def `actif`), `IDcat` | — |
 | **Bien** | `IDbien` | `NomBien`, `Ville`, `TypeBien`, `Surface?`, `Usage` (def `principale`), `DateAchat`, `PrixBienNu`, `FraisNotaire`, `FraisAgence`, `ApportCash`, `ValeurActuelle?`, `IDcredit?`, `IDuser` | — |
 | **Stats** | `userID` | (entité support pour les agrégations) | — |
@@ -205,17 +198,18 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 
 | Méthode | Route | Description |
 |--------:|-------|-------------|
-| `POST`  | `/api/users/login` | Authentification par `code` (6 car.) — **publique** |
+| `POST`  | `/api/users/login` | Authentification par `email` + `code` (6 car.) — **publique** |
+| `POST`  | `/api/users/logout` | Efface le cookie d'authentification |
 | `GET`   | `/api/users/whoAmI` | Profil de l'utilisateur courant |
 | `PATCH` | `/api/users/me` | Mise à jour du profil |
 | `GET`   | `/api/users/exists` | Vérifie la validité du token |
-| `POST`  | `/api/signup` | Création d'utilisateur |
+| `POST`  | `/api/signup` | Création d'utilisateur (réservée aux utilisateurs authentifiés) |
 | `GET`   | `/api/ping` | Healthcheck |
 | `*`     | `/api/banques`, `/api/comptes`, `/api/categories` | CRUD scopés utilisateur |
 | `*`     | `/api/operations` | CRUD opérations + endpoints d'analytics |
 | `GET`   | `/api/operations/sumAllCompteForUser` | Totaux pointés / non pointés par compte |
 | `GET`   | `/api/operations/sumForACompte?id=` | Totaux pour un compte |
-| `GET`   | `/api/operations/sumByUserByMonth?monthNumber=&yearNumber=&IDCompte=` | Total dépenses du mois (catégories `Stats=1`) |
+| `GET`   | `/api/operations/sumByUserByMonth?monthNumber=&yearNumber=&IDCompte=` | Total dépenses du mois (catégories `Type = depense`) |
 | `GET`   | `/api/operations/sumCategoriesByUserByMonth?monthNumber=&yearNumber=` | Répartition mensuelle par catégorie |
 | `GET`   | `/api/operations/suggestCategories?operationName=&limit=` | Suggestion par similarité de libellé |
 | `*`     | `/api/operation-recurrentes` | CRUD opérations récurrentes |
@@ -225,51 +219,49 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 | `GET`   | `/api/credits/{id}/payments` | Historique de prélèvement |
 | `*`     | `/api/biens` | CRUD biens immobiliers |
 | `GET`   | `/api/stats/evolutionSolde` | Time series `global`, `retraite`, `dispo` |
+| `GET`   | `/api/stats/yearComparison`, `topCategories`, `incomeVsExpense`, `topOperations`, `categoryHeatmap` | Statistiques annuelles et par catégorie |
 
-> L'OpenAPI Explorer est exposé sur `http://localhost:3000/explorer` en local.
+> Toutes les routes (sauf `ping` et `login`) exigent un JWT. Les listes acceptent un paramètre `filter` JSON (`where`, `order`, `limit`, `skip`, `include`).
 
 ---
 
 ## Démarrage rapide
 
 ### Pré-requis
-- Node.js ≥ 20 (cf. `.nvmrc`)
+- Node.js ≥ 26 (cf. `.nvmrc`)
 - pnpm ≥ 10 (cf. `packageManager` dans `package.json`)
-- MySQL (en local ou via Docker)
+- MySQL ou MariaDB (en local ou via Docker)
+- Docker pour les tests d'API (MySQL jetable via Testcontainers)
 
 ### Installation
 
 ```bash
-pnpm install                # installe back + front
+pnpm install
 ```
 
-### Lancer le backend (port 3000)
+### Base de données
 
 ```bash
-cd back
-cp src/datasources/mccb-mysql.datasource.config.json.example \
-   src/datasources/mccb-mysql.datasource.config.json    # ou créer le fichier (cf. ci-dessous)
-pnpm migrate                # crée / met à jour le schéma MySQL
-pnpm start                  # build + node .
+export DB_HOST=localhost DB_PORT=3306 DB_USER=… DB_PASSWORD=… DB_NAME=…
+pnpm --filter @mccbng/front db:migrate                  # base vide : crée le schéma
+pnpm --filter @mccbng/front db:migrate -- --baseline    # base de production existante : marque la baseline comme jouée
 ```
 
-### Lancer le frontend (port 8080)
+Voir `docs/db-migrations.md` pour la procédure complète.
+
+### Lancer l'application (port 8080)
 
 ```bash
 cd front
-echo "API_URL=http://localhost:3000" > .env   # optionnel, valeur par défaut identique
+# variables DB_* et JWT_SECRET dans l'environnement ou dans front/.env
 pnpm dev
 ```
 
 ### Tests / linting
 
 ```bash
-# back
-pnpm --filter @mccbng/back test
-pnpm --filter @mccbng/back lint
-
-# front
-pnpm --filter @mccbng/front test
+pnpm --filter @mccbng/front test        # unitaires + intégration front (Vitest, environnement Nuxt)
+pnpm --filter @mccbng/front test:api    # tests d'intégration de l'API sur un MySQL jetable (Docker requis)
 pnpm --filter @mccbng/front lint
 pnpm --filter @mccbng/front type-check
 ```
@@ -278,50 +270,37 @@ pnpm --filter @mccbng/front type-check
 
 ## Configuration
 
-### Backend (`back/src/datasources/mccb-mysql.datasource.config.json`)
+Toute la configuration serveur passe par des variables d'environnement, lues à l'exécution (aucun fichier de configuration embarqué dans l'image).
 
-```json
-{
-  "name": "db_name_connection_mysql",
-  "connector": "mysql",
-  "host": "localhost",
-  "port": 3306,
-  "database": "database_name",
-  "user": "database_user_name",
-  "password": "database_user_password"
-}
-```
+| Variable | Obligatoire | Rôle |
+|----------|-------------|------|
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | oui | connexion MySQL |
+| `JWT_SECRET` | oui en production | secret de signature des sessions (le garder fixe : un changement déconnecte tout le monde) |
+| `JWT_TTL_SECONDS` | non | durée de vie du JWT en secondes (3600 par défaut) |
 
-### Frontend (`.env`)
-
-```
-API_URL=http://localhost:3000
-```
-
-`API_URL` est lu à l'exécution par le proxy Nitro (`/api/**`) : en dev via `.env`, en production via la variable d'environnement du conteneur, sans reconstruire l'image. Le front appelle toujours `/api` en chemin relatif.
+En développement, `JWT_SECRET` peut être omis (un secret éphémère est généré, avec un avertissement). Le front appelle toujours l'API en chemin relatif (`/api`).
 
 ---
 
 ## Déploiement Docker
 
-Les deux packages exposent les mêmes scripts pnpm :
+Une seule image contient le front **et** l'API :
 
 ```bash
-pnpm --filter @mccbng/back  docker:staging:build && pnpm --filter @mccbng/back  docker:staging:push
-pnpm --filter @mccbng/back  docker:latest:build  && pnpm --filter @mccbng/back  docker:latest:push
 pnpm --filter @mccbng/front docker:staging:build && pnpm --filter @mccbng/front docker:staging:push
 pnpm --filter @mccbng/front docker:latest:build  && pnpm --filter @mccbng/front docker:latest:push
 ```
 
-- **Back** : image `node:22-slim`, build TypeScript, suppression de `dist/datasources/*config.json` et de `src/` pour réduire la surface, lance `node .` (port 3000).
-- **Front** : multi-stage `node:22-slim` (pnpm) → `node:22-slim` qui exécute `.output/server/index.mjs` sur le port 8080 ; `API_URL` est fourni à l'exécution. Le contexte de build est la **racine du dépôt** (`docker build -f front/Dockerfile .`) car le lockfile pnpm est à la racine.
-- Registre : `dockregistry.xju.fr/mccbng/{api,front}:{staging,latest}`.
+- Multi-stage `node:26-slim` (pnpm installé avec npm, car Node 26 n'embarque plus corepack) → `node:26-slim` qui exécute `.output/server/index.mjs` sur le port 8080, avec un healthcheck. Le contexte de build est la **racine du dépôt** (`docker build -f front/Dockerfile .`) car le lockfile pnpm est à la racine.
+- Au démarrage, le conteneur sort avec un message explicite si `DB_*` ou `JWT_SECRET` manque.
+- Les migrations SQL ne sont pas jouées par l'image : les lancer depuis le poste ou la CI avant de déployer une version qui en apporte (`docs/db-migrations.md`).
+- Registre : `dockregistry.xju.fr/mccbng/front:{staging,latest}`.
 
-Un `docker-compose.build.yml` et un script `build-and-push.sh` sont disponibles à la racine pour orchestrer les builds.
+Un `docker-compose.build.yml` et un script `build-and-push.sh` sont disponibles à la racine pour orchestrer le build (le conteneur de build utilise `docker:24-cli`, compatible avec l'API Docker du NAS).
 
-### Rollback du front
+### Historique et retour arrière
 
-Le front a migré de nginx statique vers Node/Nitro. Le back et les cookies de session sont inchangés : pour revenir en arrière, redéployer l'image nginx précédente (le tag précédent de `dockregistry.xju.fr/mccbng/front`, ex. `docker pull` du digest antérieur puis retag `latest`/`staging`). L'ancienne image lisait `window.env.VITE_API_URL` depuis `config.js` ; la nouvelle lit `API_URL`.
+L'API LoopBack 4 (`back/`, image `mccbng/api`) a été remplacée par l'API Nitro. Pour revenir en arrière, redéployer les anciennes images `front` (qui proxifiait vers `API_URL`) et `api` encore présentes dans le registre. Le schéma de base de données n'a pas été modifié par la migration.
 
 ---
 

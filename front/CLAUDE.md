@@ -4,18 +4,20 @@
 
 Single Page Application for the mccbng personal finance app. Built with **Nuxt 4 (`ssr: false`, `future.compatibilityVersion: 5`) + Vue 3.5 + TypeScript + Pinia**, with **auto-imports disabled**, light/dark theme support, touch gestures, and PWA packaging. Covers banks, accounts, operations, recurring operations, categories, statistics, **loans (Credit)** and **real-estate assets (Bien)**.
 
-Nitro (Nuxt's server) serves the SPA and proxies `/api/**` to the LoopBack back-end. A later change will move the API itself into `front/server/`.
+Nitro (Nuxt's server) serves the SPA **and hosts the REST API** (`front/server/`, MySQL + JWT): one process and one Docker image serve both. The API is described in the *Server (Nitro API)* section below.
 
 ## Commands
 
 ```bash
-pnpm dev                # Nuxt dev server (port 8080, /api proxied to API_URL)
+pnpm dev                # Nuxt dev server (port 8080) — SPA + API (needs DB_* env, see below)
 pnpm build              # Production build (.output/ — Nitro server + public assets)
 pnpm build:staging      # Staging build (--envName test)
 pnpm preview            # Serve the production build locally
 pnpm test               # Vitest (unit + integration, Nuxt environment)
 pnpm test:watch         # Vitest in watch mode
+pnpm test:api           # API integration tests on a disposable MySQL (Docker / Testcontainers)
 pnpm test:coverage      # Tests with coverage report
+pnpm db:migrate         # Apply SQL migrations (add `-- --baseline` on an existing production database)
 pnpm type-check         # nuxt typecheck (vue-tsc)
 pnpm lint               # ESLint (@nuxt/eslint, flat config) with --fix
 pnpm lint:check         # ESLint check only
@@ -35,7 +37,7 @@ app/pages/              → File-based routes (see below)
 app/middleware/auth.global.ts → Global auth guard
 app/plugins/            → fontawesome.ts (global <FontAwesomeIcon>), touch-events.client.ts (vue3-touch-events)
 app/stores/             → 9 Pinia setup stores
-server/api/[...path].ts → Nitro proxy /api/** → process.env.API_URL
+server/                → REST API hosted by Nitro (see "Server (Nitro API)")
 ```
 
 **No auto-imports.** Import everything explicitly:
@@ -149,7 +151,7 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 | **credit.ts** | `fetchCredits()`, `fetchCreditById()`, `updateCredit()`, `deleteCredit()`, `fetchCreditRemainingBalance()`, `fetchCreditPayments()` | `GET/POST /api/credits`, `GET/PUT/DEL /api/credits/:id`, `GET /api/credits/:id/remaining-balance`, `GET /api/credits/:id/payments` |
 | **bien.ts** | `fetchBiens()`, `fetchBienById()`, `updateBien()`, `deleteBien()` | `GET/POST /api/biens`, `GET/PUT/DEL /api/biens/:id` |
 
-**Authentication**: see the Authentication section above. The API base URL is the empty string (`app/services/config.ts` → `API_URL`) so every call is relative to `/api/**`, which Nitro proxies to the back-end.
+**Authentication**: see the Authentication section above. The API base URL is the empty string (`app/services/config.ts` → `API_URL`) so every call is relative to `/api/**`, served by the same Nitro server.
 
 ### Components (`app/components/`)
 
@@ -238,20 +240,44 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 
 Configured under `pwa` in `nuxt.config.ts`: manifest `mCloud Compte and Budget` / `mCcBng` (`fullscreen`, portrait, theme `#4DBA87`, background `#000000`, icons 48 to 512), service worker `service-worker.js` with `registerType: 'autoUpdate'`, `navigateFallback: '/'` with `/api/**` denied. The SPA shell is prerendered (`nitro.prerender.routes: ['/']`) so the service worker can precache it. `<NuxtPwaManifest />` in `app.vue` injects the manifest link. `public/` holds the icons and favicon.
 
-### API proxy and runtime config
+### Server (Nitro API)
 
-`server/api/[...path].ts` forwards every `/api/**` request (method, path, query, headers except `cookie`, body; 30 s timeout, 502 JSON error if the back is unreachable) to `process.env.API_URL` (default `http://localhost:3000`). `API_URL` is read **at runtime**, so it can change without rebuilding. In dev, put it in `front/.env`.
+```
+server/
+├── api/                      # one route per file (Nitro file-based routing)
+│   ├── [resource]/*.ts       #   generic CRUD for banques, categories, biens
+│   ├── comptes|operations|operation-recurrentes|credits/*.ts   # explicit CRUD files + specific routes
+│   ├── users/*.ts, signup.post.ts, ping.get.ts
+│   ├── stats/*.ts
+│   └── [...path].ts          #   JSON 404 for any unknown /api route
+├── middleware/auth.ts        # JWT check on /api/** (public: GET /api/ping, POST /api/users/login)
+├── plugins/                  # config check at startup, MySQL pool shutdown
+├── db/                       # schema.ts (Drizzle, mirrors the production DDL), client.ts, migrations/*.sql
+└── utils/                    # config, auth, scope, crud, resources, crud-routes, filter, validate, errors, sql, stats, users, credits
+```
+
+- **Configuration** (`utils/config.ts`): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET` (required in production), `JWT_TTL_SECONDS` (default 3600), read from `process.env` at runtime. In dev they can live in `front/.env`.
+- **Handlers**: wrap them in `defineApiHandler` so every error follows `{ error: { statusCode, name, message } }`; throw `notFound`, `badRequest`, `conflict`, … from `utils/errors.ts`. Unexpected errors become a generic 500 and are logged as `[api] <method> <path>`.
+- **CRUD**: `utils/resources.ts` describes each resource once (table, `readScope`/`writeScope`, Zod `create`/`patch` schemas, application `defaults`, `forced` fields such as `IDuser`, `validate` ownership checks, `onCreate`/`onDelete` cascades). `utils/crud.ts` implements the 8 standard routes. Because a static directory (`comptes/`, `operations/`, …) shadows the dynamic `[resource]` route, those resources have explicit one-line files calling `crudRoute(path, action)`; add the same files when a resource gets its own sub-routes.
+- **Filter**: lists accept a LoopBack-style `filter` JSON (`where` with `and`/`or`/`inq`/`like`/`gt`…, `order`, `limit`, `skip`, `include`), parsed by `utils/filter.ts` with a column/operator whitelist. The user scope is always combined with `and` after the client's `where`.
+- **Scope**: `utils/scope.ts` — `getCurrentUserId(event)`, `compteScope` (inherited scoping on `IDcompte`), `assertCompteOwned` (404). Users are looked up by `IDuser`, never by the non-unique `id` column.
+- **SQL**: `rawQuery(sql, params)` (`utils/sql.ts`) for analytics (`utils/stats.ts`, aggregates, auto-generation); always parameterised. Dates are read/written in UTC (`timezone: 'Z'`).
+- **Transactions**: cascades use `db.transaction`, but most production tables are MyISAM, which ignores transactions (`docs/db-migrations.md`).
+- **Security**: `nuxt-security` adds the security headers and an enforced CSP; only `POST /api/users/login` is rate-limited (5 attempts per IP per 15 min, in memory; the module reads `X-Forwarded-For`, so the reverse proxy must overwrite it).
+- **Migrations**: SQL files in `server/db/migrations`, applied by `scripts/db-migrate.mjs` (`pnpm db:migrate`); `0000_baseline.sql` is the production DDL and is only *marked* as applied on the existing database (`--baseline`). See `../docs/db-migrations.md`.
 
 ### Testing
 
 - **Framework**: Vitest with `@nuxt/test-utils` (`environment: 'nuxt'`, see `vitest.config.ts`); `h3-next` is required as an optional peer.
-- **Tests**: `tests/unit/` (stores), `tests/integration/` (route table, auth service + middleware), `tests/fixtures/routes.ts` (route contract).
+- **Tests**: `tests/unit/` (stores, server filter parser), `tests/integration/` (route table, auth service + middleware), `tests/fixtures/routes.ts` (route contract).
+- **API tests** (`tests/api/`, run with `pnpm test:api`, config `vitest.api.config.ts`): a global setup starts a disposable MySQL (Testcontainers, or an external one through `TEST_DB_*`), applies the migrations, builds Nuxt and starts the built server; specs call the API over HTTP with two users to cover multi-user isolation. `vitest.config.ts` excludes `tests/api/**`, so `pnpm test` does not need Docker.
 - `useRouter()` and other Nuxt composables need the Nuxt context: call them inside tests, not at collection time.
 
 ## Dependencies
 
 ### Runtime
-- `nuxt` 4, `vue` ^3.5, `pinia` + `@pinia/nuxt`, `@vite-pwa/nuxt`
+- `nuxt` 4, `vue` ^3.5, `pinia` + `@pinia/nuxt`, `@vite-pwa/nuxt`, `nuxt-security`
+- Server: `drizzle-orm` + `mysql2`, `zod`, `jsonwebtoken`, `bcryptjs`
 - `highcharts` ^12.2 — charts
 - `@fortawesome/*` — icons
 - `vue3-touch-events` ^4 — swipe gestures (client plugin)
@@ -259,17 +285,17 @@ Configured under `pwa` in `nuxt.config.ts`: manifest `mCloud Compte and Budget` 
 
 ### Dev
 - `typescript`, `vue-tsc`, `sass`
-- `vitest`, `@nuxt/test-utils`, `@vue/test-utils`, `happy-dom`, `h3-next`
+- `vitest`, `@nuxt/test-utils`, `@vue/test-utils`, `happy-dom`, `h3-next`, `testcontainers` + `@testcontainers/mysql`
 - `eslint` 9 + `@nuxt/eslint`, `lint-staged`
 
 ## Docker
 
 Build context is the **repo root** (the pnpm lockfile lives there): `docker build -f front/Dockerfile .` (the `docker:*:build` scripts do this).
 
-1. **Build stage** (`node:22-slim`): corepack + `pnpm install --frozen-lockfile --ignore-scripts --filter @mccbng/front...`, then `pnpm --filter @mccbng/front build`.
-2. **Runtime stage** (`node:22-slim`): copies `.output/` only, runs `node .output/server/index.mjs` as user `node` on port **8080** (`NITRO_PORT`), with a healthcheck. `API_URL` is **required** at run time (the container exits at startup if it is unset).
+1. **Build stage** (`node:26-slim`): `npm install -g pnpm@10.33.0` (Node 26 n'embarque plus corepack) + `pnpm install --frozen-lockfile --ignore-scripts --filter @mccbng/front...`, then `pnpm --filter @mccbng/front build`.
+2. **Runtime stage** (`node:26-slim`): copies `.output/` only, runs `node .output/server/index.mjs` as user `node` on port **8080** (`NITRO_PORT`), with a healthcheck. `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` and `JWT_SECRET` are **required** at run time (`docker-entrypoint.sh` exits at startup with an explicit message if one is missing); `JWT_TTL_SECONDS` is optional.
 
-Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps port 8080 and sets `API_URL`.
+Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps port 8080 (fill in the `DB_*` and `JWT_SECRET` placeholders). Migrations are not run by the image: use `pnpm db:migrate` (`../docs/db-migrations.md`).
 
 ## File Structure
 
@@ -286,23 +312,26 @@ front/
 │   ├── services/                     # fetch-based services per domain + http.ts, config.ts
 │   ├── stores/                       # user, compte, operation, category, stats, display, credit, bien, banque
 │   └── assets/styles/                # variables.scss, theme.css, main.css
-├── server/api/[...path].ts           # Nitro proxy /api/** → API_URL
+├── server/                           # REST API hosted by Nitro (api/, middleware/, plugins/, db/, utils/)
+├── scripts/db-migrate.mjs            # SQL migration runner
 ├── public/                           # icons, favicon
-├── tests/{unit,integration,fixtures}/
-├── vitest.config.ts
+├── tests/{unit,integration,api,support,fixtures}/
+├── vitest.config.ts / vitest.api.config.ts
 ├── eslint.config.mjs
 ├── tsconfig.json                     # references .nuxt/tsconfig.*.json
-├── Dockerfile / Dockerfile.dockerignore
+├── Dockerfile / Dockerfile.dockerignore / docker-entrypoint.sh
 └── package.json
 ```
 
 ## Conventions When Editing
 
 - Use `<script setup lang="ts">` and the Composition API in new components, with **explicit imports** (no auto-imports).
-- Add a new domain by creating: `app/services/<domain>.ts` (using `services/http.ts` and `API_URL` from `services/config.ts`), `app/stores/<domain>.ts` (a setup store), and components under `app/components/`.
+- Add a new domain by creating: `app/services/<domain>.ts` (using `services/http.ts` and the relative base URL from `services/config.ts`), `app/stores/<domain>.ts` (a setup store), and components under `app/components/`.
 - Model modal-style flows as **child pages** (absolute `path`, `name`, `componentName` in `definePageMeta`) rendering `RouteOverTheContent`, and update `tests/fixtures/routes.ts`.
 - Keep route names stable: the code reads `route.name`.
 - For currency display, prefer `<Currency :amount="…" />`.
 - Read auth through `getTokenCookie()` / `getUserIDCookie()` (or the user store) rather than touching cookies directly, and use `hydrateSession` to load a session.
 - Keep state mutations free of HTTP calls — services do the I/O, actions orchestrate.
 - Never call `useXStore()` at module top level in a store file.
+- Add an API endpoint under `server/api/` (wrapped in `defineApiHandler`), scope it with `getCurrentUserId`, validate input with Zod, and cover it in `tests/api/` with at least a second user to prove the isolation. For a new CRUD resource, describe it in `server/utils/resources.ts` and, if it has sub-routes, add explicit `crudRoute` files in its directory.
+- Never look a user up by the `id` column: use `IDuser`.

@@ -3,34 +3,42 @@
 Ce document liste les améliorations de sécurité **non encore implémentées** sur
 le flux d'authentification, à reprendre dans une prochaine itération.
 
-État courant (après PR `claude/secure-connection-keys-7SAhm`) :
+État courant (API hébergée dans le serveur Nitro de Nuxt, `front/server/`) :
 
-- `secret_key` est désormais **hashée en bcrypt** en base.
+- `secret_key` est **hashée en bcrypt** en base (migration paresseuse des valeurs
+  en clair à la première connexion réussie).
 - Login = `email` + `code` (l'email est stocké en `localStorage` côté front pour
   ne pas avoir à le retaper).
 - **Rate-limiting** sur `POST /api/users/login` (5 tentatives / 15 min / IP) via
-  `express-rate-limit`.
-- Cookie d'auth `mccbngAuth` posé par le backend en `HttpOnly` + `SameSite=Strict`
+  `nuxt-security`. Limites : compteur en mémoire (une seule instance), les
+  connexions réussies sont comptées, et l'IP vient de `X-Forwarded-For` — le
+  reverse proxy doit **écraser** cet en-tête, sinon la limite est contournable.
+- Cookie d'auth `mccbngAuth` posé par le serveur en `HttpOnly` + `SameSite=Strict`
   (+ `Secure` en production).
-- TTL JWT explicite (`JWT_TTL_SECONDS`, défaut 1h) ; secret optionnellement
-  persistant via `JWT_SECRET`.
+- TTL JWT explicite (`JWT_TTL_SECONDS`, défaut 1h) ; `JWT_SECRET` obligatoire en
+  production.
+- **En-têtes de sécurité** (`nuxt-security`) : HSTS, `X-Content-Type-Options`,
+  `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, et une
+  **Content-Security-Policy appliquée** (le mode `report-only` est inutile sans
+  point de collecte `report-to`).
+- Validation systématique des entrées avec Zod, filtre de liste à liste blanche,
+  isolation par utilisateur testée (une ressource d'autrui répond 404).
 
 ## Reste à faire
 
-### 1. Helmet + en-têtes de sécurité
+### 1. Durcir le périmètre existant
 
-Ajouter `helmet` au pipeline Express (via `this.expressMiddleware(...)` dans
-`src/application.ts`) pour activer par défaut :
-
-- `Strict-Transport-Security` (HSTS)
-- `Content-Security-Policy` (à calibrer, surtout pour `/explorer`)
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `Referrer-Policy: no-referrer`
-- `Permissions-Policy` minimaliste
-
-Penser à exclure ou adapter la CSP pour le Swagger Explorer (`/explorer`) qui
-charge des assets externes.
+- **`Banque` n'est pas scopée par utilisateur** : tout utilisateur authentifié peut
+  lire, modifier et supprimer toutes les banques.
+- **`POST /api/signup` est ouvert à tout utilisateur authentifié** : le réserver à
+  un rôle administrateur.
+- **`User.id` n'est pas unique en production** (la clé primaire est `IDuser`) :
+  ajouter une contrainte d'unicité après avoir corrigé les doublons éventuels.
+- **Tables MyISAM** (`Operation`, `OperationRecurrente`, `Compte`, `Categorie`,
+  `Banque`, `User`) : les transactions de l'API n'ont aucun effet. Les convertir en
+  InnoDB (`ALTER TABLE … ENGINE=InnoDB`) via une migration versionnée.
+- Rate-limit **partagé** (stockage externe) si l'application passe à plusieurs
+  instances.
 
 ### 2. Verrouillage temporaire du compte (account lockout)
 
@@ -45,7 +53,7 @@ utilisateur** (clé = `email` ou `IDuser`) qui :
 Implémentation possible :
 
 - Option A — colonnes `failedLoginCount` + `lockedUntil` sur `User`, mises à
-  jour dans `MyUserService.verifyCredentials`.
+  jour dans `verifyCredentials` (`front/server/utils/users.ts`).
 - Option B — table dédiée `LoginAttempt` (`userId`, `ip`, `success`, `at`) qui
   permet aussi de monitorer / alerter sur les patterns suspects.
 

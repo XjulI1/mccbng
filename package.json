@@ -8,9 +8,7 @@
   "private": true,
   "pnpm": {
     "overrides": {
-      "@achrinza/node-ipc": "^10.1.11",
-      "cookie": ">=0.7.0",
-      "openapi-typescript": ">=7.0.0"
+      "cookie": ">=0.7.0"
     },
     "onlyBuiltDependencies": [
       "@parcel/watcher",

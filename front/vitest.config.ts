@@ -4,5 +4,7 @@ export default defineVitestConfig({
   test: {
     environment: 'nuxt',
     include: ['tests/**/*.spec.ts'],
+    // Tests d'API (MySQL jetable + serveur) et de parité : lancés par leurs propres configs (test:api, test:parity)
+    exclude: ['**/node_modules/**', 'tests/api/**', 'tests/parity/**'],
   },
 })
