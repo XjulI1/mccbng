@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { createServer } from 'node:net'
 import { createConnection } from 'mysql2/promise'
@@ -40,7 +41,7 @@ const waitFor = async (url: string, timeoutMs = 60_000) => {
 
 export default async function setup(project: TestProject) {
   const database = await startDatabase()
-  const jwtSecret = 'test-secret-' + Math.random().toString(36).slice(2)
+  const jwtSecret = `test-secret-${randomBytes(16).toString('hex')}`
 
   const connection = await createConnection({ ...database.db, multipleStatements: true })
   await connection.query('DROP DATABASE IF EXISTS ??; CREATE DATABASE ??', [database.db.database, database.db.database])

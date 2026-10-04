@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { createConnection, type Connection } from 'mysql2/promise'
@@ -53,7 +53,7 @@ export interface TestUser {
 }
 
 // Chaque fichier de test charge ce module séparément : base aléatoire pour éviter les collisions d IDuser/email
-let nextUser = 1000 + Math.floor(Math.random() * 100_000_000)
+let nextUser = 1000 + randomInt(100_000_000)
 export const signToken = (user: { id: string; IDuser: number; email: string }, options: jwt.SignOptions = { expiresIn: 3600 }) =>
   jwt.sign({ id: user.id, name: 'test', email: user.email, IDuser: user.IDuser }, ctx().jwtSecret, options)
 

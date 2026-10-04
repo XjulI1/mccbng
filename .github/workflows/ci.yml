@@ -7,6 +7,10 @@ on:
       - master
   pull_request:
 
+# Droits minimaux du GITHUB_TOKEN pour tous les jobs
+permissions:
+  contents: read
+
 jobs:
   backend:
     name: Backend (build / lint / test)
