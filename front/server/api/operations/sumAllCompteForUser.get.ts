@@ -3,6 +3,7 @@ import { getCurrentUserId } from '../../utils/scope'
 import { rawQuery } from '../../utils/sql'
 
 // Totaux pointés / non pointés par compte visible (aucun filtre de catégorie : doit correspondre à la banque).
+// Un côté absent (aucune opération pointée, ou aucune non pointée) est omis de la ligne ; le front le lit comme 0.
 export default defineApiHandler(async (event) => {
   const userID = getCurrentUserId(event)
   const checked = await rawQuery<any>(
@@ -19,8 +20,11 @@ export default defineApiHandler(async (event) => {
     'GROUP BY IDCompte',
     [userID]
   )
-  return checked.map((row) => {
+  const merged = checked.map((row) => {
     const match = notChecked.find(other => other.IDCompte === row.IDCompte)
     return Object.assign(row, { TotalNotChecked: match?.TotalNotChecked })
   })
+  // Correction : un compte dont toutes les opérations sont non pointées figurait absent de la liste (donc solde 0 à l'écran)
+  const known = new Set(merged.map(row => row.IDCompte))
+  return [...merged, ...notChecked.filter(row => !known.has(row.IDCompte))]
 })

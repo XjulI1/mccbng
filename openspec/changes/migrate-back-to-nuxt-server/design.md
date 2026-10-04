@@ -96,6 +96,7 @@ Une image `front` unique (Dockerfile existant, env `DB_*`, `JWT_SECRET`). `build
 | C13 | Messages d'erreur 404 | `Entity not found: Banque with id N`, `Compte N not found` (opération d'autrui) | `Banque N not found`, `Operation N not found` (statuts identiques) |
 | C14 | Réponse de création | entité insérée (colonnes NULL absentes) | idem (données + défauts + clé générée) |
 | C15 | Recherche de l'utilisateur courant (`whoAmI`, `PATCH /users/me`, upgrade du hash) | par la colonne `id`, non unique en production (id historique de 1 caractère, lignes dupliquées) : un utilisateur peut lire le profil d'un autre | par `IDuser` (clé primaire, déjà dans le JWT) |
+| C16 | `GET /operations/sumAllCompteForUser` | omet les comptes sans aucune opération pointée (leur solde s'affiche à 0 jusqu'au clic sur le compte) | inclut aussi ces comptes (avec `TotalNotChecked` seul) |
 | K1 | `Banque` sans scope utilisateur | tout utilisateur authentifié lit/écrit | **inchangé** (écart connu, hors périmètre) |
 | K2 | `POST /signup` | accessible à tout utilisateur authentifié | **inchangé** (écart connu, hors périmètre) |
 | K3 | Auto-génération | 1 occurrence max par appel | **inchangé** (la doc est corrigée, pas le code) |

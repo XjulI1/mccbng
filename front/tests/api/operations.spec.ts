@@ -105,6 +105,21 @@ describe('agrégats', () => {
     expect((await get('/api/operations/sumForACompte', dave.token, { id: other.IDcompte })).status).toBe(404)
   })
 
+  it('sumAllCompteForUser : un compte dont toutes les opérations sont non pointées est listé', async () => {
+    const gus = await createUser()
+    const mixte = await createCompte(gus, { NomCompte: 'Mixte' })
+    const nonPointe = await createCompte(gus, { NomCompte: 'Non pointé' })
+    await createOperation(gus, mixte.IDcompte, { MontantOp: 100, CheckOp: true })
+    await createOperation(gus, nonPointe.IDcompte, { MontantOp: 300 })
+
+    const all = (await get('/api/operations/sumAllCompteForUser', gus.token)).body
+    expect(all).toHaveLength(2)
+    expect(all.find((r: any) => r.IDCompte === mixte.IDcompte)).toMatchObject({ TotalChecked: 100 })
+    const ligne = all.find((r: any) => r.IDCompte === nonPointe.IDcompte)
+    expect(ligne).toMatchObject({ TotalNotChecked: 300 })
+    expect(ligne.TotalChecked).toBeUndefined()
+  })
+
   it('totaux mensuels : Type=depense uniquement', async () => {
     const erin = await createUser()
     const compte = await createCompte(erin)

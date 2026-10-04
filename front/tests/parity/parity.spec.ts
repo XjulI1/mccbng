@@ -191,6 +191,8 @@ const normalize = (entry: Logged) => {
   else norm.body = scrub(body)
   if (entry.label === 'login ok') norm.body = { userId: body.userId, hasToken: typeof body.id === 'string' }
   if (entry.label === 'ping') norm.body = { greeting: typeof body.greeting }
+  // Écart volontaire (design C16) : Nitro liste aussi les comptes sans opération pointée
+  if (entry.label === 'sumAllCompteForUser' && Array.isArray(norm.body)) norm.body = norm.body.filter((r: { TotalChecked?: number }) => r.TotalChecked !== undefined)
   if (entry.label === 'logout' || entry.label === 'login ok') norm.cookieCleared = /Max-Age=0/i.test(entry.setCookie ?? '')
   return norm
 }
