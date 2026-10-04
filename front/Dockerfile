@@ -11,7 +11,6 @@ WORKDIR /app
 
 # Manifestes du workspace (couche mise en cache tant que les dépendances ne changent pas)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-COPY back/package.json back/package.json
 COPY front/package.json front/package.json
 
 # --ignore-scripts : le postinstall (nuxt prepare) a besoin des sources, `nuxt build` le refait

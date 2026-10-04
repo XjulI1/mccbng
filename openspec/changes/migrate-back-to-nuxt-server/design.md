@@ -67,6 +67,7 @@ Schémas Zod par ressource (create/replace/patch) ; un plugin Nitro `error` norm
 Un runner SQL minimal (`front/scripts/db-migrate.mjs`, sans `drizzle-kit`) applique dans l'ordre les fichiers de `server/db/migrations/` et les enregistre dans la table `__migrations` ; `0000_baseline.sql` décrit le schéma existant (tables + index, y compris `Bien` et `Categorie.Type`) et est marqué « joué » en prod via `db:migrate -- --baseline`. Pas de `--rebuild`. Une tâche Nitro ou script `pnpm db:migrate` s'exécute manuellement (étape de déploiement), pas au démarrage, pour éviter les migrations concurrentes.
 
 ### D9. Tests
+*Le harnais de parité a été supprimé avec `back/` (tâche 9.4) ; `tests/api/` est le filet de non-régression conservé.*
 *Résultat* : le scénario de parité (≈130 appels couvrant tous les domaines) passe : mêmes statuts et mêmes corps 2xx ; seuls les messages d'erreur 404 diffèrent (C13). Il a permis de corriger : réponse de création (C14), ordre de génération des récurrentes (pop), dates et défauts.
 
 - **Intégration** : Vitest + `@nuxt/test-utils` (`setup({ server: true })`) + Testcontainers MySQL 8, jeu de données seed par fixture, deux utilisateurs pour les tests d'isolation.

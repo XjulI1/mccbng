@@ -20,11 +20,10 @@
     "docker:staging:push": "docker push dockregistry.xju.fr/mccbng/front:staging",
     "docker:latest:build": "docker buildx build --platform linux/amd64 -f Dockerfile -t dockregistry.xju.fr/mccbng/front:latest ..",
     "docker:latest:push": "docker push dockregistry.xju.fr/mccbng/front:latest",
-    "docker:run": "docker run -p 8080:8080 -e API_URL=http://host.docker.internal:3000 -d front",
+    "docker:run": "docker run -p 8080:8080 -e DB_HOST=host.docker.internal -e DB_PORT=3306 -e DB_USER=... -e DB_PASSWORD=... -e DB_NAME=... -e JWT_SECRET=... -d front",
     "postinstall": "nuxt prepare",
     "db:migrate": "node scripts/db-migrate.mjs",
-    "test:api": "vitest run --config vitest.api.config.ts",
-    "test:parity": "vitest run --config vitest.parity.config.ts"
+    "test:api": "vitest run --config vitest.api.config.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.0",

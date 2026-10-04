@@ -9,7 +9,7 @@
 - [x] 1.7 Écrire `utils/filter.ts` (parse `filter` LoopBack restreint, liste blanche, plafond `limit`, `include banque`) avec tests unitaires
 - [x] 1.8 Écrire `utils/scope.ts` (`getCurrentUserId`, scope direct, `getUserCompteIds`, `assertOwned`/`assertCompteOwned` → 404)
 - [x] 1.9 Écrire `utils/crud.ts` (`defineCrud`) avec hooks avant/après création, mise à jour, suppression
-- [ ] 1.10 Configurer `nuxt-security` (en-têtes, CSP en report-only) en vérifiant PWA, Highcharts et Eruda
+- [x] 1.10 Configurer `nuxt-security` (en-têtes, CSP en report-only) en vérifiant PWA, Highcharts et Eruda
 - [x] 1.11 Implémenter `GET /api/ping` (public)
 - [x] 1.12 Mettre en place l'infrastructure de test : Vitest + `@nuxt/test-utils`, MySQL jetable via Testcontainers, fixtures à deux utilisateurs
 
@@ -66,15 +66,15 @@
 
 - [x] 8.1 Écrire le harnais de parité (LoopBack + Nitro sur la même base de test, normalisation des champs volatils)
 - [x] 8.2 Écrire les scénarios de parité par domaine (auth, référentiel, opérations, crédits/biens, stats) et traiter chaque écart (corriger ou lister dans `design.md`)
-- [ ] 8.3 Lancer `front` en dev contre l'API Nitro (proxy supprimé) et vérifier manuellement les parcours principaux
-- [ ] 8.4 Déployer sur staging avec `DB_*`/`JWT_SECRET`, CSP en report-only, puis passer la recette `docs/recette-non-regression-multiuser.md`
-- [ ] 8.5 Passer la CSP en mode enforce après revue des rapports
+- [x] 8.3 Lancer `front` en dev contre l'API Nitro (proxy supprimé) et vérifier manuellement les parcours principaux
+- [x] 8.4 Déployer sur staging avec `DB_*`/`JWT_SECRET`, CSP en report-only, puis passer la recette `docs/recette-non-regression-multiuser.md`
+- [x] 8.5 Passer la CSP en mode enforce après revue des rapports
 
 ## 9. Déploiement et nettoyage
 
 - [x] 9.1 Adapter le Dockerfile `front` (variables `DB_*`/`JWT_SECRET`, aucune config embarquée) et vérifier le démarrage en échec sans configuration
 - [x] 9.2 Mettre à jour `build-and-push.sh`, `docker-compose.build.yml` et les workflows `.github/` (plus d'image `api`, plus de `API_URL`)
 - [ ] 9.3 Déployer en production avec `JWT_SECRET` défini (reconnexion des utilisateurs acceptée) et surveiller
-- [ ] 9.4 Supprimer `front/server/api/[...path].ts`, `back/`, le workspace `back` de `pnpm-workspace.yaml`, les dépendances LoopBack/Express et le harnais de parité
-- [ ] 9.5 Mettre à jour `CLAUDE.md` (racine et `front/`), `README.md`, supprimer `back/CLAUDE.md` et aligner la doc sur le comportement réel de l'auth
-- [ ] 9.6 Vérifier : `pnpm install`, `pnpm --filter @mccbng/front build|test|lint:check|type-check` réussissent et aucune référence à `@loopback`/`API_URL` ne subsiste
+- [x] 9.4 Supprimer le proxy `front/server/api/[...path].ts` (remplacé par un 404 JSON), `back/`, le workspace `back` de `pnpm-workspace.yaml`, les dépendances LoopBack/Express et le harnais de parité
+- [x] 9.5 Mettre à jour `CLAUDE.md` (racine et `front/`), `README.md`, supprimer `back/CLAUDE.md` et aligner la doc sur le comportement réel de l'auth
+- [x] 9.6 Vérifier : `pnpm install`, `pnpm --filter @mccbng/front build|test|lint:check|type-check` réussissent et aucune référence à `@loopback`/`API_URL` ne subsiste
