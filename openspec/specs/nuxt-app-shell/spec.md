@@ -49,10 +49,3 @@ Les variables de `variables.scss` (breakpoints, hauteurs, largeurs) SHALL rester
 - **WHEN** `debugToolsEnabled` est absent ou faux
 - **THEN** le paquet `eruda` n'est pas chargé
 
-### Requirement: Proxy de l'API
-Le serveur Nitro SHALL proxifier `/api/**` vers l'URL définie par `API_URL` (défaut `http://localhost:3000` en dev uniquement), en dev comme en production, sans transmettre le header `Cookie`, avec un timeout de 30 s et une réponse JSON 502 si le back est injoignable, de sorte que le front appelle l'API en chemin relatif.
-
-#### Scenario: Appel API relatif
-- **WHEN** le front appelle `GET /api/comptes`
-- **THEN** la requête est transmise à `${API_URL}/api/comptes` avec ses en-têtes `Authorization`
-
