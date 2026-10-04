@@ -2,7 +2,7 @@
 
 **mccbng** (mCloud Compte and Budget Next Generation) est une application web de gestion de finances personnelles : suivi multi-banques et multi-comptes, opérations bancaires, opérations récurrentes, budget par catégorie, statistiques, suivi de crédits et de biens immobiliers.
 
-L'application est un workspace `pnpm` composé d'un seul package, **`front/`** : une SPA Nuxt 4 (Vue 3, TypeScript, Pinia, PWA ; SSR désactivé, mode sombre, gestes tactiles) dont le serveur Nitro héberge aussi l'**API REST** (`front/server/`), sur MySQL, avec authentification JWT. Un seul processus et une seule image Docker servent donc le front et l'API.
+L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA Nuxt 4 (Vue 3, TypeScript, Pinia, PWA ; SSR désactivé, mode sombre, gestes tactiles) dont le serveur Nitro héberge aussi l'**API REST** (`server/`), sur MySQL, avec authentification JWT. Un seul processus et une seule image Docker servent donc le front et l'API.
 
 ---
 
@@ -89,7 +89,7 @@ L'application est un workspace `pnpm` composé d'un seul package, **`front/`** :
 | Frontend     | Nuxt 4 (SPA, `ssr: false`, `compatibilityVersion: 5`, auto-imports désactivés), Vue 3.5, Pinia, TypeScript 5, SCSS, Highcharts 12, FontAwesome, `vue3-touch-events`, `@vite-pwa/nuxt`, Vitest |
 | API          | Serveur Nitro de Nuxt (Node.js ≥ 26, TypeScript 5), Drizzle ORM + `mysql2`, Zod, `jsonwebtoken`, `bcryptjs`, `nuxt-security` |
 | Base données | MySQL / MariaDB (schéma de production : MyISAM et InnoDB, voir `docs/db-migrations.md`) |
-| Build / déploiement | Docker (multi-stage), Node/Nitro, `pnpm` workspace |
+| Build / déploiement | Docker (multi-stage), Node/Nitro, `pnpm` |
 
 ### Vue d'ensemble
 
@@ -103,7 +103,7 @@ L'application est un workspace `pnpm` composé d'un seul package, **`front/`** :
    ┌──────────────────────────────────────────────────┐
    │   Nuxt / Nitro (port 8080)                       │
    │   - SPA + service worker                         │
-   │   - API REST /api/**  (front/server/api)         │
+   │   - API REST /api/**  (server/api)         │
    │   - middleware JWT, validation Zod, erreurs JSON │
    │   - nuxt-security : en-têtes, CSP, rate-limit    │
    └──────────────────────────────┬───────────────────┘
@@ -113,7 +113,7 @@ L'application est un workspace `pnpm` composé d'un seul package, **`front/`** :
                         └──────────────────┘
 ```
 
-### API serveur (`front/server/`)
+### API serveur (`server/`)
 
 ```
 server/
@@ -138,9 +138,9 @@ server/
 - **Authentification** : l'utilisateur courant est toujours retrouvé par `IDuser` (clé primaire), jamais par la colonne `id`, non unique en production.
 - **Erreurs** : format uniforme `{ "error": { "statusCode", "name", "message" } }` (`defineApiHandler`) ; une erreur inattendue renvoie un 500 générique, détaillée seulement dans les logs.
 - **SQL analytique** (`utils/sql.ts`, `utils/stats.ts`) : requêtes brutes paramétrées pour les agrégats et les statistiques.
-- **Migrations** : fichiers SQL versionnés (`server/db/migrations`), appliqués par `front/scripts/db-migrate.mjs` (voir `docs/db-migrations.md`).
+- **Migrations** : fichiers SQL versionnés (`server/db/migrations`), appliqués par `scripts/db-migrate.mjs` (voir `docs/db-migrations.md`).
 
-### Architecture frontend (`front/`)
+### Architecture frontend (`app/`)
 
 ```
 nuxt.config.ts          → ssr:false, compatibilityVersion 5, auto-imports off, PWA, SCSS global
@@ -243,8 +243,8 @@ pnpm install
 
 ```bash
 export DB_HOST=localhost DB_PORT=3306 DB_USER=… DB_PASSWORD=… DB_NAME=…
-pnpm --filter @mccbng/front db:migrate                  # base vide : crée le schéma
-pnpm --filter @mccbng/front db:migrate -- --baseline    # base de production existante : marque la baseline comme jouée
+pnpm db:migrate                  # base vide : crée le schéma
+pnpm db:migrate -- --baseline    # base de production existante : marque la baseline comme jouée
 ```
 
 Voir `docs/db-migrations.md` pour la procédure complète.
@@ -252,18 +252,17 @@ Voir `docs/db-migrations.md` pour la procédure complète.
 ### Lancer l'application (port 8080)
 
 ```bash
-cd front
-# variables DB_* et JWT_SECRET dans l'environnement ou dans front/.env
+# variables DB_* et JWT_SECRET dans l'environnement ou dans .env
 pnpm dev
 ```
 
 ### Tests / linting
 
 ```bash
-pnpm --filter @mccbng/front test        # unitaires + intégration front (Vitest, environnement Nuxt)
-pnpm --filter @mccbng/front test:api    # tests d'intégration de l'API sur un MySQL jetable (Docker requis)
-pnpm --filter @mccbng/front lint
-pnpm --filter @mccbng/front type-check
+pnpm test        # unitaires + intégration front (Vitest, environnement Nuxt)
+pnpm test:api    # tests d'intégration de l'API sur un MySQL jetable (Docker requis)
+pnpm lint
+pnpm type-check
 ```
 
 ---
@@ -287,11 +286,11 @@ En développement, `JWT_SECRET` peut être omis (un secret éphémère est gén�
 Une seule image contient le front **et** l'API :
 
 ```bash
-pnpm --filter @mccbng/front docker:staging:build && pnpm --filter @mccbng/front docker:staging:push
-pnpm --filter @mccbng/front docker:latest:build  && pnpm --filter @mccbng/front docker:latest:push
+pnpm docker:staging:build && pnpm docker:staging:push
+pnpm docker:latest:build  && pnpm docker:latest:push
 ```
 
-- Multi-stage `node:26-slim` (pnpm installé avec npm, car Node 26 n'embarque plus corepack) → `node:26-slim` qui exécute `.output/server/index.mjs` sur le port 8080, avec un healthcheck. Le contexte de build est la **racine du dépôt** (`docker build -f front/Dockerfile .`) car le lockfile pnpm est à la racine.
+- Multi-stage `node:26-slim` (pnpm installé avec npm, car Node 26 n'embarque plus corepack) → `node:26-slim` qui exécute `.output/server/index.mjs` sur le port 8080, avec un healthcheck. Le contexte de build est la **racine du dépôt** (`docker build .`).
 - Au démarrage, le conteneur sort avec un message explicite si `DB_*` ou `JWT_SECRET` manque.
 - Les migrations SQL ne sont pas jouées par l'image : les lancer depuis le poste ou la CI avant de déployer une version qui en apporte (`docs/db-migrations.md`).
 - Registre : `dockregistry.xju.fr/mccbng/front:{staging,latest}`.

@@ -4,7 +4,7 @@
 TBD - created by archiving change migrate-back-to-nuxt-server. Update Purpose after archive.
 ## Requirements
 ### Requirement: API hébergée dans le serveur Nitro
-L'API SHALL être servie par les handlers Nitro de `front/server/api/**` sous le préfixe `/api`, dans le même processus que le front, sur le port 8080. Les URLs, méthodes HTTP et formes de réponse JSON MUST rester identiques à celles de l'API LoopBack (les ~79 routes recensées), de sorte que `front/app/` n'ait pas à changer. Aucun proxy vers un autre serveur MUST subsister.
+L'API SHALL être servie par les handlers Nitro de `server/api/**` sous le préfixe `/api`, dans le même processus que le front, sur le port 8080. Les URLs, méthodes HTTP et formes de réponse JSON MUST rester identiques à celles de l'API LoopBack (les ~79 routes recensées), de sorte que `app/` n'ait pas à changer. Aucun proxy vers un autre serveur MUST subsister.
 
 #### Scenario: Route existante inchangée
 - **WHEN** le front appelle `GET /api/comptes` avec un Bearer valide
@@ -12,7 +12,7 @@ L'API SHALL être servie par les handlers Nitro de `front/server/api/**` sous le
 
 #### Scenario: Aucun proxy résiduel
 - **WHEN** l'application est construite
-- **THEN** `front/server/api/[...path].ts` n'existe plus et aucune variable `API_URL` n'est lue
+- **THEN** `server/api/[...path].ts` n'existe plus et aucune variable `API_URL` n'est lue
 
 ### Requirement: Connexion MySQL par variables d'environnement
 Le serveur SHALL se connecter à MySQL via `mysql2` et Drizzle avec un pool configuré par `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` et `DB_NAME` (runtime config Nitro). Le fichier `mccb-mysql.datasource.config.json` MUST disparaître. Le serveur MUST refuser de démarrer en production si une de ces variables est absente.

@@ -4,7 +4,7 @@
 TBD - created by archiving change migrate-back-to-nuxt-server. Update Purpose after archive.
 ## Requirements
 ### Requirement: Migrations SQL versionnées avec baseline
-Le schéma SHALL être géré par des fichiers SQL versionnés dans `front/server/db/migrations/`, appliqués dans l'ordre par une commande dédiée (`pnpm --filter @mccbng/front db:migrate`) qui enregistre les migrations jouées dans une table de suivi. La base de production actuelle MUST être la **baseline** : la migration `0000_baseline` reprend à l'identique le DDL de production (moteurs MyISAM/InnoDB, jeux de caractères et défauts compris), est marquée comme jouée sans être exécutée sur la production, et MUST permettre de recréer le schéma sur une base vide. Les anciennes migrations (`2026-05-02-create-bien.sql`, `2026-05-07-categorie-type.sql`) sont intégrées à la baseline. Aucun mode `--rebuild`/`DROP` MUST exister.
+Le schéma SHALL être géré par des fichiers SQL versionnés dans `server/db/migrations/`, appliqués dans l'ordre par une commande dédiée (`pnpm db:migrate`) qui enregistre les migrations jouées dans une table de suivi. La base de production actuelle MUST être la **baseline** : la migration `0000_baseline` reprend à l'identique le DDL de production (moteurs MyISAM/InnoDB, jeux de caractères et défauts compris), est marquée comme jouée sans être exécutée sur la production, et MUST permettre de recréer le schéma sur une base vide. Les anciennes migrations (`2026-05-02-create-bien.sql`, `2026-05-07-categorie-type.sql`) sont intégrées à la baseline. Aucun mode `--rebuild`/`DROP` MUST exister.
 
 #### Scenario: Base vide
 - **WHEN** la commande de migration est lancée sur une base vide
@@ -22,7 +22,7 @@ Le schéma SHALL être géré par des fichiers SQL versionnés dans `front/serve
 Chaque domaine (auth, référentiel, opérations, crédits/biens, stats) SHALL être couvert par des tests Vitest + `@nuxt/test-utils` exécutant les handlers contre une base MySQL réelle jetable (Testcontainers ou Docker Compose) initialisée par les migrations. Les tests MUST couvrir le scoping multi-utilisateur (une ressource d'autrui = 404), les cascades du crédit, l'auto-génération des récurrentes, les filtres `Categorie.Type` et le rate-limit du login.
 
 #### Scenario: Suite complète
-- **WHEN** `pnpm --filter @mccbng/front test` est exécuté avec Docker disponible
+- **WHEN** `pnpm test` est exécuté avec Docker disponible
 - **THEN** la base jetable démarre, les migrations passent et tous les tests d'intégration réussissent
 
 #### Scenario: Isolation entre tests
@@ -52,5 +52,5 @@ Une fois les critères satisfaits, le package `back/`, ses scripts (`build`, `mi
 
 #### Scenario: Repo propre
 - **WHEN** la bascule est terminée
-- **THEN** `pnpm install` et `pnpm --filter @mccbng/front build` réussissent sans `back/` et aucun fichier ne référence `@loopback/*` ni `API_URL`
+- **THEN** `pnpm install` et `pnpm build` réussissent sans `back/` et aucun fichier ne référence `@loopback/*` ni `API_URL`
 

@@ -40,7 +40,7 @@ Chaque page SHALL être chargée à la demande (code-splitting automatique de Nu
 - **THEN** le code de la page est chargé à ce moment-là
 
 ### Requirement: Table de routes de référence testée
-Une table de routes de référence, capturée depuis `router.ts` avant sa suppression, SHALL être versionnée dans `front/tests/fixtures/routes.ts` et un test d'intégration Vitest (`@nuxt/test-utils`, environnement `nuxt`) MUST vérifier que le routeur Nuxt généré la respecte exactement : chemin, nom de route, route parente, `componentName`, `disabledTotalHeader` (valeur effective, meta du parent incluse).
+Une table de routes de référence, capturée depuis `router.ts` avant sa suppression, SHALL être versionnée dans `tests/fixtures/routes.ts` et un test d'intégration Vitest (`@nuxt/test-utils`, environnement `nuxt`) MUST vérifier que le routeur Nuxt généré la respecte exactement : chemin, nom de route, route parente, `componentName`, `disabledTotalHeader` (valeur effective, meta du parent incluse).
 
 #### Scenario: Toutes les URLs de la table résolvent
 - **WHEN** le test résout chaque URL de la table (paramètres dynamiques instanciés, ex. `/editCredit/12`)

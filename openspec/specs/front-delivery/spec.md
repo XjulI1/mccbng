@@ -4,10 +4,10 @@
 TBD - created by archiving change migrate-front-to-nuxt. Update Purpose after archive.
 ## Requirements
 ### Requirement: Scripts de développement et de build
-`front/package.json` SHALL fournir `dev` (port 8080), `build` (`nuxt build`), `build:staging` (mode `test`), `preview`, `test`, `type-check`, `lint` et `lint:check`, ainsi que les scripts `docker:*` existants.
+`package.json` SHALL fournir `dev` (port 8080), `build` (`nuxt build`), `build:staging` (mode `test`), `preview`, `test`, `type-check`, `lint` et `lint:check`, ainsi que les scripts `docker:*` existants.
 
 #### Scenario: Build de production
-- **WHEN** `pnpm build` est exécuté dans `front/`
+- **WHEN** `pnpm build` est exécuté à la racine du dépôt
 - **THEN** la sortie Nitro est produite dans `.output/` sans erreur
 
 #### Scenario: Vérification de types
@@ -66,9 +66,9 @@ Le lint SHALL utiliser `@nuxt/eslint` en flat config sur `app/`, `.vue` et `.ts`
 - **THEN** il s'exécute sans modifier les fichiers et signale les violations
 
 ### Requirement: Documentation à jour
-`CLAUDE.md` (racine), `front/CLAUDE.md` et `README.md` SHALL décrire la nouvelle architecture Nuxt (structure `app/`, Pinia, commandes, Docker).
+`CLAUDE.md` (racine), `docs/architecture.md` et `README.md` SHALL décrire la nouvelle architecture Nuxt (structure `app/`, Pinia, commandes, Docker).
 
 #### Scenario: Lecture de la documentation
-- **WHEN** un développeur consulte `front/CLAUDE.md`
+- **WHEN** un développeur consulte `docs/architecture.md`
 - **THEN** il n'y trouve plus de référence à Vuex, `router.ts`, `vite.config.ts`, nginx ou Jest
 

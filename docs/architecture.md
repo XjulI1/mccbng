@@ -1,10 +1,10 @@
-# CLAUDE.md — Frontend (Nuxt 4 SPA)
+# Architecture — Nuxt 4 SPA + Nitro API
 
 ## Overview
 
 Single Page Application for the mccbng personal finance app. Built with **Nuxt 4 (`ssr: false`, `future.compatibilityVersion: 5`) + Vue 3.5 + TypeScript + Pinia**, with **auto-imports disabled**, light/dark theme support, touch gestures, and PWA packaging. Covers banks, accounts, operations, recurring operations, categories, statistics, **loans (Credit)** and **real-estate assets (Bien)**.
 
-Nitro (Nuxt's server) serves the SPA **and hosts the REST API** (`front/server/`, MySQL + JWT): one process and one Docker image serve both. The API is described in the *Server (Nitro API)* section below.
+Nitro (Nuxt's server) serves the SPA **and hosts the REST API** (`server/`, MySQL + JWT): one process and one Docker image serve both. The API is described in the *Server (Nitro API)* section below.
 
 ## Commands
 
@@ -256,7 +256,7 @@ server/
 └── utils/                    # config, auth, scope, crud, resources, crud-routes, filter, validate, errors, sql, stats, users, credits
 ```
 
-- **Configuration** (`utils/config.ts`): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET` (required in production), `JWT_TTL_SECONDS` (default 3600), read from `process.env` at runtime. In dev they can live in `front/.env`.
+- **Configuration** (`utils/config.ts`): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET` (required in production), `JWT_TTL_SECONDS` (default 3600), read from `process.env` at runtime. In dev they can live in `.env`.
 - **Handlers**: wrap them in `defineApiHandler` so every error follows `{ error: { statusCode, name, message } }`; throw `notFound`, `badRequest`, `conflict`, … from `utils/errors.ts`. Unexpected errors become a generic 500 and are logged as `[api] <method> <path>`.
 - **CRUD**: `utils/resources.ts` describes each resource once (table, `readScope`/`writeScope`, Zod `create`/`patch` schemas, application `defaults`, `forced` fields such as `IDuser`, `validate` ownership checks, `onCreate`/`onDelete` cascades). `utils/crud.ts` implements the 8 standard routes. Because a static directory (`comptes/`, `operations/`, …) shadows the dynamic `[resource]` route, those resources have explicit one-line files calling `crudRoute(path, action)`; add the same files when a resource gets its own sub-routes.
 - **Filter**: lists accept a LoopBack-style `filter` JSON (`where` with `and`/`or`/`inq`/`like`/`gt`…, `order`, `limit`, `skip`, `include`), parsed by `utils/filter.ts` with a column/operator whitelist. The user scope is always combined with `and` after the client's `where`.
@@ -290,17 +290,17 @@ server/
 
 ## Docker
 
-Build context is the **repo root** (the pnpm lockfile lives there): `docker build -f front/Dockerfile .` (the `docker:*:build` scripts do this).
+Build context is the **repo root** (`Dockerfile` is at the root): `docker build .` (the `docker:*:build` scripts do this).
 
-1. **Build stage** (`node:26-slim`): `npm install -g pnpm@10.33.0` (Node 26 n'embarque plus corepack) + `pnpm install --frozen-lockfile --ignore-scripts --filter @mccbng/front...`, then `pnpm --filter @mccbng/front build`.
+1. **Build stage** (`node:26-slim`): `npm install -g pnpm@10.33.0` (Node 26 n'embarque plus corepack) + `pnpm install --frozen-lockfile --ignore-scripts`, then `pnpm build`.
 2. **Runtime stage** (`node:26-slim`): copies `.output/` only, runs `node .output/server/index.mjs` as user `node` on port **8080** (`NITRO_PORT`), with a healthcheck. `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` and `JWT_SECRET` are **required** at run time (`docker-entrypoint.sh` exits at startup with an explicit message if one is missing); `JWT_TTL_SECONDS` is optional.
 
-Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps port 8080 (fill in the `DB_*` and `JWT_SECRET` placeholders). Migrations are not run by the image: use `pnpm db:migrate` (`../docs/db-migrations.md`).
+Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps port 8080 (fill in the `DB_*` and `JWT_SECRET` placeholders). Migrations are not run by the image: use `pnpm db:migrate` (`db-migrations.md`).
 
 ## File Structure
 
 ```
-front/
+./
 ├── nuxt.config.ts
 ├── app/
 │   ├── app.vue                       # Root layout
@@ -319,7 +319,7 @@ front/
 ├── vitest.config.ts / vitest.api.config.ts
 ├── eslint.config.mjs
 ├── tsconfig.json                     # references .nuxt/tsconfig.*.json
-├── Dockerfile / Dockerfile.dockerignore / docker-entrypoint.sh
+├── Dockerfile / .dockerignore / docker-entrypoint.sh
 └── package.json
 ```
 

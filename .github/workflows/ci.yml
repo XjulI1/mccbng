@@ -35,16 +35,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm --filter @mccbng/front lint:check
+        run: pnpm lint:check
 
       - name: Type check
-        run: pnpm --filter @mccbng/front type-check
+        run: pnpm type-check
 
       - name: Build
-        run: pnpm --filter @mccbng/front build
+        run: pnpm build
 
       - name: Test
-        run: pnpm --filter @mccbng/front test
+        run: pnpm test
 
   api:
     name: API Nitro (tests d'intégration sur MySQL jetable)
@@ -70,4 +70,4 @@ jobs:
 
       # Testcontainers démarre MySQL (Docker est disponible sur ubuntu-latest)
       - name: Tests d'intégration de l'API
-        run: pnpm --filter @mccbng/front test:api
+        run: pnpm test:api

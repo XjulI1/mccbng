@@ -1,9 +1,15 @@
+node_modules
+npm-debug.log
+dist
 **/node_modules
 **/.nuxt
 **/.output
 **/dist
 .git
+.github
 .pnpm-store
+.env*
+tmp
 docs
 mockups
 openspec

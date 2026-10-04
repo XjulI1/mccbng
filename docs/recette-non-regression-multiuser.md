@@ -17,7 +17,7 @@ paramétrées).
   - 1+ catégorie personnelle
 - Conserver les IDs de U2 pour tenter les accès croisés avec le token de U1
 - Catégorie système (`IDuser = 0`) présente en base
-- Backend démarré (`pnpm start` dans `back/`) et frontend (`pnpm dev` dans `front/`)
+- Backend démarré (`pnpm start` dans `back/`) et frontend (`pnpm dev`)
 - Accès direct à la base MySQL pour vérifications
 
 ## 1. Authentification / signup

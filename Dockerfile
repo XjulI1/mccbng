@@ -1,5 +1,5 @@
-# Contexte de build : racine du dépôt (le lockfile pnpm est à la racine du workspace)
-#   docker build -f front/Dockerfile -t <image> .
+# Contexte de build : racine du dépôt
+#   docker build -t <image> .
 
 # ---- Build ----
 FROM node:26-slim AS build
@@ -9,25 +9,24 @@ RUN npm install -g pnpm@10.33.0
 
 WORKDIR /app
 
-# Manifestes du workspace (couche mise en cache tant que les dépendances ne changent pas)
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-COPY front/package.json front/package.json
+# Manifestes (couche mise en cache tant que les dépendances ne changent pas)
+COPY package.json pnpm-lock.yaml .npmrc ./
 
 # --ignore-scripts : le postinstall (nuxt prepare) a besoin des sources, `nuxt build` le refait
-RUN pnpm install --frozen-lockfile --ignore-scripts --filter @mccbng/front...
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
-# Sources du front
-COPY front front
+# Sources
+COPY . .
 
-RUN pnpm --filter @mccbng/front build
+RUN pnpm build
 
 # ---- Prod ----
 FROM node:26-slim
 
 WORKDIR /app
 
-COPY --from=build /app/front/.output ./.output
-COPY --from=build /app/front/docker-entrypoint.sh ./docker-entrypoint.sh
+COPY --from=build /app/.output ./.output
+COPY --from=build /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
 ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0
@@ -35,7 +34,7 @@ ENV NITRO_PORT=8080
 # Configuration lue à l'exécution (aucun secret dans l'image) :
 #   DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME  (MySQL, obligatoires)
 #   JWT_SECRET (obligatoire), JWT_TTL_SECONDS (défaut 3600)
-# Les migrations SQL (front/scripts/db-migrate.mjs) se lancent depuis le poste / la CI, pas depuis cette image.
+# Les migrations SQL (scripts/db-migrate.mjs) se lancent depuis le poste / la CI, pas depuis cette image.
 
 USER node
 

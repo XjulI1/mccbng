@@ -29,11 +29,11 @@ Les auto-imports de composables/utilitaires et de composants MUST être désacti
 - **THEN** le composant est résolu via le plugin global, sans import local
 
 ### Requirement: Structure de dossiers app/
-Le code applicatif SHALL résider dans `front/app/` avec les dossiers Nuxt standards (`pages`, `components`, `composables`, `stores`, `plugins`, `middleware`, `assets`), les `services/` étant conservés. L'alias `@` MUST pointer vers `app/`.
+Le code applicatif SHALL résider dans `app/` avec les dossiers Nuxt standards (`pages`, `components`, `composables`, `stores`, `plugins`, `middleware`, `assets`), les `services/` étant conservés. L'alias `@` MUST pointer vers `app/`.
 
 #### Scenario: Résolution de l'alias
 - **WHEN** un fichier importe `@/services/compte`
-- **THEN** l'import est résolu vers `front/app/services/compte.ts`
+- **THEN** l'import est résolu vers `app/services/compte.ts`
 
 ### Requirement: Variables SCSS injectées globalement
 Les variables de `variables.scss` (breakpoints, hauteurs, largeurs) SHALL rester disponibles dans tout bloc `<style lang="scss">` sans import explicite.

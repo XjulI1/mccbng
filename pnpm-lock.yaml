@@ -9,9 +9,7 @@ overrides:
 
 importers:
 
-  .: {}
-
-  front:
+  .:
     dependencies:
       '@fortawesome/fontawesome-svg-core':
         specifier: ^6.7.0

@@ -34,8 +34,8 @@ echo "=> Commit built: $(git -C "${WORK_DIR}" log -1 --format='%h %ad %s' --date
 # Build front image
 echo ""
 echo "=> Building front image: ${REGISTRY}/front:${IMAGE_TAG}"
-# Context = repo root (pnpm workspace lockfile lives at the root)
-docker build -f "${WORK_DIR}/front/Dockerfile" -t "${REGISTRY}/front:${IMAGE_TAG}" "${WORK_DIR}"
+# Context = repo root (Dockerfile at the root)
+docker build -f "${WORK_DIR}/Dockerfile" -t "${REGISTRY}/front:${IMAGE_TAG}" "${WORK_DIR}"
 
 # Push images to registry
 echo ""

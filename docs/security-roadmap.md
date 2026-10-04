@@ -3,7 +3,7 @@
 Ce document liste les améliorations de sécurité **non encore implémentées** sur
 le flux d'authentification, à reprendre dans une prochaine itération.
 
-État courant (API hébergée dans le serveur Nitro de Nuxt, `front/server/`) :
+État courant (API hébergée dans le serveur Nitro de Nuxt, `server/`) :
 
 - `secret_key` est **hashée en bcrypt** en base (migration paresseuse des valeurs
   en clair à la première connexion réussie).
@@ -53,7 +53,7 @@ utilisateur** (clé = `email` ou `IDuser`) qui :
 Implémentation possible :
 
 - Option A — colonnes `failedLoginCount` + `lockedUntil` sur `User`, mises à
-  jour dans `verifyCredentials` (`front/server/utils/users.ts`).
+  jour dans `verifyCredentials` (`server/utils/users.ts`).
 - Option B — table dédiée `LoginAttempt` (`userId`, `ip`, `success`, `at`) qui
   permet aussi de monitorer / alerter sur les patterns suspects.
 
