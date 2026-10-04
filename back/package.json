@@ -9,7 +9,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=20"
+    "node": ">=26"
   },
   "scripts": {
     "build": "lb-tsc",
@@ -80,7 +80,7 @@
     "@types/express": "^4.17.9",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/lodash": "^4.17.7",
-    "@types/node": "^25.0.0",
+    "@types/node": "^26.0.0",
     "eslint": "^8.57.0",
     "eslint-config-loopback": "^14.0.0",
     "nsp": "^3.2.1",

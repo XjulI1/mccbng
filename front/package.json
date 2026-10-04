@@ -51,7 +51,7 @@
     "@testcontainers/mysql": "^12.2.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^25.0.0",
+    "@types/node": "^26.0.0",
     "@vue/test-utils": "^2.4.6",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.5",
@@ -71,5 +71,8 @@
       "eslint --fix"
     ]
   },
-  "readme": "ERROR: No README data found!"
+  "readme": "ERROR: No README data found!",
+  "engines": {
+    "node": ">=26"
+  }
 }

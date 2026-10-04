@@ -2,11 +2,10 @@
 #   docker build -f front/Dockerfile -t <image> .
 
 # ---- Build ----
-FROM node:22-slim AS build
+FROM node:26-slim AS build
 
-ENV PNPM_HOME=/pnpm
-ENV PATH=$PNPM_HOME:$PATH
-RUN corepack enable
+# Node 26 n'embarque plus corepack : pnpm est installé à la version du champ packageManager du package.json racine
+RUN npm install -g pnpm@10.33.0
 
 WORKDIR /app
 
@@ -24,7 +23,7 @@ COPY front front
 RUN pnpm --filter @mccbng/front build
 
 # ---- Prod ----
-FROM node:22-slim
+FROM node:26-slim
 
 WORKDIR /app
 

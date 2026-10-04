@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Image Docker Node/Nitro
-L'image front SHALL être construite en multi-stage depuis `node:22-slim` avec pnpm (et non yarn), ne contenir que `.output/` au runtime, et démarrer le serveur Nitro, qui sert à la fois le front et l'API (`/api/**`). `nginx.conf` MUST être supprimé. Les tags `dockregistry.xju.fr/mccbng/front:{staging,latest}` sont conservés ; l'image `mccbng/api` MUST NOT être produite. La configuration DB et JWT MUST NOT être embarquée dans l'image.
+L'image front SHALL être construite en multi-stage depuis `node:26-slim` avec pnpm (et non yarn), ne contenir que `.output/` au runtime, et démarrer le serveur Nitro, qui sert à la fois le front et l'API (`/api/**`). `nginx.conf` MUST être supprimé. Les tags `dockregistry.xju.fr/mccbng/front:{staging,latest}` sont conservés ; l'image `mccbng/api` MUST NOT être produite. La configuration DB et JWT MUST NOT être embarquée dans l'image.
 
 #### Scenario: Démarrage sans configuration DB
 - **WHEN** le conteneur est lancé sans `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` ou `DB_NAME`

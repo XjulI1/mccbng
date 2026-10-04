@@ -90,7 +90,7 @@ L'application est organisée en monorepo `pnpm` avec deux packages :
 | Couche       | Technologies |
 |--------------|--------------|
 | Frontend     | Nuxt 4 (SPA, `ssr: false`, `compatibilityVersion: 5`, auto-imports désactivés), Vue 3.5, Pinia, TypeScript 5, SCSS, Highcharts 12, FontAwesome, `vue3-touch-events`, `@vite-pwa/nuxt`, Vitest |
-| Backend      | LoopBack 4 (Node.js ≥ 20, TypeScript 5), `@loopback/authentication-jwt`, Express, MySQL via `loopback-connector-mysql`, `bcryptjs`, `jsonwebtoken` |
+| Backend      | LoopBack 4 (Node.js ≥ 26, TypeScript 5), `@loopback/authentication-jwt`, Express, MySQL via `loopback-connector-mysql`, `bcryptjs`, `jsonwebtoken` |
 | Base données | MySQL (charset `utf8mb4_unicode_ci`) |
 | Build / déploiement | Docker (multi-stage), Node/Nitro (front), `pnpm` workspace |
 
@@ -233,7 +233,7 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 ## Démarrage rapide
 
 ### Pré-requis
-- Node.js ≥ 20 (cf. `.nvmrc`)
+- Node.js ≥ 26 (cf. `.nvmrc`)
 - pnpm ≥ 10 (cf. `packageManager` dans `package.json`)
 - MySQL (en local ou via Docker)
 
@@ -313,8 +313,8 @@ pnpm --filter @mccbng/front docker:staging:build && pnpm --filter @mccbng/front 
 pnpm --filter @mccbng/front docker:latest:build  && pnpm --filter @mccbng/front docker:latest:push
 ```
 
-- **Back** : image `node:22-slim`, build TypeScript, suppression de `dist/datasources/*config.json` et de `src/` pour réduire la surface, lance `node .` (port 3000).
-- **Front** : multi-stage `node:22-slim` (pnpm) → `node:22-slim` qui exécute `.output/server/index.mjs` sur le port 8080 ; `API_URL` est fourni à l'exécution. Le contexte de build est la **racine du dépôt** (`docker build -f front/Dockerfile .`) car le lockfile pnpm est à la racine.
+- **Back** : image `node:26-slim`, build TypeScript, suppression de `dist/datasources/*config.json` et de `src/` pour réduire la surface, lance `node .` (port 3000).
+- **Front** : multi-stage `node:26-slim` (pnpm) → `node:26-slim` qui exécute `.output/server/index.mjs` sur le port 8080 ; `API_URL` est fourni à l'exécution. Le contexte de build est la **racine du dépôt** (`docker build -f front/Dockerfile .`) car le lockfile pnpm est à la racine.
 - Registre : `dockregistry.xju.fr/mccbng/{api,front}:{staging,latest}`.
 
 Un `docker-compose.build.yml` et un script `build-and-push.sh` sont disponibles à la racine pour orchestrer les builds.

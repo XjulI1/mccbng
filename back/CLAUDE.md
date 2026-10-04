@@ -178,7 +178,7 @@ Most repositories are vanilla `DefaultCrudRepository`. Custom logic worth knowin
 
 ## Docker
 
-- **Base**: `node:22-slim`.
+- **Base**: `node:26-slim`.
 - **Build**: copies source, installs deps with pnpm, runs `lb-tsc`.
 - **Hardening**: removes `dist/datasources/*config.json` and `src/*` from the final image.
 - **Runtime**: `HOST=0.0.0.0 PORT=3000`, command `node .`.

@@ -266,8 +266,8 @@ Configured under `pwa` in `nuxt.config.ts`: manifest `mCloud Compte and Budget` 
 
 Build context is the **repo root** (the pnpm lockfile lives there): `docker build -f front/Dockerfile .` (the `docker:*:build` scripts do this).
 
-1. **Build stage** (`node:22-slim`): corepack + `pnpm install --frozen-lockfile --ignore-scripts --filter @mccbng/front...`, then `pnpm --filter @mccbng/front build`.
-2. **Runtime stage** (`node:22-slim`): copies `.output/` only, runs `node .output/server/index.mjs` as user `node` on port **8080** (`NITRO_PORT`), with a healthcheck. `API_URL` is **required** at run time (the container exits at startup if it is unset).
+1. **Build stage** (`node:26-slim`): `npm install -g pnpm@10.33.0` (Node 26 n'embarque plus corepack) + `pnpm install --frozen-lockfile --ignore-scripts --filter @mccbng/front...`, then `pnpm --filter @mccbng/front build`.
+2. **Runtime stage** (`node:26-slim`): copies `.output/` only, runs `node .output/server/index.mjs` as user `node` on port **8080** (`NITRO_PORT`), with a healthcheck. `API_URL` is **required** at run time (the container exits at startup if it is unset).
 
 Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps port 8080 and sets `API_URL`.
 

@@ -1,5 +1,5 @@
 # Check out https://hub.docker.com/_/node to select a new base image
-FROM node:22-slim
+FROM node:26-slim
 
 # Set to a non-root built-in user `node`
 USER node
@@ -13,6 +13,11 @@ WORKDIR /home/node/app
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
 COPY --chown=node package*.json ./
+
+# Node 26 n'embarque plus yarn (ni corepack) : installation globale en root, puis retour à l'utilisateur node
+USER root
+RUN npm install -g yarn@1
+USER node
 
 RUN yarn
 

@@ -107,7 +107,7 @@ User scoping uses two patterns:
 
 ## Development Setup
 
-- **Node.js**: ≥ 20 (see `.nvmrc`)
+- **Node.js**: ≥ 26 (see `.nvmrc`)
 - **Package Manager**: `pnpm@10.33.0` (see `packageManager` in root `package.json`); workspace config in `pnpm-workspace.yaml`.
 - **Backend**: port 3000 (configurable via `HOST` / `PORT` env vars). API mounted at `/api`. Swagger UI at `/explorer`.
 - **Frontend**: Nuxt/Nitro on port 8080 (dev and Docker image) with `/api` proxy to `API_URL` (default `http://localhost:3000`).
@@ -121,8 +121,8 @@ User scoping uses two patterns:
 
 Both packages have Dockerfiles for containerized deployment:
 
-- **Backend**: `node:22-slim` base, builds TypeScript, removes `dist/datasources/*config.json` and `src/` from the image for security, runs on port 3000.
-- **Frontend**: Multi-stage `node:22-slim` (pnpm) → `node:22-slim` running the Nitro output (`.output/server/index.mjs`) on port 8080. The build context is the **repo root** (`docker build -f front/Dockerfile .`) because the pnpm lockfile lives there.
+- **Backend**: `node:26-slim` base, builds TypeScript, removes `dist/datasources/*config.json` and `src/` from the image for security, runs on port 3000.
+- **Frontend**: Multi-stage `node:26-slim` (pnpm) → `node:26-slim` running the Nitro output (`.output/server/index.mjs`) on port 8080. The build context is the **repo root** (`docker build -f front/Dockerfile .`) because the pnpm lockfile lives there.
 
 Registry: `dockregistry.xju.fr/mccbng/{api,front}` with `staging` and `latest` tags.
 
