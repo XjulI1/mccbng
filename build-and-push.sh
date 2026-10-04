@@ -29,6 +29,7 @@ WORK_DIR=$(mktemp -d)
 echo ""
 echo "=> Cloning repository..."
 git clone --branch "${GIT_BRANCH}" --depth 1 "${GIT_REPO}" "${WORK_DIR}"
+echo "=> Commit built: $(git -C "${WORK_DIR}" log -1 --format='%h %ad %s' --date=short)"
 
 # Build front image
 echo ""

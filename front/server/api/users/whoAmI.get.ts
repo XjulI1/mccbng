@@ -1,8 +1,8 @@
-import { requireAuth } from '../../utils/auth'
 import { defineApiHandler } from '../../utils/errors'
-import { findUserById } from '../../utils/users'
+import { getCurrentUserId } from '../../utils/scope'
+import { findUserByIDuser } from '../../utils/users'
 
 export default defineApiHandler(async (event) => {
-  const { favoris, warningTotal, warningCompte, IDuser, email, username } = await findUserById(requireAuth(event).id)
+  const { favoris, warningTotal, warningCompte, IDuser, email, username } = await findUserByIDuser(getCurrentUserId(event))
   return { favoris, warningTotal, warningCompte, IDuser, email, username }
 })

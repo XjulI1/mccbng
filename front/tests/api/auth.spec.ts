@@ -112,6 +112,27 @@ describe('profil utilisateur', () => {
   })
 })
 
+describe('utilisateurs dont la colonne id est dupliquée (données historiques)', () => {
+  it('whoAmI et PATCH /users/me ciblent chacun leur propre ligne (clé primaire IDuser)', async () => {
+    const a = await createUser()
+    const b = await createUser()
+    // En production la colonne `id` n'est pas unique : on force le même id pour les deux utilisateurs
+    await sql('UPDATE `User` SET id = ? WHERE IDuser IN (?, ?)', ['1', a.IDuser, b.IDuser])
+    const tokenA = signToken({ id: '1', IDuser: a.IDuser, email: a.email })
+    const tokenB = signToken({ id: '1', IDuser: b.IDuser, email: b.email })
+
+    expect((await get('/api/users/whoAmI', tokenA)).body).toMatchObject({ IDuser: a.IDuser, email: a.email })
+    expect((await get('/api/users/whoAmI', tokenB)).body).toMatchObject({ IDuser: b.IDuser, email: b.email })
+
+    expect((await patch('/api/users/me', tokenB, { username: 'seulement-b' })).status).toBe(204)
+    expect((await get('/api/users/whoAmI', tokenB)).body.username).toBe('seulement-b')
+    expect((await get('/api/users/whoAmI', tokenA)).body.username).not.toBe('seulement-b')
+
+    // doublon d'email : 409 (et non une erreur SQL 500)
+    expect((await patch('/api/users/me', tokenB, { email: a.email })).status).toBe(409)
+  })
+})
+
 describe('signup', () => {
   it('anonyme refusé', async () => {
     expect((await post('/api/signup', undefined, { email: 'x@example.test', password: 'p', secret_key: '123456', IDuser: 9202 })).status).toBe(401)

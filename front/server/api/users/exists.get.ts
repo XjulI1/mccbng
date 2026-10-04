@@ -1,4 +1,4 @@
-import { requireAuth } from '../../utils/auth'
 import { defineApiHandler } from '../../utils/errors'
+import { getCurrentUserId } from '../../utils/scope'
 
-export default defineApiHandler(event => Boolean(requireAuth(event).id))
+export default defineApiHandler(event => typeof getCurrentUserId(event) === 'number')

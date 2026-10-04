@@ -13,8 +13,10 @@ const INVALID_CREDENTIALS = 'Invalid email or code.'
 export const findUserByEmail = async (email: string): Promise<UserRow | undefined> =>
   (await getDb().select().from(users).where(eq(users.email, email)).limit(1))[0]
 
-export const findUserById = async (id: string): Promise<UserRow> => {
-  const [user] = await getDb().select().from(users).where(eq(users.id, id)).limit(1)
+// Les utilisateurs sont retrouvés par IDuser (clé primaire) : la colonne `id` n'est pas unique en production
+// (identifiants historiques courts, lignes dupliquées à la main) et ferait lire le profil d'un autre utilisateur.
+export const findUserByIDuser = async (IDuser: number): Promise<UserRow> => {
+  const [user] = await getDb().select().from(users).where(eq(users.IDuser, IDuser)).limit(1)
   if (!user) throw unauthorized('invalid User')
   return user
 }
@@ -32,7 +34,7 @@ export const verifyCredentials = async (credentials: { email?: string; code?: st
   // Migration paresseuse : on hashe la clé en clair à la première connexion réussie (échec toléré)
   if (!isBcrypt) {
     try {
-      await getDb().update(users).set({ secret_key: await bcrypt.hash(credentials.code, 12) }).where(eq(users.id, found.id))
+      await getDb().update(users).set({ secret_key: await bcrypt.hash(credentials.code, 12) }).where(eq(users.IDuser, found.IDuser as number))
     } catch {
       // la connexion a réussi, nouvelle tentative au prochain login
     }

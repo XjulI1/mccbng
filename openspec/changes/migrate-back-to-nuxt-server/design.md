@@ -95,6 +95,7 @@ Une image `front` unique (Dockerfile existant, env `DB_*`, `JWT_SECRET`). `build
 | C12 | Validation des corps | schémas LoopBack stricts (dates `date-time` complètes, `Type` obligatoire sur catégorie, `IDuser` sur PUT compte/crédit, `Usage` sur bien) | Zod plus permissif (sur-ensemble : tout ce que LoopBack accepte l'est aussi) ; champs inconnus ignorés |
 | C13 | Messages d'erreur 404 | `Entity not found: Banque with id N`, `Compte N not found` (opération d'autrui) | `Banque N not found`, `Operation N not found` (statuts identiques) |
 | C14 | Réponse de création | entité insérée (colonnes NULL absentes) | idem (données + défauts + clé générée) |
+| C15 | Recherche de l'utilisateur courant (`whoAmI`, `PATCH /users/me`, upgrade du hash) | par la colonne `id`, non unique en production (id historique de 1 caractère, lignes dupliquées) : un utilisateur peut lire le profil d'un autre | par `IDuser` (clé primaire, déjà dans le JWT) |
 | K1 | `Banque` sans scope utilisateur | tout utilisateur authentifié lit/écrit | **inchangé** (écart connu, hors périmètre) |
 | K2 | `POST /signup` | accessible à tout utilisateur authentifié | **inchangé** (écart connu, hors périmètre) |
 | K3 | Auto-génération | 1 occurrence max par appel | **inchangé** (la doc est corrigée, pas le code) |
@@ -126,6 +127,7 @@ Une image `front` unique (Dockerfile existant, env `DB_*`, `JWT_SECRET`). `build
 - `User` : clé primaire `IDuser` (INT, non auto-incrémenté, donc obligatoire à la création) ; `id` varchar(128), `email` varchar(255) unique.
 - Moteurs : MyISAM (Banque, Categorie, Compte, Operation, OperationRecurrente, User) et InnoDB (Bien, Credit, Stats, UserCredentials) ; jeux de caractères utf8mb3 sauf `Bien` (utf8mb4).
 - Défauts SQL différents des modèles LoopBack (`Operation.IDcat`, `Credit.Statut/IDcat`, `Compte.bloque/visible/…` sans défaut) : les défauts sont appliqués par l'API.
+- `User.id` n'est pas une clé : la ligne existante porte un identifiant court (1 caractère), et rien n'empêche des doublons. L'API n'utilise donc que `IDuser` pour retrouver un utilisateur (C15).
 - Aucun index secondaire sur `Operation.IDcompte` (hors périmètre).
 - Table `Stats` : héritée, sans usage par l'API.
 - La baseline `0000_baseline.sql` reprend ce DDL réel (sans données).
