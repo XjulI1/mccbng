@@ -7,7 +7,7 @@
   "repository": "git@github.com:XjulI1/mccbng.git",
   "author": "Xavier JULIEN <xavijulien@gmail.com>",
   "license": "MIT",
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@12.9.1",
   "engines": {
     "node": ">=26"
   },
@@ -72,28 +72,6 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx,vue}": [
       "eslint --fix"
-    ]
-  },
-  "pnpm": {
-    "overrides": {
-      "cookie": ">=0.7.0",
-      "brace-expansion@<1.1.21": "1.1.21",
-      "brace-expansion@>=2.0.0 <2.1.7": "2.1.7",
-      "brace-expansion@>=3.0.0 <5.0.12": "5.0.12",
-      "js-yaml@>=4.0.0 <4.3.2": "4.3.2",
-      "fast-uri@>=3.0.0 <3.1.8": "3.1.8",
-      "postcss@<8.5.23": "8.5.23",
-      "nanoid@<3.3.18": "3.3.18",
-      "esbuild@<0.25.0": "0.25.0",
-      "js-cookie@<=3.0.5": "3.0.7",
-      "@babel/core@<7.29.6": "7.29.6",
-      "browserslist@<4.28.7": "4.28.7",
-      "baseline-browser-mapping@<2.11.0": "2.11.0",
-      "immutable@>=5.0.0-beta.1 <5.1.8": "5.1.8"
-    },
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "core-js"
     ]
   }
 }

@@ -88,7 +88,7 @@ User scoping uses two patterns:
 ## Development Setup
 
 - **Node.js**: ≥ 26 (see `.nvmrc`). Node 26 no longer ships `corepack` or `yarn`.
-- **Package Manager**: `pnpm@10.33.0` (see `packageManager` in root `package.json`).
+- **Package Manager**: `pnpm@12.9.1` (see `packageManager` in root `package.json`).
 - **App**: Nuxt/Nitro on port 8080 (dev and Docker image). API mounted at `/api`.
 - **Database**: MySQL / MariaDB. The production schema mixes MyISAM (no transactions) and InnoDB tables, see `docs/db-migrations.md`.
 
@@ -106,7 +106,7 @@ In development they can live in `.env`. Nothing is baked into the Docker image, 
 
 A single image runs the whole application (`Dockerfile`):
 
-- Multi-stage `node:26-slim` (pnpm installed with `npm install -g pnpm@10.33.0`) → `node:26-slim` running the Nitro output (`.output/server/index.mjs`) on port 8080. The build context is the **repo root** (`docker build .`) (`Dockerfile` is at the root).
+- Multi-stage `node:26-slim` (pnpm installed with `npm install -g pnpm@12.9.1`) → `node:26-slim` running the Nitro output (`.output/server/index.mjs`) on port 8080. The build context is the **repo root** (`docker build .`) (`Dockerfile` is at the root).
 - `docker-entrypoint.sh` exits with an explicit message when `DB_*` or `JWT_SECRET` is missing.
 - SQL migrations are **not** run by the image: run `scripts/db-migrate.mjs` from a workstation or CI before deploying a version that adds one.
 
@@ -140,7 +140,8 @@ mccbng/
 ├── docs/                # architecture.md (detailed architecture), recette-non-regression-multiuser.md, db-migrations.md, security-roadmap.md)
 ├── mockups/             # Standalone HTML UI mockups
 ├── openspec/            # OpenSpec specs and changes
-├── package.json         # Scripts, dependencies, pnpm config / packageManager
+├── package.json         # Scripts, dependencies, packageManager
+├── pnpm-workspace.yaml  # pnpm settings (overrides, allowBuilds, shamefullyHoist)
 ├── pnpm-lock.yaml
 ├── docker-compose.build.yml
 ├── build-and-push.sh

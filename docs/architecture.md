@@ -292,7 +292,7 @@ server/
 
 Build context is the **repo root** (`Dockerfile` is at the root): `docker build .` (the `docker:*:build` scripts do this).
 
-1. **Build stage** (`node:26-slim`): `npm install -g pnpm@10.33.0` (Node 26 n'embarque plus corepack) + `pnpm install --frozen-lockfile --ignore-scripts`, then `pnpm build`.
+1. **Build stage** (`node:26-slim`): `npm install -g pnpm@12.9.1` (Node 26 n'embarque plus corepack) + `pnpm install --frozen-lockfile --ignore-scripts`, then `pnpm build`.
 2. **Runtime stage** (`node:26-slim`): copies `.output/` only, runs `node .output/server/index.mjs` as user `node` on port **8080** (`NITRO_PORT`), with a healthcheck. `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` and `JWT_SECRET` are **required** at run time (`docker-entrypoint.sh` exits at startup with an explicit message if one is missing); `JWT_TTL_SECONDS` is optional.
 
 Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps port 8080 (fill in the `DB_*` and `JWT_SECRET` placeholders). Migrations are not run by the image: use `pnpm db:migrate` (`db-migrations.md`).

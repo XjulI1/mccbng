@@ -5,12 +5,12 @@
 FROM node:26-slim AS build
 
 # Node 26 n'embarque plus corepack : pnpm est installé à la version du champ packageManager du package.json racine
-RUN npm install -g pnpm@10.33.0
+RUN npm install -g pnpm@12.9.1
 
 WORKDIR /app
 
 # Manifestes (couche mise en cache tant que les dépendances ne changent pas)
-COPY package.json pnpm-lock.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 
 # --ignore-scripts : le postinstall (nuxt prepare) a besoin des sources, `nuxt build` le refait
 RUN pnpm install --frozen-lockfile --ignore-scripts
