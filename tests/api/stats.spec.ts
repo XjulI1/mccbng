@@ -88,40 +88,40 @@ describe('stats', () => {
     expect((await get('/api/stats/topOperations', user.token, { from: '2026-10-05', to: '2026-10-05' })).body).toHaveLength(1)
   })
 
-  it('sorties non catégorisées comptées en dépense « Non catégorisé », entrées ignorées', async () => {
+  it('catégorie « Aucune » (IDcat 0) : comptée comme toute catégorie de dépense, entrées comprises, dans tous les graphiques', async () => {
+    // Comme en production : IDcat = 0 est la catégorie partagée par défaut « Aucune », de Type 'depense'
+    await sql("SET SESSION sql_mode = CONCAT(@@SESSION.sql_mode, ',NO_AUTO_VALUE_ON_ZERO')")
+    await sql("INSERT IGNORE INTO Categorie (IDcat, Nom, IDuser, Type) VALUES (0, 'Aucune', 0, 'depense')")
     const user = await createUser()
     const c = await createCompte(user)
     const courses = await createCategorie(user, 'Courses', 'depense')
     await createOperation(user, c.IDcompte, { MontantOp: -30, IDcat: courses.IDcat, DateOp: '2025-03-10' })
-    await createOperation(user, c.IDcompte, { MontantOp: -900, IDcat: 0, DateOp: '2025-03-05' }) // mensualité sans catégorie
-    await createOperation(user, c.IDcompte, { MontantOp: -50, DateOp: '2025-03-20' })
-    await createOperation(user, c.IDcompte, { MontantOp: 400, IDcat: 0, DateOp: '2025-03-21' }) // entrée : ignorée
-    // catégorie supprimée depuis : comptée comme non catégorisée
-    await sql('INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat) VALUES (?, ?, ?, ?, ?)', ['Orpheline', -20, new Date('2025-03-22T00:00:00Z'), c.IDcompte, 2_000_000_000])
+    await createOperation(user, c.IDcompte, { MontantOp: -900, IDcat: 0, DateOp: '2025-03-05' })
+    await createOperation(user, c.IDcompte, { MontantOp: -50, DateOp: '2025-03-20' }) // catégorie par défaut
+    await createOperation(user, c.IDcompte, { MontantOp: 400, IDcat: 0, DateOp: '2025-03-21' }) // entrée : vient en déduction
 
     const top = await get('/api/stats/topCategories', user.token, { from: '2025-03-01', to: '2025-03-31' })
     expect(top.body).toEqual([
-      { IDcat: 0, libelle: 'Non catégorisé', total: -970 },
+      { IDcat: 0, libelle: 'Aucune', total: -550 },
       { IDcat: courses.IDcat, libelle: 'Courses', total: -30 }
     ])
     const year = await get('/api/stats/yearComparison', user.token, { yearA: 2024, yearB: 2025 })
-    expect(year.body.yearB[2]).toBe(-1000)
+    expect(year.body.yearB[2]).toBe(-580)
     const heatmap = await get('/api/stats/categoryHeatmap', user.token, { yearNumber: 2025 })
-    expect(heatmap.body.categories).toEqual([{ IDcat: 0, libelle: 'Non catégorisé' }, { IDcat: courses.IDcat, libelle: 'Courses' }])
-    expect(heatmap.body.data).toEqual(expect.arrayContaining([[2, 0, -970], [2, 1, -30]]))
+    expect(heatmap.body.categories).toEqual([{ IDcat: 0, libelle: 'Aucune' }, { IDcat: courses.IDcat, libelle: 'Courses' }])
+    expect(heatmap.body.data).toEqual(expect.arrayContaining([[2, 0, -550], [2, 1, -30]]))
 
     const month = await get('/api/operations/sumByUserByMonth', user.token, { monthNumber: 3, yearNumber: 2025 })
-    expect(month.body[0].MonthNegative).toBe(-1000)
+    expect(month.body[0].MonthNegative).toBe(-580)
     const byCat = await get('/api/operations/sumCategoriesByUserByMonth', user.token, { monthNumber: 3, yearNumber: 2025 })
-    expect(byCat.body).toEqual(expect.arrayContaining([{ TotalMonth: -970, IDcat: 0 }, { TotalMonth: -30, IDcat: courses.IDcat }]))
+    expect(byCat.body).toEqual(expect.arrayContaining([{ TotalMonth: -550, IDcat: 0 }, { TotalMonth: -30, IDcat: courses.IDcat }]))
     expect(byCat.body).toHaveLength(2)
 
     const income = await get('/api/stats/incomeVsExpense', user.token, { yearNumber: 2025 })
-    expect(income.body.expense[2]).toBe(-1000)
-    expect(income.body.income[2]).toBe(0) // l'entrée non catégorisée n'est pas un revenu
+    expect(income.body.expense[2]).toBe(-580)
+    expect(income.body.income[2]).toBe(0)
     const topOps = await get('/api/stats/topOperations', user.token, { from: '2025-03-01', to: '2025-03-31' })
-    expect(topOps.body.map((o: any) => o.MontantOp)).toEqual([-900, -50, -30, -20])
-    expect(topOps.body.find((o: any) => o.NomOp === 'Orpheline').IDcat).toBe(0)
+    expect(topOps.body.map((o: any) => o.MontantOp)).toEqual([-900, 400, -50, -30])
   })
 
   it('regroupements : drapeaux NULL lus comme valeur par défaut, comptes enfant et retraite hors dispo', async () => {

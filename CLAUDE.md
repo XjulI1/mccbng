@@ -84,7 +84,7 @@ User scoping uses two patterns:
 - Loan tracking (`Credit`) with monthly auto-debit (changes to the credit are propagated to its recurring operation), remaining-balance (past outflows only, interest once per calendar month, then principal) and payment-history endpoints.
 - Real-estate tracking (`Bien`) with optional link to a `Credit` for mortgages.
 - Amortization view filtering operations flagged `amortissement = 1`.
-- Monthly and yearly statistics: total spent, pie chart by category, income vs expense, top categories / operations, heatmap, time series of balance evolution (global = neither retraite nor children / retraite / dispo = global and not bloque). Expense totals include uncategorized outflows under `IDcat = 0` « Non catégorisé »; `NULL` account flags read as their default; operations dated in the future (generated ahead) still count in balances.
+- Monthly and yearly statistics: total spent, pie chart by category, income vs expense, top categories / operations, heatmap, time series of balance evolution (global = neither retraite nor children / retraite / dispo = global and not bloque). Every chart uses the same expense rule (`EXPENSE_JOIN` / `EXPENSE_WHERE`): the category `Type`, inflows and outflows alike; there is no uncategorized operation, `IDcat = 0` is the shared default category « Aucune » (`depense`) and counts like any other; `NULL` account flags read as their default; operations dated in the future (generated ahead) still count in balances.
 - Light / dark / system theme with persistence.
 - Mobile-responsive PWA with swipeable account panel and optional Eruda debug console.
 

@@ -211,7 +211,7 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 | `*`     | `/api/operations` | CRUD opérations + endpoints d'analytics |
 | `GET`   | `/api/operations/sumAllCompteForUser` | Totaux pointés / non pointés par compte |
 | `GET`   | `/api/operations/sumForACompte?id=` | Totaux pour un compte |
-| `GET`   | `/api/operations/sumByUserByMonth?monthNumber=&yearNumber=&IDCompte=` | Total dépenses du mois (catégories `Type = depense` et sorties non catégorisées) |
+| `GET`   | `/api/operations/sumByUserByMonth?monthNumber=&yearNumber=&IDCompte=` | Total dépenses du mois (catégories `Type = depense`, catégorie par défaut « Aucune » comprise) |
 | `POST`  | `/api/operations/transfert` | Virement : débit + crédit en une requête |
 | `GET`   | `/api/operations/sumCategoriesByUserByMonth?monthNumber=&yearNumber=` | Répartition mensuelle par catégorie |
 | `GET`   | `/api/operations/suggestCategories?operationName=&limit=` | Suggestion par similarité de libellé |

@@ -16,19 +16,15 @@
 - **THEN** elle est comptée dans `TotalNotChecked`
 
 ### Requirement: Totaux mensuels de dépenses
-`GET /api/operations/sumByUserByMonth?monthNumber&yearNumber&IDCompte` et `GET /api/operations/sumCategoriesByUserByMonth?monthNumber&yearNumber` SHALL considérer les opérations des catégories `Type='depense'` ainsi que les sorties non catégorisées (`MontantOp < 0` avec `IDcat` égal à 0, `NULL` ou inexistant, mensualités de crédit comprises), et ne couvrir que les comptes de l'utilisateur. Dans `sumCategoriesByUserByMonth`, les sorties non catégorisées MUST être regroupées sous `IDcat = 0`, que le front affiche avec le libellé `Non catégorisé` (la réponse garde ses clés `TotalMonth` et `IDcat`). Les entrées non catégorisées MUST être ignorées.
+`GET /api/operations/sumByUserByMonth?monthNumber&yearNumber&IDCompte` et `GET /api/operations/sumCategoriesByUserByMonth?monthNumber&yearNumber` SHALL considérer toutes les opérations des catégories `Type='depense'` (partagées ou de l'utilisateur), entrées comme sorties, et ne couvrir que les comptes de l'utilisateur. Il n'existe pas d'opération sans catégorie : `IDcat = 0` est la catégorie partagée par défaut « Aucune » (`Type='depense'`), comptée comme les autres. Aucune opération d'une catégorie de dépense MUST être écartée.
 
 #### Scenario: Exclusion des revenus
 - **WHEN** un mois contient des opérations `revenu` et `depense`
 - **THEN** seules les `depense` sont additionnées
 
-#### Scenario: Mensualité sans catégorie
-- **WHEN** un mois contient une mensualité de crédit de -900 € avec `IDcat = 0`
-- **THEN** elle est incluse dans le total dépensé et apparaît sous `Non catégorisé`
-
-#### Scenario: Entrée sans catégorie
-- **WHEN** un mois contient une entrée de +50 € avec `IDcat = 0`
-- **THEN** elle n'est comptée ni dans le total dépensé ni sous `Non catégorisé`
+#### Scenario: Catégorie par défaut « Aucune »
+- **WHEN** un mois contient une sortie de -900 € et une entrée de +400 € en catégorie « Aucune » (`IDcat = 0`)
+- **THEN** le total dépensé inclut les deux (-500 €) et `sumCategoriesByUserByMonth` les regroupe sous `IDcat = 0`
 
 ### Requirement: Opérations récurrentes
 Les routes `/api/operation-recurrentes` SHALL fournir le CRUD standard d'`OperationRecurrente`, avec :

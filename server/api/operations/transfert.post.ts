@@ -16,7 +16,7 @@ const transfertBody = z.object({
   montant: numeric.pipe(z.number().positive()),
   DateOp: z.coerce.date(),
   NomOp: z.string(),
-  // Catégorie obligatoire, appliquée aux deux opérations : un virement n'est jamais une dépense « Non catégorisé »
+  // Catégorie obligatoire, appliquée aux deux opérations (Virement ou Retrait, de Type 'transfert')
   IDcat: id
 })
 

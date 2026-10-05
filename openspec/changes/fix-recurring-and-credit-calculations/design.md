@@ -13,7 +13,7 @@ L'audit du 2026-10-05 a relevé les constats suivants, dans la section « donné
 | D-M4 | Crédit démarrant dans le passé : une seule échéance rattrapée par connexion |
 | D-M5 | Restant dû : `Math.abs` sur les montants positifs, intérêts comptés par paiement et non par mois, échéances futures déjà déduites |
 | D-M6 | Drapeaux de compte `NULL`, d'où des comptes exclus de `soldeGlobal`, de la série `global`, de `dispo` et de `visible` |
-| D-M11 | Sorties non catégorisées (`IDcat = 0`, notamment les mensualités) absentes des totaux de dépense |
+| D-M11 | Sorties non catégorisées (`IDcat = 0`, notamment les mensualités) absentes des totaux de dépense — **infirmé** : en production, `IDcat = 0` est la catégorie partagée « Aucune » de `Type='depense'`, déjà comptée (voir D7) |
 | D-B1 | Borne `to` des stats à minuit, dates invalides acceptées |
 | D-B2 | `MoisOpRecu` à 1 par défaut (février), `Frequence` et `JourNumOpRecu` non bornés |
 | D-B9 | `Math.round(x*100)/100` arrondit mal (1,005 donne 1) ; `SUM` de FLOAT sans arrondi |
@@ -129,14 +129,14 @@ Arrondi final par `round2(x) = Math.round((x + Number.EPSILON) × 100) / 100`, m
 - Écarté : la formule d'annuité théorique, parce qu'elle ignore les remboursements anticipés.
 - Écarté : le décompte en mois entiers (ancré sur `DateDebut` ou sur le paiement précédent), qui décale les intérêts d'un mois dès qu'un prélèvement change de jour.
 
-### D7. Drapeaux NULL, regroupements et non catégorisé
+### D7. Drapeaux NULL, regroupements et règle des dépenses
 - **Drapeaux** : dans le SQL, `COALESCE(bloque,0)`, `COALESCE(retraite,0)`, `COALESCE(children,0)`, `COALESCE(porte_feuille,0)` et `COALESCE(visible,1)`, partout où ces drapeaux filtrent. En production, `children` et `joint` sont déjà `NOT NULL DEFAULT 0` ; le `COALESCE` sur `children` est sans effet mais garde la règle uniforme.
 - **Regroupements** de `evolutionSolde` :
   - `global` : `retraite = 0 AND children = 0` (inchangé) ;
   - `retraite` : `retraite = 1` (inchangé) ;
   - `dispo` : `retraite = 0 AND children = 0 AND bloque = 0`. C'est un sous-ensemble de `global`. Auparavant, `dispo` valait `bloque = 0` et incluait donc les comptes retraite et enfants non bloqués.
-- **Dépenses non catégorisées** : une opération dont `IDcat` vaut 0, `NULL` ou une catégorie inexistante (ou privée d'un autre utilisateur), et dont `MontantOp < 0`, est comptée comme dépense dans les totaux, le camembert, le top et la heatmap, sous un pseudo-libellé `Non catégorisé` (`IDcat = 0`). `topCategories` et `categoryHeatmap` renvoient ce libellé ; `sumCategoriesByUserByMonth` ne renvoie que `IDcat` (contrat inchangé) et le front affiche `Non catégorisé` pour `IDcat = 0`. `incomeVsExpense` (série `expense`) et `topOperations` appliquent la même règle, pour que tous les graphiques donnent le même total de dépenses ; `topOperations` renvoie `IDcat = 0` pour une sortie non catégorisée. Les mensualités de crédit non catégorisées y sont comprises. Une entrée non catégorisée n'est comptée ni en revenu ni en dépense. Les virements ne tombent jamais dans ce cas, car leur catégorie est obligatoire (D9).
-- *Alternative* : exiger une catégorie à la saisie. C'est souhaitable côté UX, mais cela ne corrige pas l'historique.
+- **Règle des dépenses**, commune à tous les totaux et graphiques (`EXPENSE_JOIN` / `EXPENSE_WHERE` dans `server/utils/stats.ts`) : une opération compte selon le `Type` de sa catégorie, entrées comme sorties ; les transferts sont exclus. Il n'existe pas d'opération sans catégorie : `IDcat = 0` est la catégorie partagée par défaut « Aucune » (`Type='depense'`), présente en production et utilisée par plus de 1 300 opérations (dont des entrées : ajustements, intéressement…). Elle est comptée comme les autres, sous son libellé. Rien n'est masqué des statistiques.
+- *Écarté* (revue sur la copie de production) : traiter `IDcat = 0` comme « non catégorisé », compter ses sorties en dépense et ignorer ses entrées. Cela masquait des opérations saisies par l'utilisateur.
 
 ### D8. Dates des stats
 `from` et `to` sont validés par Zod au format `YYYY-MM-DD` ; une date invalide donne 400. Le filtre devient `DateOp >= :from AND DateOp < :to + 1 jour`.
@@ -158,7 +158,6 @@ Les échéances générées par anticipation (D2) restent comptées dans `TotalN
 - [Rattrapage massif au premier appel après une longue absence] → Plafond de 24 échéances par appel. Chaque opération générée est datée de son échéance réelle.
 - [Échéance réservée mais non insérée (crash entre UPDATE et INSERT)] → Compensation conditionnelle en cas d'erreur applicative et log d'erreur. Le cas résiduel (crash du processus) se rattrape à la main.
 - [Aller-retour de `DernierDateOpRecu` non identique (fuseau, heure stockée), qui bloquerait la réservation] → `:last` repris tel quel de la lecture, test dédié.
-- [Changement visible des totaux de dépense, avec l'ajout du « Non catégorisé », mensualités comprises] → À annoncer dans les notes de version. Le libellé est explicite dans les graphiques.
 - [Changement visible de `soldeDispo` et de la série `dispo` pour les utilisateurs ayant un compte retraite ou enfant non bloqué] → À annoncer dans les notes de version.
 - [Récurrentes de crédit devenues non modifiables depuis l'écran des récurrentes] → Message 409 explicite et renvoi vers le crédit dans le front.
 - [`soldeGlobal`, `soldeRetraite` et `soldeDispo` lisent la colonne `Compte.solde`] → Vérifié : `Compte.solde` est le solde d'ouverture saisi à la création du compte, et le front (`TimeSeriesEvolutionSoldes.vue`) cumule les séries journalières à partir de lui. Aucun changement.

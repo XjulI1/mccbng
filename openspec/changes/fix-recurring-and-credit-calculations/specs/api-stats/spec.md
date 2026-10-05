@@ -25,7 +25,7 @@ Les requêtes SQL MUST être paramétrées et limitées aux comptes de l'utilisa
 - **THEN** il n'est inclus ni dans `global` ni dans `dispo`
 
 ### Requirement: Statistiques de dépenses
-`GET /api/stats/yearComparison`, `topCategories`, `categoryHeatmap`, `incomeVsExpense` (série `expense`) et `topOperations` SHALL considérer comme dépenses les catégories `Type='depense'` ainsi que les sorties non catégorisées (`MontantOp < 0` avec `IDcat` égal à 0, `NULL` ou inexistant, mensualités de crédit comprises), regroupées sous `IDcat = 0` et le libellé `Non catégorisé`. Les entrées non catégorisées MUST être ignorées partout : elles ne sont ni une dépense, ni un revenu de `incomeVsExpense`, ni une ligne de `topOperations`. Les transferts restent exclus. `yearComparison` exige `yearA` et `yearB` (400 `yearA and yearB are required`). Les plages de dates (`from`, `to`) MUST être :
+`GET /api/stats/yearComparison`, `topCategories`, `categoryHeatmap`, `incomeVsExpense` (série `expense`) et `topOperations` SHALL appliquer la même règle que les totaux mensuels : une opération compte selon le `Type` de sa catégorie, entrées comme sorties (`depense` en dépense, `revenu` en revenu pour `incomeVsExpense` et `topOperations`), et les transferts sont exclus. Il n'existe pas d'opération sans catégorie : `IDcat = 0` est la catégorie partagée par défaut « Aucune » (`Type='depense'`), comptée comme les autres. Aucune opération d'une catégorie de dépense ou de revenu MUST être masquée. `yearComparison` exige `yearA` et `yearB` (400 `yearA and yearB are required`). Les plages de dates (`from`, `to`) MUST être :
 - obligatoires (400 `from and to are required`) ;
 - au format `YYYY-MM-DD` (400 sinon) ;
 - ordonnées (400 `from must be earlier than to`).
@@ -48,14 +48,10 @@ La borne `to` MUST inclure toute la journée. Le paramètre `limit` MUST être b
 - **WHEN** `to=2026-10-05` et une opération est datée du 5 octobre 2026 à 14 h
 - **THEN** elle est incluse
 
-#### Scenario: Dépense non catégorisée
-- **WHEN** une sortie de -50 € sans catégorie est dans la plage
-- **THEN** `topCategories` contient une entrée `Non catégorisé` d'au moins 50 €
+#### Scenario: Catégorie « Aucune »
+- **WHEN** des opérations de la plage sont en catégorie « Aucune » (`IDcat = 0`)
+- **THEN** `topCategories` et `categoryHeatmap` les présentent sous le libellé `Aucune`, et `topOperations` les inclut
 
 #### Scenario: Cohérence entre graphiques
-- **WHEN** un mois contient des dépenses catégorisées, une mensualité sans catégorie et une entrée sans catégorie
-- **THEN** la série `expense` de `incomeVsExpense`, `yearComparison` et `sumByUserByMonth` donnent le même total pour ce mois, et `income` n'inclut pas l'entrée sans catégorie
-
-#### Scenario: Grosse sortie non catégorisée
-- **WHEN** une mensualité de -900 € sans catégorie est la plus grosse sortie de la plage
-- **THEN** elle figure dans `topOperations` avec `IDcat = 0`
+- **WHEN** un mois contient des dépenses dans plusieurs catégories, dont une entrée en catégorie « Aucune »
+- **THEN** la série `expense` de `incomeVsExpense`, `yearComparison`, `sumByUserByMonth` et la somme de `sumCategoriesByUserByMonth` donnent le même total pour ce mois

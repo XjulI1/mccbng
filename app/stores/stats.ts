@@ -15,9 +15,7 @@ export const useStatsStore = defineStore('stats', () => {
     const category = useCategoryStore()
     return categoriesTotal.value.map((categorie) => {
       return {
-        // IDcat = 0 : sorties non catégorisées (mensualités sans catégorie…)
-        name: category.getCategoryName(categorie.IDcat)?.Nom
-          ?? (Number(categorie.IDcat) === 0 ? 'Non catégorisé' : `#${categorie.IDcat}`),
+        name: category.getCategoryName(categorie.IDcat)?.Nom ?? `#${categorie.IDcat}`,
         catId: categorie.IDcat,
         y: categorie.TotalMonth * -1
       }

@@ -25,13 +25,13 @@ export const parseRange = (from?: string, to?: string): { from: string; toExclus
   return { from, toExclusive: end.toISOString().slice(0, 10) }
 }
 
-// Dépenses : catégories Type='depense' accessibles (partagées ou de l'utilisateur) + sorties non catégorisées
-// (IDcat à 0, NULL, inexistant ou d'autrui), regroupées sous IDcat = 0. Une entrée non catégorisée est ignorée.
+// Règle commune à tous les totaux de dépense : une opération compte selon le Type de sa catégorie (partagée ou
+// de l'utilisateur), entrées comme sorties. Il n'y a pas d'opération sans catégorie : IDcat = 0 est la catégorie
+// partagée « Aucune » (Type 'depense'), comptée comme les autres. Les transferts sont exclus.
 // À utiliser avec l'alias `o` pour Operation ; EXPENSE_JOIN attend l'IDuser en paramètre.
-export const UNCATEGORIZED_LABEL = 'Non catégorisé'
-export const EXPENSE_JOIN = 'LEFT JOIN Categorie c ON c.IDcat = o.IDcat AND c.IDuser IN (0, ?) '
-export const EXPENSE_WHERE = "(c.Type = 'depense' OR (c.IDcat IS NULL AND o.MontantOp < 0))"
-export const EXPENSE_CAT = 'COALESCE(c.IDcat, 0)'
+export const EXPENSE_JOIN = 'INNER JOIN Categorie c ON c.IDcat = o.IDcat AND c.IDuser IN (0, ?) '
+export const EXPENSE_WHERE = "c.Type = 'depense'"
+export const EXPENSE_CAT = 'o.IDcat'
 
 // Drapeaux de compte NULL (anciens comptes) : valeur par défaut, jamais d'exclusion du compte.
 export const flag = (name: 'bloque' | 'retraite' | 'children' | 'porte_feuille') => `COALESCE(${name}, 0)`
@@ -75,8 +75,8 @@ export const evolutionSolde = async (userID: number) => {
   }
 }
 
-// Dépense nette par mois sur deux années (catégories Type='depense' et sorties non catégorisées ; un remboursement
-// rangé dans une catégorie de dépense vient en déduction). Tableaux de 12 mois + écart en % de yearB vs yearA.
+// Dépense nette par mois sur deux années (catégories Type='depense' ; un remboursement rangé dans une catégorie
+// de dépense vient en déduction). Tableaux de 12 mois + écart en % de yearB vs yearA.
 export const yearComparison = async (userID: number, compteIds: number[], yearA: number, yearB: number) => {
   if (!compteIds.length) {
     return { yearA: new Array(12).fill(0), yearB: new Array(12).fill(0), deltaPct: new Array(12).fill(null) }
@@ -106,7 +106,7 @@ export const yearComparison = async (userID: number, compteIds: number[], yearA:
 export const topCategories = async (userID: number, compteIds: number[], from: string, toExclusive: string, limit: number) => {
   if (!compteIds.length) return []
   return rawQuery(
-    `SELECT ${EXPENSE_CAT} AS IDcat, COALESCE(c.Nom, ?) AS libelle, ROUND(SUM(o.MontantOp), 2) AS total ` +
+    `SELECT ${EXPENSE_CAT} AS IDcat, c.Nom AS libelle, ROUND(SUM(o.MontantOp), 2) AS total ` +
     'FROM Operation o ' +
     EXPENSE_JOIN +
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
@@ -115,12 +115,11 @@ export const topCategories = async (userID: number, compteIds: number[], from: s
     `GROUP BY ${EXPENSE_CAT}, c.Nom ` +
     'ORDER BY total ASC ' +
     'LIMIT ?',
-    [UNCATEGORIZED_LABEL, userID, ...compteIds, from, toExclusive, limit]
+    [userID, ...compteIds, from, toExclusive, limit]
   )
 }
 
 // Regroupe par Type de catégorie (et non par signe) : un remboursement rangé en dépense n'est pas un revenu.
-// Les sorties non catégorisées comptent en dépense ; les entrées non catégorisées ne comptent pas en revenu.
 export const incomeVsExpense = async (userID: number, compteIds: number[], yearNumber: number) => {
   if (!compteIds.length) return { income: new Array(12).fill(0), expense: new Array(12).fill(0) }
   const rows = await rawQuery<{ m: number | string; income: number | string; expense: number | string }>(
@@ -145,8 +144,7 @@ export const incomeVsExpense = async (userID: number, compteIds: number[], yearN
   return { income, expense }
 }
 
-// Plus grosses opérations (valeur absolue) : revenus et dépenses, sorties non catégorisées comprises ;
-// les transferts et les entrées non catégorisées sont exclus.
+// Plus grosses opérations (valeur absolue) : revenus et dépenses ; les transferts sont exclus.
 export const topOperations = async (userID: number, compteIds: number[], from: string, toExclusive: string, limit: number) => {
   if (!compteIds.length) return []
   return rawQuery(
@@ -166,14 +164,14 @@ export const topOperations = async (userID: number, compteIds: number[], from: s
 export const categoryHeatmap = async (userID: number, compteIds: number[], yearNumber: number) => {
   if (!compteIds.length) return { categories: [], data: [] }
   const rows = await rawQuery<{ m: number | string; IDcat: number | string; libelle: string; total: number | string }>(
-    `SELECT MONTH(o.DateOp) AS m, ${EXPENSE_CAT} AS IDcat, COALESCE(c.Nom, ?) AS libelle, ROUND(SUM(o.MontantOp), 2) AS total ` +
+    `SELECT MONTH(o.DateOp) AS m, ${EXPENSE_CAT} AS IDcat, c.Nom AS libelle, ROUND(SUM(o.MontantOp), 2) AS total ` +
     'FROM Operation o ' +
     EXPENSE_JOIN +
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
     'AND YEAR(o.DateOp) = ? ' +
     `AND ${EXPENSE_WHERE} ` +
     `GROUP BY MONTH(o.DateOp), ${EXPENSE_CAT}, c.Nom`,
-    [UNCATEGORIZED_LABEL, userID, ...compteIds, yearNumber]
+    [userID, ...compteIds, yearNumber]
   )
   const totalsByCat = new Map<number, { libelle: string; total: number }>()
   for (const row of rows) {

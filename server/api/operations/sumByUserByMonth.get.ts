@@ -4,7 +4,7 @@ import { rawQuery } from '../../utils/sql'
 import { EXPENSE_JOIN, EXPENSE_WHERE } from '../../utils/stats'
 import { queryNumber } from '../../utils/validate'
 
-// Total dépensé du mois : catégories Type='depense' (partagées + celles de l'utilisateur) et sorties non catégorisées.
+// Total dépensé du mois : catégories Type='depense' (partagées + celles de l'utilisateur).
 export default defineApiHandler(async (event) => {
   const monthNumber = queryNumber(event, 'monthNumber')
   const yearNumber = queryNumber(event, 'yearNumber')

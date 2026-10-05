@@ -5,7 +5,7 @@ L'audit du 2026-10-05 montre que plusieurs calculs produisent des données finan
 - Des appels concurrents doublent les débits.
 - Les mensualités continuent après la fin du crédit.
 - Le restant dû est mal calculé.
-- Les statistiques excluent certains comptes et toutes les dépenses non catégorisées.
+- Les statistiques excluent certains comptes (drapeaux `NULL`) et chaque graphique applique sa propre règle de dépense.
 
 Comme ces erreurs s'écrivent en base à chaque ouverture de l'application, leur coût de correction augmente avec le temps.
 
@@ -31,7 +31,7 @@ Comme ces erreurs s'écrivent en base à chaque ouverture de l'application, leur
   - `MoisOpRecu` dans 0-11, avec 0 par défaut au lieu de 1, qui désignait février (serveur et formulaire).
 - **Statistiques et soldes** :
   - un drapeau de compte `NULL` prend sa valeur par défaut (0, ou 1 pour `visible`) au lieu d'exclure le compte ;
-  - les sorties non catégorisées, mensualités de crédit comprises, comptent comme dépense « Non catégorisé » ;
+  - une seule règle de dépense pour tous les graphiques : le `Type` de la catégorie, entrées comme sorties, catégorie par défaut « Aucune » comprise ;
   - **BREAKING (chiffres)** : `dispo` devient `retraite = 0 AND children = 0 AND bloque = 0`, au lieu de `bloque = 0` ;
   - la borne `to` inclut toute la journée et les dates sont validées ;
   - les opérations datées dans le futur restent comptées dans les soldes, qui servent de prévisionnel (comportement documenté).
@@ -43,9 +43,9 @@ Comme ces erreurs s'écrivent en base à chaque ouverture de l'application, leur
 <!-- aucune -->
 
 ### Modified Capabilities
-- `api-operations` : auto-génération (échéancier, verrou, rattrapage, fin de crédit), CRUD et validation des récurrentes (initialisation serveur, lecture seule des récurrentes de crédit), totaux mensuels incluant le non catégorisé, agrégats tolérant les drapeaux NULL, nouvelle route de virement.
+- `api-operations` : auto-génération (échéancier, verrou, rattrapage, fin de crédit), CRUD et validation des récurrentes (initialisation serveur, lecture seule des récurrentes de crédit), totaux mensuels selon la règle de dépense commune, agrégats tolérant les drapeaux NULL, nouvelle route de virement.
 - `api-credits-biens` : création et suppression robustes, propagation des modifications, calcul du restant dû.
-- `api-stats` : séries de solde tolérant les drapeaux NULL, nouvelle définition de `dispo`, dépenses non catégorisées, bornes de dates.
+- `api-stats` : séries de solde tolérant les drapeaux NULL, nouvelle définition de `dispo`, règle de dépense commune, bornes de dates.
 
 ## Impact
 
@@ -59,9 +59,9 @@ Comme ces erreurs s'écrivent en base à chaque ouverture de l'application, leur
 - **Code front** :
   - `app/stores/operation.ts` (`createTransfert`) ;
   - `app/components/OperationRecurrenteForm.vue` (défaut `MoisOpRecu = 0`, plus d'envoi de `DernierDateOpRecu` à la création, édition et suppression désactivées pour une récurrente de crédit) ;
-  - les composants de stats, pour afficher « Non catégorisé ».
+  - `app/stores/stats.ts` (nom de catégorie lu sans plantage si la catégorie est absente de la liste).
 - **Données** : `scripts/diagnose-recurrentes.mjs`. Sans option, il est en lecture seule et propose les corrections de `JourNumOpRecu`/`MoisOpRecu`. Avec `--apply --ids=…`, il applique les corrections retenues. Aucune migration de schéma n'est requise : la conversion InnoDB et les `NOT NULL` sont dans `harden-db-schema-and-cleanup`.
 - **Utilisateurs** :
   - au premier chargement après déploiement, les récurrentes en retard sont rattrapées en une fois, et les dates d'échéance peuvent se recaler sur le jour choisi ;
-  - les totaux de dépense augmentent (non catégorisé, mensualités) et `dispo` peut baisser ;
+  - `dispo` peut baisser (comptes retraite et enfants non bloqués exclus) ;
   - les mensualités ne se modifient plus que depuis le crédit.

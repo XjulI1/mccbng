@@ -73,14 +73,14 @@
   - fusionner les deux `SUM` pointé/non pointé en une requête `SUM(CASE …)` ;
   - `dispo` = `retraite = 0 AND children = 0 AND bloque = 0` ;
   - vérifier que `Compte.solde` (lue par `soldeGlobal`, `soldeRetraite` et `soldeDispo`) est à jour, sinon calculer ces soldes depuis `Operation`
-- [x] 6.2 `sumByUserByMonth`, `sumCategoriesByUserByMonth`, `yearComparison`, `topCategories`, `categoryHeatmap`, `incomeVsExpense`, `topOperations` : inclure les sorties non catégorisées sous `IDcat = 0` / `Non catégorisé` (jointure gauche sur `Categorie`)
+- [x] 6.2 `sumByUserByMonth`, `sumCategoriesByUserByMonth`, `yearComparison`, `topCategories`, `categoryHeatmap`, `incomeVsExpense`, `topOperations` : une seule règle de dépense (`EXPENSE_JOIN` / `EXPENSE_WHERE` : `Type` de la catégorie, entrées comme sorties, catégorie « Aucune » `IDcat = 0` comprise)
 - [x] 6.3 Valider `from`/`to` par Zod (`YYYY-MM-DD`) et filtrer `DateOp >= from AND DateOp < to + 1 jour` (`assertValidRange` remplacé)
-- [x] 6.4 Front : afficher `Non catégorisé` dans `PieByCategorie`, `TopCategories`, `CategoryHeatmap` (`stores/stats.ts` : `getCategoryName` sûr pour `IDcat = 0`)
+- [x] 6.4 Front : `stores/stats.ts`, `getCategoryName` lu sans plantage si la catégorie est absente de la liste
 - [x] 6.5 Tests API :
   - compte à drapeaux NULL inclus ;
   - compte retraite ou enfant non bloqué exclu de `dispo` ;
   - `soldeGlobal` cohérent avec `sumAllCompteForUser` restreint ;
-  - mensualité non catégorisée comptée et entrée non catégorisée ignorée ;
+  - catégorie « Aucune » (`IDcat = 0`) comptée, entrées comprises, avec le même total dans tous les graphiques ;
   - échéance future comptée dans `TotalNotChecked` ;
   - borne `to` inclusive ;
   - date invalide → 400
@@ -98,6 +98,6 @@
 
 ## 8. Documentation
 
-- [x] 8.1 Mettre à jour `docs/architecture.md` et `CLAUDE.md` (« Key Features » : rattrapage complet des récurrentes au lieu de « at most one occurrence per call », récurrente de crédit en lecture seule, virement serveur, `Non catégorisé`, définition de `dispo`, opérations futures comptées dans les soldes)
+- [x] 8.1 Mettre à jour `docs/architecture.md` et `CLAUDE.md` (« Key Features » : rattrapage complet des récurrentes au lieu de « at most one occurrence per call », récurrente de crédit en lecture seule, virement serveur, règle de dépense commune, définition de `dispo`, opérations futures comptées dans les soldes)
 - [x] 8.2 Documenter `scripts/diagnose-recurrentes.mjs` (lecture seule et `--apply`) dans `docs/exploitation.md`
 - [x] 8.3 Rédiger la note de version : recalage des échéances, rattrapage, nouveaux totaux de dépense (mensualités comprises), nouvelle définition de `dispo`, mensualités modifiables seulement depuis le crédit

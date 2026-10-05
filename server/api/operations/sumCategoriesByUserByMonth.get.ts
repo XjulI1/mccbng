@@ -4,7 +4,7 @@ import { rawQuery } from '../../utils/sql'
 import { EXPENSE_CAT, EXPENSE_JOIN, EXPENSE_WHERE } from '../../utils/stats'
 import { queryNumber } from '../../utils/validate'
 
-// Dépenses du mois par catégorie ; les sorties non catégorisées sont regroupées sous IDcat = 0 (« Non catégorisé »).
+// Dépenses du mois par catégorie (Type='depense', catégorie « Aucune » comprise).
 export default defineApiHandler(async (event) => {
   const monthNumber = queryNumber(event, 'monthNumber')
   const yearNumber = queryNumber(event, 'yearNumber')
