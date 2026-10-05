@@ -18,9 +18,8 @@
         class="form-notice"
       >
         Cette mensualité est gérée par son crédit : modifiez-la depuis la page
-        <NuxtLink to="/credits">
-          Crédits
-        </NuxtLink>.
+        <!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
+        <NuxtLink to="/credits">Crédits</NuxtLink>.
       </p>
 
       <div class="form-group">
