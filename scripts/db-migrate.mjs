@@ -2,10 +2,11 @@
 // Migrations SQL versionnées : applique server/db/migrations/*.sql dans l'ordre alphabétique.
 //   node scripts/db-migrate.mjs             applique les migrations en attente
 //   node scripts/db-migrate.mjs --baseline  marque 0000_baseline comme jouée SANS l'exécuter (base de prod existante)
-// Configuration : DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME.
+// Configuration : DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
 import { readdir, readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { loadEnv } from './load-env.mjs'
 import { createConnection } from 'mysql2/promise'
 
 export const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'server', 'db', 'migrations')
@@ -47,6 +48,14 @@ export async function runMigrations(connection, { dir = MIGRATIONS_DIR, baseline
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  // .env de la racine (ou ENV_FILE) ; les variables déjà définies dans l'environnement sont prioritaires
+  try {
+    const envFile = loadEnv()
+    if (envFile) console.log(`Configuration lue dans ${envFile}`)
+  } catch (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
   const missing = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'].filter(name => !process.env[name])
   if (missing.length) {
     console.error(`Configuration manquante : ${missing.join(', ')}`)

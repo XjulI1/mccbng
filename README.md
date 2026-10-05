@@ -243,7 +243,7 @@ pnpm install
 ### Base de données
 
 ```bash
-export DB_HOST=localhost DB_PORT=3306 DB_USER=… DB_PASSWORD=… DB_NAME=…
+# DB_* lues dans .env (ou ENV_FILE=…), l'environnement restant prioritaire
 pnpm db:migrate                  # base vide : crée le schéma
 pnpm db:migrate -- --baseline    # base de production existante : marque la baseline comme jouée
 ```

@@ -8,9 +8,17 @@ La table de suivi `__migrations` (`name`, `applied_at`) mémorise les fichiers d
 
 ## Configuration
 
+Les scripts qui modifient la base (`db-migrate.mjs`, `hash-legacy-secrets.mjs`) lisent `DB_HOST`, `DB_PORT`,
+`DB_USER`, `DB_PASSWORD` et `DB_NAME` dans le fichier `.env` de la racine du dépôt (le même que `pnpm dev`).
+Les variables déjà définies dans l'environnement sont prioritaires, et `ENV_FILE` permet de viser un autre fichier :
+
 ```bash
-export DB_HOST=… DB_PORT=3306 DB_USER=… DB_PASSWORD=… DB_NAME=…
+pnpm db:migrate                               # .env de la racine
+ENV_FILE=.env.production pnpm db:migrate      # autre fichier (chemin relatif à la racine, ou absolu)
+DB_NAME=mccbng_copie pnpm db:migrate          # une variable passée en ligne de commande l'emporte sur le fichier
 ```
+
+Le script affiche le fichier chargé (`Configuration lue dans …`) : le vérifier avant toute opération sur la production.
 
 ## Commandes
 

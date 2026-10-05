@@ -3,10 +3,11 @@
 // À exécuter en production AVANT de déployer la version qui refuse les secret_key en clair.
 //   node scripts/hash-legacy-secrets.mjs            simulation : liste les utilisateurs concernés, n'écrit rien
 //   node scripts/hash-legacy-secrets.mjs --apply    hashe et enregistre
-// Configuration : DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME.
+// Configuration : DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
 import bcrypt from 'bcryptjs'
 import { fileURLToPath } from 'node:url'
 import { createConnection } from 'mysql2/promise'
+import { loadEnv } from './load-env.mjs'
 
 const BCRYPT_COST = 12
 
@@ -29,6 +30,14 @@ export async function hashLegacySecrets(connection, { apply = false, log = () =>
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  // .env de la racine (ou ENV_FILE) ; les variables déjà définies dans l'environnement sont prioritaires
+  try {
+    const envFile = loadEnv()
+    if (envFile) console.log(`Configuration lue dans ${envFile}`)
+  } catch (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
   const missing = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'].filter(name => !process.env[name])
   if (missing.length) {
     console.error(`Configuration manquante : ${missing.join(', ')}`)

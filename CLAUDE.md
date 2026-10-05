@@ -103,7 +103,7 @@ User scoping uses two patterns:
 | `JWT_SECRET` | yes in production | JWT signing secret (an ephemeral one is generated in dev, with a warning) |
 | `JWT_TTL_SECONDS` | no | JWT lifetime, default 21600 (6 h) |
 
-In development they can live in `.env`. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
+In development they can live in `.env`. The scripts that modify the database (`scripts/db-migrate.mjs`, `scripts/hash-legacy-secrets.mjs`) also load the root `.env` through `scripts/load-env.mjs` (or the file named by `ENV_FILE`); variables already set in the environment take precedence. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
 
 ## Docker Deployment
 
