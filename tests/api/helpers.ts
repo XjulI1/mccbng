@@ -1,4 +1,4 @@
-import { randomInt, randomUUID } from 'node:crypto'
+import { randomInt } from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { createConnection, type Connection } from 'mysql2/promise'
@@ -40,13 +40,12 @@ export const del = <T = any>(path: string, token: string | undefined) => request
 
 let connection: Connection | undefined
 export const sql = async <T = any>(query: string, params: unknown[] = []): Promise<T[]> => {
-  connection ??= await createConnection({ ...ctx().db, timezone: 'Z' })
+  connection ??= await createConnection({ ...ctx().db, timezone: 'Z', decimalNumbers: true })
   const [rows] = await connection.query(query, params)
   return rows as T[]
 }
 
 export interface TestUser {
-  id: string
   IDuser: number
   email: string
   code: string
@@ -63,12 +62,11 @@ export const signToken = (user: { IDuser: number; email: string }, options: jwt.
 // Insère un utilisateur et fournit directement un JWT valide (évite de consommer le rate-limit du login).
 export const createUser = async (overrides: Partial<{ code: string; plaintext: boolean }> = {}): Promise<TestUser> => {
   const IDuser = nextUser++
-  const id = randomUUID()
   const email = `user${IDuser}@example.test`
   const code = overrides.code ?? 'abc123'
   const secret = overrides.plaintext ? code : await bcrypt.hash(code, 4)
-  await sql('INSERT INTO `User` (id, IDuser, email, username, secret_key) VALUES (?, ?, ?, ?, ?)', [id, IDuser, email, `user${IDuser}`, secret])
-  return { id, IDuser, email, code, token: signToken({ IDuser, email }) }
+  await sql('INSERT INTO `User` (IDuser, email, username, secret_key) VALUES (?, ?, ?, ?)', [IDuser, email, `user${IDuser}`, secret])
+  return { IDuser, email, code, token: signToken({ IDuser, email }) }
 }
 
 export const createBanque = async (token: string, name = 'Banque test') => (await post('/api/banques', token, { NomBanque: name })).body

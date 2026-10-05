@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **mccbng** (mCloud Compte and Budget Next Generation) is a personal finance and budgeting application. It is a single **Nuxt 4** package at the repo root:
 
-- Nuxt 4 SPA (`ssr: false`, `compatibilityVersion: 5`, auto-imports disabled) with TypeScript, Pinia and PWA support. Its Nitro server (`server/`) **also hosts the REST API** (MySQL, JWT authentication), so one process and one Docker image serve both the front and the API.
+- Nuxt 4 SPA (`ssr: false`, `compatibilityVersion: 5`, auto-imports disabled) with TypeScript, Pinia and PWA support. Its Nitro server (`server/`) **also hosts the REST API** (MariaDB, JWT authentication), so one process and one Docker image serve both the front and the API.
 
 > The LoopBack 4 API (`back/`, image `mccbng/api`) and the `vue-touch-events/` workspace have been removed. The front depends on the published `vue3-touch-events` package.
 
@@ -24,7 +24,7 @@ pnpm build              # Production build (.output/, Nitro server)
 pnpm build:staging      # Staging build (--envName test)
 pnpm preview            # Serve the production build locally
 pnpm test               # Vitest (unit + integration, Nuxt environment)
-pnpm test:api           # API integration tests on a disposable MySQL (Docker/Testcontainers required)
+pnpm test:api           # API integration tests on a disposable MariaDB 10.11 (Docker/Testcontainers required)
 pnpm test:coverage      # Tests with coverage
 pnpm type-check         # TypeScript type checking (nuxt typecheck)
 pnpm lint               # ESLint with auto-fix
@@ -41,7 +41,7 @@ pnpm hash-code <code>   # bcrypt hash (cost 12) of a login code, to paste into U
 [Browser / PWA]
       │
       ▼
-[Nuxt SPA + Nitro API  (port 8080)] ────►  [MySQL / MariaDB]
+[Nuxt SPA + Nitro API  (port 8080)] ────►  [MariaDB 10.11]
    app   server/api
 ```
 
@@ -49,7 +49,7 @@ pnpm hash-code <code>   # bcrypt hash (cost 12) of a login code, to paste into U
 2. The API sets the session in the `HttpOnly` `mccbngAuth` cookie only: a JWT `{ name, email, IDuser, tv }` (HS256, `iss`/`aud` `mccbng`, signed with `JWT_SECRET`, TTL `JWT_TTL_SECONDS`, default 6 h). The response body is `{ userId }`, without the token.
 3. The front only keeps the non-secret `userID` cookie (`app/services/auth.ts`); `app/services/http.ts` sends requests with `credentials: 'same-origin'` and `X-Requested-With: mccbng`. There is no `Authorization` header: a Bearer token is refused.
 4. `server/middleware/auth.ts` requires `X-Requested-With: mccbng` (and a same-host `Origin` when present) on every unsafe method (CSRF, 403 otherwise), then verifies the cookie JWT on every `/api/**` route except `GET /api/ping` and `POST /api/users/login`. It re-reads `User.tokenVersion`: `POST /api/users/logout` increments it, which revokes the user's sessions on all devices.
-5. Users are always looked up by `IDuser` (primary key). The legacy `id` column (not unique) is no longer read or written.
+5. Users are always looked up by `IDuser` (primary key). The legacy LoopBack columns (`id`, `realm`, `emailVerified`, `verificationToken`) are dropped by migration `0004_drop_legacy`.
 6. `JWT_SECRET` must stay fixed: changing it invalidates every session.
 7. There is no signup route: users are created in phpMyAdmin with a `secret_key` produced by `pnpm hash-code <code>` (see `docs/exploitation.md`).
 8. The login rate-limit (5 / 15 min / IP) reads the IP from `X-Real-IP`, set by the Synology DSM reverse proxy from Cloudflare's `CF-Connecting-IP` (chain: client → Cloudflare → DSM → container; the NAS must only be reachable through Cloudflare), with the socket address as fallback; IPv6 addresses are counted by their `/64` prefix (`server/plugins/client-ip.ts`, `rateLimitKey`); `X-Forwarded-For` is never trusted.
@@ -58,7 +58,7 @@ pnpm hash-code <code>   # bcrypt hash (cost 12) of a login code, to paste into U
 
 | Entity | Key | Notes |
 |--------|-----|-------|
-| **User** | `IDuser` (not auto-incremented) | `email` is unique, `secret_key` is the bcrypt-hashed login code. `failedLoginCount`/`lockedUntil` drive the lockout, `tokenVersion` the session revocation. The legacy `id` column (not unique) is unused and will be dropped. |
+| **User** | `IDuser` (not auto-incremented) | `email` is unique, `secret_key` is the bcrypt-hashed login code. `failedLoginCount`/`lockedUntil` drive the lockout, `tokenVersion` the session revocation. |
 | **Banque** | `IDbanque` | Bank — groups accounts. Shared (no user scope): read and create only through the API (no `PATCH`/`PUT`/`DELETE`, 405). |
 | **Compte** | `IDcompte` | Bank account. Type flags: `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible`. |
 | **Operation** | `IDop` | Single transaction. Belongs to a `Compte`, optionally tied to a `Categorie` and a `Credit`. `CheckOp` = pointed/checked status, `amortissement` flag. |
@@ -66,7 +66,6 @@ pnpm hash-code <code>   # bcrypt hash (cost 12) of a login code, to paste into U
 | **Categorie** | `IDcat` | `Type` ENUM (`depense` / `revenu` / `transfert`) drives how the category is counted in each graph. `IDuser = 0` marks shared categories (readable by all, not editable). |
 | **Credit** | `IDcredit` | Loan / mortgage. Auto-creates a monthly `OperationRecurrente` when created. |
 | **Bien** | `IDbien` | Real-estate asset. Optionally linked to a `Credit` (mortgage). |
-| **Stats** | `userID` | Legacy table, unused by the API. |
 
 User scoping uses two patterns:
 
@@ -93,17 +92,17 @@ User scoping uses two patterns:
 - **Node.js**: ≥ 26 (see `.nvmrc`). Node 26 no longer ships `corepack` or `yarn`.
 - **Package Manager**: `pnpm@12.9.1` (see `packageManager` in root `package.json`).
 - **App**: Nuxt/Nitro on port 8080 (dev and Docker image). API mounted at `/api`.
-- **Database**: MySQL / MariaDB. The production schema mixes MyISAM (no transactions) and InnoDB tables, see `docs/db-migrations.md`.
+- **Database**: MariaDB (production 10.11; tests run on `mariadb:10.11`). Since migration `0002` every table is InnoDB (real transactions) in `utf8mb4_unicode_ci`; migrations are replayable (`IF [NOT] EXISTS`) and run with `NO_AUTO_VALUE_ON_ZERO` (`IDcat = 0` / `IDbanque = 0` rows), see `docs/db-migrations.md`.
 
 ### Environment Configuration (read at runtime, from `process.env`)
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | yes | MySQL connection |
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | yes | MariaDB connection |
 | `JWT_SECRET` | yes in production | JWT signing secret (an ephemeral one is generated in dev, with a warning) |
 | `JWT_TTL_SECONDS` | no | JWT lifetime, default 21600 (6 h) |
 
-In development they can live in `.env`. The scripts that modify the database (`scripts/db-migrate.mjs`, `scripts/hash-legacy-secrets.mjs`, `scripts/diagnose-recurrentes.mjs`) also load the root `.env` through `scripts/load-env.mjs` (or the file named by `ENV_FILE`); variables already set in the environment take precedence. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
+In development they can live in `.env`. The scripts that access the database (`scripts/db-migrate.mjs`, `scripts/hash-legacy-secrets.mjs`, `scripts/diagnose-recurrentes.mjs`, `scripts/check-amounts.mjs`) also load the root `.env` through `scripts/load-env.mjs` (or the file named by `ENV_FILE`); variables already set in the environment take precedence. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
 
 ## Docker Deployment
 
@@ -121,12 +120,13 @@ Registry: `dockregistry.xju.fr/mccbng/front` with `staging` and `latest` tags. T
 - Every protected route resolves the user with `getCurrentUserId(event)` (`server/utils/scope.ts`) and applies a scope (`readScope`/`writeScope`, `compteScope`, `assertCompteOwned`) before reading or writing.
 - Request bodies and query parameters are validated with Zod; defaults are applied in code (production SQL defaults differ from the models).
 - Raw SQL must be parameterised (`rawQuery(sql, params)` in `server/utils/sql.ts`).
+- Multi-row writes run in `getDb().transaction(…)` (transfer, credit creation, cascades); there is no manual compensation any more.
 - Frontend uses Vue 3 Composition API with `<script setup lang="ts">`.
 - Auto-imports are disabled in the front: import `ref`/`computed` from `vue`, `useRoute`/`useRouter`/`definePageMeta` from `#imports`, stores from `@/stores/*`, and Nuxt components such as `NuxtPage` from `#components`.
 - SCSS variables (`app/assets/styles/variables.scss`) are globally injected via Vite's `additionalData` (set in `nuxt.config.ts`).
 - CSS custom properties drive light/dark theming (`app/assets/styles/theme.css`).
 - Domain naming is in French (Banque, Compte, Operation, Categorie, Credit, Bien) — keep field/property names consistent with existing models when adding endpoints.
-- All financial amounts use the SQL `FLOAT` type with manual rounding to 2 decimal places.
+- Financial amounts are SQL `DECIMAL(12,2)` (since migration `0003`; `TauxInteret` `DECIMAL(6,3)`, `Surface` `DECIMAL(8,2)`), read as JSON numbers (`decimalNumbers` in the pool, Drizzle `decimal` with `mode: 'number'`); sums computed in JS are still rounded with `round2`. No `FLOAT` column remains.
 - Overlay (modal-style) flows are child pages under `app/pages/` that render `RouteOverTheContent`; the form is selected by `componentName` declared in `definePageMeta`. Route names are part of the contract (`route.name` is read by the code) and are checked by `tests/integration/routes.spec.ts`.
 
 ## Repository Layout
@@ -135,7 +135,7 @@ Registry: `dockregistry.xju.fr/mccbng/front` with `staging` and `latest` tags. T
 mccbng/
 ├── app/                 # Nuxt SPA (pages, components, stores, services…)
 ├── server/              # Nitro API (api/, middleware/, plugins/, db/, utils/)
-├── scripts/             # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs (one-shot), diagnose-recurrentes.mjs (recurring operations / credits diagnostic and fixes)
+├── scripts/             # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs (one-shot), diagnose-recurrentes.mjs (recurring operations / credits diagnostic and fixes), check-amounts.mjs (aggregated amounts snapshot / comparison around a migration)
 ├── public/              # icons, favicon
 ├── tests/               # unit, integration, api
 ├── nuxt.config.ts, vitest*.config.ts, eslint.config.mjs, tsconfig.json

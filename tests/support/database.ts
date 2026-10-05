@@ -1,7 +1,7 @@
 export interface DbConfig { host: string; port: number; user: string; password: string; database: string }
 export type DbCredentials = Omit<DbConfig, 'database'>
 
-// MySQL : base externe via TEST_DB_* (CI, MySQL local), sinon conteneur Testcontainers jetable.
+// MariaDB 10.11 (moteur de production) : base externe via TEST_DB_* (CI, MariaDB local), sinon conteneur Testcontainers jetable.
 export const startDatabase = async () => {
   if (process.env.TEST_DB_HOST) {
     return {
@@ -16,8 +16,8 @@ export const startDatabase = async () => {
       stop: async () => {}
     }
   }
-  const { MySqlContainer } = await import('@testcontainers/mysql')
-  const container = await new MySqlContainer('mysql:8.4')
+  const { MariaDbContainer } = await import('@testcontainers/mariadb')
+  const container = await new MariaDbContainer('mariadb:10.11')
     .withDatabase('mccbng_test').withUsername('mccbng').withUserPassword('mccbng').start()
   return {
     db: { host: container.getHost(), port: container.getPort(), user: 'mccbng', password: 'mccbng', database: 'mccbng_test' },

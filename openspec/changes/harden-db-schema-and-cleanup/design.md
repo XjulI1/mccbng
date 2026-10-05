@@ -65,7 +65,7 @@ Un test applique chaque migration, puis rejoue son contenu une seconde fois et v
 ### D4. Trois migrations
 - Toutes les migrations s'exécutent avec `NO_AUTO_VALUE_ON_ZERO` : le runner ajoute ce mode à la session avant d'appliquer un fichier, et `0002` le rappelle en tête (`SET SESSION sql_mode = CONCAT(@@SESSION.sql_mode, ',NO_AUTO_VALUE_ON_ZERO')`). Sans lui, une copie de table qui réinsère la ligne de clé `0` de `Categorie` ou de `Banque` pourrait lui attribuer une nouvelle valeur auto-incrémentée, ce qui détacherait toutes les opérations de la catégorie « Aucune ». Un test vérifie, après migration, que les lignes `IDcat = 0` et `IDbanque = 0` existent toujours avec cette clé.
 - `0002_innodb_utf8mb4_indexes.sql` :
-  - contrôle préalable documenté : aucune collision de `User.email` sous `utf8mb4_unicode_ci` (requête `GROUP BY email COLLATE utf8mb4_unicode_ci HAVING COUNT(*) > 1` jouée sur la copie de production) ;
+  - contrôle préalable documenté : aucune collision de `User.email` sous `utf8mb4_unicode_ci` (requête `GROUP BY CONVERT(email USING utf8mb4) COLLATE utf8mb4_unicode_ci HAVING COUNT(*) > 1` jouée sur la copie de production ; la conversion est nécessaire sur une colonne `utf8mb3`) ;
   - `ALTER TABLE … ENGINE=InnoDB, CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci` sur `Operation`, `OperationRecurrente`, `Compte`, `Categorie`, `Banque`, `User`, `Credit` (déjà InnoDB) ; `Bien` est déjà conforme ; `Stats` et `UserCredentials` ne sont pas convertis (supprimés par `0004`) ;
   - `UPDATE Compte SET bloque = 0 WHERE bloque IS NULL`, de même pour `porte_feuille` et `retraite` (0) et `visible` (1) ; puis `MODIFY … tinyint(1) NOT NULL DEFAULT …` ;
   - `DROP INDEX IF EXISTS IDopRecu ON OperationRecurrente` ;
@@ -106,7 +106,7 @@ Une fois toutes les tables en InnoDB :
 Ce code et les migrations partent dans la même fenêtre (voir Migration Plan) : la version déployée n'a jamais à fonctionner sur du MyISAM.
 
 ### D8. Schéma Drizzle
-`server/db/schema.ts` décrit le schéma obtenu après toutes les migrations : `decimal` (D6), drapeaux `notNull().default(…)`, index déclarés, `userCredentials` et les colonnes legacy de `User` retirées. Un test compare, après migration d'une base vide, les colonnes, types, nullabilités et défauts du schéma Drizzle à `information_schema.COLUMNS`.
+`server/db/schema.ts` décrit le schéma obtenu après toutes les migrations : `decimal` (D6), drapeaux `notNull().default(…)`, index déclarés, `userCredentials` et les colonnes legacy de `User` retirées. Un test compare, après migration d'une base vide, les colonnes, types, nullabilités et index du schéma Drizzle à `information_schema`. Les défauts ne sont pas comparés : les `.default()` de Drizzle sont des défauts applicatifs (`IDcat: 0`, `JourNumOpRecu: 1`…), appliqués à l'insertion et volontairement différents des défauts SQL de production.
 
 ## Risks / Trade-offs
 
@@ -127,7 +127,7 @@ Ce code et les migrations partent dans la même fenêtre (voir Migration Plan) :
    - `pnpm db:migrate` (`0002` → `0004`) : mesurer la durée ;
    - comparer les sommes par compte avant et après `0003` ;
    - `EXPLAIN` de la liste paginée d'un compte et d'une requête de stats ;
-   - `pnpm test:api` avec `TEST_DB_*` pointant vers la copie.
+   - non-régression de l'API : le serveur construit pointe sur la copie et les réponses de routes GET (comptes, opérations paginées, soldes, stats, crédits) sont comparées avant et après migration, avec la version en production comme référence (`pnpm test:api` ne s'applique pas : son setup recrée la base).
 2. Fenêtre de maintenance :
    1. arrêter l'application ;
    2. sauvegarde complète (`mysqldump`) ;

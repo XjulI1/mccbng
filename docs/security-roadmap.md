@@ -28,22 +28,18 @@ grande partie du change `harden-api-security` (archivé le 2026-10-05,
   **Content-Security-Policy appliquée**.
 - Validation systématique des entrées avec Zod, filtre de liste à liste blanche,
   isolation par utilisateur testée (une ressource d'autrui répond 404).
+- Schéma de base durci (change `harden-db-schema-and-cleanup`) : tables InnoDB
+  (transactions effectives), `utf8mb4`, montants `DECIMAL`, colonnes et tables
+  legacy (`User.id`, `UserCredentials`…) supprimées.
 
 ## Reste à faire
 
-### 1. Schéma de base
-
-- **Tables MyISAM** (`Operation`, `OperationRecurrente`, `Compte`, `Categorie`,
-  `Banque`, `User`) : les transactions de l'API n'ont aucun effet. Conversion en
-  InnoDB portée par le change `harden-db-schema-and-cleanup`, qui supprime aussi
-  la colonne historique `User.id` et la table `UserCredentials`.
-
-### 2. Si l'application est répliquée
+### 1. Si l'application est répliquée
 
 - Rate-limit **partagé** : driver `unstorage` externe (Redis) pour
   `#rate-limiter-storage` de `nuxt-security`.
 
-### 3. Détection (optionnel)
+### 2. Détection (optionnel)
 
 - Table `LoginAttempt` (`IDuser`, `ip`, `success`, `at`) pour monitorer et alerter
   sur les patterns suspects (password spraying), si le journal JSON ne suffit plus.

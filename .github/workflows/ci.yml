@@ -47,7 +47,7 @@ jobs:
         run: pnpm test
 
   api:
-    name: API Nitro (tests d'intégration sur MySQL jetable)
+    name: API Nitro (tests d'intégration sur MariaDB jetable)
     runs-on: ubuntu-latest
 
     steps:
@@ -68,6 +68,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Testcontainers démarre MySQL (Docker est disponible sur ubuntu-latest)
+      # Testcontainers démarre MariaDB 10.11 (Docker est disponible sur ubuntu-latest)
       - name: Tests d'intégration de l'API
         run: pnpm test:api

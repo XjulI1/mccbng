@@ -62,7 +62,7 @@ describe('verrouillage temporaire du compte', () => {
     const [row] = await sql('SELECT failedLoginCount, lockedUntil FROM `User` WHERE IDuser = ?', [IDuser])
     return { failedLoginCount: row.failedLoginCount, ms: row.lockedUntil ? new Date(row.lockedUntil).getTime() - Date.now() : 0 }
   }
-  // lockedUntil est un DATETIME sans fraction de seconde : MySQL arrondit à la seconde la plus proche (jusqu'à +0,5 s)
+  // lockedUntil est un DATETIME sans fraction de seconde : MariaDB arrondit à la seconde la plus proche (jusqu'à +0,5 s)
   const ROUNDING_MS = 1000
   const unlockClock = (IDuser: number) => sql('UPDATE `User` SET lockedUntil = ? WHERE IDuser = ?', [new Date('2000-01-01T00:00:00Z'), IDuser])
 
@@ -263,25 +263,6 @@ describe('profil utilisateur', () => {
     expect(forbidden.status).toBeGreaterThanOrEqual(400)
     const [row] = await sql('SELECT secret_key FROM `User` WHERE IDuser = ?', [a.IDuser])
     expect(row.secret_key).not.toBe('hacked')
-  })
-})
-
-describe('utilisateurs dont la colonne id est dupliquée (données historiques)', () => {
-  it('whoAmI et PATCH /users/me ciblent chacun leur propre ligne (clé primaire IDuser)', async () => {
-    const a = await createUser()
-    const b = await createUser()
-    // En production la colonne `id` n'est pas unique : on force le même id pour les deux utilisateurs
-    await sql('UPDATE `User` SET id = ? WHERE IDuser IN (?, ?)', ['1', a.IDuser, b.IDuser])
-
-    expect((await get('/api/users/whoAmI', a.token)).body).toMatchObject({ IDuser: a.IDuser, email: a.email })
-    expect((await get('/api/users/whoAmI', b.token)).body).toMatchObject({ IDuser: b.IDuser, email: b.email })
-
-    expect((await patch('/api/users/me', b.token, { username: 'seulement-b' })).status).toBe(204)
-    expect((await get('/api/users/whoAmI', b.token)).body.username).toBe('seulement-b')
-    expect((await get('/api/users/whoAmI', a.token)).body.username).not.toBe('seulement-b')
-
-    // doublon d'email : 409 (et non une erreur SQL 500)
-    expect((await patch('/api/users/me', b.token, { email: a.email })).status).toBe(409)
   })
 })
 
