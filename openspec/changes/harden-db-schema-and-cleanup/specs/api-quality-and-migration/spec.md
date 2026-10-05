@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Migrations SQL versionnées avec baseline
-Le schéma SHALL être géré par des fichiers SQL versionnés dans `server/db/migrations/`, appliqués dans l'ordre par une commande dédiée (`pnpm db:migrate`) qui enregistre les migrations jouées dans une table de suivi. La base de production actuelle MUST être la **baseline** : la migration `0000_baseline` reprend à l'identique le DDL de production (moteurs MyISAM/InnoDB, jeux de caractères et défauts compris), est marquée comme jouée sans être exécutée sur la production, et MUST permettre de recréer le schéma sur une base vide. Les anciennes migrations (`2026-05-02-create-bien.sql`, `2026-05-07-categorie-type.sql`) sont intégrées à la baseline. Aucun mode `--rebuild`/`DROP` MUST exister. La commande MUST prendre un verrou exclusif (`GET_LOCK`) pendant son exécution et échouer explicitement si une autre exécution le détient ; l'option `--baseline` MUST être refusée lorsque le schéma n'existe pas ; un échec pendant l'application d'un fichier MUST nommer le fichier et signaler qu'il peut être partiellement appliqué.
+Le schéma SHALL être géré par des fichiers SQL versionnés dans `server/db/migrations/`, appliqués dans l'ordre par une commande dédiée (`pnpm db:migrate`) qui enregistre les migrations jouées dans une table de suivi. La base de production actuelle MUST être la **baseline** : la migration `0000_baseline` reprend à l'identique le DDL de production (moteurs MyISAM/InnoDB, jeux de caractères et défauts compris), est marquée comme jouée sans être exécutée sur la production, et MUST permettre de recréer le schéma sur une base vide. Les anciennes migrations (`2026-05-02-create-bien.sql`, `2026-05-07-categorie-type.sql`) sont intégrées à la baseline. Aucun mode `--rebuild`/`DROP` MUST exister. Le moteur cible est MariaDB. La commande MUST prendre un verrou exclusif (`GET_LOCK`) pendant son exécution et échouer explicitement si une autre exécution le détient ; l'option `--baseline` MUST être refusée lorsque le schéma n'existe pas ; chaque fichier MUST être appliqué avec le mode SQL `NO_AUTO_VALUE_ON_ZERO`, de sorte qu'une clé auto-incrémentée valant `0` soit conservée ; un échec pendant l'application d'un fichier MUST nommer le fichier et signaler qu'il peut être partiellement appliqué. Toute migration postérieure à la baseline MUST être rejouable : relancer son contenu après une application complète ou partielle ne produit ni erreur ni modification supplémentaire.
 
 #### Scenario: Base vide
 - **WHEN** la commande de migration est lancée sur une base vide
@@ -23,30 +23,64 @@ Le schéma SHALL être géré par des fichiers SQL versionnés dans `server/db/m
 - **WHEN** `pnpm db:migrate -- --baseline` est lancé sur une base sans table `User`
 - **THEN** la commande échoue sans marquer la baseline comme jouée
 
+#### Scenario: Fichier en échec
+- **WHEN** une instruction d'un fichier de migration échoue
+- **THEN** la commande échoue avec un message qui nomme le fichier et signale une application partielle possible, et le fichier n'est pas marqué comme joué
+
+#### Scenario: Clé zéro conservée
+- **WHEN** les migrations sont appliquées sur une base contenant la catégorie partagée `IDcat = 0` et la banque `IDbanque = 0`
+- **THEN** ces deux lignes existent toujours avec la clé `0` et les opérations en `IDcat = 0` restent rattachées à « Aucune »
+
+#### Scenario: Migration rejouée
+- **WHEN** le contenu d'une migration postérieure à la baseline est exécuté une seconde fois sur une base où elle a déjà été appliquée
+- **THEN** aucune erreur n'est levée et le schéma est inchangé
+
+### Requirement: Tests d'intégration des handlers
+Chaque domaine (auth, référentiel, opérations, crédits/biens, stats) SHALL être couvert par des tests Vitest + `@nuxt/test-utils` exécutant les handlers contre une base MariaDB 10.11 réelle jetable (Testcontainers, ou base externe via `TEST_DB_*`) initialisée par les migrations. Les tests MUST couvrir le scoping multi-utilisateur (une ressource d'autrui = 404), les cascades du crédit, l'auto-génération des récurrentes, les filtres `Categorie.Type` et le rate-limit du login.
+
+#### Scenario: Suite complète
+- **WHEN** `pnpm test:api` est exécuté avec Docker disponible
+- **THEN** la base MariaDB jetable démarre, les migrations passent et tous les tests d'intégration réussissent
+
+#### Scenario: Isolation entre tests
+- **WHEN** deux tests créent des données
+- **THEN** les données de l'un n'affectent pas l'autre
+
 ## ADDED Requirements
 
 ### Requirement: Schéma normalisé
-Une migration versionnée SHALL convertir les tables `Operation`, `OperationRecurrente`, `Compte`, `Categorie`, `Banque` et `User` en `InnoDB` et toutes les tables métier en `utf8mb4`, remplacer les valeurs `NULL` des drapeaux de compte (`bloque`, `joint`, `children`, `retraite`, `porte_feuille` → 0, `visible` → 1) puis les déclarer `NOT NULL` avec ces défauts, et créer les index `Operation(IDcompte, CheckOp, DateOp)`, `Operation(IDcredit)`, `Operation(IDcat)`, `Compte(IDuser)`, `OperationRecurrente(IDcompte)`, `Categorie(IDuser)` et `Credit(IDuser)`.
-
-#### Scenario: Transaction effective
-- **WHEN** une écriture multi-tables de l'API échoue après sa première instruction
-- **THEN** aucune des écritures de la transaction n'est persistée
+Une migration versionnée SHALL convertir les tables `Operation`, `OperationRecurrente`, `Compte`, `Categorie`, `Banque`, `User` et `Credit` en `InnoDB` avec le jeu de caractères `utf8mb4` et la collation `utf8mb4_unicode_ci`, remplacer les valeurs `NULL` des drapeaux de compte (`bloque`, `porte_feuille`, `retraite` → 0, `visible` → 1) puis les déclarer `NOT NULL` avec ces défauts, supprimer la clé `UNIQUE IDopRecu` redondante, et créer les index `Operation(IDcompte, CheckOp, DateOp)`, `Operation(IDcompte, DateOp)`, `Operation(IDcredit)`, `Operation(IDcat)`, `Compte(IDuser)`, `OperationRecurrente(IDcompte)`, `Categorie(IDuser)` et `Credit(IDuser)`.
 
 #### Scenario: Libellé avec emoji
 - **WHEN** `POST /api/operations` est appelé avec `NomOp: "Resto 🍕"`
 - **THEN** l'opération est créée et relue avec le même libellé
 
-#### Scenario: Index utilisé
-- **WHEN** la liste paginée des opérations d'un compte est demandée
-- **THEN** le plan d'exécution (`EXPLAIN`) utilise l'index `Operation(IDcompte, CheckOp, DateOp)`
+#### Scenario: Drapeau absent
+- **WHEN** un compte est inséré sans valeur pour `bloque` ni `visible`
+- **THEN** il est relu avec `bloque = 0` et `visible = 1`
 
-### Requirement: Montants exacts
-Une migration versionnée distincte SHALL convertir toutes les colonnes de montant (`Operation`, `OperationRecurrente`, `Compte`, `Credit`, `Bien`) de `FLOAT` en `DECIMAL(12,2)`. L'API MUST continuer de renvoyer ces montants comme des nombres JSON.
+#### Scenario: Index présents
+- **WHEN** les migrations sont appliquées sur une base vide
+- **THEN** `information_schema.STATISTICS` contient les 8 index et toutes les tables métier sont en `InnoDB` / `utf8mb4_unicode_ci`
+
+### Requirement: Valeurs numériques exactes
+Une migration versionnée distincte SHALL supprimer toute colonne `FLOAT` du schéma : les montants (`Operation.MontantOp`, `OperationRecurrente.MontantOpRecu`, `Compte.solde`, `Credit.MontantInitial`, `Credit.MontantMensuel`, `Bien.PrixBienNu`, `Bien.FraisNotaire`, `Bien.FraisAgence`, `Bien.ApportCash`, `Bien.ValeurActuelle`) en `DECIMAL(12,2)`, `Credit.TauxInteret` en `DECIMAL(6,3)` et `Bien.Surface` en `DECIMAL(8,2)`, nullabilité et défauts conservés. L'API MUST continuer de renvoyer ces valeurs comme des nombres JSON.
 
 #### Scenario: Montant élevé
 - **WHEN** un crédit de 150 000,01 € est enregistré puis relu
 - **THEN** `MontantInitial` vaut exactement 150000.01
 
 #### Scenario: Type JSON conservé
-- **WHEN** une opération est lue via `GET /api/operations/{id}`
-- **THEN** `MontantOp` est un nombre JSON et non une chaîne
+- **WHEN** une opération est lue via `GET /api/operations/{id}` et un crédit via `GET /api/credits/{id}`
+- **THEN** `MontantOp`, `MontantInitial` et `TauxInteret` sont des nombres JSON et non des chaînes
+
+### Requirement: Suppression du schéma legacy
+Une migration versionnée SHALL supprimer les tables `Stats` et `UserCredentials` et les colonnes `User.id`, `User.realm`, `User.emailVerified` et `User.verificationToken`, qu'aucun code ne lit ni n'écrit.
+
+#### Scenario: Schéma nettoyé
+- **WHEN** les migrations sont appliquées sur une base vide
+- **THEN** les tables `Stats` et `UserCredentials` n'existent pas et `User` ne contient plus les colonnes legacy
+
+#### Scenario: Profil utilisateur intact
+- **WHEN** `GET /api/users/whoAmI` est appelé après migration
+- **THEN** `username`, `warningTotal`, `warningCompte` et `favoris` sont renvoyés comme avant
