@@ -13,6 +13,16 @@
         }}
       </h2>
 
+      <p
+        v-if="isManagedByCredit"
+        class="form-notice"
+      >
+        Cette mensualité est gérée par son crédit : modifiez-la depuis la page
+        <NuxtLink to="/credits">
+          Crédits
+        </NuxtLink>.
+      </p>
+
       <div class="form-group">
         <label
           for="operation-name"
@@ -219,6 +229,7 @@
         <button
           type="button"
           class="btn btn-primary"
+          :disabled="isManagedByCredit"
           @click="updateOperationRecurrente"
         >
           <span class="btn-icon">✓</span>
@@ -229,6 +240,7 @@
           v-if="operationRecurrente.IDopRecu"
           type="button"
           class="btn btn-danger"
+          :disabled="isManagedByCredit"
           @click="deleteOperationRecurrente"
         >
           <span class="btn-icon">🗑</span>
@@ -245,6 +257,7 @@
   import { useCompteStore } from '@/stores/compte'
   import { useOperationStore } from '@/stores/operation'
   import { useRoute, useRouter } from '#imports'
+  import { NuxtLink } from '#components'
 
   const categoryStore = useCategoryStore()
   const compteStore = useCompteStore()
@@ -261,9 +274,10 @@
     MontantOpRecu: 0,
     JourOpRecu: 1,
     JourNumOpRecu: 1,
-    MoisOpRecu: 1,
+    // Mois indexés à partir de 0 (janvier)
+    MoisOpRecu: 0,
     Frequence: 3,
-    DernierDateOpRecu: new Date(),
+    // DernierDateOpRecu n'est pas envoyé à la création : le serveur le fixe pour que la première échéance soit générée
     IDcompte: undefined,
     IDcat: 0
   })
@@ -275,7 +289,9 @@
   const activeAccountID = computed(
     () => compteStore.activeAccount.IDcompte
   )
-  const isYearly = computed(() => operationRecurrente.value.Frequence === 7)
+  const isYearly = computed(() => Number(operationRecurrente.value.Frequence) === 7)
+  // Une mensualité de crédit se modifie depuis le crédit (l'API répond 409)
+  const isManagedByCredit = computed(() => Boolean((operationRecurrente.value as { IDcredit?: number | null }).IDcredit))
 
   watch(activeAccountID, (value) => {
     if (!operationRecurrente.value.IDopRecu) {
@@ -311,6 +327,7 @@
   }
 
   const updateOperationRecurrente = () => {
+    if (isManagedByCredit.value) return
     operationStore.updateRecurringOperation(operationRecurrente.value)
 
     if (operationRecurrente.value.IDopRecu === undefined) {
@@ -321,6 +338,7 @@
   }
 
   const deleteOperationRecurrente = () => {
+    if (isManagedByCredit.value) return
     operationStore.deleteRecurringOperation(operationRecurrente.value)
     router.push('/recurrOperation')
   }
@@ -356,7 +374,6 @@
       montantOpIsPositive.value = operationRecurrente.value.MontantOpRecu > 0
     }
   } else {
-    operationRecurrente.value.DernierDateOpRecu = new Date()
     operationRecurrente.value.IDcompte = activeAccountID.value
   }
 </script>
@@ -389,6 +406,12 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.form-notice {
+  margin: 0 0 var(--spacing-lg);
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .form-group {

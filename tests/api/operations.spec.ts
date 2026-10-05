@@ -2,9 +2,35 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import {
   createCategorie, createCompte, createOperation, createUser, del, get, patch, post, put, sql, type TestUser
 } from './helpers'
+import {
+  addDays, firstDueOnOrAfter, initialLastDate, prevDueDate, startOfUtcDay, type RecurrenceRule
+} from '../../server/utils/schedule'
 
 let alice: TestUser
 let bob: TestUser
+
+const today = () => startOfUtcDay(new Date())
+const iso = (date: Date | string) => new Date(date).toISOString().slice(0, 10)
+
+// Les `count` dernières échéances dues (≤ aujourd'hui + anticipation) et la DernierDateOpRecu qui les précède
+const lastDues = (rule: RecurrenceRule, count: number, anticipation = 15) => {
+  const dues = [prevDueDate(rule, firstDueOnOrAfter(rule, addDays(today(), anticipation + 1)))]
+  while (dues.length < count) dues.unshift(prevDueDate(rule, dues[0]!))
+  return { dues, last: prevDueDate(rule, dues[0]!) }
+}
+
+// Crée une récurrente par l'API puis impose sa règle et sa DernierDateOpRecu en base (état historique simulé)
+const createRecurrente = async (user: TestUser, IDcompte: number, rule: RecurrenceRule, last: Date) => {
+  const res = await post('/api/operation-recurrentes', user.token, {
+    NomOpRecu: 'Loyer', MontantOpRecu: -500, JourOpRecu: 1, IDcompte, ...rule
+  })
+  if (res.status !== 200) throw new Error(`createRecurrente: ${res.status} ${JSON.stringify(res.body)}`)
+  await sql('UPDATE OperationRecurrente SET DernierDateOpRecu = ? WHERE IDopRecu = ?', [last, res.body.IDopRecu])
+  return res.body.IDopRecu as number
+}
+
+const generatedDates = async (IDcompte: number) =>
+  (await sql('SELECT DateOp FROM Operation WHERE IDcompte = ? ORDER BY DateOp, IDop', [IDcompte])).map((o: any) => iso(o.DateOp))
 
 beforeAll(async () => {
   alice = await createUser()
@@ -120,6 +146,17 @@ describe('agrégats', () => {
     expect(ligne.TotalChecked).toBeUndefined()
   })
 
+  it('agrégats : une échéance datée dans le futur reste comptée, totaux arrondis', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    await createOperation(user, compte.IDcompte, { MontantOp: -0.1, CheckOp: true })
+    await createOperation(user, compte.IDcompte, { MontantOp: -0.2, CheckOp: true })
+    await createOperation(user, compte.IDcompte, { MontantOp: -850, DateOp: addDays(new Date(), 10).toISOString() })
+    const one = (await get('/api/operations/sumForACompte', user.token, { id: compte.IDcompte })).body
+    expect(one).toEqual({ IDCompte: compte.IDcompte, TotalChecked: -0.3, TotalNotChecked: -850 })
+    expect((await get('/api/operations/sumForACompte', user.token, { id: (await createCompte(user)).IDcompte })).body).toEqual({})
+  })
+
   it('totaux mensuels : Type=depense uniquement', async () => {
     const erin = await createUser()
     const compte = await createCompte(erin)
@@ -162,55 +199,210 @@ describe('opérations récurrentes', () => {
   const recurrente = (IDcompte: number, extra: Record<string, unknown> = {}) => ({
     NomOpRecu: 'Loyer', MontantOpRecu: -500, JourOpRecu: 1, DernierDateOpRecu: '2024-01-05', IDcompte, ...extra
   })
+  const monthly = (JourNumOpRecu: number): RecurrenceRule => ({ Frequence: 3, JourNumOpRecu, MoisOpRecu: 0 })
 
-  it('CRUD : défauts, compte d\'autrui → 404', async () => {
+  it('CRUD : défauts (MoisOpRecu = 0), compte d\'autrui → 404', async () => {
     const compte = await createCompte(alice)
     const created = await post('/api/operation-recurrentes', alice.token, recurrente(compte.IDcompte))
     expect(created.status).toBe(200)
-    expect(created.body).toMatchObject({ JourNumOpRecu: 1, MoisOpRecu: 1, Frequence: 3, IDcat: 0 })
+    expect(created.body).toMatchObject({ JourNumOpRecu: 1, MoisOpRecu: 0, Frequence: 3, IDcat: 0 })
     const bobCompte = await createCompte(bob)
     expect((await post('/api/operation-recurrentes', alice.token, recurrente(bobCompte.IDcompte))).status).toBe(404)
     expect((await get(`/api/operation-recurrentes/${created.body.IDopRecu}`, bob.token)).status).toBe(404)
     expect((await del(`/api/operation-recurrentes/${created.body.IDopRecu}`, alice.token)).status).toBe(204)
   })
 
-  it('auto-génération : mensuelle échue, récente, annuelle ; idempotence', async () => {
+  it('validation : Frequence ∈ {3, 7}, JourNumOpRecu 1-31, MoisOpRecu 0-11, IDcredit refusé, sans écriture', async () => {
+    const compte = await createCompte(alice)
+    for (const invalid of [{ Frequence: 5 }, { JourNumOpRecu: 0 }, { JourNumOpRecu: 32 }, { MoisOpRecu: 12 }, { MoisOpRecu: -1 }, { IDcredit: 1 }]) {
+      const res = await post('/api/operation-recurrentes', alice.token, recurrente(compte.IDcompte, invalid))
+      expect(res.status, JSON.stringify(invalid)).toBe(422)
+    }
+    expect((await sql('SELECT COUNT(*) AS n FROM OperationRecurrente WHERE IDcompte = ?', [compte.IDcompte]))[0].n).toBe(0)
+    // valeurs reçues en chaîne depuis un <select>
+    const annual = await post('/api/operation-recurrentes', alice.token, recurrente(compte.IDcompte, { Frequence: '7', MoisOpRecu: '11', JourNumOpRecu: '31' }))
+    expect(annual.status).toBe(200)
+    expect(annual.body).toMatchObject({ Frequence: 7, MoisOpRecu: 11, JourNumOpRecu: 31 })
+    const patched = await patch(`/api/operation-recurrentes/${annual.body.IDopRecu}`, alice.token, { Frequence: 4 })
+    expect(patched.status).toBe(422)
+  })
+
+  it('création : DernierDateOpRecu reçu ignoré, la première échéance à venir est générée', async () => {
+    const compte = await createCompte(alice)
+    const rule = monthly(new Date().getUTCDate())
+    const created = (await post('/api/operation-recurrentes', alice.token, recurrente(compte.IDcompte, {
+      JourNumOpRecu: rule.JourNumOpRecu, DernierDateOpRecu: new Date().toISOString()
+    }))).body
+    const [row] = await sql('SELECT DernierDateOpRecu FROM OperationRecurrente WHERE IDopRecu = ?', [created.IDopRecu])
+    expect(iso(row.DernierDateOpRecu)).toBe(iso(initialLastDate(rule, new Date())))
+    // échéance du jour : générée au premier appel
+    const user = alice
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    expect(await generatedDates(compte.IDcompte)).toEqual([iso(today())])
+  })
+
+  it('auto-génération : échéance au jour choisi, une seule par appel répété', async () => {
     const gina = await createUser()
     const compte = await createCompte(gina)
-    const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString()
-    const due = (await post('/api/operation-recurrentes', gina.token, recurrente(compte.IDcompte, { NomOpRecu: 'Échue', DernierDateOpRecu: daysAgo(20) }))).body
-    const recent = (await post('/api/operation-recurrentes', gina.token, recurrente(compte.IDcompte, { NomOpRecu: 'Récente', DernierDateOpRecu: daysAgo(5) }))).body
-    const yearly = (await post('/api/operation-recurrentes', gina.token, recurrente(compte.IDcompte, { NomOpRecu: 'Annuelle', Frequence: 7, DernierDateOpRecu: daysAgo(400) }))).body
-    const yearlyRecent = (await post('/api/operation-recurrentes', gina.token, recurrente(compte.IDcompte, { NomOpRecu: 'Annuelle récente', Frequence: 7, DernierDateOpRecu: daysAgo(100) }))).body
+    const target = addDays(today(), -3)
+    const rule = monthly(target.getUTCDate())
+    const recu = await createRecurrente(gina, compte.IDcompte, rule, prevDueDate(rule, target))
 
     const res = await post('/api/operation-recurrentes/auto-generation', gina.token, {})
     expect(res.status).toBe(200)
     expect(res.body).toEqual({})
+    expect(await generatedDates(compte.IDcompte)).toEqual([iso(target)])
+    const [row] = await sql('SELECT DernierDateOpRecu FROM OperationRecurrente WHERE IDopRecu = ?', [recu])
+    expect(iso(row.DernierDateOpRecu)).toBe(iso(target))
+    const ops = await sql('SELECT CheckOp, MontantOp FROM Operation WHERE IDcompte = ?', [compte.IDcompte])
+    expect(ops).toEqual([{ CheckOp: 0, MontantOp: -500 }])
 
-    const ops = await sql('SELECT NomOp, CheckOp FROM Operation WHERE IDcompte = ?', [compte.IDcompte])
-    expect(ops.map((o: any) => o.NomOp).sort()).toEqual(['Annuelle', 'Échue'])
-    expect(ops.every((o: any) => o.CheckOp === 0)).toBe(true)
-
-    const [after] = await sql('SELECT DernierDateOpRecu FROM OperationRecurrente WHERE IDopRecu = ?', [due.IDopRecu])
-    expect(new Date(after.DernierDateOpRecu).getTime()).toBeGreaterThan(new Date(due.DernierDateOpRecu).getTime())
-    // les récurrentes non échues ne bougent pas
-    const [untouched] = await sql('SELECT DernierDateOpRecu FROM OperationRecurrente WHERE IDopRecu IN (?, ?) ORDER BY IDopRecu', [recent.IDopRecu, yearlyRecent.IDopRecu])
-    expect(untouched).toBeDefined()
-    void yearly
-
-    // 2e appel : l'échue (désormais +1 mois, donc dans moins de 15 j ou déjà passée) ne produit au plus qu'une occurrence de plus
     await post('/api/operation-recurrentes/auto-generation', gina.token, {})
-    const again = await sql('SELECT COUNT(*) AS n FROM Operation WHERE IDcompte = ?', [compte.IDcompte])
-    expect(again[0].n).toBeLessThanOrEqual(3)
+    expect(await generatedDates(compte.IDcompte)).toEqual([iso(target)])
+  })
+
+  it('auto-génération : échéance à plus de 15 jours non générée', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const rule = monthly(1)
+    const { dues } = lastDues(rule, 1)
+    await createRecurrente(user, compte.IDcompte, rule, dues[0]!)
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    expect(await generatedDates(compte.IDcompte)).toEqual([])
+  })
+
+  it('auto-génération : rattrapage complet en un appel, jour 31 borné en fin de mois', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const rule = monthly(31)
+    const { dues, last } = lastDues(rule, 3)
+    await createRecurrente(user, compte.IDcompte, rule, last)
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    expect(await generatedDates(compte.IDcompte)).toEqual(dues.map(iso))
+    expect(dues.every(d => d.getUTCDate() === new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate())).toBe(true)
+  })
+
+  it('auto-génération : annuelle au mois et au jour choisis', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const target = addDays(today(), -2)
+    const rule: RecurrenceRule = { Frequence: 7, JourNumOpRecu: target.getUTCDate(), MoisOpRecu: target.getUTCMonth() }
+    await createRecurrente(user, compte.IDcompte, rule, prevDueDate(rule, target))
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    expect(await generatedDates(compte.IDcompte)).toEqual([iso(target)])
+  })
+
+  it('auto-génération : appels concurrents sans doublon', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const rule = monthly(10)
+    const { dues, last } = lastDues(rule, 3)
+    await createRecurrente(user, compte.IDcompte, rule, last)
+    const results = await Promise.all([1, 2, 3, 4].map(() => post('/api/operation-recurrentes/auto-generation', user.token, {})))
+    expect(results.map(r => r.status)).toEqual([200, 200, 200, 200])
+    expect(await generatedDates(compte.IDcompte)).toEqual(dues.map(iso))
+  })
+
+  it('auto-génération : DernierDateOpRecu historique portant une heure', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const target = addDays(today(), -1)
+    const rule = monthly(target.getUTCDate())
+    const last = new Date(prevDueDate(rule, target).getTime() + (14 * 60 + 37) * 60_000)
+    await createRecurrente(user, compte.IDcompte, rule, last)
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    expect(await generatedDates(compte.IDcompte)).toEqual([iso(target)])
+  })
+
+  it('auto-génération : au plus 24 échéances par appel', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const rule = monthly(1)
+    const { dues, last } = lastDues(rule, 30)
+    await createRecurrente(user, compte.IDcompte, rule, last)
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    expect(await generatedDates(compte.IDcompte)).toEqual(dues.slice(0, 24).map(iso))
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    expect(await generatedDates(compte.IDcompte)).toEqual(dues.map(iso))
+  })
+
+  it('auto-génération : récurrente orpheline (crédit inexistant) ignorée', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const rule = monthly(10)
+    const { last } = lastDues(rule, 2)
+    const recu = await createRecurrente(user, compte.IDcompte, rule, last)
+    await sql('UPDATE OperationRecurrente SET IDcredit = ? WHERE IDopRecu = ?', [2_000_000_000, recu])
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    expect(await generatedDates(compte.IDcompte)).toEqual([])
   })
 
   it('auto-génération ne touche pas les récurrentes d\'autrui', async () => {
     const hank = await createUser()
     const ivy = await createUser()
     const compte = await createCompte(ivy)
-    await post('/api/operation-recurrentes', ivy.token, recurrente(compte.IDcompte, { DernierDateOpRecu: new Date(Date.now() - 30 * 86_400_000).toISOString() }))
+    const rule = monthly(10)
+    await createRecurrente(ivy, compte.IDcompte, rule, lastDues(rule, 2).last)
     await post('/api/operation-recurrentes/auto-generation', hank.token, {})
-    const ops = await sql('SELECT COUNT(*) AS n FROM Operation WHERE IDcompte = ?', [compte.IDcompte])
-    expect(ops[0].n).toBe(0)
+    expect(await generatedDates(compte.IDcompte)).toEqual([])
+  })
+
+  it('récurrente d\'un crédit : lecture seule (409), ignorée par le PATCH en masse', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const credit = (await post('/api/credits', user.token, {
+      NomCredit: 'Auto', MontantInitial: 1000, MontantMensuel: 100, DateDebut: '2024-03-15', DateFin: '2099-03-15', IDcompte: compte.IDcompte
+    })).body
+    const simple = (await post('/api/operation-recurrentes', user.token, recurrente(compte.IDcompte))).body
+    const url = `/api/operation-recurrentes/${credit.IDopRecu}`
+
+    const patched = await patch(url, user.token, { MontantOpRecu: -1 })
+    expect(patched.status).toBe(409)
+    expect(patched.body.error.message).toBe(`Recurring operation ${credit.IDopRecu} is managed by credit ${credit.IDcredit}`)
+    expect((await put(url, user.token, recurrente(compte.IDcompte))).status).toBe(409)
+    expect((await del(url, user.token)).status).toBe(409)
+
+    const bulk = await patch('/api/operation-recurrentes', user.token, { MontantOpRecu: -42 })
+    expect(bulk.body).toEqual({ count: 1 })
+    const rows = await sql('SELECT IDopRecu, MontantOpRecu FROM OperationRecurrente WHERE IDcompte = ? ORDER BY IDopRecu', [compte.IDcompte])
+    expect(rows).toEqual([{ IDopRecu: credit.IDopRecu, MontantOpRecu: 100 }, { IDopRecu: simple.IDopRecu, MontantOpRecu: -42 }])
+  })
+})
+
+describe('virement', () => {
+  it('crée le débit et le crédit, avec la catégorie sur les deux', async () => {
+    const user = await createUser()
+    const a = await createCompte(user, { NomCompte: 'A' })
+    const b = await createCompte(user, { NomCompte: 'B' })
+    const cat = await createCategorie(user, 'Virement', 'transfert')
+    const res = await post('/api/operations/transfert', user.token, {
+      fromCompte: a.IDcompte, toCompte: b.IDcompte, montant: '100', DateOp: '2026-10-05', NomOp: 'Virement (A -> B)', IDcat: cat.IDcat
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.debit).toMatchObject({ MontantOp: -100, IDcompte: a.IDcompte, IDcat: cat.IDcat })
+    expect(res.body.credit).toMatchObject({ MontantOp: 100, IDcompte: b.IDcompte, IDcat: cat.IDcat })
+    const ops = await sql('SELECT IDop, IDcompte, MontantOp, IDcat, CheckOp FROM Operation WHERE IDcompte IN (?, ?) ORDER BY IDop', [a.IDcompte, b.IDcompte])
+    expect(ops).toEqual([
+      { IDop: res.body.debit.IDop, IDcompte: a.IDcompte, MontantOp: -100, IDcat: cat.IDcat, CheckOp: 0 },
+      { IDop: res.body.credit.IDop, IDcompte: b.IDcompte, MontantOp: 100, IDcat: cat.IDcat, CheckOp: 0 }
+    ])
+  })
+
+  it('refuse sans écriture : catégorie manquante, même compte, montant ≤ 0, compte ou catégorie d\'autrui', async () => {
+    const user = await createUser()
+    const a = await createCompte(user)
+    const b = await createCompte(user)
+    const cat = await createCategorie(user, 'Virement', 'transfert')
+    const bobCompte = await createCompte(bob)
+    const bobCat = await createCategorie(bob, 'Privée', 'transfert')
+    const body = { fromCompte: a.IDcompte, toCompte: b.IDcompte, montant: 10, DateOp: '2026-10-05', NomOp: 'V', IDcat: cat.IDcat }
+
+    expect((await post('/api/operations/transfert', user.token, { ...body, IDcat: undefined })).status).toBe(422)
+    expect((await post('/api/operations/transfert', user.token, { ...body, toCompte: a.IDcompte })).status).toBe(400)
+    expect((await post('/api/operations/transfert', user.token, { ...body, montant: 0 })).status).toBe(422)
+    expect((await post('/api/operations/transfert', user.token, { ...body, toCompte: bobCompte.IDcompte })).status).toBe(404)
+    expect((await post('/api/operations/transfert', user.token, { ...body, IDcat: bobCat.IDcat })).status).toBe(404)
+    expect((await sql('SELECT COUNT(*) AS n FROM Operation WHERE IDcompte IN (?, ?, ?)', [a.IDcompte, b.IDcompte, bobCompte.IDcompte]))[0].n).toBe(0)
   })
 })

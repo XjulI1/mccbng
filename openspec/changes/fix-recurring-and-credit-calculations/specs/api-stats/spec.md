@@ -1,18 +1,36 @@
 ## MODIFIED Requirements
 
 ### Requirement: Évolution du solde
-`GET /api/stats/evolutionSolde` SHALL renvoyer `{ soldeGlobal, soldeRetraite, soldeDispo, global, retraite, dispo }` (soldes actuels et séries journalières pour les trois regroupements de comptes) sans filtre de `Categorie.Type`, de sorte que les soldes correspondent à ceux de la banque. Les requêtes SQL MUST être paramétrées et limitées aux comptes de l'utilisateur. Un drapeau de compte `NULL` (`bloque`, `retraite`, `children`, `porte_feuille`) MUST être interprété comme 0 et ne jamais exclure le compte des regroupements.
+`GET /api/stats/evolutionSolde` SHALL renvoyer `{ soldeGlobal, soldeRetraite, soldeDispo, global, retraite, dispo }`, c'est-à-dire les soldes actuels et les séries journalières pour les trois regroupements de comptes. Les soldes actuels sont la somme des soldes d'ouverture (`Compte.solde`) du regroupement ; les séries sont les sommes journalières des opérations, que le front cumule à partir de ce solde. Ces valeurs sont calculées sans filtre de `Categorie.Type`, de sorte que les soldes correspondent à ceux de la banque. Les regroupements MUST être :
+- `global` : comptes avec `retraite = 0` et `children = 0` ;
+- `retraite` : comptes avec `retraite = 1` ;
+- `dispo` : comptes avec `retraite = 0`, `children = 0` et `bloque = 0` (sous-ensemble de `global`).
+
+Les requêtes SQL MUST être paramétrées et limitées aux comptes de l'utilisateur. Un drapeau de compte `NULL` (`bloque`, `retraite`, `children`, `porte_feuille`) MUST être interprété comme 0 et ne jamais exclure le compte des regroupements.
 
 #### Scenario: Cohérence avec les agrégats
-- **WHEN** l'utilisateur possède des comptes avec opérations de tous types de catégorie
-- **THEN** `soldeGlobal` égale la somme des soldes de `sumAllCompteForUser`
+- **WHEN** l'utilisateur possède des comptes, dont un compte retraite et un compte enfant, avec opérations de tous types de catégorie
+- **THEN** `soldeGlobal` égale la somme des soldes d'ouverture des comptes ni retraite ni enfant, et la série `global` totalise toutes leurs opérations, toutes catégories confondues
 
 #### Scenario: Ancien compte sans drapeau
 - **WHEN** un compte de l'utilisateur a `retraite = NULL` et `bloque = NULL`
 - **THEN** il est inclus dans `soldeGlobal`, la série `global` et la série `dispo`
 
+#### Scenario: Compte retraite non bloqué
+- **WHEN** un compte de l'utilisateur a `retraite = 1` et `bloque = 0`
+- **THEN** il est inclus dans `soldeRetraite` et la série `retraite`, mais ni dans `soldeDispo` ni dans la série `dispo`
+
+#### Scenario: Compte enfant non bloqué
+- **WHEN** un compte de l'utilisateur a `children = 1` et `bloque = 0`
+- **THEN** il n'est inclus ni dans `global` ni dans `dispo`
+
 ### Requirement: Statistiques de dépenses
-`GET /api/stats/yearComparison`, `topCategories` et `categoryHeatmap` SHALL considérer les catégories `Type='depense'` ainsi que les sorties non catégorisées (`MontantOp < 0` avec `IDcat` égal à 0, `NULL` ou inexistant), regroupées sous `IDcat = 0` et le libellé `Non catégorisé`. `yearComparison` exige `yearA` et `yearB` (400 `yearA and yearB are required`). Les plages de dates (`from`, `to`) MUST être obligatoires (400 `from and to are required`), au format `YYYY-MM-DD` (400 sinon) et ordonnées (400 `from must be earlier than to`) ; la borne `to` MUST inclure toute la journée. Le paramètre `limit` MUST être borné comme aujourd'hui.
+`GET /api/stats/yearComparison`, `topCategories`, `categoryHeatmap`, `incomeVsExpense` (série `expense`) et `topOperations` SHALL considérer comme dépenses les catégories `Type='depense'` ainsi que les sorties non catégorisées (`MontantOp < 0` avec `IDcat` égal à 0, `NULL` ou inexistant, mensualités de crédit comprises), regroupées sous `IDcat = 0` et le libellé `Non catégorisé`. Les entrées non catégorisées MUST être ignorées partout : elles ne sont ni une dépense, ni un revenu de `incomeVsExpense`, ni une ligne de `topOperations`. Les transferts restent exclus. `yearComparison` exige `yearA` et `yearB` (400 `yearA and yearB are required`). Les plages de dates (`from`, `to`) MUST être :
+- obligatoires (400 `from and to are required`) ;
+- au format `YYYY-MM-DD` (400 sinon) ;
+- ordonnées (400 `from must be earlier than to`).
+
+La borne `to` MUST inclure toute la journée. Le paramètre `limit` MUST être borné comme aujourd'hui.
 
 #### Scenario: Années manquantes
 - **WHEN** `yearComparison` est appelé sans `yearB`
@@ -33,3 +51,11 @@
 #### Scenario: Dépense non catégorisée
 - **WHEN** une sortie de -50 € sans catégorie est dans la plage
 - **THEN** `topCategories` contient une entrée `Non catégorisé` d'au moins 50 €
+
+#### Scenario: Cohérence entre graphiques
+- **WHEN** un mois contient des dépenses catégorisées, une mensualité sans catégorie et une entrée sans catégorie
+- **THEN** la série `expense` de `incomeVsExpense`, `yearComparison` et `sumByUserByMonth` donnent le même total pour ce mois, et `income` n'inclut pas l'entrée sans catégorie
+
+#### Scenario: Grosse sortie non catégorisée
+- **WHEN** une mensualité de -900 € sans catégorie est la plus grosse sortie de la plage
+- **THEN** elle figure dans `topOperations` avec `IDcat = 0`

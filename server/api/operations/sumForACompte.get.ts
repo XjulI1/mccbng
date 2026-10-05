@@ -1,19 +1,16 @@
 import { badRequest, defineApiHandler } from '../../utils/errors'
 import { assertCompteOwned } from '../../utils/scope'
 import { rawQuery } from '../../utils/sql'
+import { CHECKED_TOTALS, withoutNullTotals } from '../../utils/totals'
 import { queryNumber } from '../../utils/validate'
 
 export default defineApiHandler(async (event) => {
   const compteID = queryNumber(event, 'id')
   if (compteID === undefined) throw badRequest('id is required')
   await assertCompteOwned(event, compteID)
-  const [checked] = await rawQuery(
-    'SELECT IDCompte, SUM(MontantOp) as TotalChecked FROM Operation WHERE IDcompte = ? AND CheckOp = true GROUP BY IDCompte',
+  const [row] = await rawQuery(
+    `SELECT o.IDcompte AS IDCompte, ${CHECKED_TOTALS} FROM Operation o WHERE o.IDcompte = ? GROUP BY o.IDcompte`,
     [compteID]
   )
-  const [notChecked] = await rawQuery(
-    'SELECT IDCompte, SUM(MontantOp) as TotalNotChecked FROM Operation WHERE IDcompte = ? AND CheckOp = false GROUP BY IDCompte',
-    [compteID]
-  )
-  return Object.assign(checked ?? {}, notChecked ?? {})
+  return row ? withoutNullTotals(row) : {}
 })

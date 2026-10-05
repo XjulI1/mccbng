@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { createCategorie, createCompte, createOperation, createUser, get, type TestUser } from './helpers'
+import { createCategorie, createCompte, createOperation, createUser, get, sql, type TestUser } from './helpers'
 
 let alice: TestUser
 let bob: TestUser
@@ -38,7 +38,7 @@ describe('stats', () => {
     expect(res.status).toBe(200)
     expect(res.body.soldeGlobal).toBe(1000)
     expect(res.body.soldeRetraite).toBe(500)
-    expect(res.body.soldeDispo).toBe(1500)
+    expect(res.body.soldeDispo).toBe(1000) // dispo = global hors comptes bloqués : le compte retraite n'y est plus
     expect(res.body.global[0]).toHaveProperty('montant')
     expect(res.body.global[0].date).toMatch(/^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/)
     const total = res.body.global.reduce((sum: number, p: any) => sum + p.montant, 0)
@@ -74,6 +74,82 @@ describe('stats', () => {
     const inverted = await get('/api/stats/topCategories', alice.token, { from: '2024-12-31', to: '2024-01-01' })
     expect(inverted.status).toBe(400)
     expect(inverted.body.error.message).toBe('from must be earlier than to')
+    expect((await get('/api/stats/topCategories', alice.token, { from: '2026-13-45', to: '2026-12-31' })).status).toBe(400)
+    expect((await get('/api/stats/topOperations', alice.token, { from: '2026-02-30', to: '2026-12-31' })).status).toBe(400)
+  })
+
+  it('borne `to` inclusive sur toute la journée', async () => {
+    const user = await createUser()
+    const c = await createCompte(user)
+    const cat = await createCategorie(user, 'Courses', 'depense')
+    await createOperation(user, c.IDcompte, { MontantOp: -12, IDcat: cat.IDcat, DateOp: '2026-10-05T14:00:00.000Z' })
+    const top = await get('/api/stats/topCategories', user.token, { from: '2026-10-05', to: '2026-10-05' })
+    expect(top.body).toEqual([{ IDcat: cat.IDcat, libelle: 'Courses', total: -12 }])
+    expect((await get('/api/stats/topOperations', user.token, { from: '2026-10-05', to: '2026-10-05' })).body).toHaveLength(1)
+  })
+
+  it('sorties non catégorisées comptées en dépense « Non catégorisé », entrées ignorées', async () => {
+    const user = await createUser()
+    const c = await createCompte(user)
+    const courses = await createCategorie(user, 'Courses', 'depense')
+    await createOperation(user, c.IDcompte, { MontantOp: -30, IDcat: courses.IDcat, DateOp: '2025-03-10' })
+    await createOperation(user, c.IDcompte, { MontantOp: -900, IDcat: 0, DateOp: '2025-03-05' }) // mensualité sans catégorie
+    await createOperation(user, c.IDcompte, { MontantOp: -50, DateOp: '2025-03-20' })
+    await createOperation(user, c.IDcompte, { MontantOp: 400, IDcat: 0, DateOp: '2025-03-21' }) // entrée : ignorée
+    // catégorie supprimée depuis : comptée comme non catégorisée
+    await sql('INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat) VALUES (?, ?, ?, ?, ?)', ['Orpheline', -20, new Date('2025-03-22T00:00:00Z'), c.IDcompte, 2_000_000_000])
+
+    const top = await get('/api/stats/topCategories', user.token, { from: '2025-03-01', to: '2025-03-31' })
+    expect(top.body).toEqual([
+      { IDcat: 0, libelle: 'Non catégorisé', total: -970 },
+      { IDcat: courses.IDcat, libelle: 'Courses', total: -30 }
+    ])
+    const year = await get('/api/stats/yearComparison', user.token, { yearA: 2024, yearB: 2025 })
+    expect(year.body.yearB[2]).toBe(-1000)
+    const heatmap = await get('/api/stats/categoryHeatmap', user.token, { yearNumber: 2025 })
+    expect(heatmap.body.categories).toEqual([{ IDcat: 0, libelle: 'Non catégorisé' }, { IDcat: courses.IDcat, libelle: 'Courses' }])
+    expect(heatmap.body.data).toEqual(expect.arrayContaining([[2, 0, -970], [2, 1, -30]]))
+
+    const month = await get('/api/operations/sumByUserByMonth', user.token, { monthNumber: 3, yearNumber: 2025 })
+    expect(month.body[0].MonthNegative).toBe(-1000)
+    const byCat = await get('/api/operations/sumCategoriesByUserByMonth', user.token, { monthNumber: 3, yearNumber: 2025 })
+    expect(byCat.body).toEqual(expect.arrayContaining([{ TotalMonth: -970, IDcat: 0 }, { TotalMonth: -30, IDcat: courses.IDcat }]))
+    expect(byCat.body).toHaveLength(2)
+
+    const income = await get('/api/stats/incomeVsExpense', user.token, { yearNumber: 2025 })
+    expect(income.body.expense[2]).toBe(-1000)
+    expect(income.body.income[2]).toBe(0) // l'entrée non catégorisée n'est pas un revenu
+    const topOps = await get('/api/stats/topOperations', user.token, { from: '2025-03-01', to: '2025-03-31' })
+    expect(topOps.body.map((o: any) => o.MontantOp)).toEqual([-900, -50, -30, -20])
+    expect(topOps.body.find((o: any) => o.NomOp === 'Orpheline').IDcat).toBe(0)
+  })
+
+  it('regroupements : drapeaux NULL lus comme valeur par défaut, comptes enfant et retraite hors dispo', async () => {
+    const user = await createUser()
+    const insert = async (NomCompte: string, solde: number, flags: Record<string, number | null>) => {
+      const cols = Object.keys(flags)
+      const res = await sql(
+        `INSERT INTO Compte (NomCompte, solde, IDuser, ${cols.join(', ')}) VALUES (?, ?, ?, ${cols.map(() => '?').join(', ')})`,
+        [NomCompte, solde, user.IDuser, ...Object.values(flags)]
+      ) as unknown as { insertId: number }
+      return res.insertId
+    }
+    // children est NOT NULL DEFAULT 0 en production ; bloque, retraite, porte_feuille et visible peuvent valoir NULL
+    const ancien = await insert('Ancien', 100, { bloque: null, retraite: null, porte_feuille: null, visible: null })
+    await insert('Retraite libre', 1000, { bloque: 0, retraite: 1, children: 0 })
+    await insert('Enfant', 10000, { bloque: 0, retraite: 0, children: 1 })
+    await insert('Bloqué', 100000, { bloque: 1, retraite: 0, children: 0 })
+    await createOperation(user, ancien, { MontantOp: -10, DateOp: '2025-01-01' })
+
+    const res = (await get('/api/stats/evolutionSolde', user.token)).body
+    expect(res.soldeGlobal).toBe(100100) // Ancien + Bloqué
+    expect(res.soldeRetraite).toBe(1000)
+    expect(res.soldeDispo).toBe(100) // Ancien seulement
+    expect(res.global).toEqual([{ montant: -10, date: '2025-01-01T00:00:00.000Z' }])
+    expect(res.dispo).toEqual([{ montant: -10, date: '2025-01-01T00:00:00.000Z' }])
+
+    const all = (await get('/api/operations/sumAllCompteForUser', user.token)).body
+    expect(all).toEqual([{ IDCompte: ancien, TotalNotChecked: -10 }]) // visible NULL = visible
   })
 
   it('topOperations : transferts exclus, tri par valeur absolue', async () => {

@@ -38,13 +38,14 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 - CRUD complet des opérations (débit/crédit), avec date, libellé, montant, catégorie, indicateur "pointée" (`CheckOp`) et indicateur d'amortissement.
 - Liste paginée par scroll infini (35 opérations par page) côté front.
 - **Swipe-to-delete** et clic pour éditer sur mobile.
-- **Virement** entre comptes (`/transfert`) : crée automatiquement la paire débit + crédit.
+- **Virement** entre comptes (`/transfert`) : le serveur crée la paire débit + crédit en une requête (`POST /api/operations/transfert`).
 - **Recherche** d'opérations par libellé sur tous les comptes (`/search`).
 - **Suggestion intelligente de catégorie** lors de la saisie : `GET /api/operations/suggestCategories` propose les catégories les plus fréquentes pour un libellé similaire.
 
 ### Opérations récurrentes
-- Modèle de transaction récurrente avec fréquence (3 = mensuelle, 7 = annuelle), jour, mois, et date de dernière génération.
-- Génération automatique au login : `POST /api/operation-recurrentes/auto-generation` parcourt toutes les récurrentes de l'utilisateur et insère les opérations manquantes selon le délai écoulé.
+- Modèle de transaction récurrente avec fréquence (3 = mensuelle, 7 = annuelle), jour (borné au dernier jour du mois), mois (0 = janvier) et date de dernière échéance générée.
+- Génération automatique au chargement : `POST /api/operation-recurrentes/auto-generation` génère toutes les échéances dues jusqu'à 15 jours (mensuel) ou 30 jours (annuel) à l'avance, sans doublon même en cas d'appels simultanés.
+- La mensualité d'un crédit se modifie depuis le crédit (lecture seule dans `/recurrOperation`).
 - Vue dédiée `/recurrOperation` pour la gestion (création, édition, suppression).
 
 ### Catégorisation et budget
@@ -60,7 +61,7 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 - À la création d'un crédit, une **opération récurrente mensuelle est générée automatiquement** (`Frequence = 3`) et liée via `IDopRecu`.
 - À la suppression, l'opération récurrente associée est supprimée et les opérations passées dissociées (`IDcredit` mis à `null`).
 - Endpoints spécifiques :
-  - `GET /api/credits/{id}/remaining-balance` — calcul du capital restant dû et déjà payé via SQL brut.
+  - `GET /api/credits/{id}/remaining-balance` — capital restant dû, principal et intérêts payés (sorties passées seulement, intérêts par mois civil).
   - `GET /api/credits/{id}/payments` — historique des prélèvements liés.
 - Vue `/credits` : `CreditList` + `CreditCard` (avec barre de progression) + `CreditForm`.
 
@@ -210,7 +211,8 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 | `*`     | `/api/operations` | CRUD opérations + endpoints d'analytics |
 | `GET`   | `/api/operations/sumAllCompteForUser` | Totaux pointés / non pointés par compte |
 | `GET`   | `/api/operations/sumForACompte?id=` | Totaux pour un compte |
-| `GET`   | `/api/operations/sumByUserByMonth?monthNumber=&yearNumber=&IDCompte=` | Total dépenses du mois (catégories `Type = depense`) |
+| `GET`   | `/api/operations/sumByUserByMonth?monthNumber=&yearNumber=&IDCompte=` | Total dépenses du mois (catégories `Type = depense` et sorties non catégorisées) |
+| `POST`  | `/api/operations/transfert` | Virement : débit + crédit en une requête |
 | `GET`   | `/api/operations/sumCategoriesByUserByMonth?monthNumber=&yearNumber=` | Répartition mensuelle par catégorie |
 | `GET`   | `/api/operations/suggestCategories?operationName=&limit=` | Suggestion par similarité de libellé |
 | `*`     | `/api/operation-recurrentes` | CRUD opérations récurrentes |

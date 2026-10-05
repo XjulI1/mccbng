@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import {
+  createTransfert as createTransfertService,
   deleteOperation as deleteOperationService,
   fetchOperationsForAccount,
   fetchRecurrOperation as fetchRecurrOperationService,
@@ -108,28 +109,16 @@ export const useOperationStore = defineStore('operation', () => {
   }
 
   async function createTransfert (operation) {
-    const token = useUserStore().token
-    const positiveMontant = parseFloat(
-      operation.MontantOp > 0 ? operation.MontantOp : operation.MontantOp * -1
-    )
-
-    await updateOperationService(
+    await createTransfertService(
       {
-        ...operation,
-        MontantOp: positiveMontant * -1,
-        IDcompte: operation.IDcompteDebit
+        fromCompte: operation.IDcompteDebit,
+        toCompte: operation.IDcompteCredit,
+        montant: Math.abs(parseFloat(operation.MontantOp)),
+        DateOp: operation.DateOp,
+        NomOp: operation.NomOp,
+        IDcat: operation.IDcat
       },
-      token,
-      API_URL
-    )
-
-    await updateOperationService(
-      {
-        ...operation,
-        MontantOp: positiveMontant,
-        IDcompte: operation.IDcompteCredit
-      },
-      token,
+      useUserStore().token,
       API_URL
     )
 
