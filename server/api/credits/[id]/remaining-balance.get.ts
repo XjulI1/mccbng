@@ -1,8 +1,9 @@
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { getDb } from '../../../db/client'
 import { operations } from '../../../db/schema'
 import { defineApiHandler } from '../../../utils/errors'
 import { findOwnedCredit } from '../../../utils/credits'
+import { compteScope } from '../../../utils/scope'
 import { idParam } from '../../../utils/validate'
 
 const round2 = (value: number) => Math.round(value * 100) / 100
@@ -11,7 +12,7 @@ const round2 = (value: number) => Math.round(value * 100) / 100
 export default defineApiHandler(async (event) => {
   const id = idParam(event)
   const credit = await findOwnedCredit(event, id)
-  const payments = await getDb().select().from(operations).where(eq(operations.IDcredit, id)).orderBy(asc(operations.DateOp))
+  const payments = await getDb().select().from(operations).where(and(eq(operations.IDcredit, id), await compteScope(event, operations.IDcompte))).orderBy(asc(operations.DateOp))
 
   const monthlyRate = (credit.TauxInteret ?? 0) / 100 / 12
   let solde = credit.MontantInitial

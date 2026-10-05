@@ -6,19 +6,19 @@
 - [ ] 1.4 Tests du runner : exécutions concurrentes, `--baseline` sur base vide, fichier en échec
 - [ ] 1.5 Documenter dans `docs/db-migrations.md` la convention d'écriture (migration vérifiable ou procédure de reprise) et la numérotation partagée avec `harden-api-security`
 
-## 2. Migration 0001 : InnoDB, utf8mb4, drapeaux, index
+## 2. Migration 0002 : InnoDB, utf8mb4, drapeaux, index
 
 - [ ] 2.1 Relever la version MySQL/MariaDB de production, le `innodb_default_row_format` et la collation cible
-- [ ] 2.2 Écrire `server/db/migrations/0001_innodb_utf8mb4_indexes.sql` : `ENGINE=InnoDB` et `CONVERT TO CHARACTER SET utf8mb4`, mise à jour des `NULL` des drapeaux puis `NOT NULL DEFAULT`, `DROP INDEX IDopRecu`, création des 7 index
+- [ ] 2.2 Écrire `server/db/migrations/0002_innodb_utf8mb4_indexes.sql` : `ENGINE=InnoDB` et `CONVERT TO CHARACTER SET utf8mb4`, mise à jour des `NULL` des drapeaux puis `NOT NULL DEFAULT`, `DROP INDEX IDopRecu`, création des 7 index
 - [ ] 2.3 Mettre à jour `server/db/schema.ts` (drapeaux `notNull`, index)
 - [ ] 2.4 Tests API : libellé avec emoji, transaction réellement annulée (création de crédit en échec simulé), `EXPLAIN` de la liste paginée qui utilise l'index
 - [ ] 2.5 Répétition sur une copie de production : durée, intégrité, `pnpm test:api` contre la copie
 - [ ] 2.6 Écrire dans `docs/db-migrations.md` la procédure de fenêtre de maintenance et les `ALTER` inverses
 
-## 3. Migration 0002 : montants DECIMAL
+## 3. Migration 0003 : montants DECIMAL
 
 - [ ] 3.1 Établir la liste exhaustive des colonnes monétaires depuis la baseline
-- [ ] 3.2 Écrire `server/db/migrations/0002_decimal_amounts.sql` (`DECIMAL(12,2)`)
+- [ ] 3.2 Écrire `server/db/migrations/0003_decimal_amounts.sql` (`DECIMAL(12,2)`)
 - [ ] 3.3 `server/db/client.ts` : `decimalNumbers: true` ; `server/db/schema.ts` : `decimal({ precision: 12, scale: 2, mode: 'number' })`
 - [ ] 3.4 Script de comparaison des sommes par compte avant et après sur une copie ; documenter les écarts
 - [ ] 3.5 Tests API : 150 000,01 relu à l'identique, `typeof MontantOp === 'number'`
@@ -38,8 +38,9 @@
 
 - [ ] 5.1 Supprimer `unprocessable` et `tooManyRequests` s'ils restent inutilisés, et l'export inutile de `findUserByEmail`
 - [ ] 5.2 Unifier les routes CRUD explicites qui ne font que déléguer (`comptes`, `operations`, `operation-recurrentes`, `credits`) avec le routage `[resource]` ; tests de routes inchangés et verts
-- [ ] 5.3 Documenter dans `server/utils/crud.ts` que `transaction()` n'est atomique qu'en InnoDB (retirer la mention une fois `0001` déployée)
-- [ ] 5.4 Statuer sur `UserCredentials.password`, écrit mais jamais lu, et sur la table legacy `Stats` (questions ouvertes)
+- [ ] 5.3 Documenter dans `server/utils/crud.ts` que `transaction()` n'est atomique qu'en InnoDB (retirer la mention une fois `0002` déployée)
+- [ ] 5.4 Statuer sur la table legacy `Stats` (question ouverte)
+- [ ] 5.5 Migration `DROP COLUMN User.id` et `DROP TABLE UserCredentials` (plus lues ni écrites depuis `harden-api-security`, à déployer après lui) ; retirer `userCredentials` de `server/db/schema.ts`
 
 ## 6. Qualité et CI
 

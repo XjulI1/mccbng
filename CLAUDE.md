@@ -30,6 +30,7 @@ pnpm type-check         # TypeScript type checking (nuxt typecheck)
 pnpm lint               # ESLint with auto-fix
 pnpm lint:check         # ESLint check only (no auto-fix)
 pnpm db:migrate         # Apply SQL migrations (add `-- --baseline` on an existing production database)
+pnpm hash-code <code>   # bcrypt hash (cost 12) of a login code, to paste into User.secret_key
 ```
 
 ## Architecture Overview
@@ -44,19 +45,21 @@ pnpm db:migrate         # Apply SQL migrations (add `-- --baseline` on an existi
    app   server/api
 ```
 
-1. The frontend authenticates via `POST /api/users/login` with `{ email, code }` (a 6-character code compared to the bcrypt-hashed `secret_key`).
-2. The API returns a JWT (`{ id, name, email, IDuser }`, signed with `JWT_SECRET`, TTL `JWT_TTL_SECONDS`, default 1 h) and sets an `HttpOnly` `mccbngAuth` cookie.
-3. The token is stored in the cookies `userToken` / `userID` via `document.cookie` (`app/services/auth.ts`). All subsequent API calls include `Authorization: Bearer <token>`.
-4. `server/middleware/auth.ts` verifies the JWT on every `/api/**` route except `GET /api/ping` and `POST /api/users/login`.
-5. Users are always looked up by `IDuser` (primary key), **never by the `id` column**, which is not unique in production.
+1. The frontend authenticates via `POST /api/users/login` with `{ email, code }` (a 6-character code compared to the bcrypt-hashed `secret_key`; a non-bcrypt key is refused). After 5 consecutive failures the account is locked (5 min → 30 min → 2 h → 24 h); every attempt is logged as one JSON line (`"event":"login"`).
+2. The API sets the session in the `HttpOnly` `mccbngAuth` cookie only: a JWT `{ name, email, IDuser, tv }` (HS256, `iss`/`aud` `mccbng`, signed with `JWT_SECRET`, TTL `JWT_TTL_SECONDS`, default 6 h). The response body is `{ userId }`, without the token.
+3. The front only keeps the non-secret `userID` cookie (`app/services/auth.ts`); `app/services/http.ts` sends requests with `credentials: 'same-origin'` and `X-Requested-With: mccbng`. There is no `Authorization` header: a Bearer token is refused.
+4. `server/middleware/auth.ts` requires `X-Requested-With: mccbng` (and a same-host `Origin` when present) on every unsafe method (CSRF, 403 otherwise), then verifies the cookie JWT on every `/api/**` route except `GET /api/ping` and `POST /api/users/login`. It re-reads `User.tokenVersion`: `POST /api/users/logout` increments it, which revokes the user's sessions on all devices.
+5. Users are always looked up by `IDuser` (primary key). The legacy `id` column (not unique) is no longer read or written.
 6. `JWT_SECRET` must stay fixed: changing it invalidates every session.
+7. There is no signup route: users are created in phpMyAdmin with a `secret_key` produced by `pnpm hash-code <code>` (see `docs/exploitation.md`).
+8. The login rate-limit (5 / 15 min / IP) reads the IP from `X-Real-IP`, set by the reverse proxy (Synology DSM), with the socket address as fallback (`server/plugins/client-ip.ts`); `X-Forwarded-For` is never trusted.
 
 ### Domain Model
 
 | Entity | Key | Notes |
 |--------|-----|-------|
-| **User** | `IDuser` (not auto-incremented) | `id` is an application identifier and is **not unique**. `email` is unique, `secret_key` is the bcrypt-hashed login code. |
-| **Banque** | `IDbanque` | Bank — groups accounts. Shared (no user scope). |
+| **User** | `IDuser` (not auto-incremented) | `email` is unique, `secret_key` is the bcrypt-hashed login code. `failedLoginCount`/`lockedUntil` drive the lockout, `tokenVersion` the session revocation. The legacy `id` column (not unique) is unused and will be dropped. |
+| **Banque** | `IDbanque` | Bank — groups accounts. Shared (no user scope): read and create only through the API (no `PATCH`/`PUT`/`DELETE`, 405). |
 | **Compte** | `IDcompte` | Bank account. Type flags: `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible`. |
 | **Operation** | `IDop` | Single transaction. Belongs to a `Compte`, optionally tied to a `Categorie` and a `Credit`. `CheckOp` = pointed/checked status, `amortissement` flag. |
 | **OperationRecurrente** | `IDopRecu` | Recurring template. `Frequence`: 3 = monthly, 7 = yearly. `DernierDateOpRecu` tracks last generation. |
@@ -98,7 +101,7 @@ User scoping uses two patterns:
 |----------|----------|---------|
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | yes | MySQL connection |
 | `JWT_SECRET` | yes in production | JWT signing secret (an ephemeral one is generated in dev, with a warning) |
-| `JWT_TTL_SECONDS` | no | JWT lifetime, default 3600 |
+| `JWT_TTL_SECONDS` | no | JWT lifetime, default 21600 (6 h) |
 
 In development they can live in `.env`. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
 
@@ -132,12 +135,12 @@ Registry: `dockregistry.xju.fr/mccbng/front` with `staging` and `latest` tags. T
 mccbng/
 ├── app/                 # Nuxt SPA (pages, components, stores, services…)
 ├── server/              # Nitro API (api/, middleware/, plugins/, db/, utils/)
-├── scripts/             # db-migrate.mjs (SQL migration runner)
+├── scripts/             # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs (one-shot)
 ├── public/              # icons, favicon
 ├── tests/               # unit, integration, api
 ├── nuxt.config.ts, vitest*.config.ts, eslint.config.mjs, tsconfig.json
 ├── Dockerfile, docker-entrypoint.sh
-├── docs/                # architecture.md (detailed architecture), recette-non-regression-multiuser.md, db-migrations.md, security-roadmap.md)
+├── docs/                # architecture.md (detailed architecture), exploitation.md (phpMyAdmin procedures), recette-non-regression-multiuser.md, db-migrations.md, security-roadmap.md)
 ├── mockups/             # Standalone HTML UI mockups
 ├── openspec/            # OpenSpec specs and changes
 ├── package.json         # Scripts, dependencies, packageManager

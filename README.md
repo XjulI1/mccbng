@@ -21,8 +21,9 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 
 ### Authentification et compte utilisateur
 - Connexion par **code secret à 6 caractères** (`POST /api/users/login`) — pas de mot de passe à saisir.
-- Token JWT stocké en cookies (`userToken`, `userID`) côté front, valide jusqu'au redémarrage du back (le secret est régénéré à chaque démarrage).
-- Inscription via `POST /api/signup` (réservée à un usage admin / amorçage).
+- Session portée par un cookie `HttpOnly` (`mccbngAuth`, JWT de 6 h par défaut) illisible en JavaScript ; seul l'identifiant utilisateur (`userID`) est stocké côté front.
+- Verrouillage temporaire du compte après 5 échecs consécutifs (5 min, 30 min, 2 h, puis 24 h) ; la déconnexion ferme la session sur tous les appareils.
+- Pas d'inscription par l'API : les utilisateurs sont créés dans phpMyAdmin, avec un code hashé par `pnpm hash-code` (voir `docs/exploitation.md`).
 - Édition du profil (`PATCH /api/users/me`) : email, username, seuils d'alerte (`warningTotal`, `warningCompte`), favori (`favoris`).
 - Vue **Mon compte** (`/editUser`) pour la mise à jour du profil.
 
@@ -98,13 +99,13 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
                      │   Browser / PWA     │
                      │  (nuxt spa + pinia) │
                      └──────────┬──────────┘
-                                │ fetch, Bearer JWT
+                                │ fetch, cookie HttpOnly
                                 ▼
    ┌──────────────────────────────────────────────────┐
    │   Nuxt / Nitro (port 8080)                       │
    │   - SPA + service worker                         │
    │   - API REST /api/**  (server/api)         │
-   │   - middleware JWT, validation Zod, erreurs JSON │
+   │   - middleware CSRF + JWT, Zod, erreurs JSON     │
    │   - nuxt-security : en-têtes, CSP, rate-limit    │
    └──────────────────────────────┬───────────────────┘
                                   ▼
@@ -120,10 +121,10 @@ server/
 ├── api/                    # une route par fichier (file-based routing Nitro)
 │   ├── [resource]/*.ts     #   CRUD générique : banques, categories, biens
 │   ├── comptes|operations|operation-recurrentes|credits/*.ts   # CRUD + routes spécifiques
-│   ├── users/*.ts, signup.post.ts, ping.get.ts
+│   ├── users/*.ts, ping.get.ts
 │   ├── stats/*.ts          #   statistiques
 │   └── [...path].ts        #   404 JSON pour toute route /api inconnue
-├── middleware/auth.ts      # vérifie le JWT sur /api/** (sauf ping et login)
+├── middleware/auth.ts      # CSRF puis JWT du cookie sur /api/** (sauf ping et login)
 ├── plugins/                # contrôle de la configuration au démarrage, fermeture du pool MySQL
 ├── db/                     # schema.ts (Drizzle), client.ts (pool mysql2), migrations/*.sql
 └── utils/                  # auth, config, crud, filter, resources, scope, sql, stats, errors…
@@ -169,11 +170,11 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 ### Flux d'authentification
 
 1. Le front appelle `POST /api/users/login` avec `{ email, code }` (code de 6 caractères).
-2. Le serveur retrouve l'utilisateur par email et compare le code à `secret_key` (bcrypt ; une `secret_key` encore en clair est acceptée puis re-hashée à la première connexion réussie). Une comparaison factice est faite si l'email est inconnu pour égaliser les temps de réponse.
-3. Un JWT est signé avec `{ id, name, email, IDuser }` (`JWT_SECRET`, durée `JWT_TTL_SECONDS`, 1 h par défaut) ; la réponse contient `{ id: <token>, userId: <IDuser> }` et un cookie `mccbngAuth` (`HttpOnly`, `SameSite=Strict`, `Secure` en production).
-4. Le front stocke le token et `IDuser` dans les cookies `userToken` / `userID`.
-5. Toute requête authentifiée envoie `Authorization: Bearer <token>` ; le middleware `server/middleware/auth.ts` vérifie le JWT, et `getCurrentUserId` scope chaque requête à l'utilisateur.
-6. Le login est limité à 5 essais par IP et par fenêtre de 15 minutes (`nuxt-security`). Les en-têtes de sécurité et la CSP sont appliqués à toutes les réponses.
+2. Le serveur retrouve l'utilisateur par email et compare le code à `secret_key` (bcrypt uniquement : une `secret_key` en clair est refusée). Une comparaison factice de même coût est faite si l'email est inconnu pour égaliser les temps de réponse. Après 5 échecs consécutifs, le compte est verrouillé (5 min, 30 min, 2 h, puis 24 h) sans le révéler. Chaque tentative produit une ligne de log JSON (`"event":"login"`), sans le code.
+3. Un JWT `{ name, email, IDuser, tv }` est signé en HS256 (`JWT_SECRET`, émetteur et audience `mccbng`, durée `JWT_TTL_SECONDS`, 6 h par défaut) et posé uniquement dans le cookie `mccbngAuth` (`HttpOnly`, `SameSite=Strict`, `Secure` en production) ; la réponse contient `{ userId: <IDuser> }`.
+4. Le front ne conserve que `IDuser`, dans le cookie `userID`.
+5. Le navigateur renvoie le cookie à chaque requête ; le front ajoute `X-Requested-With: mccbng`, exigé sur toute méthode non sûre (protection CSRF, 403 sinon). Le middleware `server/middleware/auth.ts` vérifie le JWT et la `tokenVersion` de l'utilisateur (incrémentée au logout, ce qui révoque toutes ses sessions), et `getCurrentUserId` scope chaque requête à l'utilisateur. Un header `Authorization: Bearer` est refusé.
+6. Le login est limité à 5 essais par IP et par fenêtre de 15 minutes (`nuxt-security`). L'IP est lue dans `X-Real-IP`, posé par le reverse proxy (Synology DSM), à défaut l'adresse de la socket ; `X-Forwarded-For` n'est jamais pris en compte. Les en-têtes de sécurité et la CSP sont appliqués à toutes les réponses.
 
 ---
 
@@ -181,7 +182,7 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 
 | Entité | Clé primaire | Champs principaux | Liens |
 |--------|--------------|-------------------|-------|
-| **User** | `IDuser` (non auto-incrémenté) | `id` (identifiant applicatif, **non unique**), `email` (unique), `username`, `secret_key` (bcrypt), `favoris`, `warningTotal`, `warningCompte`, `emailVerified`, `verificationToken` | `UserCredentials` |
+| **User** | `IDuser` (non auto-incrémenté) | `email` (unique), `username`, `secret_key` (bcrypt), `favoris`, `warningTotal`, `warningCompte`, `failedLoginCount`, `lockedUntil`, `tokenVersion` ; `id` historique non unique, inutilisé | — |
 | **UserCredentials** | `id` (UUID) | `password`, `userId` | `belongsTo User` |
 | **Banque** | `IDbanque` | `NomBanque` | `hasMany Compte` |
 | **Compte** | `IDcompte` | `NomCompte`, `solde` (FLOAT), `IDuser`, `IDbanque`, `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible` | `belongsTo Banque` |
@@ -199,13 +200,13 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 | Méthode | Route | Description |
 |--------:|-------|-------------|
 | `POST`  | `/api/users/login` | Authentification par `email` + `code` (6 car.) — **publique** |
-| `POST`  | `/api/users/logout` | Efface le cookie d'authentification |
+| `POST`  | `/api/users/logout` | Révoque toutes les sessions de l'utilisateur et efface le cookie |
 | `GET`   | `/api/users/whoAmI` | Profil de l'utilisateur courant |
 | `PATCH` | `/api/users/me` | Mise à jour du profil |
-| `GET`   | `/api/users/exists` | Vérifie la validité du token |
-| `POST`  | `/api/signup` | Création d'utilisateur (réservée aux utilisateurs authentifiés) |
-| `GET`   | `/api/ping` | Healthcheck |
-| `*`     | `/api/banques`, `/api/comptes`, `/api/categories` | CRUD scopés utilisateur |
+| `GET`   | `/api/users/exists` | Vérifie la validité de la session |
+| `GET`   | `/api/ping` | Healthcheck — **public** |
+| `GET`, `POST` | `/api/banques` | Banques partagées : lecture et création uniquement (modification et suppression en base) |
+| `*`     | `/api/comptes`, `/api/categories` | CRUD scopés utilisateur |
 | `*`     | `/api/operations` | CRUD opérations + endpoints d'analytics |
 | `GET`   | `/api/operations/sumAllCompteForUser` | Totaux pointés / non pointés par compte |
 | `GET`   | `/api/operations/sumForACompte?id=` | Totaux pour un compte |
@@ -221,7 +222,7 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 | `GET`   | `/api/stats/evolutionSolde` | Time series `global`, `retraite`, `dispo` |
 | `GET`   | `/api/stats/yearComparison`, `topCategories`, `incomeVsExpense`, `topOperations`, `categoryHeatmap` | Statistiques annuelles et par catégorie |
 
-> Toutes les routes (sauf `ping` et `login`) exigent un JWT. Les listes acceptent un paramètre `filter` JSON (`where`, `order`, `limit`, `skip`, `include`).
+> Toutes les routes (sauf `ping` et `login`) exigent le cookie de session ; les méthodes non sûres exigent en plus `X-Requested-With: mccbng`. Les listes acceptent un paramètre `filter` JSON (`where`, `order`, `limit`, `skip`, `include`).
 
 ---
 
@@ -275,9 +276,11 @@ Toute la configuration serveur passe par des variables d'environnement, lues à 
 |----------|-------------|------|
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | oui | connexion MySQL |
 | `JWT_SECRET` | oui en production | secret de signature des sessions (le garder fixe : un changement déconnecte tout le monde) |
-| `JWT_TTL_SECONDS` | non | durée de vie du JWT en secondes (3600 par défaut) |
+| `JWT_TTL_SECONDS` | non | durée de vie du JWT en secondes (21600, soit 6 h, par défaut) |
 
 En développement, `JWT_SECRET` peut être omis (un secret éphémère est généré, avec un avertissement). Le front appelle toujours l'API en chemin relatif (`/api`).
+
+**Reverse proxy** : le proxy (Synology DSM) doit poser `X-Real-IP` avec l'IP du client (en-tête personnalisé `X-Real-IP` = `$remote_addr` s'il n'est pas déjà posé), et le conteneur ne doit pas être joignable sans passer par lui. Le compteur du rate-limit est en mémoire : un stockage partagé serait nécessaire si l'application était répliquée. Procédures d'administration (création d'utilisateur, déverrouillage, banques) : `docs/exploitation.md`.
 
 ---
 

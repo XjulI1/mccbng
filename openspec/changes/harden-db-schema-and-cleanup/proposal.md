@@ -11,13 +11,13 @@ S'y ajoutent une pagination non déterministe, des listes sans limite, un runner
 
 ## What Changes
 
-- **Migration `0001` de normalisation** :
+- **Migration `0002` de normalisation** :
   - passage en `ENGINE=InnoDB` de `Operation`, `OperationRecurrente`, `Compte`, `Categorie`, `Banque` et `User` (roadmap sécurité §1) ;
   - conversion en `utf8mb4` ;
   - remplacement des `NULL` des drapeaux de compte, puis passage en `NOT NULL DEFAULT 0` (1 pour `visible`) ;
   - suppression de la clé `UNIQUE IDopRecu`, redondante avec la clé primaire ;
   - ajout des index `Operation(IDcompte, CheckOp, DateOp)`, `Operation(IDcredit)`, `Operation(IDcat)`, `Compte(IDuser)`, `OperationRecurrente(IDcompte)`, `Categorie(IDuser)` et `Credit(IDuser)`.
-- **Migration `0002` montants exacts** : **BREAKING (données)** les colonnes de montant passent de `FLOAT` à `DECIMAL(12,2)`. Le pool `mysql2` et le schéma Drizzle restituent des nombres et non des chaînes.
+- **Migration `0003` montants exacts** : **BREAKING (données)** les colonnes de montant passent de `FLOAT` à `DECIMAL(12,2)`. Le pool `mysql2` et le schéma Drizzle restituent des nombres et non des chaînes.
 - **Requêtes** :
   - tri de pagination complété par la clé primaire ;
   - limite par défaut sur toutes les listes ;
@@ -50,7 +50,7 @@ S'y ajoutent une pagination non déterministe, des listes sans limite, un runner
 ## Impact
 
 - **Base de données** :
-  - verrouillage des tables pendant `0001` et `0002` (`ALTER TABLE`), d'où une fenêtre de maintenance ;
+  - verrouillage des tables pendant `0002` et `0003` (`ALTER TABLE`), d'où une fenêtre de maintenance ;
   - sauvegarde obligatoire avant exécution ;
   - procédure dans `docs/db-migrations.md`.
 - **Code** :
@@ -60,5 +60,5 @@ S'y ajoutent une pagination non déterministe, des listes sans limite, un runner
   - `scripts/db-migrate.mjs` ;
   - `eslint.config.mjs` et `nuxt.config.ts` (`noImplicitAny`) ;
   - les fichiers `app/**` et `tests/**` qui portent des `any`.
-- **Dépendances** : `harden-api-security`, qui a besoin d'InnoDB pour l'atomicité de la création d'utilisateur, et `fix-recurring-and-credit-calculations`, qui fonctionne avant comme après ce change, sont plus simples si `0001` est déployée en premier. Les migrations ajoutées par `harden-api-security` (lockout, `tokenVersion`, `UNIQUE(User.id)`) prennent les numéros suivants.
+- **Dépendances** : `harden-api-security` est déployé avant ce change et occupe la migration `0001_user_login_security` (lockout, `tokenVersion`) ; il ne dépend plus d'InnoDB (la création d'utilisateur a été retirée de l'API). `fix-recurring-and-credit-calculations` fonctionne avant comme après ce change. La suppression de `User.id` et de `UserCredentials`, devenus inutilisés, fait l'objet de la tâche 5.5.
 - **CI** : nouvelle étape `lint:check` sans warning, `type-check` et `pnpm audit --prod`.

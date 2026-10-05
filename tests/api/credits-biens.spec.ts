@@ -92,6 +92,66 @@ describe('crédits', () => {
   })
 })
 
+describe('références d\'autrui (IDcredit, IDcat)', () => {
+  const recurrente = (IDcompte: number, extra: Record<string, unknown> = {}) => ({
+    NomOpRecu: 'Mensualité', MontantOpRecu: -100, JourOpRecu: 1, DernierDateOpRecu: '2024-01-05', IDcompte, ...extra
+  })
+
+  it('opération rattachée au crédit d\'autrui : 404 sans écriture (création, PATCH, PATCH en masse)', async () => {
+    const aliceCompte = await createCompte(alice)
+    const aliceCredit = (await post('/api/credits', alice.token, credit(aliceCompte.IDcompte))).body
+    const bobCompte = await createCompte(bob)
+
+    const created = await post('/api/operations', bob.token, {
+      NomOp: 'pirate', MontantOp: -1, DateOp: '2024-01-01', IDcompte: bobCompte.IDcompte, IDcredit: aliceCredit.IDcredit
+    })
+    expect(created.status).toBe(404)
+    expect(created.body.error.message).toBe(`Credit ${aliceCredit.IDcredit} not found`)
+    expect(await sql('SELECT IDop FROM Operation WHERE IDcredit = ?', [aliceCredit.IDcredit])).toEqual([])
+
+    const op = await createOperation(bob, bobCompte.IDcompte)
+    expect((await patch(`/api/operations/${op.IDop}`, bob.token, { IDcredit: aliceCredit.IDcredit })).status).toBe(404)
+    expect((await patch('/api/operations', bob.token, { IDcredit: aliceCredit.IDcredit })).status).toBe(404)
+    expect(await sql('SELECT IDop FROM Operation WHERE IDcredit = ?', [aliceCredit.IDcredit])).toEqual([])
+
+    expect((await post('/api/operation-recurrentes', bob.token, recurrente(bobCompte.IDcompte, { IDcredit: aliceCredit.IDcredit }))).status).toBe(404)
+  })
+
+  it('catégorie privée d\'autrui : 404 ; catégorie partagée et sans catégorie acceptées', async () => {
+    const aliceCat = (await post('/api/categories', alice.token, { Nom: 'Privée Alice' })).body
+    const sharedCat = ((await sql("INSERT INTO Categorie (Nom, IDuser, Type) VALUES ('Partagée réf', 0, 'depense')")) as unknown as { insertId: number }).insertId
+    const bobCompte = await createCompte(bob)
+
+    expect((await post('/api/operations', bob.token, {
+      NomOp: 'x', MontantOp: -1, DateOp: '2024-01-01', IDcompte: bobCompte.IDcompte, IDcat: aliceCat.IDcat
+    })).status).toBe(404)
+    expect((await post('/api/credits', bob.token, credit(bobCompte.IDcompte, { IDcat: aliceCat.IDcat }))).status).toBe(404)
+
+    const recu = (await post('/api/operation-recurrentes', bob.token, recurrente(bobCompte.IDcompte))).body
+    expect((await patch(`/api/operation-recurrentes/${recu.IDopRecu}`, bob.token, { IDcat: aliceCat.IDcat })).status).toBe(404)
+    expect((await get(`/api/operation-recurrentes/${recu.IDopRecu}`, bob.token)).body.IDcat).toBe(0)
+
+    const shared = await createOperation(bob, bobCompte.IDcompte, { IDcat: sharedCat })
+    expect(shared.IDcat).toBe(sharedCat)
+    expect((await createOperation(bob, bobCompte.IDcompte, { IDcat: 0 })).IDcat).toBe(0)
+  })
+
+  it('payments / remaining-balance ignorent une opération étrangère rattachée au crédit', async () => {
+    const compte = await createCompte(alice)
+    const created = (await post('/api/credits', alice.token, credit(compte.IDcompte))).body
+    await createOperation(alice, compte.IDcompte, { IDcredit: created.IDcredit, NomOp: 'mienne', MontantOp: -100 })
+    // Donnée antérieure au contrôle de propriété : opération de Bob portant le crédit d'Alice
+    const bobCompte = await createCompte(bob)
+    await sql('INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, IDcredit) VALUES (?, ?, ?, ?, 0, ?)',
+      ['étrangère', -500, new Date('2024-02-01T00:00:00Z'), bobCompte.IDcompte, created.IDcredit])
+
+    const payments = await get(`/api/credits/${created.IDcredit}/payments`, alice.token)
+    expect(payments.body.map((o: any) => o.NomOp)).toEqual(['mienne'])
+    const balance = await get(`/api/credits/${created.IDcredit}/remaining-balance`, alice.token)
+    expect(balance.body).toMatchObject({ solde: 900, paye: 100 })
+  })
+})
+
 describe('biens', () => {
   const bien = (extra: Record<string, unknown> = {}) => ({
     NomBien: 'Appart', Ville: 'Lyon', TypeBien: 'appartement', DateAchat: '2020-06-01', PrixBienNu: 200000, FraisNotaire: 15000, ...extra

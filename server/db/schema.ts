@@ -6,9 +6,9 @@ import {
 // noms de tables et de colonnes strictement identiques.
 const str = (name: string) => varchar(name, { length: 512 })
 
-// Production : clé primaire = IDuser (id n'est qu'un identifiant UUID applicatif), email varchar(255), id varchar(128)
+// Production : clé primaire = IDuser, email varchar(255). La colonne historique `id` (non unique) existe encore en base
+// mais n'est plus lue ni écrite par l'API : elle sera supprimée par une migration ultérieure.
 export const users = mysqlTable('User', {
-  id: varchar('id', { length: 128 }).notNull(),
   IDuser: int('IDuser').primaryKey(),
   realm: str('realm'),
   username: str('username'),
@@ -18,7 +18,12 @@ export const users = mysqlTable('User', {
   favoris: int('favoris'),
   secret_key: str('secret_key'),
   emailVerified: boolean('emailVerified'),
-  verificationToken: str('verificationToken')
+  verificationToken: str('verificationToken'),
+  // Verrouillage temporaire après échecs de connexion consécutifs
+  failedLoginCount: int('failedLoginCount').notNull().default(0),
+  lockedUntil: datetime('lockedUntil', { mode: 'date' }),
+  // Incrémenté au logout : invalide tous les JWT émis (claim `tv`)
+  tokenVersion: int('tokenVersion').notNull().default(0)
 })
 
 export const userCredentials = mysqlTable('UserCredentials', {

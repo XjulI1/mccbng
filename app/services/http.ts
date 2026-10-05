@@ -1,7 +1,8 @@
 type Params = Record<string, unknown>
 
 export interface ApiOptions {
-  token?: string
+  /** @deprecated ignoré : la session est portée par le cookie HttpOnly mccbngAuth, envoyé automatiquement */
+  token?: unknown
   params?: Params
 }
 
@@ -24,8 +25,8 @@ const request = async <T>(
   url: string,
   opts: ApiOptions & { body?: unknown } = {}
 ): Promise<T> => {
-  const headers: Record<string, string> = {}
-  if (opts.token) headers.Authorization = `Bearer ${opts.token}`
+  // X-Requested-With : exigé par le serveur sur les méthodes non sûres (protection CSRF)
+  const headers: Record<string, string> = { 'X-Requested-With': 'mccbng' }
 
   let body: BodyInit | undefined
   if (opts.body !== undefined) {
@@ -36,7 +37,8 @@ const request = async <T>(
   const response = await fetch(url + buildQueryString(opts.params), {
     method,
     headers,
-    body
+    body,
+    credentials: 'same-origin'
   })
 
   if (!response.ok) {

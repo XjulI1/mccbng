@@ -36,16 +36,16 @@ Constats de l'audit du 2026-10-05 traités ici :
 ## Decisions
 
 ### D1. Deux migrations distinctes
-`0001_innodb_utf8mb4_indexes.sql` regroupe :
+`0002_innodb_utf8mb4_indexes.sql` regroupe :
 - `ALTER TABLE … ENGINE=InnoDB, CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci` ;
 - `UPDATE Compte SET bloque = 0 WHERE bloque IS NULL`, et de même pour les autres drapeaux (`visible` à 1) ;
 - `MODIFY … NOT NULL DEFAULT …` ;
 - `DROP INDEX IDopRecu` ;
 - `CREATE INDEX …`.
 
-`0002_decimal_amounts.sql` porte `MODIFY … DECIMAL(12,2)` sur `Operation.MontantOp`, `OperationRecurrente.MontantOpRecu`, `Compte.solde`, `Credit.{MontantInitial, MontantMensuel}` et `Bien.{PrixBienNu, ValeurActuelle, FraisAgence, ApportCash, …}` (liste exacte à établir depuis la baseline).
+`0003_decimal_amounts.sql` porte `MODIFY … DECIMAL(12,2)` sur `Operation.MontantOp`, `OperationRecurrente.MontantOpRecu`, `Compte.solde`, `Credit.{MontantInitial, MontantMensuel}` et `Bien.{PrixBienNu, ValeurActuelle, FraisAgence, ApportCash, …}` (liste exacte à établir depuis la baseline).
 
-On sépare les deux parce que `0002` modifie des valeurs : `FLOAT` arrondi vers `DECIMAL`. Elle mérite sa propre sauvegarde et sa propre vérification. `0001` est sans risque sur les valeurs.
+On sépare les deux parce que `0003` modifie des valeurs : `FLOAT` arrondi vers `DECIMAL`. Elle mérite sa propre sauvegarde et sa propre vérification. `0002` est sans risque sur les valeurs.
 - *Alternative* : une seule migration. Un rollback partiel serait plus difficile.
 
 ### D2. Lecture des DECIMAL en nombres
@@ -81,16 +81,16 @@ Les fichiers explicites `server/api/{comptes,operations,operation-recurrentes,cr
 
 - [`ALTER TABLE` sur `Operation` verrouille la table pendant la conversion] → Exécution hors heures d'usage, après sauvegarde (`mysqldump`). On mesure d'abord la durée sur une copie.
 - [Index sur des `VARCHAR` en `utf8mb4` : limite de 767 octets sur les anciens formats de ligne] → Vérifier la version de MariaDB/MySQL et `innodb_default_row_format=DYNAMIC`. Les index prévus portent sur des colonnes numériques et des dates, donc ne sont pas concernés.
-- [Valeurs `FLOAT` déjà imprécises arrondies différemment en `DECIMAL`] → Avant `0002`, un script compare `SUM` par compte avant et après sur une copie. On accepte un écart au centime, documenté.
+- [Valeurs `FLOAT` déjà imprécises arrondies différemment en `DECIMAL`] → Avant `0003`, un script compare `SUM` par compte avant et après sur une copie. On accepte un écart au centime, documenté.
 - [Le front reçoit des chaînes si `decimalNumbers` est oublié] → Test API qui vérifie que `typeof MontantOp === 'number'`.
 - [Unification des routes CRUD (D7) : régression d'URL] → `tests/api` et `tests/integration/routes.spec.ts` doivent rester verts sans modification de leurs attentes.
 
 ## Migration Plan
 
 1. Sauvegarde complète de la production.
-2. Répétition de `0001` puis `0002` sur une copie de production : mesurer la durée, comparer les sommes par compte, lancer `pnpm test:api` contre la copie.
+2. Répétition de `0002` puis `0003` sur une copie de production : mesurer la durée, comparer les sommes par compte, lancer `pnpm test:api` contre la copie.
 3. Fenêtre de maintenance : arrêter l'application, puis `pnpm db:migrate`, déployer la version compatible (`decimalNumbers`) et redémarrer.
-4. Rollback : restaurer la sauvegarde. Les migrations ne sont pas réversibles automatiquement ; `docs/db-migrations.md` décrit les `ALTER` inverses de `0001`.
+4. Rollback : restaurer la sauvegarde. Les migrations ne sont pas réversibles automatiquement ; `docs/db-migrations.md` décrit les `ALTER` inverses de `0002`.
 
 ## Open Questions
 

@@ -1,7 +1,11 @@
 # Roadmap sécurité — connexion
 
-Ce document liste les améliorations de sécurité **non encore implémentées** sur
-le flux d'authentification, à reprendre dans une prochaine itération.
+Ce document liste les améliorations de sécurité **non encore déployées** sur
+le flux d'authentification.
+
+> Les points marqués **[harden-api-security]** sont implémentés par le change
+> OpenSpec `openspec/changes/harden-api-security` (procédure de déploiement :
+> `docs/exploitation.md`). Ils seront retirés de ce document à l'archivage du change.
 
 État courant (API hébergée dans le serveur Nitro de Nuxt, `server/`) :
 
@@ -28,45 +32,35 @@ le flux d'authentification, à reprendre dans une prochaine itération.
 
 ### 1. Durcir le périmètre existant
 
-- **`Banque` n'est pas scopée par utilisateur** : tout utilisateur authentifié peut
-  lire, modifier et supprimer toutes les banques.
-- **`POST /api/signup` est ouvert à tout utilisateur authentifié** : le réserver à
-  un rôle administrateur.
-- **`User.id` n'est pas unique en production** (la clé primaire est `IDuser`) :
-  ajouter une contrainte d'unicité après avoir corrigé les doublons éventuels.
+- **[harden-api-security]** **`Banque` n'est pas scopée par utilisateur** : tout
+  utilisateur authentifié peut lire, modifier et supprimer toutes les banques.
+  → Lecture et création seules par l'API ; modification et suppression en base.
+- **[harden-api-security]** **`POST /api/signup` est ouvert à tout utilisateur
+  authentifié**. → Route supprimée ; création des utilisateurs dans phpMyAdmin.
+- **[harden-api-security]** Le rate-limit lit l'IP dans `X-Forwarded-For`.
+  → IP lue dans `X-Real-IP` (reverse proxy), à défaut l'adresse de la socket.
+- **`User.id` n'est pas unique en production** (la clé primaire est `IDuser`).
+  → Sans objet : la colonne n'est plus utilisée par l'API depuis
+  `harden-api-security` ; sa suppression (avec `UserCredentials`) est portée par
+  `harden-db-schema-and-cleanup`.
 - **Tables MyISAM** (`Operation`, `OperationRecurrente`, `Compte`, `Categorie`,
-  `Banque`, `User`) : les transactions de l'API n'ont aucun effet. Les convertir en
-  InnoDB (`ALTER TABLE … ENGINE=InnoDB`) via une migration versionnée.
+  `Banque`, `User`) : les transactions de l'API n'ont aucun effet. Conversion en
+  InnoDB portée par le change `harden-db-schema-and-cleanup` (migration versionnée).
 - Rate-limit **partagé** (stockage externe) si l'application passe à plusieurs
   instances.
 
-### 2. Verrouillage temporaire du compte (account lockout)
+### 2. Verrouillage temporaire du compte (account lockout) — [harden-api-security]
 
-Le rate-limiter actuel agit **par IP**. Compléter avec un compteur **par
-utilisateur** (clé = `email` ou `IDuser`) qui :
+Colonnes `failedLoginCount` + `lockedUntil` sur `User` (option A) : verrouillage
+au 5ᵉ échec consécutif pendant 5 min, puis 30 min, 2 h et 24 h au maximum ;
+remise à zéro après une connexion réussie. Chaque tentative produit une ligne de
+log JSON (résultat, `IDuser`, IP, User-Agent, horodatage).
 
-- Incrémente à chaque échec sur `verifyCredentials`.
-- Verrouille le compte après N échecs (ex. 10) pendant un délai croissant
-  (1 min, 5 min, 30 min, 1 h…).
-- Réinitialise le compteur après une connexion réussie.
+Option B (table `LoginAttempt` pour monitorer / alerter sur les patterns
+suspects) : à reprendre si une détection automatisée devient nécessaire.
 
-Implémentation possible :
+### 3. Refresh tokens — abandonné
 
-- Option A — colonnes `failedLoginCount` + `lockedUntil` sur `User`, mises à
-  jour dans `verifyCredentials` (`server/utils/users.ts`).
-- Option B — table dédiée `LoginAttempt` (`userId`, `ip`, `success`, `at`) qui
-  permet aussi de monitorer / alerter sur les patterns suspects.
-
-Combiner avec un log structuré des tentatives (succès / échec, IP, UA,
-horodatage) pour permettre la détection d'attaques par password spraying.
-
-### 3. (Optionnel) Refresh tokens
-
-Aujourd'hui, le JWT expire au bout d'1 h et l'utilisateur doit se reconnecter.
-Pour améliorer l'UX sans dégrader la sécurité, ajouter :
-
-- Un **refresh token** long-lived stocké en cookie `HttpOnly` séparé.
-- Une route `POST /api/users/refresh` qui échange le refresh token contre un
-  nouveau access token court-lived.
-- Une rotation du refresh token à chaque utilisation, avec révocation côté
-  serveur (table `RefreshToken`).
+Remplacé par un JWT de 6 h (`JWT_TTL_SECONDS=21600` par défaut), porté par le
+cookie `HttpOnly` et révocable par `tokenVersion` au logout
+**[harden-api-security]**.

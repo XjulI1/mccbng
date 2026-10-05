@@ -36,6 +36,17 @@ Sans `--baseline`, le runner refuse de continuer s'il trouve la table `User` san
 
 `pnpm db:migrate` (sans option) exécute la baseline puis les migrations suivantes.
 
+## Contrôles et procédures d'exploitation
+
+Les requêtes de contrôle à lancer avant un déploiement (aucun `User.IDuser ≤ 0`, références `IDcredit` / `IDcat`
+croisées entre utilisateurs, `secret_key` en clair) et les procédures phpMyAdmin (création d'utilisateur,
+déverrouillage, banques) sont décrites dans [`exploitation.md`](exploitation.md).
+
+```sql
+-- Aucun utilisateur ne doit avoir un IDuser ≤ 0 (0 = propriétaire des catégories partagées)
+SELECT IDuser, email FROM `User` WHERE IDuser <= 0;
+```
+
 ## Ajouter une migration
 
 1. Créer `server/db/migrations/0001_<description>.sql` (numéro suivant, SQL pur, rejouable de préférence).

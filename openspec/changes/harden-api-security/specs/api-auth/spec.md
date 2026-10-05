@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Connexion par email et code
-`POST /api/users/login` SHALL accepter `{ email, code }` (`email` ≤ 254 caractères, `code` de exactement 6 caractères), vérifier le code contre `User.secret_key` par bcrypt, poser le cookie de session et renvoyer `{ userId: <IDuser> }` sans le JWT dans le corps. Les identifiants invalides MUST produire 401 `Invalid email or code.` avec un temps de réponse comparable que l'email existe ou non : la comparaison factice MUST utiliser un hash de même coût que les hash réels.
+`POST /api/users/login` SHALL accepter `{ email, code }` (`email` ≤ 254 caractères, `code` de exactement 6 caractères), vérifier le code contre `User.secret_key` par bcrypt, poser le cookie de session et renvoyer `{ userId: <IDuser> }` sans le JWT dans le corps. Une `secret_key` qui n'est pas un hash bcrypt (préfixe `$2`) MUST être refusée. Les identifiants invalides MUST produire 401 `Invalid email or code.` avec un temps de réponse comparable que l'email existe ou non : la comparaison factice MUST utiliser un hash de même coût que les hash réels.
 
 #### Scenario: Connexion valide
 - **WHEN** un utilisateur envoie son email et son code corrects
@@ -11,19 +11,12 @@
 - **WHEN** l'email n'existe pas
 - **THEN** la réponse est 401 `Invalid email or code.` après une comparaison bcrypt factice de même coût que les hash réels
 
-### Requirement: Migration paresseuse des secret_key en clair
-Tant que des `secret_key` en clair subsistent en production, si `secret_key` ne commence pas par `$2`, le login SHALL l'accepter par comparaison à temps constant puis la re-hasher en bcrypt (coût 12) à la première connexion réussie ; un échec du re-hash MUST NOT faire échouer le login. Un script one-shot MUST permettre de hasher toutes les `secret_key` restantes ; une fois exécuté en production, le chemin legacy MUST être supprimé et toute `secret_key` non bcrypt MUST être refusée (401).
-
-#### Scenario: Utilisateur legacy
-- **WHEN** un utilisateur dont la `secret_key` est en clair se connecte avec le bon code avant l'exécution du script
-- **THEN** le login réussit et la `secret_key` stockée devient un hash bcrypt
-
-#### Scenario: Script de migration exécuté
-- **WHEN** le script de hash des `secret_key` legacy a été exécuté
-- **THEN** aucune `secret_key` ne reste en clair en base
+#### Scenario: secret_key en clair
+- **WHEN** un utilisateur dont la `secret_key` stockée est en clair se connecte avec ce code
+- **THEN** la réponse est 401 `Invalid email or code.` et la `secret_key` n'est pas modifiée
 
 ### Requirement: JWT préservant IDuser
-Le JWT SHALL être signé en `HS256` avec `JWT_SECRET` (secret aléatoire par processus si absent hors production, avec avertissement au démarrage), porter `iss` et `aud` égaux à `mccbng`, expirer après `JWT_TTL_SECONDS` (défaut 3600) et porter `{ id, name, email, IDuser, tv }` où `tv` est la `tokenVersion` de l'utilisateur. La vérification MUST imposer l'algorithme `HS256`, l'émetteur et l'audience. Un token invalide, expiré, d'une `tokenVersion` périmée ou d'un utilisateur qui n'existe plus MUST produire 401 avec le message générique `Invalid or expired token` ; la raison détaillée MUST n'être que journalisée côté serveur.
+Le JWT SHALL être signé en `HS256` avec `JWT_SECRET` (secret aléatoire par processus si absent hors production, avec avertissement au démarrage), porter `iss` et `aud` égaux à `mccbng`, expirer après `JWT_TTL_SECONDS` (défaut 21600, soit 6 h) et porter `{ name, email, IDuser, tv }` où `tv` est la `tokenVersion` de l'utilisateur ; il MUST NOT porter la colonne `User.id`. La vérification MUST imposer l'algorithme `HS256`, l'émetteur et l'audience. Un token invalide, expiré, d'une `tokenVersion` périmée ou d'un utilisateur qui n'existe plus MUST produire 401 avec le message générique `Invalid or expired token` ; la raison détaillée MUST n'être que journalisée côté serveur.
 
 #### Scenario: Token valide
 - **WHEN** une route protégée reçoit un JWT valide d'un utilisateur existant
@@ -46,11 +39,15 @@ Le JWT SHALL être signé en `HS256` avec `JWT_SECRET` (secret aléatoire par pr
 - **THEN** la réponse est 401
 
 ### Requirement: Cookie d'authentification HttpOnly
-Le login SHALL poser `mccbngAuth=<jwt>; HttpOnly; SameSite=Strict; Path=/; Max-Age=<TTL>` (+ `Secure` si `NODE_ENV=production`), et ce cookie MUST être le support d'authentification des routes protégées. Le header `Authorization: Bearer` MUST rester accepté pendant une seule version de transition puis être retiré. Toute requête de méthode non sûre (`POST`, `PUT`, `PATCH`, `DELETE`) authentifiée par cookie MUST porter l'en-tête `X-Requested-With: mccbng` et, si l'en-tête `Origin` est présent, une origine égale à celle de l'application ; sinon la réponse MUST être 403. `POST /api/users/logout` (protégé, 204) MUST incrémenter la `tokenVersion` de l'utilisateur, ce qui invalide tous ses JWT émis, et effacer le cookie (`Max-Age=0`).
+Le login SHALL poser `mccbngAuth=<jwt>; HttpOnly; SameSite=Strict; Path=/; Max-Age=<TTL>` (+ `Secure` si `NODE_ENV=production`), et ce cookie MUST être le seul support d'authentification des routes protégées : le header `Authorization: Bearer` MUST NOT être accepté. Toute requête de méthode non sûre (`POST`, `PUT`, `PATCH`, `DELETE`) MUST porter l'en-tête `X-Requested-With: mccbng` et, si l'en-tête `Origin` est présent, une origine égale à celle de l'application ; sinon la réponse MUST être 403. `POST /api/users/logout` (protégé, 204) MUST incrémenter la `tokenVersion` de l'utilisateur, ce qui invalide tous ses JWT émis sur tous ses appareils, et effacer le cookie (`Max-Age=0`).
 
 #### Scenario: Requête authentifiée par cookie
 - **WHEN** le navigateur appelle `GET /api/comptes` avec le cookie `mccbngAuth` valide et sans header `Authorization`
 - **THEN** la réponse est 200
+
+#### Scenario: Bearer seul
+- **WHEN** un client appelle `GET /api/comptes` avec `Authorization: Bearer <jwt valide>` et sans cookie
+- **THEN** la réponse est 401
 
 #### Scenario: Requête cross-site
 - **WHEN** une page d'une autre origine envoie `POST /api/operations` avec le cookie mais sans `X-Requested-With: mccbng`
@@ -60,8 +57,12 @@ Le login SHALL poser `mccbngAuth=<jwt>; HttpOnly; SameSite=Strict; Path=/; Max-A
 - **WHEN** `POST /api/users/logout` est appelé avec une session valide
 - **THEN** la réponse est 204, le cookie `mccbngAuth` est expiré et le JWT précédemment émis est refusé (401) s'il est rejoué
 
+#### Scenario: Déconnexion de tous les appareils
+- **WHEN** un utilisateur connecté sur deux appareils se déconnecte sur l'un d'eux
+- **THEN** le JWT de l'autre appareil est refusé (401) à sa requête suivante
+
 ### Requirement: Rate-limiting du login
-`POST /api/users/login` SHALL être limité à 5 tentatives par IP et par fenêtre de 15 minutes via la configuration de `nuxt-security`, sans middleware de rate-limit maison. L'IP MUST être lue depuis l'en-tête posé par le reverse proxy de confiance (`X-Real-IP`), avec repli sur l'adresse de la socket ; la valeur de `X-Forwarded-For` fournie par le client MUST NOT être utilisée. Si l'application est déployée sur plusieurs instances, le compteur MUST utiliser un stockage partagé. Au-delà de la limite, la réponse MUST être 429 (corps par défaut de `nuxt-security`). Aucune autre route ne MUST être limitée par cette règle.
+`POST /api/users/login` SHALL être limité à 5 tentatives par IP et par fenêtre de 15 minutes via la configuration de `nuxt-security`, sans middleware de rate-limit maison. L'IP MUST être lue depuis l'en-tête posé par le reverse proxy de confiance (`X-Real-IP`, posé par le proxy inversé Synology DSM), avec repli sur l'adresse de la socket ; la valeur de `X-Forwarded-For` fournie par le client MUST NOT être utilisée. Si l'application est déployée sur plusieurs instances, le compteur MUST utiliser un stockage partagé. Au-delà de la limite, la réponse MUST être 429 (corps par défaut de `nuxt-security`). Aucune autre route ne MUST être limitée par cette règle.
 
 #### Scenario: Sixième échec
 - **WHEN** une même IP enchaîne 6 logins invalides en 15 minutes
@@ -75,33 +76,36 @@ Le login SHALL poser `mccbngAuth=<jwt>; HttpOnly; SameSite=Strict; Path=/; Max-A
 - **WHEN** une IP appelle massivement `GET /api/comptes`
 - **THEN** la règle de rate-limit du login ne s'applique pas
 
-### Requirement: Création d'utilisateur
-`POST /api/signup` SHALL être réservé aux administrateurs, c'est-à-dire aux `IDuser` listés dans la variable `ADMIN_IDUSERS` (403 pour tout autre utilisateur authentifié, 401 sans session). Le corps MUST NOT contenir `IDuser` (rejet 4xx) : l'`IDuser` MUST être attribué par le serveur, strictement positif, et ne pas être déjà référencé par une ligne de `User`, `Compte`, `Categorie`, `Credit` ou `Bien`. La route MUST exiger `secret_key` de 6 caractères (400 sinon), refuser un `email` déjà utilisé (409), hasher `secret_key` (bcrypt coût 12) et le `password` (bcrypt) dans `UserCredentials`, et ne jamais renvoyer `secret_key`.
-
-#### Scenario: Utilisateur non administrateur
-- **WHEN** un utilisateur authentifié absent de `ADMIN_IDUSERS` appelle `POST /api/signup`
-- **THEN** la réponse est 403 et aucun utilisateur n'est créé
-
-#### Scenario: IDuser fourni par le client
-- **WHEN** un administrateur envoie `POST /api/signup` avec `IDuser: 0`
-- **THEN** la requête est rejetée (4xx) et aucun utilisateur n'est créé
-
-#### Scenario: IDuser attribué par le serveur
-- **WHEN** un administrateur crée un utilisateur valide
-- **THEN** l'utilisateur reçoit un `IDuser` strictement positif qu'aucune donnée existante ne référence
-
-#### Scenario: Appel anonyme
-- **WHEN** `POST /api/signup` est appelé sans session
-- **THEN** la réponse est 401
-
 ## ADDED Requirements
 
-### Requirement: Verrouillage temporaire du compte
-Le serveur SHALL compter les échecs de connexion consécutifs par utilisateur et, à partir de 10 échecs, verrouiller le compte pendant un délai croissant à chaque nouvel échec (1 min, 5 min, 30 min, puis 1 h au maximum). Pendant le verrouillage, le login MUST répondre 401 `Invalid email or code.`, même avec le bon code, sans exécuter de comparaison bcrypt et sans révéler le verrouillage. Une connexion réussie MUST remettre le compteur à zéro.
+### Requirement: Création manuelle d'utilisateur
+L'API MUST NOT exposer de route de création d'utilisateur : `POST /api/signup` MUST répondre 404 au format d'erreur uniforme. Les utilisateurs SHALL être créés directement en base selon une procédure documentée. Une commande `pnpm hash-code <code>` MUST produire, pour un code de 6 caractères, un hash bcrypt de coût 12 utilisable tel quel comme `secret_key`, et refuser un code d'une autre longueur.
 
-#### Scenario: Dixième échec
-- **WHEN** un compte cumule 10 échecs consécutifs
+#### Scenario: Route supprimée
+- **WHEN** un utilisateur authentifié appelle `POST /api/signup` avec `IDuser: 0`
+- **THEN** la réponse est 404 et aucun utilisateur n'est créé
+
+#### Scenario: Hash d'un code
+- **WHEN** l'exploitant lance `pnpm hash-code 123456`
+- **THEN** la commande affiche un hash `$2…$12$…` avec lequel le login accepte le code `123456`
+
+### Requirement: Hash des secret_key legacy
+Un script one-shot SHALL hasher en bcrypt (coût 12) toutes les `secret_key` qui ne sont pas déjà un hash bcrypt, en mode simulation par défaut. Il MUST être exécuté en production avant le déploiement de la version qui refuse les `secret_key` en clair.
+
+#### Scenario: Script exécuté
+- **WHEN** le script est lancé sans `--dry-run` sur une base contenant des `secret_key` en clair
+- **THEN** aucune `secret_key` ne reste en clair et chaque utilisateur concerné se connecte avec son code habituel
+
+### Requirement: Verrouillage temporaire du compte
+Le serveur SHALL compter les échecs de connexion consécutifs par utilisateur et, au 5ᵉ échec, verrouiller le compte pendant 5 minutes ; chaque nouvel échec après un verrouillage MUST le prolonger au palier suivant (30 min, 2 h, puis 24 h au maximum). Pendant le verrouillage, le login MUST répondre 401 `Invalid email or code.`, même avec le bon code, sans exécuter de comparaison bcrypt et sans révéler le verrouillage. Une connexion réussie MUST remettre le compteur à zéro.
+
+#### Scenario: Cinquième échec
+- **WHEN** un compte cumule 5 échecs consécutifs
 - **THEN** une tentative immédiate avec le bon code reçoit 401
+
+#### Scenario: Palier suivant
+- **WHEN** le premier verrouillage de 5 minutes est écoulé et une nouvelle tentative échoue
+- **THEN** le compte est verrouillé pendant 30 minutes
 
 #### Scenario: Fin du verrouillage
 - **WHEN** le délai de verrouillage est écoulé et l'utilisateur saisit le bon code
@@ -114,20 +118,12 @@ Chaque tentative de connexion SHALL produire un log structuré côté serveur co
 - **WHEN** une tentative de connexion échoue
 - **THEN** une ligne de log indique l'échec, l'IP et l'horodatage, sans le code saisi
 
-### Requirement: Unicité de User.id
-La colonne `User.id` SHALL être unique en base. La migration qui ajoute la contrainte MUST échouer avec un message explicite listant les valeurs en doublon s'il en existe, sans modifier la table.
+## REMOVED Requirements
 
-#### Scenario: Doublons présents
-- **WHEN** la migration est lancée alors que deux utilisateurs partagent le même `id`
-- **THEN** elle échoue en nommant la valeur en doublon et la table est inchangée
+### Requirement: Migration paresseuse des secret_key en clair
+**Reason**: Les `secret_key` en clair sont hashées en une fois par un script avant le déploiement ; le chemin de comparaison en clair était un vecteur d'énumération par timing.
+**Migration**: Exécuter `scripts/hash-legacy-secrets.mjs` en production avant de déployer ; les nouvelles clés sont produites par `pnpm hash-code`.
 
-### Requirement: Rafraîchissement de session
-En phase 2 optionnelle, `POST /api/users/refresh` SHALL échanger un refresh token opaque, stocké hashé côté serveur et transmis dans un cookie `HttpOnly` dédié limité à ce chemin, contre un nouveau JWT de courte durée et un nouveau refresh token (rotation). La réutilisation d'un refresh token déjà utilisé MUST révoquer tous les refresh tokens de cette session, et la déconnexion MUST révoquer le refresh token courant.
-
-#### Scenario: Rotation
-- **WHEN** le front appelle `POST /api/users/refresh` avec un refresh token valide
-- **THEN** un nouveau cookie de session et un nouveau refresh token sont posés, et l'ancien refresh token est invalidé
-
-#### Scenario: Rejeu d'un refresh token
-- **WHEN** un refresh token déjà utilisé est présenté
-- **THEN** la réponse est 401 et tous les refresh tokens de la session sont révoqués
+### Requirement: Création d'utilisateur
+**Reason**: `POST /api/signup` n'a aucun appelant (les utilisateurs sont créés dans phpMyAdmin) et permettait de choisir son `IDuser`, dont `0`, propriétaire des catégories partagées (S-H1).
+**Migration**: Créer les utilisateurs en base selon la procédure documentée, avec une `secret_key` produite par `pnpm hash-code`.

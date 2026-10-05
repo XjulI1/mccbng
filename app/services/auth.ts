@@ -1,6 +1,8 @@
 import { apiGet, apiPost } from './http'
 
-const COOKIE_TOKEN = 'userToken'
+// Ancien cookie lisible en JS qui portait le JWT : n'est plus écrit, supprimé s'il subsiste.
+// La session est portée par le cookie HttpOnly mccbngAuth, posé et lu uniquement par le serveur.
+const LEGACY_COOKIE_TOKEN = 'userToken'
 const COOKIE_USER_ID = 'userID'
 const LOCAL_STORAGE_EMAIL = 'mccbng.lastEmail'
 
@@ -30,8 +32,6 @@ const deleteCookie = (name: string) => {
   document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Strict`
 }
 
-export const getTokenCookie = () => readCookie<string>(COOKIE_TOKEN)
-
 export const getUserIDCookie = () => readCookie<string | number>(COOKIE_USER_ID)
 
 export const getLastEmail = (): string => {
@@ -59,31 +59,31 @@ export const clearLastEmail = () => {
 }
 
 export const auth = async (email: string, code: string, apiUrl: string) => {
-  const data = await apiPost<{ id: string; ttl: number; userId: number }>(
+  const data = await apiPost<{ userId: number }>(
     apiUrl + '/api/users/login',
     { email, code }
   )
 
-  return {
-    userToken: data.id,
-    ttl: data.ttl,
-    userID: data.userId
-  }
+  return { userID: data.userId }
 }
 
-export const saveCookies = ({ userToken, userID }) => {
-  writeCookie(COOKIE_TOKEN, userToken)
+export const saveCookies = ({ userID }) => {
   writeCookie(COOKIE_USER_ID, userID)
 }
 
+export const removeLegacyTokenCookie = () => {
+  if (readCookie(LEGACY_COOKIE_TOKEN) !== null) deleteCookie(LEGACY_COOKIE_TOKEN)
+}
+
 export const removeCookies = () => {
-  deleteCookie(COOKIE_TOKEN)
+  deleteCookie(LEGACY_COOKIE_TOKEN)
   deleteCookie(COOKIE_USER_ID)
 }
 
-export const checkUserAuthentification = async ({ userToken, apiUrl }) => {
+// La validité de la session (cookie HttpOnly) ne peut être vérifiée que par le serveur.
+export const checkUserAuthentification = async ({ apiUrl }) => {
   try {
-    await apiGet(apiUrl + '/api/users/exists', { token: userToken })
+    await apiGet(apiUrl + '/api/users/exists')
 
     return true
   } catch {
@@ -93,14 +93,25 @@ export const checkUserAuthentification = async ({ userToken, apiUrl }) => {
   }
 }
 
+// Révoque la session côté serveur (tous les appareils) ; un échec réseau n'empêche pas la déconnexion locale.
+export const logout = async (apiUrl: string) => {
+  try {
+    await apiPost(apiUrl + '/api/users/logout')
+  } catch {
+    // déconnexion locale malgré tout
+  }
+  removeCookies()
+}
+
 export default {
-  getTokenCookie,
   getUserIDCookie,
   getLastEmail,
   setLastEmail,
   clearLastEmail,
   auth,
   saveCookies,
+  removeLegacyTokenCookie,
   removeCookies,
-  checkUserAuthentification
+  checkUserAuthentification,
+  logout
 }

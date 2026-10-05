@@ -175,9 +175,9 @@
     })
   }
 
-  const endAuthentification = async ({ userToken, userID }) => {
-    await hydrateSession(userToken, userID)
-    saveCookies({ userToken, userID })
+  const endAuthentification = async ({ userID }) => {
+    await hydrateSession(userID)
+    saveCookies({ userID })
 
     router.replace({ name: 'Home' })
   }
@@ -193,9 +193,9 @@
     }
     submitting.value = true
     auth(email.value.trim(), value, API_URL)
-      .then(({ userToken, userID }) => {
+      .then(({ userID }) => {
         setLastEmail(email.value.trim())
-        return endAuthentification({ userToken, userID })
+        return endAuthentification({ userID })
       })
       .catch(() => {
         error.value = true

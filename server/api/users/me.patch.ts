@@ -22,7 +22,7 @@ export default defineApiHandler(async (event) => {
   const set = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined))
 
   if (data.email) {
-    const [other] = await getDb().select({ id: users.id }).from(users).where(and(eq(users.email, data.email), ne(users.IDuser, userId))).limit(1)
+    const [other] = await getDb().select({ IDuser: users.IDuser }).from(users).where(and(eq(users.email, data.email), ne(users.IDuser, userId))).limit(1)
     if (other) throw conflict('A user with this email already exists')
   }
   if (Object.keys(set).length) await getDb().update(users).set(set).where(eq(users.IDuser, userId))

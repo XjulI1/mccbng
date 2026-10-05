@@ -21,8 +21,9 @@ export const request = async <T = any>(
   for (const [key, value] of Object.entries(opts.query ?? {})) {
     url.searchParams.set(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
   }
-  const headers: Record<string, string> = { ...opts.headers }
-  if (opts.token) headers.Authorization = `Bearer ${opts.token}`
+  // Session par cookie HttpOnly (comme le navigateur) + en-tête anti-CSRF exigé sur les méthodes non sûres
+  const headers: Record<string, string> = { 'X-Requested-With': 'mccbng', ...opts.headers }
+  if (opts.token) headers.Cookie = `mccbngAuth=${opts.token}`
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json'
   const response = await fetch(url, { method, headers, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) })
   const text = await response.text()
@@ -54,8 +55,10 @@ export interface TestUser {
 
 // Chaque fichier de test charge ce module séparément : base aléatoire pour éviter les collisions d IDuser/email
 let nextUser = 1000 + randomInt(100_000_000)
-export const signToken = (user: { id: string; IDuser: number; email: string }, options: jwt.SignOptions = { expiresIn: 3600 }) =>
-  jwt.sign({ id: user.id, name: 'test', email: user.email, IDuser: user.IDuser }, ctx().jwtSecret, options)
+export const signToken = (user: { IDuser: number; email: string }, options: jwt.SignOptions = {}, tv = 0) =>
+  jwt.sign({ name: 'test', email: user.email, IDuser: user.IDuser, tv }, ctx().jwtSecret, {
+    algorithm: 'HS256', issuer: 'mccbng', audience: 'mccbng', expiresIn: 3600, ...options
+  })
 
 // Insère un utilisateur et fournit directement un JWT valide (évite de consommer le rate-limit du login).
 export const createUser = async (overrides: Partial<{ code: string; plaintext: boolean }> = {}): Promise<TestUser> => {
@@ -65,7 +68,7 @@ export const createUser = async (overrides: Partial<{ code: string; plaintext: b
   const code = overrides.code ?? 'abc123'
   const secret = overrides.plaintext ? code : await bcrypt.hash(code, 4)
   await sql('INSERT INTO `User` (id, IDuser, email, username, secret_key) VALUES (?, ?, ?, ?, ?)', [id, IDuser, email, `user${IDuser}`, secret])
-  return { id, IDuser, email, code, token: signToken({ id, IDuser, email }) }
+  return { id, IDuser, email, code, token: signToken({ IDuser, email }) }
 }
 
 export const createBanque = async (token: string, name = 'Banque test') => (await post('/api/banques', token, { NomBanque: name })).body

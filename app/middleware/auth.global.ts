@@ -1,10 +1,11 @@
 import { defineNuxtRouteMiddleware, navigateTo } from '#imports'
 import { API_URL } from '@/services/config'
-import { checkUserAuthentification, getTokenCookie, getUserIDCookie, removeCookies } from '@/services/auth'
+import { checkUserAuthentification, getUserIDCookie, removeCookies, removeLegacyTokenCookie } from '@/services/auth'
 import { hydrateSession } from '@/services/session'
 import { useUserStore } from '@/stores/user'
 
-// Redirige vers /login tant que la session (cookies userToken / userID) n'est pas valide.
+// Redirige vers /login tant que la session n'est pas valide. Le jeton est dans le cookie HttpOnly mccbngAuth
+// (illisible en JS) : sa validité est vérifiée par le serveur via GET /api/users/exists.
 // Au premier chargement, une session valide est réhydratée dans le store (utilisateur,
 // comptes, catégories) avant que la navigation demandée (lien profond compris) ne se fasse.
 export default defineNuxtRouteMiddleware(async (to) => {
@@ -14,22 +15,24 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return to.path === '/login' ? navigateTo('/') : undefined
   }
 
-  const userToken = getTokenCookie()
+  // Ancien cookie lisible en JS qui portait le JWT : supprimé au démarrage
+  removeLegacyTokenCookie()
+
   const userID = getUserIDCookie()
-  if (!userToken || !userID) {
+  if (!userID) {
     return to.path === '/login' ? undefined : navigateTo('/login')
   }
 
-  // checkUserAuthentification supprime les cookies si le token est invalide
-  const isValid = await checkUserAuthentification({ userToken, apiUrl: API_URL })
+  // checkUserAuthentification supprime les cookies si la session est invalide
+  const isValid = await checkUserAuthentification({ apiUrl: API_URL })
   if (!isValid) {
     return to.path === '/login' ? undefined : navigateTo('/login')
   }
 
   try {
-    await hydrateSession(userToken, userID)
+    await hydrateSession(userID)
   } catch {
-    userStore.saveUserToken(null)
+    userStore.closeSession()
     removeCookies()
     return to.path === '/login' ? undefined : navigateTo('/login')
   }
