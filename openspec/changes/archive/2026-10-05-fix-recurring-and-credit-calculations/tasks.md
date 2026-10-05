@@ -6,7 +6,7 @@
   - les récurrentes liées à un crédit terminé ou inexistant ;
   - les doublons d'opérations générées (même compte, nom, montant et date).
 - [x] 1.2 Ajouter le mode `--apply --ids=1,2,3` : il applique la correction proposée aux seules récurrentes listées et journalise chaque modification (avant/après). Il charge `.env` via `scripts/load-env.mjs`.
-- [ ] 1.3 Exécuter le diagnostic en production, revoir la liste avec l'utilisateur, appliquer `--apply` sur les récurrentes retenues et corriger à la main les récurrentes déjà dérivées (31 → 3)
+- [x] 1.3 Exécuter le diagnostic en production, revoir la liste avec l'utilisateur, appliquer `--apply` sur les récurrentes retenues et corriger à la main les récurrentes déjà dérivées (31 → 3)
 
 ## 2. Échéancier
 
