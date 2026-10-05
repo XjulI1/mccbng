@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   banques, biens, categories, comptes, credits, operationRecurrentes, operations
@@ -22,8 +22,10 @@ const shape = (required: z.ZodRawShape, optional: z.ZodRawShape = {}) => {
 
 const userId = (event: Parameters<typeof getCurrentUserId>[0]) => getCurrentUserId(event)
 
+// Banques partagées : lecture et création seules. Renommer, fusionner ou supprimer se fait en base par l'exploitant.
 export const banqueResource: CrudResource = {
   path: 'banques', label: 'Banque', table: banques, pk: 'IDbanque',
+  actions: ['list', 'count', 'get', 'create'],
   ...shape({ NomBanque: str })
 }
 
@@ -71,15 +73,38 @@ export const categorieResource: CrudResource = {
   ...shape({ Nom: str }, { Type: z.enum(['depense', 'revenu', 'transfert']) })
 }
 
-const assertCompteInBody = async (event: Parameters<typeof assertCompteOwned>[0], data: Record<string, any>) => {
+type ApiEvent = Parameters<typeof getCurrentUserId>[0]
+
+const assertCompteInBody = async (event: ApiEvent, data: Record<string, any>) => {
   if (data.IDcompte !== undefined) await assertCompteOwned(event, data.IDcompte)
 }
+
+// IDcredit : null/absent, ou un crédit de l'utilisateur.
+const assertCreditInBody = async (event: ApiEvent, data: Record<string, any>) => {
+  if (!data.IDcredit) return
+  const [credit] = await getDb().select({ id: credits.IDcredit }).from(credits)
+    .where(and(eq(credits.IDcredit, data.IDcredit), eq(credits.IDuser, userId(event)))).limit(1)
+  if (!credit) throw notFound(`Credit ${data.IDcredit} not found`)
+}
+
+// IDcat : 0 (sans catégorie), une catégorie partagée (IDuser = 0) ou une catégorie de l'utilisateur.
+const assertCategorieInBody = async (event: ApiEvent, data: Record<string, any>) => {
+  if (!data.IDcat) return
+  const [categorie] = await getDb().select({ id: categories.IDcat }).from(categories)
+    .where(and(eq(categories.IDcat, data.IDcat), inArray(categories.IDuser, [0, userId(event)]))).limit(1)
+  if (!categorie) throw notFound(`Categorie ${data.IDcat} not found`)
+}
+
+const assertReferencesOwned = (...checks: ((event: ApiEvent, data: Record<string, any>) => Promise<void>)[]) =>
+  async (event: ApiEvent, data: Record<string, any>) => {
+    for (const check of checks) await check(event, data)
+  }
 
 export const operationResource: CrudResource = {
   path: 'operations', label: 'Operation', table: operations, pk: 'IDop',
   readScope: event => compteScope(event, operations.IDcompte),
   defaults: { CheckOp: false, IDcat: 0, amortissement: false },
-  validate: assertCompteInBody,
+  validate: assertReferencesOwned(assertCompteInBody, assertCreditInBody, assertCategorieInBody),
   ...shape(
     { NomOp: str, MontantOp: numeric, DateOp: date, IDcompte: numeric },
     { CheckOp: boolish, IDcat: numeric, amortissement: boolish, IDcredit: numeric.nullable() }
@@ -90,7 +115,7 @@ export const operationRecurrenteResource: CrudResource = {
   path: 'operation-recurrentes', label: 'OperationRecurrente', table: operationRecurrentes, pk: 'IDopRecu',
   readScope: event => compteScope(event, operationRecurrentes.IDcompte),
   defaults: { JourNumOpRecu: 1, MoisOpRecu: 1, Frequence: 3, IDcat: 0 },
-  validate: assertCompteInBody,
+  validate: assertReferencesOwned(assertCompteInBody, assertCreditInBody, assertCategorieInBody),
   ...shape(
     { NomOpRecu: str, MontantOpRecu: numeric, JourOpRecu: numeric, DernierDateOpRecu: date, IDcompte: numeric },
     { JourNumOpRecu: numeric, MoisOpRecu: numeric, Frequence: numeric, IDcat: numeric, IDcredit: numeric.nullable() }
@@ -104,7 +129,7 @@ export const creditResource: CrudResource = {
   defaults: { Statut: 'actif', IDcat: 0 },
   // IDopRecu est un lien géré par le serveur (récurrente de mensualité)
   preserve: ['IDopRecu'],
-  validate: assertCompteInBody,
+  validate: assertReferencesOwned(assertCompteInBody, assertCategorieInBody),
   ...shape(
     { NomCredit: str, MontantInitial: numeric, MontantMensuel: numeric, DateDebut: date, DateFin: date, IDcompte: numeric },
     { NomPreteur: str.nullable(), TauxInteret: numeric.nullable(), Statut: str, IDcat: numeric }
@@ -141,12 +166,7 @@ export const bienResource: CrudResource = {
   readScope: event => eq(biens.IDuser, userId(event)),
   forced: event => ({ IDuser: userId(event) }),
   defaults: { Usage: 'principale', FraisAgence: 0, ApportCash: 0 },
-  validate: async (event, data) => {
-    if (!data.IDcredit) return
-    const [credit] = await getDb().select({ id: credits.IDcredit }).from(credits)
-      .where(and(eq(credits.IDcredit, data.IDcredit), eq(credits.IDuser, userId(event)), isNotNull(credits.IDcredit))).limit(1)
-    if (!credit) throw notFound(`Credit ${data.IDcredit} not found`)
-  },
+  validate: assertCreditInBody,
   ...shape(
     { NomBien: str, Ville: str, TypeBien: str, DateAchat: date, PrixBienNu: numeric, FraisNotaire: numeric },
     {

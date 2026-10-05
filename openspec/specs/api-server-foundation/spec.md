@@ -33,7 +33,7 @@ Les tables `User`, `UserCredentials`, `Banque`, `Compte`, `Operation`, `Operatio
 - **THEN** ses champs (`IDop`, `NomOp`, `MontantOp`, `DateOp`, `CheckOp`, `IDcompte`, `IDcat`, `amortissement`, `IDcredit`) ont les mêmes noms et types JSON qu'avant
 
 ### Requirement: Isolation par utilisateur
-Chaque route protégée SHALL résoudre l'utilisateur courant depuis le JWT (`IDuser` numérique) et appliquer le scoping : **direct** (`IDuser`) pour `Compte`, `Categorie`, `Credit`, `Bien` ; **hérité** (liste des `IDcompte` de l'utilisateur, filtre `inq`) pour `Operation` et `OperationRecurrente`. Une ressource appartenant à un autre utilisateur MUST produire un 404, jamais son contenu. Les écritures MUST contrôler la propriété des `IDcompte` et `IDcredit` référencés.
+Chaque route protégée SHALL résoudre l'utilisateur courant depuis le JWT (`IDuser` numérique) et appliquer le scoping : **direct** (`IDuser`) pour `Compte`, `Categorie`, `Credit`, `Bien` ; **hérité** (liste des `IDcompte` de l'utilisateur, filtre `inq`) pour `Operation` et `OperationRecurrente`. Une ressource appartenant à un autre utilisateur MUST produire un 404, jamais son contenu. Les écritures (création, remplacement, mise à jour unitaire et en masse) MUST contrôler la propriété des références fournies : `IDcompte` (compte de l'utilisateur), `IDcredit` (null ou crédit de l'utilisateur) et `IDcat` (0, catégorie partagée `IDuser = 0` ou catégorie de l'utilisateur) ; une référence non autorisée MUST produire 404 sans écriture.
 
 #### Scenario: Lecture d'une ressource d'autrui
 - **WHEN** l'utilisateur A appelle `GET /api/comptes/{id}` pour un compte de l'utilisateur B
@@ -42,6 +42,18 @@ Chaque route protégée SHALL résoudre l'utilisateur courant depuis le JWT (`ID
 #### Scenario: Écriture vers un compte d'autrui
 - **WHEN** l'utilisateur A appelle `POST /api/operations` avec l'`IDcompte` d'un compte de B
 - **THEN** la réponse est 404 et aucune opération n'est créée
+
+#### Scenario: Rattachement au crédit d'autrui
+- **WHEN** l'utilisateur B appelle `POST /api/operations` avec son propre `IDcompte` et l'`IDcredit` d'un crédit de A
+- **THEN** la réponse est 404 et aucune opération n'est créée
+
+#### Scenario: Catégorie privée d'autrui
+- **WHEN** l'utilisateur B appelle `PATCH /api/operation-recurrentes/{id}` avec l'`IDcat` d'une catégorie privée de A
+- **THEN** la réponse est 404 et la récurrente est inchangée
+
+#### Scenario: Catégorie partagée
+- **WHEN** l'utilisateur crée une opération avec l'`IDcat` d'une catégorie `IDuser = 0`
+- **THEN** l'opération est créée
 
 ### Requirement: Filtre de liste compatible LoopBack
 Les routes de liste (`GET /api/<ressource>`) SHALL accepter le paramètre `filter` JSON utilisé par le front, avec au minimum : `where` (égalité, `and`, `or`, `inq`, `like`), `order` (chaîne `"COL ASC, COL DESC"`), `limit`, `skip` et `include: [{ relation: 'banque' }]` pour les comptes. Les noms de colonnes et opérateurs MUST être validés contre une liste blanche par ressource (jamais interpolés tels quels dans le SQL), et le filtre d'appartenance utilisateur MUST toujours être combiné par `and` au `where` fourni.
@@ -88,11 +100,15 @@ Toutes les erreurs de l'API SHALL être renvoyées en JSON `{ "error": { "status
 - **THEN** la réponse est 500 `Internal Server Error` sans fuite du SQL ni de la stack
 
 ### Requirement: Endpoint de santé public
-`GET /api/ping` SHALL rester public et renvoyer le même JSON de santé qu'avant sans nécessiter de JWT.
+`GET /api/ping` SHALL rester public, sans nécessiter de JWT, et renvoyer un JSON de santé limité à `greeting`, `date` et `url`. Les en-têtes de la requête MUST NOT figurer dans la réponse.
 
 #### Scenario: Ping sans authentification
-- **WHEN** `GET /api/ping` est appelé sans en-tête `Authorization`
+- **WHEN** `GET /api/ping` est appelé sans session
 - **THEN** la réponse est 200
+
+#### Scenario: Pas d'écho des en-têtes
+- **WHEN** `GET /api/ping` est appelé avec des en-têtes `X-Forwarded-For` et `User-Agent`
+- **THEN** la réponse ne contient aucun champ `headers`
 
 ### Requirement: En-têtes de sécurité
 Le serveur SHALL activer `nuxt-security` avec des en-têtes de sécurité (HSTS en production, `X-Content-Type-Options: nosniff`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, CSP calibrée) pour l'application Nuxt (SPA, PWA, Highcharts, Eruda lazy) comme pour l'API. La CSP MUST NOT casser le service worker, les styles inline requis ni Highcharts.
@@ -104,4 +120,11 @@ Le serveur SHALL activer `nuxt-security` avec des en-têtes de sécurité (HSTS 
 #### Scenario: Application fonctionnelle sous CSP
 - **WHEN** l'application est chargée en production avec la CSP active
 - **THEN** aucun blocage CSP n'apparaît dans la console pour les parcours principaux (login, liste d'opérations, stats)
+
+### Requirement: Résolution sûre des ressources génériques
+Les routes génériques `/api/[resource]` SHALL ne résoudre que les ressources déclarées en propre dans le registre CRUD ; un nom inconnu, y compris une propriété héritée du prototype (`constructor`, `__proto__`, `toString`), MUST produire 404 au format d'erreur uniforme.
+
+#### Scenario: Nom issu du prototype
+- **WHEN** `GET /api/constructor` est appelé avec une session valide
+- **THEN** la réponse est 404 et aucune erreur 500 n'est journalisée
 

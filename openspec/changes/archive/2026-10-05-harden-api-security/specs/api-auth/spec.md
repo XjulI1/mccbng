@@ -1,8 +1,5 @@
-# api-auth Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change migrate-back-to-nuxt-server. Update Purpose after archive.
-## Requirements
 ### Requirement: Connexion par email et code
 `POST /api/users/login` SHALL accepter `{ email, code }` (`email` ≤ 254 caractères, `code` de exactement 6 caractères), vérifier le code contre `User.secret_key` par bcrypt, poser le cookie de session et renvoyer `{ userId: <IDuser> }` sans le JWT dans le corps. Une `secret_key` qui n'est pas un hash bcrypt (préfixe `$2`) MUST être refusée. Les identifiants invalides MUST produire 401 `Invalid email or code.` avec un temps de réponse comparable que l'email existe ou non : la comparaison factice MUST utiliser un hash de même coût que les hash réels.
 
@@ -83,16 +80,7 @@ Le login SHALL poser `mccbngAuth=<jwt>; HttpOnly; SameSite=Strict; Path=/; Max-A
 - **WHEN** une IP appelle massivement `GET /api/comptes`
 - **THEN** la règle de rate-limit du login ne s'applique pas
 
-### Requirement: Profil utilisateur
-`GET /api/users/whoAmI` SHALL renvoyer `{ favoris, warningTotal, warningCompte, IDuser, email, username }` ; `GET /api/users/exists` MUST renvoyer `true` pour un token valide ; `PATCH /api/users/me` MUST accepter uniquement `email`, `username`, `warningTotal`, `warningCompte`, `favoris` (champs inconnus rejetés) et renvoyer 409 `A user with this email already exists` si l'email appartient à un autre utilisateur (204 sinon).
-
-#### Scenario: Email déjà pris
-- **WHEN** l'utilisateur modifie son email pour celui d'un autre
-- **THEN** la réponse est 409
-
-#### Scenario: Champ interdit
-- **WHEN** `PATCH /api/users/me` contient `secret_key`
-- **THEN** la requête est rejetée (4xx) et la valeur n'est pas modifiée
+## ADDED Requirements
 
 ### Requirement: Création manuelle d'utilisateur
 L'API MUST NOT exposer de route de création d'utilisateur : `POST /api/signup` MUST répondre 404 au format d'erreur uniforme. Les utilisateurs SHALL être créés directement en base selon une procédure documentée. Une commande `pnpm hash-code <code>` MUST produire, pour un code de 6 caractères, un hash bcrypt de coût 12 utilisable tel quel comme `secret_key`, et refuser un code d'une autre longueur.
@@ -134,3 +122,12 @@ Chaque tentative de connexion SHALL produire un log structuré côté serveur co
 - **WHEN** une tentative de connexion échoue
 - **THEN** une ligne de log indique l'échec, l'IP et l'horodatage, sans le code saisi
 
+## REMOVED Requirements
+
+### Requirement: Migration paresseuse des secret_key en clair
+**Reason**: Les `secret_key` en clair sont hashées en une fois par un script avant le déploiement ; le chemin de comparaison en clair était un vecteur d'énumération par timing.
+**Migration**: Exécuter `scripts/hash-legacy-secrets.mjs` en production avant de déployer ; les nouvelles clés sont produites par `pnpm hash-code`.
+
+### Requirement: Création d'utilisateur
+**Reason**: `POST /api/signup` n'a aucun appelant (les utilisateurs sont créés dans phpMyAdmin) et permettait de choisir son `IDuser`, dont `0`, propriétaire des catégories partagées (S-H1).
+**Migration**: Créer les utilisateurs en base selon la procédure documentée, avec une `secret_key` produite par `pnpm hash-code`.

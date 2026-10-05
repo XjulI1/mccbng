@@ -9,7 +9,9 @@ export class HttpError extends Error {
 
 export const badRequest = (message: string) => new HttpError(400, 'BadRequestError', message)
 export const unauthorized = (message: string) => new HttpError(401, 'UnauthorizedError', message)
+export const forbidden = (message: string) => new HttpError(403, 'ForbiddenError', message)
 export const notFound = (message: string) => new HttpError(404, 'NotFoundError', message)
+export const methodNotAllowed = (message: string) => new HttpError(405, 'MethodNotAllowedError', message)
 export const conflict = (message: string) => new HttpError(409, 'ConflictError', message)
 export const unprocessable = (message: string) => new HttpError(422, 'UnprocessableEntityError', message)
 export const tooManyRequests = (message: string) => new HttpError(429, 'TooManyRequestsError', message)

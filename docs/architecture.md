@@ -93,9 +93,11 @@ The reference route table lives in `tests/fixtures/routes.ts` and is enforced by
 
 ### Authentication
 
-- Cookies `userToken` and `userID` are read/written through `document.cookie` in `app/services/auth.ts` (`getTokenCookie`, `getUserIDCookie`, `saveCookies`, `removeCookies`), in the same format as `useCookie` (URI-encoded JSON, `SameSite=Strict`, `Secure` over HTTPS) and as the former `universal-cookie` implementation. `useCookie` is deliberately not used: each call would create a ref + watcher outside any effect scope.
-- `app/middleware/auth.global.ts`: for any route other than `/login`, if the user store has no token, it reads the cookies, validates them with `GET /api/users/exists` (`checkUserAuthentification`, which clears invalid cookies), then calls `hydrateSession` (user, accounts, categories). It redirects to `/login` when cookies are missing, the token is invalid or hydration fails (cookies are then cleared), and redirects an already-authenticated user from `/login` to `/`. The requested deep link is preserved.
-- `login.vue` has no auto-authentication of its own (the middleware handles existing sessions): after `auth(...)` it calls `hydrateSession`, saves the cookies, then `router.replace({ name: 'Home' })`.
+- The session JWT lives only in the `HttpOnly` `mccbngAuth` cookie set by the server: JavaScript never sees it. `app/services/http.ts` sends every request with `credentials: 'same-origin'` and `X-Requested-With: mccbng` (required by the server's CSRF check on unsafe methods), without any `Authorization` header. The services still receive a `token` argument (the user store's session marker), which the HTTP client ignores.
+- The only front cookie is the non-secret `userID`, read/written through `document.cookie` in `app/services/auth.ts` (`getUserIDCookie`, `saveCookies`, `removeCookies`), in the same format as `useCookie` (URI-encoded JSON, `SameSite=Strict`, `Secure` over HTTPS). `useCookie` is deliberately not used: each call would create a ref + watcher outside any effect scope. A legacy `userToken` cookie (former JS-readable JWT) is deleted at startup (`removeLegacyTokenCookie`).
+- `app/middleware/auth.global.ts`: for any route other than `/login`, if the user store has no open session, it removes a legacy `userToken` cookie, reads `userID`, asks the server whether the cookie session is valid with `GET /api/users/exists` (`checkUserAuthentification`, which clears the cookies otherwise), then calls `hydrateSession` (user, accounts, categories). It redirects to `/login` when `userID` is missing, the session is invalid or hydration fails (cookies are then cleared), and redirects an already-authenticated user from `/login` to `/`. The requested deep link is preserved.
+- Logout (`/config`) calls `POST /api/users/logout` (which revokes the user's sessions on all devices; a network failure does not prevent the local logout), clears `userID` and `sessionStorage`, then reloads the app. `localStorage` only holds preferences (theme, debug mode, last email) and is kept.
+- `login.vue` has no auto-authentication of its own (the middleware handles existing sessions): after `auth(...)` (the server sets the session cookie and answers `{ userId }`) it calls `hydrateSession`, saves the `userID` cookie, then `router.replace({ name: 'Home' })`.
 - Logout (`config.vue`): clears storage and cookies, then reloads the page.
 
 ### Pinia stores (`app/stores/`)
@@ -245,25 +247,28 @@ Configured under `pwa` in `nuxt.config.ts`: manifest `mCloud Compte and Budget` 
 ```
 server/
 ├── api/                      # one route per file (Nitro file-based routing)
-│   ├── [resource]/*.ts       #   generic CRUD for banques, categories, biens
+│   ├── [resource]/*.ts       #   generic CRUD for banques (read + create only), categories, biens
 │   ├── comptes|operations|operation-recurrentes|credits/*.ts   # explicit CRUD files + specific routes
-│   ├── users/*.ts, signup.post.ts, ping.get.ts
+│   ├── users/*.ts, ping.get.ts  #   no signup route: users are created in phpMyAdmin (docs/exploitation.md)
 │   ├── stats/*.ts
 │   └── [...path].ts          #   JSON 404 for any unknown /api route
-├── middleware/auth.ts        # JWT check on /api/** (public: GET /api/ping, POST /api/users/login)
+├── middleware/auth.ts        # CSRF check on unsafe methods, then cookie JWT check on /api/** (public: GET /api/ping, POST /api/users/login)
 ├── plugins/                  # config check at startup, MySQL pool shutdown
 ├── db/                       # schema.ts (Drizzle, mirrors the production DDL), client.ts, migrations/*.sql
 └── utils/                    # config, auth, scope, crud, resources, crud-routes, filter, validate, errors, sql, stats, users, credits
 ```
 
-- **Configuration** (`utils/config.ts`): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET` (required in production), `JWT_TTL_SECONDS` (default 3600), read from `process.env` at runtime. In dev they can live in `.env`.
+- **Configuration** (`utils/config.ts`): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET` (required in production), `JWT_TTL_SECONDS` (default 21600, 6 h), read from `process.env` at runtime. In dev they can live in `.env`.
 - **Handlers**: wrap them in `defineApiHandler` so every error follows `{ error: { statusCode, name, message } }`; throw `notFound`, `badRequest`, `conflict`, … from `utils/errors.ts`. Unexpected errors become a generic 500 and are logged as `[api] <method> <path>`.
 - **CRUD**: `utils/resources.ts` describes each resource once (table, `readScope`/`writeScope`, Zod `create`/`patch` schemas, application `defaults`, `forced` fields such as `IDuser`, `validate` ownership checks, `onCreate`/`onDelete` cascades). `utils/crud.ts` implements the 8 standard routes. Because a static directory (`comptes/`, `operations/`, …) shadows the dynamic `[resource]` route, those resources have explicit one-line files calling `crudRoute(path, action)`; add the same files when a resource gets its own sub-routes.
 - **Filter**: lists accept a LoopBack-style `filter` JSON (`where` with `and`/`or`/`inq`/`like`/`gt`…, `order`, `limit`, `skip`, `include`), parsed by `utils/filter.ts` with a column/operator whitelist. The user scope is always combined with `and` after the client's `where`.
 - **Scope**: `utils/scope.ts` — `getCurrentUserId(event)`, `compteScope` (inherited scoping on `IDcompte`), `assertCompteOwned` (404). Users are looked up by `IDuser`, never by the non-unique `id` column.
 - **SQL**: `rawQuery(sql, params)` (`utils/sql.ts`) for analytics (`utils/stats.ts`, aggregates, auto-generation); always parameterised. Dates are read/written in UTC (`timezone: 'Z'`).
 - **Transactions**: cascades use `db.transaction`, but most production tables are MyISAM, which ignores transactions (`docs/db-migrations.md`).
-- **Security**: `nuxt-security` adds the security headers and an enforced CSP; only `POST /api/users/login` is rate-limited (5 attempts per IP per 15 min, in memory; the module reads `X-Forwarded-For`, so the reverse proxy must overwrite it).
+- **Security**: `nuxt-security` adds the security headers and an enforced CSP; only `POST /api/users/login` is rate-limited (5 attempts per IP per 15 min, in memory). The IP is read from `X-Real-IP`, set by the Synology DSM reverse proxy from Cloudflare's `CF-Connecting-IP` (client → Cloudflare → DSM → container), with the socket address as fallback; IPv6 addresses are counted by their `/64` prefix (`plugins/client-ip.ts`, `rateLimitKey`); `X-Forwarded-For` is never trusted.
+- **Session** (`utils/auth.ts`): JWT `{ name, email, IDuser, tv }` signed HS256 with `iss`/`aud` `mccbng`, carried only by the `HttpOnly` `mccbngAuth` cookie (a Bearer header is refused). `authenticate` re-reads `User.tokenVersion` and refuses a stale `tv` or a deleted user with a generic 401 `Invalid or expired token` (the detailed reason is only logged). `POST /api/users/logout` increments `tokenVersion`.
+- **Login** (`utils/users.ts`): bcrypt only (a plaintext `secret_key` is refused), dummy comparison at the same cost (12) for unknown emails, lockout after 5 consecutive failures (5 min → 30 min → 2 h → 24 h, no bcrypt while locked), one JSON log line per attempt (`event: 'login'`, result, `IDuser`, trusted IP, User-Agent, never the code).
+- **References**: `Operation`/`OperationRecurrente`/`Credit` writes check that `IDcredit` belongs to the user and that `IDcat` is 0, shared (`IDuser = 0`) or the user's (404 otherwise). Generic resources are resolved with `Object.hasOwn` (`/api/constructor` → 404) and a resource may restrict its actions (`banques`: read + create, 405 otherwise).
 - **Migrations**: SQL files in `server/db/migrations`, applied by `scripts/db-migrate.mjs` (`pnpm db:migrate`); `0000_baseline.sql` is the production DDL and is only *marked* as applied on the existing database (`--baseline`). See `../docs/db-migrations.md`.
 
 ### Testing
@@ -313,7 +318,7 @@ Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps
 │   ├── stores/                       # user, compte, operation, category, stats, display, credit, bien, banque
 │   └── assets/styles/                # variables.scss, theme.css, main.css
 ├── server/                           # REST API hosted by Nitro (api/, middleware/, plugins/, db/, utils/)
-├── scripts/db-migrate.mjs            # SQL migration runner
+├── scripts/                         # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs
 ├── public/                           # icons, favicon
 ├── tests/{unit,integration,api,support,fixtures}/
 ├── vitest.config.ts / vitest.api.config.ts
@@ -330,7 +335,7 @@ Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps
 - Model modal-style flows as **child pages** (absolute `path`, `name`, `componentName` in `definePageMeta`) rendering `RouteOverTheContent`, and update `tests/fixtures/routes.ts`.
 - Keep route names stable: the code reads `route.name`.
 - For currency display, prefer `<Currency :amount="…" />`.
-- Read auth through `getTokenCookie()` / `getUserIDCookie()` (or the user store) rather than touching cookies directly, and use `hydrateSession` to load a session.
+- Read auth through `getUserIDCookie()` (or the user store's session marker) rather than touching cookies directly, never try to read the JWT (it is `HttpOnly`), and use `hydrateSession` to load a session.
 - Keep state mutations free of HTTP calls — services do the I/O, actions orchestrate.
 - Never call `useXStore()` at module top level in a store file.
 - Add an API endpoint under `server/api/` (wrapped in `defineApiHandler`), scope it with `getCurrentUserId`, validate input with Zod, and cover it in `tests/api/` with at least a second user to prove the isolation. For a new CRUD resource, describe it in `server/utils/resources.ts` and, if it has sub-routes, add explicit `crudRoute` files in its directory.

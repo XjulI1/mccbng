@@ -3,7 +3,7 @@ import type { MySqlTable } from 'drizzle-orm/mysql-core'
 import { getQuery, getRouterParam, setResponseStatus, type H3Event } from 'h3'
 import type { ZodType } from 'zod'
 import { getDb, type Db } from '../db/client'
-import { notFound } from './errors'
+import { methodNotAllowed, notFound } from './errors'
 import { parseFilter, parseWhere } from './filter'
 import { idParam, parseBody } from './validate'
 
@@ -37,6 +37,8 @@ export interface CrudResource {
   onCreate?: (event: H3Event, data: Row, tx: Tx) => Promise<Row>
   /** Vérifications / cascades avant suppression */
   onDelete?: (event: H3Event, existing: Row, tx: Tx) => Promise<void>
+  /** Actions exposées par l'API (défaut : toutes) ; les autres répondent 405 */
+  actions?: CrudAction[]
 }
 
 const col = (resource: CrudResource, name: string) => (getTableColumns(resource.table) as Record<string, any>)[name]
@@ -156,5 +158,18 @@ export const crudHandlers = {
 
 export type CrudAction = keyof typeof crudHandlers
 
-export const unknownResource = (name: string | undefined) => notFound(`Resource ${name ?? ''} not found`.trim())
+// Résolution par propriété propre uniquement : `constructor`, `__proto__`, `toString`… donnent 404 et non 500.
+export const resolveResource = (registry: Record<string, CrudResource>, name: string | undefined): CrudResource => {
+  if (!name || !Object.hasOwn(registry, name)) throw notFound(`Resource ${name ?? ''} not found`.trim())
+  return registry[name]!
+}
+
+// Exécute une action CRUD si la ressource l'expose (405 sinon).
+export const runCrudAction = (resource: CrudResource, action: CrudAction, event: H3Event) => {
+  if (resource.actions && !resource.actions.includes(action)) {
+    throw methodNotAllowed(`${event.method} is not allowed on ${resource.label}`)
+  }
+  return crudHandlers[action](resource, event)
+}
+
 export const routeResourceName = (event: H3Event) => getRouterParam(event, 'resource')

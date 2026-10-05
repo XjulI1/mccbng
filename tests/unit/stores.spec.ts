@@ -76,7 +76,7 @@ describe('store compte', () => {
 
 describe('store operation (pagination par 35)', () => {
   it('charge 35 opérations puis la page suivante jusqu\'à épuisement', async () => {
-    useUserStore().saveUserToken('token')
+    useUserStore().openSession()
     useCompteStore().setActiveAccount({ IDcompte: 1 })
     const operation = useOperationStore()
     vi.mocked(fetchOperationsForAccount)
@@ -89,13 +89,13 @@ describe('store operation (pagination par 35)', () => {
     expect(operation.operationsOfActiveAccount).toHaveLength(35)
     expect(operation.hasMoreOperations).toBe(true)
     expect(operation.operationsSkip).toBe(35)
-    expect(fetchOperationsForAccount).toHaveBeenLastCalledWith(1, 'token', '', 0, 35)
+    expect(fetchOperationsForAccount).toHaveBeenLastCalledWith(1, true, '', 0, 35)
 
     await operation.loadMoreOperations()
 
     expect(operation.operationsOfActiveAccount).toHaveLength(45)
     expect(operation.hasMoreOperations).toBe(false)
-    expect(fetchOperationsForAccount).toHaveBeenLastCalledWith(1, 'token', '', 35, 35)
+    expect(fetchOperationsForAccount).toHaveBeenLastCalledWith(1, true, '', 35, 35)
 
     await operation.loadMoreOperations()
 

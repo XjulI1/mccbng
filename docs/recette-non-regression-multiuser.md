@@ -20,16 +20,17 @@ paramétrées).
 - Backend démarré (`pnpm start` dans `back/`) et frontend (`pnpm dev`)
 - Accès direct à la base MySQL pour vérifications
 
-## 1. Authentification / signup
+## 1. Authentification et session
 
 | #   | Cas                                            | Attendu                              |
 | --- | ---------------------------------------------- | ------------------------------------ |
-| 1.1 | Login U1 avec code valide                      | 200, token + userId                  |
-| 1.2 | Login code inexistant / mauvais format         | 401                                  |
-| 1.3 | `GET /users/whoAmI` avec token U1              | Renvoie U1                           |
-| 1.4 | Signup email déjà utilisé                      | 409                                  |
-| 1.5 | Signup `secret_key` déjà utilisé               | 409                                  |
-| 1.6 | Signup payload contenant un `id`/`IDuser` client | Ignoré, nouvel UUID généré          |
+| 1.1 | Login U1 avec code valide                      | 200, `{ userId }` sans JWT, cookie `mccbngAuth` HttpOnly ; aucun cookie `userToken` |
+| 1.2 | Login code inexistant / mauvais format         | 401 / 422                            |
+| 1.3 | `GET /users/whoAmI` avec la session U1         | Renvoie U1                           |
+| 1.4 | 5 mauvais codes pour U1, puis le bon code      | 401 (compte verrouillé 5 min)        |
+| 1.5 | U1 connecté sur deux appareils, logout sur l'un | L'autre appareil est renvoyé sur `/login` à la requête suivante |
+| 1.6 | `POST /signup`                                 | 404 (création des utilisateurs dans phpMyAdmin) |
+| 1.7 | Requête `POST` sans `X-Requested-With: mccbng` | 403                                  |
 
 ## 2. Banques (catalogue global)
 
@@ -38,7 +39,8 @@ paramétrées).
 | 2.1 | U1 `GET /banques`            | Liste complète (partagée)        |
 | 2.2 | U2 `GET /banques`            | Même liste que U1                |
 | 2.3 | U1 `POST /banques`           | Banque visible par U2            |
-| 2.4 | Sans token                   | 401                              |
+| 2.4 | U2 `PATCH` / `DELETE /banques/{id}` | 405, banque inchangée     |
+| 2.5 | Sans session                 | 401                              |
 
 ## 3. Comptes (scope `IDuser`)
 

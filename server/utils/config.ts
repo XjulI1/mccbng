@@ -6,7 +6,7 @@ export interface AppConfig {
   isProduction: boolean
 }
 
-const DEFAULT_TTL_SECONDS = 60 * 60
+const DEFAULT_TTL_SECONDS = 6 * 60 * 60
 const REQUIRED_DB_VARS = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'] as const
 
 let cached: AppConfig | undefined

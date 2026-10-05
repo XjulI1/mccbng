@@ -8,9 +8,17 @@ La table de suivi `__migrations` (`name`, `applied_at`) mémorise les fichiers d
 
 ## Configuration
 
+Les scripts qui modifient la base (`db-migrate.mjs`, `hash-legacy-secrets.mjs`) lisent `DB_HOST`, `DB_PORT`,
+`DB_USER`, `DB_PASSWORD` et `DB_NAME` dans le fichier `.env` de la racine du dépôt (le même que `pnpm dev`).
+Les variables déjà définies dans l'environnement sont prioritaires, et `ENV_FILE` permet de viser un autre fichier :
+
 ```bash
-export DB_HOST=… DB_PORT=3306 DB_USER=… DB_PASSWORD=… DB_NAME=…
+pnpm db:migrate                               # .env de la racine
+ENV_FILE=.env.production pnpm db:migrate      # autre fichier (chemin relatif à la racine, ou absolu)
+DB_NAME=mccbng_copie pnpm db:migrate          # une variable passée en ligne de commande l'emporte sur le fichier
 ```
+
+Le script affiche le fichier chargé (`Configuration lue dans …`) : le vérifier avant toute opération sur la production.
 
 ## Commandes
 
@@ -35,6 +43,17 @@ Sans `--baseline`, le runner refuse de continuer s'il trouve la table `User` san
 ## Base vide (développement, CI, nouvelle instance)
 
 `pnpm db:migrate` (sans option) exécute la baseline puis les migrations suivantes.
+
+## Contrôles et procédures d'exploitation
+
+Les requêtes de contrôle à lancer avant un déploiement (aucun `User.IDuser ≤ 0`, références `IDcredit` / `IDcat`
+croisées entre utilisateurs, `secret_key` en clair) et les procédures phpMyAdmin (création d'utilisateur,
+déverrouillage, banques) sont décrites dans [`exploitation.md`](exploitation.md).
+
+```sql
+-- Aucun utilisateur ne doit avoir un IDuser ≤ 0 (0 = propriétaire des catégories partagées)
+SELECT IDuser, email FROM `User` WHERE IDuser <= 0;
+```
 
 ## Ajouter une migration
 

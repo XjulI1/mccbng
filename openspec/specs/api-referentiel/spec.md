@@ -4,11 +4,23 @@
 TBD - created by archiving change migrate-back-to-nuxt-server. Update Purpose after archive.
 ## Requirements
 ### Requirement: Banques
-Les routes `/api/banques` SHALL fournir le CRUD standard de `Banque` (`IDbanque`, `NomBanque`). Les banques étant partagées (sans `IDuser`), leur comportement actuel (tout utilisateur authentifié lit et écrit) MUST être reproduit tel quel ; ce point est consigné comme écart connu dans `design.md`.
+Les routes `/api/banques` SHALL fournir la lecture (`GET /`, `GET /{id}`) et la création (`POST /`) de `Banque` (`IDbanque`, `NomBanque`). Les banques restent partagées (sans `IDuser`) : tout utilisateur authentifié MUST pouvoir les lire et en créer. La modification (`PATCH /`, `PATCH /{id}`, `PUT /{id}`) et la suppression (`DELETE /{id}`) MUST NOT être exposées par l'API : ces requêtes MUST être refusées (404 ou 405 au format d'erreur uniforme) sans rien modifier. Ces opérations se font directement en base par l'exploitant.
 
 #### Scenario: Liste triée
 - **WHEN** le front appelle `GET /api/banques?filter={"order":"NomBanque ASC"}`
 - **THEN** les banques sont renvoyées triées par nom
+
+#### Scenario: Renommage en masse
+- **WHEN** un utilisateur authentifié appelle `PATCH /api/banques` avec `{ "NomBanque": "x" }`
+- **THEN** la requête est refusée et aucune banque n'est modifiée
+
+#### Scenario: Suppression
+- **WHEN** un utilisateur authentifié appelle `DELETE /api/banques/{id}`
+- **THEN** la requête est refusée et la banque est conservée
+
+#### Scenario: Création par un utilisateur
+- **WHEN** un utilisateur authentifié appelle `POST /api/banques`
+- **THEN** la banque est créée
 
 ### Requirement: Comptes scopés par utilisateur
 Les routes `/api/comptes` SHALL fournir le CRUD standard de `Compte`, scopé par `IDuser`, avec `include: [{ relation: 'banque' }]` renvoyant la banque liée dans le champ `banque`. `IDuser` MUST être forcé à celui du JWT à la création. `GET /api/comptes/management-info` MUST renvoyer, pour chaque compte de l'utilisateur, `{ IDcompte, lastOpDate (nullable), hasReferences }` où `hasReferences` indique que le compte est référencé par une `Operation`, une `OperationRecurrente` ou un `Credit` (donc non supprimable), et `GET /api/comptes/{id}/banque` la banque d'un compte de l'utilisateur.

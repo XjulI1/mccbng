@@ -10,7 +10,9 @@ export const useUserStore = defineStore('user', () => {
   const warningCompte = ref<any>(null)
   const email = ref<any>(null)
   const username = ref<any>(null)
-  const token = ref<any>(null)
+  // Marqueur de session ouverte (et non un JWT : le jeton est dans le cookie HttpOnly mccbngAuth, illisible en JS).
+  // Conservé sous ce nom car les services le reçoivent encore en paramètre (ignoré par le client HTTP).
+  const token = ref<true | null>(null)
   const maskAmount = ref(false)
 
   function setUser (user) {
@@ -34,8 +36,12 @@ export const useUserStore = defineStore('user', () => {
       .then(() => fetchUser(id.value))
   }
 
-  function saveUserToken (newToken) {
-    token.value = newToken
+  function openSession () {
+    token.value = true
+  }
+
+  function closeSession () {
+    token.value = null
   }
 
   function toggleMaskAmount () {
@@ -54,7 +60,8 @@ export const useUserStore = defineStore('user', () => {
     setUser,
     fetchUser,
     updateUser,
-    saveUserToken,
+    openSession,
+    closeSession,
     toggleMaskAmount
   }
 })

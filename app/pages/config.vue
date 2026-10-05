@@ -125,7 +125,8 @@
   import { onMounted, computed } from 'vue'
   import { useCompteStore } from '@/stores/compte'
   import { useUserStore } from '@/stores/user'
-  import { removeCookies } from '@/services/auth'
+  import { API_URL } from '@/services/config'
+  import { logout as logoutSession } from '@/services/auth'
   import { useGlobalDebugTools } from '@/composables/useDebugTools'
 
   const compteStore = useCompteStore()
@@ -158,10 +159,11 @@
     }
   }
 
-  const logout = () => {
-    localStorage.clear()
+  // Révoque la session côté serveur, puis recharge l'app (stores réinitialisés, redirection vers /login).
+  // Le localStorage ne contient que des préférences (thème, mode debug, dernier email) : il est conservé.
+  const logout = async () => {
+    await logoutSession(API_URL)
     sessionStorage.clear()
-    removeCookies()
     window.location.reload()
   }
 

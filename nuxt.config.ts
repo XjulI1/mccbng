@@ -87,7 +87,9 @@ export default defineNuxtConfig({
   routeRules: {
     // 5 tentatives / 15 min / IP (nuxt-security compte toutes les requêtes, y compris réussies).
     // Le module ne décompte pas la 1re requête de la fenêtre : tokensPerInterval = 4 donne 5 essais, la 6e reçoit 429.
-    '/api/users/login': { security: { rateLimiter: { tokensPerInterval: 4, interval: 15 * 60 * 1000 } } }
+    // IP lue dans X-Real-IP (posé par le reverse proxy, ou à défaut l'adresse de la socket : server/plugins/client-ip.ts),
+    // jamais dans X-Forwarded-For. Compteur en mémoire : un stockage partagé est requis si l'app est répliquée.
+    '/api/users/login': { security: { rateLimiter: { tokensPerInterval: 4, interval: 15 * 60 * 1000, ipHeader: 'x-real-ip' } } }
   },
 
   devServer: { port: 8080, host: '0.0.0.0' },

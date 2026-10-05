@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import {
-  createBanque, createCategorie, createCompte, createOperation, createUser, del, get, patch, post, put, type TestUser
+  createBanque, createCategorie, createCompte, createOperation, createUser, del, get, patch, post, put, sql, type TestUser
 } from './helpers'
 
 let alice: TestUser
@@ -95,7 +95,6 @@ describe('comptes', () => {
 
 describe('catégories', () => {
   it('lecture : les siennes + partagées (IDuser 0) ; jamais celles d\'autrui', async () => {
-    const { sql } = await import('./helpers')
     await sql("INSERT INTO Categorie (Nom, IDuser, Type) VALUES ('Partagée', 0, 'revenu')")
     const mine = await createCategorie(alice, 'Alice cat')
     await createCategorie(bob, 'Bob cat')
@@ -109,7 +108,6 @@ describe('catégories', () => {
   })
 
   it('les catégories partagées ne sont pas modifiables', async () => {
-    const { sql } = await import('./helpers')
     const result: any = await sql("INSERT INTO Categorie (Nom, IDuser, Type) VALUES ('Salaire partagé', 0, 'revenu')")
     const id = result.insertId
     expect((await get(`/api/categories/${id}`, alice.token)).status).toBe(200)
@@ -124,14 +122,30 @@ describe('catégories', () => {
 })
 
 describe('banques', () => {
-  it('CRUD non scopé (comportement historique) et liste triée', async () => {
-    const b = await createBanque(alice.token, 'ZZ Banque')
+  it('lecture et création par tout utilisateur, liste triée', async () => {
+    await createBanque(alice.token, 'ZZ Banque')
     await createBanque(alice.token, 'AA Banque')
     const list = await get('/api/banques', bob.token, { filter: { order: 'NomBanque ASC' } })
+    expect(list.status).toBe(200)
     const names = list.body.map((x: any) => x.NomBanque)
     expect(names).toEqual([...names].sort())
-    expect((await patch(`/api/banques/${b.IDbanque}`, bob.token, { NomBanque: 'Renommée' })).status).toBe(204)
-    expect((await del(`/api/banques/${b.IDbanque}`, bob.token)).status).toBe(204)
-    expect((await get(`/api/banques/${b.IDbanque}`, bob.token)).status).toBe(404)
+    expect((await post('/api/banques', bob.token, { NomBanque: 'Créée par Bob' })).status).toBe(200)
+  })
+
+  it('modification et suppression non exposées : refusées sans rien modifier', async () => {
+    const b = await createBanque(alice.token, 'Intouchable')
+    const refused = [
+      await patch('/api/banques', bob.token, { NomBanque: 'x' }),
+      await patch(`/api/banques/${b.IDbanque}`, bob.token, { NomBanque: 'x' }),
+      await put(`/api/banques/${b.IDbanque}`, bob.token, { NomBanque: 'x' }),
+      await del(`/api/banques/${b.IDbanque}`, alice.token)
+    ]
+    for (const res of refused) {
+      expect(res.status).toBe(405)
+      expect(res.body.error).toMatchObject({ statusCode: 405, name: 'MethodNotAllowedError' })
+    }
+    expect((await get(`/api/banques/${b.IDbanque}`, bob.token)).body).toMatchObject({ NomBanque: 'Intouchable' })
+    const [{ n }] = await sql('SELECT count(*) AS n FROM Banque WHERE NomBanque = ?', ['x'])
+    expect(Number(n)).toBe(0)
   })
 })
