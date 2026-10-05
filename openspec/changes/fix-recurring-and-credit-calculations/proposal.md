@@ -23,7 +23,7 @@ Comme ces erreurs s'écrivent en base à chaque ouverture de l'application, leur
   - un crédit qui démarre dans le passé ne génère aucun rattrapage rétroactif.
 - **Restant dû** :
   - seules les sorties (`MontantOp < 0`) datées d'aujourd'hui ou avant sont prises en compte ;
-  - les intérêts courent par mois civil écoulé depuis `DateDebut`, une seule fois par mois ;
+  - les intérêts courent par mois civil, une seule fois par mois, à partir du mois qui précède le premier paiement (la première échéance couvre un mois d'intérêts, comme à la banque) ; une suspension d'échéances fait courir les intérêts ;
   - l'arrondi à 2 décimales devient correct.
 - **Validation des récurrentes** :
   - `Frequence` ∈ {3, 7} ;

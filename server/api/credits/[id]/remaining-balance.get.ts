@@ -12,8 +12,10 @@ import { idParam } from '../../../utils/validate'
 const monthIndex = (date: Date) => date.getUTCFullYear() * 12 + date.getUTCMonth()
 
 // Amortissement : seules les sorties passées comptent (ni déblocage, ni échéance générée par anticipation).
-// Les intérêts courent par mois civil écoulé depuis le mois de DateDebut, puis depuis le mois du paiement
-// précédent ; chaque paiement couvre d'abord ces intérêts, le reste réduit le principal.
+// Comme dans un tableau d'amortissement bancaire, la première échéance couvre un mois d'intérêts : les intérêts
+// courent depuis le mois qui précède le premier paiement (les intérêts intercalaires entre la signature,
+// DateDebut, et le début de l'amortissement se règlent à part), puis par mois civil écoulé depuis le paiement
+// précédent (suspension d'échéances comprise). Chaque paiement couvre d'abord ces intérêts, le reste réduit le principal.
 export default defineApiHandler(async (event) => {
   const id = idParam(event)
   const credit = await findOwnedCredit(event, id)
@@ -27,7 +29,7 @@ export default defineApiHandler(async (event) => {
 
   const monthlyRate = (credit.TauxInteret ?? 0) / 100 / 12
   let solde = credit.MontantInitial
-  let cursor = monthIndex(credit.DateDebut)
+  let cursor = payments.length ? monthIndex(payments[0]!.DateOp) - 1 : 0
   let paye = 0
   let interets = 0
   for (const payment of payments) {

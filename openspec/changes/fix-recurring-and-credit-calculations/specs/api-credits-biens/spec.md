@@ -24,7 +24,7 @@
 
 ### Requirement: Solde restant et paiements
 `GET /api/credits/{id}/remaining-balance` SHALL renvoyer `{ solde, paye, interets }` en simulant l'amortissement à partir de `MontantInitial` et `DateDebut`. La simulation porte sur les opérations liées au crédit dont `MontantOp < 0` et dont `DateOp` est antérieure ou égale à aujourd'hui, triées par `DateOp ASC`.
-- Les intérêts courent au taux mensuel `TauxInteret/100/12` pour chaque **mois civil** écoulé entre le mois de référence (celui de `DateDebut`, puis celui du dernier paiement traité) et le mois du paiement. Le jour du paiement dans le mois n'a pas d'effet.
+- Les intérêts courent au taux mensuel `TauxInteret/100/12` pour chaque **mois civil** écoulé entre le mois de référence et le mois du paiement. Le mois de référence est d'abord celui qui précède le premier paiement (la première échéance couvre un mois d'intérêts, comme dans un tableau d'amortissement bancaire ; les intérêts intercalaires entre `DateDebut` et le début de l'amortissement ne sont pas comptés), puis celui du dernier paiement traité. Le jour du paiement dans le mois n'a pas d'effet ; un mois sans paiement (suspension d'échéances) porte ses intérêts sur l'échéance suivante.
 - Chaque paiement (valeur absolue) couvre d'abord les intérêts courus, puis réduit le principal (borné à `[0, solde]`).
 - Les opérations positives (déblocage, remboursement) et futures MUST être ignorées.
 - Les résultats MUST être arrondis à 2 décimales avec un arrondi correct des demi-centimes.
@@ -35,8 +35,16 @@
 - **WHEN** un crédit de 1 000 € sans taux a 3 paiements passés de -100 €
 - **THEN** `{ solde: 700, paye: 300, interets: 0 }`
 
+#### Scenario: Première échéance après la signature
+- **WHEN** un crédit signé le 28 juillet a sa première échéance le 5 septembre
+- **THEN** cette échéance ne porte qu'un mois d'intérêts
+
+#### Scenario: Suspension d'échéances
+- **WHEN** aucune mensualité n'est payée pendant trois mois puis les paiements reprennent
+- **THEN** l'échéance de reprise porte les intérêts des quatre mois écoulés depuis le paiement précédent
+
 #### Scenario: Crédit avec intérêts
-- **WHEN** un crédit a un taux > 0 et un paiement le mois civil qui suit `DateDebut`
+- **WHEN** un crédit a un taux > 0 et un paiement
 - **THEN** `interets` > 0 et la part de principal remboursée est inférieure au montant du paiement
 
 #### Scenario: Prélèvement avancé d'un jour

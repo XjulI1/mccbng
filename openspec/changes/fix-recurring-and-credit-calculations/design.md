@@ -117,7 +117,7 @@ Le front désactive l'édition et la suppression de ces récurrentes et renvoie 
 - *Écarté* : la synchronisation dans les deux sens (récurrente → crédit), plus complexe et sujette aux boucles.
 
 ### D6. Restant dû
-On repart de `solde = MontantInitial` et `cursor = mois(DateDebut)`, où `mois(d) = année(d) × 12 + mois(d)`. Pour chaque opération liée au crédit telle que `MontantOp < 0` et `DateOp ≤ aujourd'hui`, triée par `DateOp ASC` :
+On repart de `solde = MontantInitial` et `cursor = mois(premier paiement) − 1`, où `mois(d) = année(d) × 12 + mois(d)` : comme dans un tableau d'amortissement bancaire, la première échéance couvre un mois d'intérêts, et les intérêts intercalaires entre la signature (`DateDebut`) et le début de l'amortissement se règlent à part. Vérifié sur la copie de production : un crédit signé le 28 juillet et remboursé à partir du 5 septembre redonne exactement le capital restant dû de la banque, alors qu'un départ au mois de `DateDebut` comptait un mois d'intérêts de trop. Pour chaque opération liée au crédit telle que `MontantOp < 0` et `DateOp ≤ aujourd'hui`, triée par `DateOp ASC` :
 1. `n = max(0, mois(DateOp) − cursor)` : le nombre de mois **civils** écoulés ;
 2. `interet = solde × taux × n`, avec `taux = TauxInteret / 100 / 12` ;
 3. le paiement (valeur absolue) couvre `interet`, puis réduit `solde`, borné à `[0, solde]` ;

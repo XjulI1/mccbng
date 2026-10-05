@@ -54,7 +54,7 @@
   - propager montant, compte, catégorie, nom et jour de `DateDebut` vers la récurrente ;
   - si `DateDebut` change et que l'ancienne `DernierDateOpRecu` < ancienne `DateDebut`, recalculer `DernierDateOpRecu` par `initialLastDate(rec, nouvelle DateDebut)` ;
   - refuser le `PATCH` en masse des crédits
-- [x] 5.4 Réécrire `server/api/credits/[id]/remaining-balance.get.ts` : sorties seulement, `DateOp ≤ aujourd'hui`, intérêts par mois civil écoulé (`n = mois(DateOp) − cursor`, puis `cursor = mois(DateOp)`), `round2`
+- [x] 5.4 Réécrire `server/api/credits/[id]/remaining-balance.get.ts` : sorties seulement, `DateOp ≤ aujourd'hui`, intérêts par mois civil écoulé (`cursor` initial = mois du premier paiement − 1, `n = mois(DateOp) − cursor`, puis `cursor = mois(DateOp)`), `round2`
 - [x] 5.5 Tests API :
   - crédit futur, dont la première mensualité est celle de `DateDebut` ;
   - crédit créé dans le passé sans rattrapage ;

@@ -193,6 +193,18 @@ describe('crédits', () => {
     expect(res.body).toEqual({ solde: 769.1, paye: 230.9, interets: 19.1 })
   })
 
+  it('solde restant : la première échéance couvre un mois d\'intérêts, une suspension fait courir les intérêts', async () => {
+    const compte = await createCompte(alice)
+    // cas réel : signé le 28 juillet, première échéance le 5 septembre (intérêts intercalaires réglés à part)
+    const created = (await post('/api/credits', alice.token, credit(compte.IDcompte, { TauxInteret: 12, DateDebut: '2021-07-28', DateFin: '2041-07-05' }))).body
+    const link = { IDcredit: created.IDcredit }
+    await createOperation(alice, compte.IDcompte, { ...link, MontantOp: -100, DateOp: '2021-09-05' })
+    expect((await get(`/api/credits/${created.IDcredit}/remaining-balance`, alice.token)).body).toEqual({ solde: 910, paye: 90, interets: 10 })
+    // suspension d'octobre à décembre : l'échéance de janvier porte 4 mois d'intérêts (910 × 1 % × 4 = 36,40)
+    await createOperation(alice, compte.IDcompte, { ...link, MontantOp: -100, DateOp: '2022-01-05' })
+    expect((await get(`/api/credits/${created.IDcredit}/remaining-balance`, alice.token)).body).toEqual({ solde: 846.4, paye: 153.6, interets: 46.4 })
+  })
+
   it('payments : tri DateOp décroissant, 404 pour autrui', async () => {
     const compte = await createCompte(alice)
     const created = (await post('/api/credits', alice.token, credit(compte.IDcompte))).body
