@@ -13,7 +13,11 @@ export const parseBody = async <S extends ZodType>(event: H3Event, schema: S): P
 }
 
 // Nombres reçus en chaîne depuis l'URL ou le JSON ; rejette NaN.
-export const numeric = z.preprocess(v => (typeof v === 'string' && v.trim() !== '' ? Number(v) : v), z.number())
+const toNumber = (v: unknown) => (typeof v === 'string' && v.trim() !== '' ? Number(v) : v)
+export const numeric = z.preprocess(toNumber, z.number())
+export const numericInt = (min: number, max: number) => z.preprocess(toNumber, z.number().int().min(min).max(max))
+export const numericOneOf = <T extends number>(...values: [T, T, ...T[]]) =>
+  z.preprocess(toNumber, z.union(values.map(v => z.literal(v)) as unknown as [z.ZodLiteral<T>, z.ZodLiteral<T>]))
 export const boolish = z.union([z.boolean(), z.literal(0), z.literal(1)]).transform(v => Boolean(v))
 
 export const idParam = (event: H3Event, name = 'id'): number => {

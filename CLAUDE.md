@@ -62,7 +62,7 @@ pnpm hash-code <code>   # bcrypt hash (cost 12) of a login code, to paste into U
 | **Banque** | `IDbanque` | Bank — groups accounts. Shared (no user scope): read and create only through the API (no `PATCH`/`PUT`/`DELETE`, 405). |
 | **Compte** | `IDcompte` | Bank account. Type flags: `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible`. |
 | **Operation** | `IDop` | Single transaction. Belongs to a `Compte`, optionally tied to a `Categorie` and a `Credit`. `CheckOp` = pointed/checked status, `amortissement` flag. |
-| **OperationRecurrente** | `IDopRecu` | Recurring template. `Frequence`: 3 = monthly, 7 = yearly. `DernierDateOpRecu` tracks last generation. |
+| **OperationRecurrente** | `IDopRecu` | Recurring template. `Frequence`: 3 = monthly, 7 = yearly. Due dates fall on `JourNumOpRecu` (and `MoisOpRecu`, 0-indexed, for yearly), clamped to the month's last day; `DernierDateOpRecu` is the last generated due date (set by the server on creation). A credit's recurring operation (`IDcredit` set) is read-only (409): it is managed through its `Credit`. |
 | **Categorie** | `IDcat` | `Type` ENUM (`depense` / `revenu` / `transfert`) drives how the category is counted in each graph. `IDuser = 0` marks shared categories (readable by all, not editable). |
 | **Credit** | `IDcredit` | Loan / mortgage. Auto-creates a monthly `OperationRecurrente` when created. |
 | **Bien** | `IDbien` | Real-estate asset. Optionally linked to a `Credit` (mortgage). |
@@ -77,14 +77,14 @@ User scoping uses two patterns:
 
 - Multi-bank, multi-account management with type flags and pointed/unpointed balance tracking.
 - Transaction CRUD with pointed status, infinite scroll pagination (35/page), swipe-to-delete on mobile.
-- Recurring operations with monthly / yearly auto-generation (at most one occurrence per recurring operation per call).
-- Account-to-account transfers (debit + credit pair created in one shot by the front).
+- Recurring operations with monthly / yearly auto-generation (`server/utils/schedule.ts`): every due occurrence up to 15 days (monthly) or 30 days (yearly) ahead is generated in one call (at most 24 per recurring operation), each reserved by an optimistic lock on `DernierDateOpRecu` so concurrent calls never duplicate it. Credits stop generating after `DateFin` or when not `actif`.
+- Account-to-account transfers: `POST /api/operations/transfert` creates the debit + credit pair server-side (mandatory `IDcat`, the debit is removed if the credit fails).
 - Cross-account search by operation name.
 - Smart category suggestion based on past operation name patterns.
-- Loan tracking (`Credit`) with monthly auto-debit, remaining-balance (interest first, then principal) and payment-history endpoints.
+- Loan tracking (`Credit`) with monthly auto-debit (changes to the credit are propagated to its recurring operation), remaining-balance (past outflows only, interest once per calendar month, then principal) and payment-history endpoints.
 - Real-estate tracking (`Bien`) with optional link to a `Credit` for mortgages.
 - Amortization view filtering operations flagged `amortissement = 1`.
-- Monthly and yearly statistics: total spent, pie chart by category, income vs expense, top categories / operations, heatmap, time series of balance evolution (global / retraite / dispo).
+- Monthly and yearly statistics: total spent, pie chart by category, income vs expense, top categories / operations, heatmap, time series of balance evolution (global = neither retraite nor children / retraite / dispo = global and not bloque). Every chart uses the same expense rule (`EXPENSE_JOIN` / `EXPENSE_WHERE`): the category `Type`, inflows and outflows alike; there is no uncategorized operation, `IDcat = 0` is the shared default category « Aucune » (`depense`) and counts like any other; `NULL` account flags read as their default; operations dated in the future (generated ahead) still count in balances.
 - Light / dark / system theme with persistence.
 - Mobile-responsive PWA with swipeable account panel and optional Eruda debug console.
 
@@ -103,7 +103,7 @@ User scoping uses two patterns:
 | `JWT_SECRET` | yes in production | JWT signing secret (an ephemeral one is generated in dev, with a warning) |
 | `JWT_TTL_SECONDS` | no | JWT lifetime, default 21600 (6 h) |
 
-In development they can live in `.env`. The scripts that modify the database (`scripts/db-migrate.mjs`, `scripts/hash-legacy-secrets.mjs`) also load the root `.env` through `scripts/load-env.mjs` (or the file named by `ENV_FILE`); variables already set in the environment take precedence. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
+In development they can live in `.env`. The scripts that modify the database (`scripts/db-migrate.mjs`, `scripts/hash-legacy-secrets.mjs`, `scripts/diagnose-recurrentes.mjs`) also load the root `.env` through `scripts/load-env.mjs` (or the file named by `ENV_FILE`); variables already set in the environment take precedence. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
 
 ## Docker Deployment
 
@@ -135,12 +135,12 @@ Registry: `dockregistry.xju.fr/mccbng/front` with `staging` and `latest` tags. T
 mccbng/
 ├── app/                 # Nuxt SPA (pages, components, stores, services…)
 ├── server/              # Nitro API (api/, middleware/, plugins/, db/, utils/)
-├── scripts/             # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs (one-shot)
+├── scripts/             # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs (one-shot), diagnose-recurrentes.mjs (recurring operations / credits diagnostic and fixes)
 ├── public/              # icons, favicon
 ├── tests/               # unit, integration, api
 ├── nuxt.config.ts, vitest*.config.ts, eslint.config.mjs, tsconfig.json
 ├── Dockerfile, docker-entrypoint.sh
-├── docs/                # architecture.md (detailed architecture), exploitation.md (phpMyAdmin procedures), recette-non-regression-multiuser.md, db-migrations.md, security-roadmap.md)
+├── docs/                # architecture.md (detailed architecture), exploitation.md (phpMyAdmin and script procedures), recette-non-regression-multiuser.md, db-migrations.md, security-roadmap.md)
 ├── mockups/             # Standalone HTML UI mockups
 ├── openspec/            # OpenSpec specs and changes
 ├── package.json         # Scripts, dependencies, packageManager

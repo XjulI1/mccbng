@@ -1,14 +1,4 @@
-# api-credits-biens Specification
-
-## Purpose
-TBD - created by archiving change migrate-back-to-nuxt-server. Update Purpose after archive.
-## Requirements
-### Requirement: CRUD des crédits
-Les routes `/api/credits` SHALL fournir le CRUD standard de `Credit` scopé par `IDuser`. La création et le remplacement MUST vérifier que `IDcompte` appartient à l'utilisateur (404 sinon) ; `IDcredit`, `IDopRecu` et `IDuser` fournis par le client MUST être ignorés. Défauts : `Statut='actif'`, `IDcat=0`.
-
-#### Scenario: Compte d'autrui
-- **WHEN** `POST /api/credits` référence un `IDcompte` d'un autre utilisateur
-- **THEN** la réponse est 404 `Compte <id> not found`
+## MODIFIED Requirements
 
 ### Requirement: Création d'un crédit et de sa récurrente
 À la création d'un crédit, le serveur SHALL créer une `OperationRecurrente` mensuelle nommée `Mensualité <NomCredit>` (`MontantOpRecu = MontantMensuel`, `JourOpRecu=1`, `JourNumOpRecu` = jour de `DateDebut`, `MoisOpRecu` = mois de `DateDebut` (indexé 0), `Frequence=3`, `IDcompte`, `IDcat`, `IDcredit`), puis renseigner `Credit.IDopRecu` avec son identifiant. `DernierDateOpRecu` MUST être initialisé à l'échéance théorique qui précède la première échéance postérieure ou égale à `max(aujourd'hui, DateDebut)`. Ainsi, la première mensualité d'un crédit futur est celle de `DateDebut`, et aucune mensualité passée n'est générée rétroactivement. Tout échec après la création de la récurrente MUST laisser la base sans crédit ni récurrente, y compris lorsque les tables ne sont pas transactionnelles (suppression compensatoire).
@@ -73,23 +63,7 @@ Les routes `/api/credits` SHALL fournir le CRUD standard de `Credit` scopé par 
 - **WHEN** une mensualité générée par anticipation est datée de dans 10 jours
 - **THEN** elle n'est pas déduite du solde
 
-### Requirement: CRUD des biens
-Les routes `/api/biens` SHALL fournir le CRUD standard de `Bien` scopé par `IDuser` (défauts `Usage='principale'`, `FraisAgence=0`, `ApportCash=0`). Lorsqu'un `IDcredit` est fourni (création, PATCH, PUT), le crédit MUST appartenir à l'utilisateur (404 sinon). `IDuser` MUST être forcé à celui du JWT.
-
-#### Scenario: Bien lié au crédit d'autrui
-- **WHEN** `POST /api/biens` référence l'`IDcredit` d'un autre utilisateur
-- **THEN** la réponse est 404 et aucun bien n'est créé
-
-#### Scenario: Bien sans crédit
-- **WHEN** un bien est créé sans `IDcredit`
-- **THEN** il est créé avec les valeurs par défaut
-
-### Requirement: Opérations liées à un crédit cloisonnées
-`GET /api/credits/{id}/payments` et `GET /api/credits/{id}/remaining-balance` SHALL ne prendre en compte que les opérations liées au crédit (`IDcredit = id`) **et** appartenant aux comptes de l'utilisateur courant. Une opération d'un autre utilisateur portant le même `IDcredit`, par exemple une donnée antérieure au contrôle de propriété, MUST être ignorée.
-
-#### Scenario: Opération étrangère rattachée au crédit
-- **WHEN** une opération d'un compte de B porte l'`IDcredit` d'un crédit de A
-- **THEN** elle n'apparaît pas dans `payments` du crédit de A et n'entre pas dans son `remaining-balance`
+## ADDED Requirements
 
 ### Requirement: Propagation des modifications d'un crédit
 `PUT /api/credits/{id}` et `PATCH /api/credits/{id}` SHALL répercuter sur l'`OperationRecurrente` liée (`IDopRecu`, ou à défaut la récurrente portant l'`IDcredit` du crédit) les seuls champs modifiés parmi les changements de `MontantMensuel` (vers `MontantOpRecu`), `IDcompte`, `IDcat`, `NomCredit` (vers `NomOpRecu = "Mensualité <NomCredit>"`) et du jour de `DateDebut` (vers `JourNumOpRecu`). Lorsque `DateDebut` change et qu'aucune mensualité n'a encore été générée (`DernierDateOpRecu` antérieure à l'ancienne `DateDebut`), `DernierDateOpRecu` MUST être recalculé avec la règle de création appliquée à la nouvelle `DateDebut`. Sinon, il MUST rester inchangé. Les opérations déjà générées MUST rester inchangées. `PATCH /api/credits` (mise à jour en masse) MUST être refusé (405).
@@ -117,4 +91,3 @@ Les routes `/api/biens` SHALL fournir le CRUD standard de `Bien` scopé par `IDu
 #### Scenario: Changement de date d'un crédit en cours
 - **WHEN** `DateDebut` d'un crédit qui a déjà généré des mensualités passe du 10 au 12 du mois
 - **THEN** seul `JourNumOpRecu` passe à 12 et `DernierDateOpRecu` est inchangé
-

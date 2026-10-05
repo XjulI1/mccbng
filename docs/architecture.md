@@ -115,7 +115,7 @@ Nine **setup stores** (`defineStore('x', () => { … })`); state is `ref`, gette
 
 #### `operation`
 - **State**: `operationsOfActiveAccount` (starts `undefined`), `recurringOperations`, `hasMoreOperations`, `isLoadingOperations`, `operationsSkip`, `operationsLimit` (35), `isSearchMode`, `currentSearchTerms`
-- **Actions**: `setOperationsOfActiveAccount`, `fetchOperationsOfActiveAccount()`, `loadMoreOperations()` (infinite scroll), `updateOperation(op)`, `deleteOperation(op)`, `createTransfert(op)` (debit + credit pair), `fetchRecurrOperation()`, `updateRecurringOperation(op)`, `deleteRecurringOperation(op)`, `getSearchOperations(terms)`, `loadMoreSearchOperations()`, `fetchOperations(where)`, `operationFromCurrentList(id)`
+- **Actions**: `setOperationsOfActiveAccount`, `fetchOperationsOfActiveAccount()`, `loadMoreOperations()` (infinite scroll), `updateOperation(op)`, `deleteOperation(op)`, `createTransfert(op)` (`POST /api/operations/transfert`), `fetchRecurrOperation()`, `updateRecurringOperation(op)`, `deleteRecurringOperation(op)`, `getSearchOperations(terms)`, `loadMoreSearchOperations()`, `fetchOperations(where)`, `operationFromCurrentList(id)`
 
 #### `category`
 - **State**: `list` — **Getter**: `getCategoryName(IDcat)` — **Actions**: `setCategoryList`, `fetchCategoryList()` (lazy: only fetches when the list has fewer than 2 entries)
@@ -174,7 +174,7 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 | **Home/Operation.vue** | Single operation row — swipe-to-delete, click-to-edit, check/uncheck toggle |
 | **Amortissement/Operation.vue** | Operation row with amortization-specific rendering |
 | **OperationForm.vue** | Create/edit form, includes category suggestion via `suggestCategories` |
-| **TransfertForm.vue** | Account-to-account transfer (creates the debit + credit pair) |
+| **TransfertForm.vue** | Account-to-account transfer (the server creates the debit + credit pair) |
 | **Search.vue** | Cross-account search by operation name |
 
 #### Recurring operations
@@ -255,15 +255,17 @@ server/
 ├── middleware/auth.ts        # CSRF check on unsafe methods, then cookie JWT check on /api/** (public: GET /api/ping, POST /api/users/login)
 ├── plugins/                  # config check at startup, MySQL pool shutdown
 ├── db/                       # schema.ts (Drizzle, mirrors the production DDL), client.ts, migrations/*.sql
-└── utils/                    # config, auth, scope, crud, resources, crud-routes, filter, validate, errors, sql, stats, users, credits
+└── utils/                    # config, auth, scope, crud, resources, crud-routes, filter, validate, errors, sql, stats, users, credits, schedule, money, totals, transfer
 ```
 
 - **Configuration** (`utils/config.ts`): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET` (required in production), `JWT_TTL_SECONDS` (default 21600, 6 h), read from `process.env` at runtime. In dev they can live in `.env`.
 - **Handlers**: wrap them in `defineApiHandler` so every error follows `{ error: { statusCode, name, message } }`; throw `notFound`, `badRequest`, `conflict`, … from `utils/errors.ts`. Unexpected errors become a generic 500 and are logged as `[api] <method> <path>`.
-- **CRUD**: `utils/resources.ts` describes each resource once (table, `readScope`/`writeScope`, Zod `create`/`patch` schemas, application `defaults`, `forced` fields such as `IDuser`, `validate` ownership checks, `onCreate`/`onDelete` cascades). `utils/crud.ts` implements the 8 standard routes. Because a static directory (`comptes/`, `operations/`, …) shadows the dynamic `[resource]` route, those resources have explicit one-line files calling `crudRoute(path, action)`; add the same files when a resource gets its own sub-routes.
+- **CRUD**: `utils/resources.ts` describes each resource once (table, `readScope`/`writeScope`, Zod `create`/`patch` schemas, application `defaults`, `forced` fields such as `IDuser`, `validate` ownership checks, `onCreate`/`onDelete`/`onUpdate` cascades, `assertWritable` to refuse writes on a row managed elsewhere, `bulkScope` to restrict the bulk PATCH). `utils/crud.ts` implements the 8 standard routes. Because a static directory (`comptes/`, `operations/`, …) shadows the dynamic `[resource]` route, those resources have explicit one-line files calling `crudRoute(path, action)`; add the same files when a resource gets its own sub-routes.
 - **Filter**: lists accept a LoopBack-style `filter` JSON (`where` with `and`/`or`/`inq`/`like`/`gt`…, `order`, `limit`, `skip`, `include`), parsed by `utils/filter.ts` with a column/operator whitelist. The user scope is always combined with `and` after the client's `where`.
 - **Scope**: `utils/scope.ts` — `getCurrentUserId(event)`, `compteScope` (inherited scoping on `IDcompte`), `assertCompteOwned` (404). Users are looked up by `IDuser`, never by the non-unique `id` column.
-- **SQL**: `rawQuery(sql, params)` (`utils/sql.ts`) for analytics (`utils/stats.ts`, aggregates, auto-generation); always parameterised. Dates are read/written in UTC (`timezone: 'Z'`).
+- **SQL**: `rawQuery(sql, params)` / `rawExecute(sql, params)` (`utils/sql.ts`) for analytics (`utils/stats.ts`, aggregates, auto-generation); always parameterised. Dates are read/written in UTC (`timezone: 'Z'`). Amounts are rounded with `round2` (`utils/money.ts`).
+- **Recurring operations** (`utils/schedule.ts`, `operation-recurrentes/auto-generation.post.ts`): pure UTC functions `nextDueDate` (next month, or next year at `MoisOpRecu`, day `JourNumOpRecu` clamped to the month's last day), `prevDueDate`, `firstDueOnOrAfter` and `initialLastDate` (initial `DernierDateOpRecu`, so that the first upcoming due date is generated). Without transactions (MyISAM), each due date is reserved by `UPDATE … WHERE DernierDateOpRecu = :last` before the `Operation` is inserted (compensated on failure); at most 24 per recurring operation and per call, 15 days (monthly) / 30 days (yearly) ahead. A credit's recurring operation is skipped when the credit is missing, not `actif`, or past `DateFin`, and is read-only through `/api/operation-recurrentes` (409).
+- **Expenses** (`utils/stats.ts`: `EXPENSE_JOIN`, `EXPENSE_WHERE`): one rule for every expense total and chart: the category `Type` (`depense`, inflows and outflows alike; `revenu` for income; `transfert` excluded). There is no uncategorized operation: `IDcat = 0` is the shared default category « Aucune » (`Type = 'depense'`), counted like any other. Account flags are read with `COALESCE`; `dispo` = neither retraite nor children nor bloque. Date ranges are `YYYY-MM-DD` and `to` covers the whole day (`parseRange`).
 - **Transactions**: cascades use `db.transaction`, but most production tables are MyISAM, which ignores transactions (`docs/db-migrations.md`).
 - **Security**: `nuxt-security` adds the security headers and an enforced CSP; only `POST /api/users/login` is rate-limited (5 attempts per IP per 15 min, in memory). The IP is read from `X-Real-IP`, set by the Synology DSM reverse proxy from Cloudflare's `CF-Connecting-IP` (client → Cloudflare → DSM → container), with the socket address as fallback; IPv6 addresses are counted by their `/64` prefix (`plugins/client-ip.ts`, `rateLimitKey`); `X-Forwarded-For` is never trusted.
 - **Session** (`utils/auth.ts`): JWT `{ name, email, IDuser, tv }` signed HS256 with `iss`/`aud` `mccbng`, carried only by the `HttpOnly` `mccbngAuth` cookie (a Bearer header is refused). `authenticate` re-reads `User.tokenVersion` and refuses a stale `tv` or a deleted user with a generic 401 `Invalid or expired token` (the detailed reason is only logged). `POST /api/users/logout` increments `tokenVersion`.
@@ -318,7 +320,7 @@ Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps
 │   ├── stores/                       # user, compte, operation, category, stats, display, credit, bien, banque
 │   └── assets/styles/                # variables.scss, theme.css, main.css
 ├── server/                           # REST API hosted by Nitro (api/, middleware/, plugins/, db/, utils/)
-├── scripts/                         # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs
+├── scripts/                         # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs, diagnose-recurrentes.mjs
 ├── public/                           # icons, favicon
 ├── tests/{unit,integration,api,support,fixtures}/
 ├── vitest.config.ts / vitest.api.config.ts

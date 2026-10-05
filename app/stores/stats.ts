@@ -15,7 +15,7 @@ export const useStatsStore = defineStore('stats', () => {
     const category = useCategoryStore()
     return categoriesTotal.value.map((categorie) => {
       return {
-        name: category.getCategoryName(categorie.IDcat).Nom,
+        name: category.getCategoryName(categorie.IDcat)?.Nom ?? `#${categorie.IDcat}`,
         catId: categorie.IDcat,
         y: categorie.TotalMonth * -1
       }

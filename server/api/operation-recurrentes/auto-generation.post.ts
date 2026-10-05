@@ -1,51 +1,77 @@
-import { eq } from 'drizzle-orm'
-import { getDb } from '../../db/client'
-import { operationRecurrentes, operations } from '../../db/schema'
 import { defineApiHandler } from '../../utils/errors'
+import {
+  addDays, isSupportedFrequency, MONTHLY, nextDueDate, startOfUtcDay, toRule
+} from '../../utils/schedule'
 import { getCurrentUserId } from '../../utils/scope'
-import { rawQuery } from '../../utils/sql'
+import { rawExecute, rawQuery } from '../../utils/sql'
 
-const DAY_MS = 24 * 60 * 60 * 1000
+// Fenêtre d'anticipation historique : une échéance est générée 15 jours (mensuel) ou 30 jours (annuel) à l'avance.
+const ANTICIPATION_DAYS = { monthly: 15, yearly: 30 }
+// Garde-fou contre une donnée aberrante : au plus 24 échéances par récurrente et par appel.
+const MAX_PER_CALL = 24
 
-// Génère au plus une occurrence par récurrente et par appel (comportement historique) :
-// mensuelle si la dernière date remonte à plus de 15 jours, annuelle au-delà de 335 jours.
+const log = (level: 'warn' | 'error', data: Record<string, unknown>) =>
+  console[level](JSON.stringify({ event: 'recurring-generation', ...data }))
+
+// Génère toutes les échéances dues de chaque récurrente de l'utilisateur.
+// Sans transaction (tables MyISAM) : chaque échéance est d'abord réservée par un UPDATE conditionnel
+// sur DernierDateOpRecu (verrou optimiste), puis l'opération est insérée. Deux appels concurrents
+// ne peuvent donc pas générer la même échéance ; l'appel perdant s'arrête pour cette récurrente.
 export default defineApiHandler(async (event) => {
   const userID = getCurrentUserId(event)
   const recurrentes = await rawQuery<any>(
-    'SELECT * FROM OperationRecurrente NATURAL JOIN Compte WHERE IDuser = ?',
+    'SELECT r.*, cr.IDcredit AS creditFound, cr.Statut AS creditStatut, cr.DateFin AS creditDateFin ' +
+    'FROM OperationRecurrente r ' +
+    'INNER JOIN Compte c ON c.IDcompte = r.IDcompte ' +
+    'LEFT JOIN Credit cr ON cr.IDcredit = r.IDcredit ' +
+    'WHERE c.IDuser = ?',
     [userID]
   )
-  const now = Date.now()
+  const today = startOfUtcDay(new Date())
 
   // Ordre historique : LoopBack dépilait la liste par la fin (pop), ce qui détermine l'ordre des IDop générés
   for (const rec of [...recurrentes].reverse()) {
-    const last = new Date(rec.DernierDateOpRecu)
-    last.setUTCHours(12)
-
-    let next: Date | undefined
-    if (rec.Frequence === 3 && now - last.getTime() > 15 * DAY_MS) {
-      next = new Date(last)
-      next.setUTCMonth(next.getUTCMonth() + 1)
-    } else if (rec.Frequence === 7 && now - last.getTime() > 335 * DAY_MS) {
-      next = new Date(last)
-      next.setUTCFullYear(next.getUTCFullYear() + 1)
+    const rule = toRule(rec)
+    if (!isSupportedFrequency(rule.Frequence)) continue
+    if (rec.IDcredit) {
+      if (rec.creditFound === null) {
+        log('warn', { reason: 'orphan', IDopRecu: rec.IDopRecu, IDcredit: rec.IDcredit })
+        continue
+      }
+      if (rec.creditStatut !== null && rec.creditStatut !== 'actif') continue
     }
-    if (!next) continue
+    const horizon = addDays(today, rule.Frequence === MONTHLY ? ANTICIPATION_DAYS.monthly : ANTICIPATION_DAYS.yearly)
+    const dateFin: Date | null = rec.IDcredit && rec.creditDateFin ? new Date(rec.creditDateFin) : null
 
-    // Date au jour près (comme l'ancien `toISOString().split('T')[0]`)
-    const day = new Date(next.toISOString().split('T')[0]!)
-    await getDb().transaction(async (tx) => {
-      await tx.insert(operations).values({
-        NomOp: rec.NomOpRecu,
-        MontantOp: rec.MontantOpRecu,
-        DateOp: day,
-        IDcompte: rec.IDcompte,
-        IDcat: rec.IDcat,
-        CheckOp: false,
-        IDcredit: rec.IDcredit ?? null
-      })
-      await tx.update(operationRecurrentes).set({ DernierDateOpRecu: day }).where(eq(operationRecurrentes.IDopRecu, rec.IDopRecu))
-    })
+    // `last` est renvoyé tel qu'il a été lu (heure comprise) pour que la comparaison de l'UPDATE soit exacte
+    let last: Date = rec.DernierDateOpRecu
+    for (let i = 0; i < MAX_PER_CALL; i++) {
+      const next = nextDueDate(rule, last)
+      if (next > horizon) break
+      if (dateFin && next > dateFin) break
+
+      const reserved = await rawExecute(
+        'UPDATE OperationRecurrente SET DernierDateOpRecu = ? WHERE IDopRecu = ? AND DernierDateOpRecu = ?',
+        [next, rec.IDopRecu, last]
+      )
+      if (reserved.affectedRows !== 1) break // échéance réservée par un appel concurrent
+
+      try {
+        await rawExecute(
+          'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, CheckOp, IDcredit) VALUES (?, ?, ?, ?, ?, 0, ?)',
+          [rec.NomOpRecu, rec.MontantOpRecu, next, rec.IDcompte, rec.IDcat ?? 0, rec.IDcredit ?? null]
+        )
+      } catch (error) {
+        // Compensation, conditionnée à notre propre réservation pour ne pas écraser celle d'un autre appel
+        await rawExecute(
+          'UPDATE OperationRecurrente SET DernierDateOpRecu = ? WHERE IDopRecu = ? AND DernierDateOpRecu = ?',
+          [last, rec.IDopRecu, next]
+        ).catch(() => undefined)
+        log('error', { reason: 'insert-failed', IDopRecu: rec.IDopRecu, due: next.toISOString(), message: (error as Error).message })
+        break
+      }
+      last = next
+    }
   }
   return {}
 })

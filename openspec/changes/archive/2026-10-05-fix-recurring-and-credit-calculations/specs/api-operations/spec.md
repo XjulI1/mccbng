@@ -1,18 +1,4 @@
-# api-operations Specification
-
-## Purpose
-TBD - created by archiving change migrate-back-to-nuxt-server. Update Purpose after archive.
-## Requirements
-### Requirement: CRUD des opérations par compte
-Les routes `/api/operations` SHALL fournir le CRUD standard d'`Operation` avec scoping hérité (`IDcompte ∈ comptes de l'utilisateur`). La création et le remplacement MUST vérifier que l'`IDcompte` appartient à l'utilisateur (404 sinon). Les défauts `CheckOp=false`, `IDcat=0`, `amortissement=false` MUST être conservés. Le filtre doit supporter la pagination (`limit`/`skip`), l'ordre `CheckOp ASC, DateOp DESC`, et la recherche `or` de `like` sur `NomOp` et `MontantOp` couplée à `IDcompte inq`.
-
-#### Scenario: Pointage
-- **WHEN** `PATCH /api/operations/{id}` met `CheckOp` à `true` sur une opération de l'utilisateur
-- **THEN** la réponse est 204 et la valeur est persistée
-
-#### Scenario: Recherche transverse
-- **WHEN** le front cherche « loyer » sur tous ses comptes
-- **THEN** seules les opérations de ses comptes dont le nom ou le montant correspond sont renvoyées
+## MODIFIED Requirements
 
 ### Requirement: Agrégats de soldes
 `GET /api/operations/sumAllCompteForUser` SHALL renvoyer, par compte, les totaux pointés/non pointés (`TotalNotChecked`, etc.) sans filtre de catégorie ; `GET /api/operations/sumForACompte?id=` SHALL faire de même pour un compte de l'utilisateur (404 si autre utilisateur). Les clés MUST être identiques à l'existant et les totaux MUST être arrondis à 2 décimales. Un drapeau de compte `NULL` MUST être interprété comme sa valeur par défaut (`visible` = 1, autres drapeaux = 0) et ne jamais exclure le compte. Les opérations datées dans le futur (échéances générées par anticipation) MUST rester comptées dans les totaux.
@@ -39,17 +25,6 @@ Les routes `/api/operations` SHALL fournir le CRUD standard d'`Operation` avec s
 #### Scenario: Catégorie par défaut « Aucune »
 - **WHEN** un mois contient une sortie de -900 € et une entrée de +400 € en catégorie « Aucune » (`IDcat = 0`)
 - **THEN** le total dépensé inclut les deux (-500 €) et `sumCategoriesByUserByMonth` les regroupe sous `IDcat = 0`
-
-### Requirement: Suggestion de catégories
-`GET /api/operations/suggestCategories?operationName&limit` SHALL classer les catégories par fréquence des opérations passées de l'utilisateur dont le nom correspond (`LIKE`), `limit` par défaut 5 borné à [1, 50], nom d'au moins 2 caractères, sans filtre de `Type`.
-
-#### Scenario: Nom trop court
-- **WHEN** `operationName` fait 1 caractère
-- **THEN** la liste renvoyée est vide (ou l'erreur actuelle de l'API, à reproduire)
-
-#### Scenario: Limite hors bornes
-- **WHEN** `limit=500`
-- **THEN** au plus 50 suggestions sont renvoyées
 
 ### Requirement: Opérations récurrentes
 Les routes `/api/operation-recurrentes` SHALL fournir le CRUD standard d'`OperationRecurrente`, avec :
@@ -135,6 +110,8 @@ Les valeurs MUST être validées : `Frequence` ∈ {3, 7}, `JourNumOpRecu` entie
 - **WHEN** une récurrente est liée à un crédit dont `DateFin` est passée ou dont le `Statut` vaut `termine`
 - **THEN** aucune opération n'est générée pour elle
 
+## ADDED Requirements
+
 ### Requirement: Virement entre comptes
 `POST /api/operations/transfert` SHALL accepter `{ fromCompte, toCompte, montant, DateOp, NomOp, IDcat }`, avec :
 - `montant > 0` ;
@@ -158,4 +135,3 @@ Le serveur MUST vérifier que les deux comptes appartiennent à l'utilisateur et
 #### Scenario: Échec du crédit
 - **WHEN** la création de l'opération créditrice échoue
 - **THEN** l'opération débitrice est supprimée et la réponse est une erreur
-

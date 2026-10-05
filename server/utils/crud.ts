@@ -37,6 +37,12 @@ export interface CrudResource {
   onCreate?: (event: H3Event, data: Row, tx: Tx) => Promise<Row>
   /** Vérifications / cascades avant suppression */
   onDelete?: (event: H3Event, existing: Row, tx: Tx) => Promise<void>
+  /** Propagation après un PATCH ou un PUT unitaire (before = ligne avant, after = ligne relue après écriture) */
+  onUpdate?: (event: H3Event, before: Row, after: Row, tx: Tx) => Promise<void>
+  /** Refus d'écrire (PUT, PATCH, DELETE unitaires) sur une ligne existante gérée ailleurs : lève une HttpError */
+  assertWritable?: (existing: Row) => void
+  /** Restriction supplémentaire du PATCH en masse */
+  bulkScope?: () => SQL
   /** Actions exposées par l'API (défaut : toutes) ; les autres répondent 405 */
   actions?: CrudAction[]
 }
@@ -69,6 +75,20 @@ const replacementValues = (resource: CrudResource, data: Row): Row => {
     values[name] = name in data ? data[name] : (resource.defaults?.[name] ?? ((column as any).notNull ? undefined : null))
   }
   return Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined))
+}
+
+// Mise à jour unitaire, suivie de la propagation éventuelle (onUpdate) sur la ligne relue.
+const update = async (resource: CrudResource, event: H3Event, id: number, before: Row, values: Row) => {
+  const where = eq(col(resource, resource.pk), id)
+  if (!resource.onUpdate) {
+    await getDb().update(resource.table).set(values as never).where(where)
+    return
+  }
+  await getDb().transaction(async (tx) => {
+    await tx.update(resource.table).set(values as never).where(where)
+    const [after] = await tx.select().from(resource.table).where(where).limit(1)
+    await resource.onUpdate!(event, before, after as Row, tx)
+  })
 }
 
 const clean = (data: Row): Row => Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined))
@@ -115,7 +135,7 @@ export const crudHandlers = {
   async updateAll(resource: CrudResource, event: H3Event) {
     const data = clean(await parseBody(event, resource.patch))
     await resource.validate?.(event, data)
-    const where = combine(parseWhere(getQuery(event).where, resource.table), await scopeOf(resource, event, true))
+    const where = combine(parseWhere(getQuery(event).where, resource.table), await scopeOf(resource, event, true), resource.bulkScope?.())
     if (!Object.keys(data).length) return { count: 0 }
     const [result] = await getDb().update(resource.table).set(data as never).where(where)
     return { count: (result as unknown as { affectedRows: number }).affectedRows }
@@ -124,11 +144,10 @@ export const crudHandlers = {
   async patchById(resource: CrudResource, event: H3Event) {
     const id = idParam(event)
     const data = clean(await parseBody(event, resource.patch))
-    await findOwned(resource, event, id, true)
+    const existing = await findOwned(resource, event, id, true)
+    resource.assertWritable?.(existing)
     await resource.validate?.(event, data)
-    if (Object.keys(data).length) {
-      await getDb().update(resource.table).set(data as never).where(eq(col(resource, resource.pk), id))
-    }
+    if (Object.keys(data).length) await update(resource, event, id, existing, data)
     setResponseStatus(event, 204)
     return null
   },
@@ -136,10 +155,11 @@ export const crudHandlers = {
   async replaceById(resource: CrudResource, event: H3Event) {
     const id = idParam(event)
     const parsed = await parseBody(event, resource.create)
-    await findOwned(resource, event, id, true)
+    const existing = await findOwned(resource, event, id, true)
+    resource.assertWritable?.(existing)
     const data = { ...resource.defaults, ...clean(parsed), ...resource.forced?.(event) }
     await resource.validate?.(event, data)
-    await getDb().update(resource.table).set(replacementValues(resource, data) as never).where(eq(col(resource, resource.pk), id))
+    await update(resource, event, id, existing, replacementValues(resource, data))
     setResponseStatus(event, 204)
     return null
   },
@@ -147,6 +167,7 @@ export const crudHandlers = {
   async deleteById(resource: CrudResource, event: H3Event) {
     const id = idParam(event)
     const existing = await findOwned(resource, event, id, true)
+    resource.assertWritable?.(existing)
     await getDb().transaction(async (tx) => {
       await resource.onDelete?.(event, existing, tx)
       await tx.delete(resource.table).where(eq(col(resource, resource.pk), id))

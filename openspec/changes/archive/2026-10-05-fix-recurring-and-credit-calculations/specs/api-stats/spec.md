@@ -1,8 +1,5 @@
-# api-stats Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change migrate-back-to-nuxt-server. Update Purpose after archive.
-## Requirements
 ### Requirement: Évolution du solde
 `GET /api/stats/evolutionSolde` SHALL renvoyer `{ soldeGlobal, soldeRetraite, soldeDispo, global, retraite, dispo }`, c'est-à-dire les soldes actuels et les séries journalières pour les trois regroupements de comptes. Les soldes actuels sont la somme des soldes d'ouverture (`Compte.solde`) du regroupement ; les séries sont les sommes journalières des opérations, que le front cumule à partir de ce solde. Ces valeurs sont calculées sans filtre de `Categorie.Type`, de sorte que les soldes correspondent à ceux de la banque. Les regroupements MUST être :
 - `global` : comptes avec `retraite = 0` et `children = 0` ;
@@ -58,25 +55,3 @@ La borne `to` MUST inclure toute la journée. Le paramètre `limit` MUST être b
 #### Scenario: Cohérence entre graphiques
 - **WHEN** un mois contient des dépenses dans plusieurs catégories, dont une entrée en catégorie « Aucune »
 - **THEN** la série `expense` de `incomeVsExpense`, `yearComparison`, `sumByUserByMonth` et la somme de `sumCategoriesByUserByMonth` donnent le même total pour ce mois
-
-### Requirement: Revenus contre dépenses
-`GET /api/stats/incomeVsExpense` SHALL regrouper par `Categorie.Type` (et non par signe de `MontantOp`) sur `Type IN ('depense','revenu')`, de sorte qu'un remboursement catégorisé en `depense` vienne en déduction de la dépense.
-
-#### Scenario: Remboursement
-- **WHEN** un remboursement positif est rangé dans une catégorie `depense`
-- **THEN** il réduit le total des dépenses et n'augmente pas les revenus
-
-### Requirement: Plus grosses opérations
-`GET /api/stats/topOperations` SHALL renvoyer les plus grosses opérations des comptes de l'utilisateur avec `Type IN ('depense','revenu')` (transferts exclus), triées comme aujourd'hui.
-
-#### Scenario: Transferts exclus
-- **WHEN** un transfert de 5 000 € existe
-- **THEN** il n'apparaît pas dans `topOperations`
-
-### Requirement: Isolation des statistiques
-Toutes les routes `/api/stats/*` SHALL exclure les données d'autres utilisateurs et répondre 401 sans JWT valide.
-
-#### Scenario: Deux utilisateurs
-- **WHEN** A et B ont des opérations
-- **THEN** les statistiques de A ne contiennent aucune opération de B
-

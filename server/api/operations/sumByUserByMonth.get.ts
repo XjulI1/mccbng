@@ -1,9 +1,10 @@
 import { badRequest, defineApiHandler } from '../../utils/errors'
 import { assertCompteOwned, getCurrentUserId } from '../../utils/scope'
 import { rawQuery } from '../../utils/sql'
+import { EXPENSE_JOIN, EXPENSE_WHERE } from '../../utils/stats'
 import { queryNumber } from '../../utils/validate'
 
-// Total du mois, limité aux catégories Type='depense' (partagées + celles de l'utilisateur).
+// Total dépensé du mois : catégories Type='depense' (partagées + celles de l'utilisateur).
 export default defineApiHandler(async (event) => {
   const monthNumber = queryNumber(event, 'monthNumber')
   const yearNumber = queryNumber(event, 'yearNumber')
@@ -12,18 +13,18 @@ export default defineApiHandler(async (event) => {
   const userID = getCurrentUserId(event)
   if (idCompte) await assertCompteOwned(event, idCompte)
 
-  const params: unknown[] = [monthNumber, yearNumber, userID, userID]
+  const params: unknown[] = [userID, monthNumber, yearNumber, userID]
   let sql =
-    'SELECT ROUND(SUM(MontantOp), 2) as MonthNegative ' +
-    'FROM Operation ' +
-    'NATURAL JOIN Compte ' +
-    'WHERE MONTH(DateOp) = ? ' +
-    'AND YEAR(DateOp) = ? ' +
-    'AND Compte.IDuser = ? ' +
-    'AND IDcat IN ' +
-    "(SELECT IDcat FROM Categorie WHERE Type = 'depense' AND IDuser IN (0, ?))"
+    'SELECT ROUND(SUM(o.MontantOp), 2) as MonthNegative ' +
+    'FROM Operation o ' +
+    'INNER JOIN Compte co ON co.IDcompte = o.IDcompte ' +
+    EXPENSE_JOIN +
+    'WHERE MONTH(o.DateOp) = ? ' +
+    'AND YEAR(o.DateOp) = ? ' +
+    'AND co.IDuser = ? ' +
+    `AND ${EXPENSE_WHERE}`
   if (idCompte) {
-    sql += ' AND IDCompte = ?'
+    sql += ' AND o.IDcompte = ?'
     params.push(idCompte)
   }
   return rawQuery(sql, params)

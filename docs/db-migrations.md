@@ -8,7 +8,7 @@ La table de suivi `__migrations` (`name`, `applied_at`) mémorise les fichiers d
 
 ## Configuration
 
-Les scripts qui modifient la base (`db-migrate.mjs`, `hash-legacy-secrets.mjs`) lisent `DB_HOST`, `DB_PORT`,
+Les scripts qui modifient la base (`db-migrate.mjs`, `hash-legacy-secrets.mjs`, `diagnose-recurrentes.mjs`) lisent `DB_HOST`, `DB_PORT`,
 `DB_USER`, `DB_PASSWORD` et `DB_NAME` dans le fichier `.env` de la racine du dépôt (le même que `pnpm dev`).
 Les variables déjà définies dans l'environnement sont prioritaires, et `ENV_FILE` permet de viser un autre fichier :
 

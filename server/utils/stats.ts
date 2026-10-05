@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { badRequest } from './errors'
 import { rawQuery } from './sql'
 
@@ -9,10 +10,35 @@ export const clampLimit = (value?: number): number => {
   return Math.min(Math.max(Math.floor(value), 1), MAX_LIMIT)
 }
 
-export const assertValidRange = (from?: string, to?: string): void => {
+const isoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => {
+  const date = new Date(`${value}T00:00:00.000Z`)
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value)
+})
+
+// Plage de dates YYYY-MM-DD ; la borne `to` inclut toute la journée (filtre DateOp >= from AND DateOp < toExclusive).
+export const parseRange = (from?: string, to?: string): { from: string; toExclusive: string } => {
   if (!from || !to) throw badRequest('from and to are required')
-  if (Date.parse(from) > Date.parse(to)) throw badRequest('from must be earlier than to')
+  if (!isoDay.safeParse(from).success || !isoDay.safeParse(to).success) throw badRequest('from and to must be valid YYYY-MM-DD dates')
+  if (from > to) throw badRequest('from must be earlier than to')
+  const end = new Date(`${to}T00:00:00.000Z`)
+  end.setUTCDate(end.getUTCDate() + 1)
+  return { from, toExclusive: end.toISOString().slice(0, 10) }
 }
+
+// Règle commune à tous les totaux de dépense : une opération compte selon le Type de sa catégorie (partagée ou
+// de l'utilisateur), entrées comme sorties. Il n'y a pas d'opération sans catégorie : IDcat = 0 est la catégorie
+// partagée « Aucune » (Type 'depense'), comptée comme les autres. Les transferts sont exclus.
+// À utiliser avec l'alias `o` pour Operation ; EXPENSE_JOIN attend l'IDuser en paramètre.
+export const EXPENSE_JOIN = 'INNER JOIN Categorie c ON c.IDcat = o.IDcat AND c.IDuser IN (0, ?) '
+export const EXPENSE_WHERE = "c.Type = 'depense'"
+export const EXPENSE_CAT = 'o.IDcat'
+
+// Drapeaux de compte NULL (anciens comptes) : valeur par défaut, jamais d'exclusion du compte.
+export const flag = (name: 'bloque' | 'retraite' | 'children' | 'porte_feuille') => `COALESCE(${name}, 0)`
+const GLOBAL = `${flag('retraite')} = 0 AND ${flag('children')} = 0`
+const RETRAITE = `${flag('retraite')} = 1`
+// Dispo : sous-ensemble de global, hors comptes bloqués
+const DISPO = `${GLOBAL} AND ${flag('bloque')} = 0`
 
 const placeholders = (ids: number[]) => ids.map(() => '?').join(',')
 const n = (value: unknown) => Number(value) || 0
@@ -20,22 +46,22 @@ const n = (value: unknown) => Number(value) || 0
 export const evolutionSolde = async (userID: number) => {
   const dates = "DATE_FORMAT(DateOp, '%Y-%m-%dT00:00:00.000Z') AS date "
   const [soldeGlobal, soldeRetraite, soldeDispo, global, retraite, dispo] = await Promise.all([
-    rawQuery('SELECT ROUND(SUM(solde), 2) AS sum FROM Compte WHERE retraite = 0 AND children = 0 AND IDuser = ?', [userID]),
-    rawQuery('SELECT ROUND(SUM(solde), 2) AS sum FROM Compte WHERE retraite = 1 AND IDuser = ?', [userID]),
-    rawQuery('SELECT ROUND(SUM(solde), 2) AS sum FROM Compte WHERE IDuser = ? AND bloque = 0', [userID]),
+    rawQuery(`SELECT ROUND(SUM(solde), 2) AS sum FROM Compte WHERE IDuser = ? AND ${GLOBAL}`, [userID]),
+    rawQuery(`SELECT ROUND(SUM(solde), 2) AS sum FROM Compte WHERE IDuser = ? AND ${RETRAITE}`, [userID]),
+    rawQuery(`SELECT ROUND(SUM(solde), 2) AS sum FROM Compte WHERE IDuser = ? AND ${DISPO}`, [userID]),
     rawQuery(
       `SELECT ROUND(SUM(MontantOp),2) AS montant, ${dates}` +
-      'FROM Operation NATURAL JOIN Compte WHERE IDuser = ? AND retraite = 0 AND children = 0 GROUP BY date ORDER BY date ASC',
+      `FROM Operation NATURAL JOIN Compte WHERE IDuser = ? AND ${GLOBAL} GROUP BY date ORDER BY date ASC`,
       [userID]
     ),
     rawQuery(
       `SELECT ROUND(SUM(MontantOp),2) AS montant, ${dates}` +
-      'FROM Operation NATURAL JOIN Compte WHERE IDuser = ? AND retraite = 1 GROUP BY date ORDER BY date ASC',
+      `FROM Operation NATURAL JOIN Compte WHERE IDuser = ? AND ${RETRAITE} GROUP BY date ORDER BY date ASC`,
       [userID]
     ),
     rawQuery(
       `SELECT ROUND(SUM(MontantOp),2) AS montant, ${dates}` +
-      'FROM Operation NATURAL JOIN Compte WHERE IDuser = ? AND bloque = 0 GROUP BY date ORDER BY date ASC',
+      `FROM Operation NATURAL JOIN Compte WHERE IDuser = ? AND ${DISPO} GROUP BY date ORDER BY date ASC`,
       [userID]
     )
   ])
@@ -49,21 +75,21 @@ export const evolutionSolde = async (userID: number) => {
   }
 }
 
-// Dépense nette par mois sur deux années (catégories Type='depense' uniquement ; un remboursement rangé
-// dans une catégorie de dépense vient en déduction). Tableaux de 12 mois + écart en % de yearB vs yearA.
+// Dépense nette par mois sur deux années (catégories Type='depense' ; un remboursement rangé dans une catégorie
+// de dépense vient en déduction). Tableaux de 12 mois + écart en % de yearB vs yearA.
 export const yearComparison = async (userID: number, compteIds: number[], yearA: number, yearB: number) => {
   if (!compteIds.length) {
     return { yearA: new Array(12).fill(0), yearB: new Array(12).fill(0), deltaPct: new Array(12).fill(null) }
   }
   const rows = await rawQuery<{ y: number | string; m: number | string; total: number | string }>(
-    'SELECT YEAR(DateOp) AS y, MONTH(DateOp) AS m, ROUND(SUM(MontantOp), 2) AS total ' +
-    'FROM Operation ' +
-    `WHERE IDcompte IN (${placeholders(compteIds)}) ` +
-    'AND YEAR(DateOp) IN (?, ?) ' +
-    'AND IDcat IN ' +
-    "(SELECT IDcat FROM Categorie WHERE Type = 'depense' AND IDuser IN (0, ?)) " +
-    'GROUP BY YEAR(DateOp), MONTH(DateOp)',
-    [...compteIds, yearA, yearB, userID]
+    'SELECT YEAR(o.DateOp) AS y, MONTH(o.DateOp) AS m, ROUND(SUM(o.MontantOp), 2) AS total ' +
+    'FROM Operation o ' +
+    EXPENSE_JOIN +
+    `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
+    'AND YEAR(o.DateOp) IN (?, ?) ' +
+    `AND ${EXPENSE_WHERE} ` +
+    'GROUP BY YEAR(o.DateOp), MONTH(o.DateOp)',
+    [userID, ...compteIds, yearA, yearB]
   )
   const seriesA: number[] = new Array(12).fill(0)
   const seriesB: number[] = new Array(12).fill(0)
@@ -76,20 +102,20 @@ export const yearComparison = async (userID: number, compteIds: number[], yearA:
   return { yearA: seriesA, yearB: seriesB, deltaPct }
 }
 
-// Plus grosses catégories de dépense sur une période (dépenses négatives : tri ASC).
-export const topCategories = async (userID: number, compteIds: number[], from: string, to: string, limit: number) => {
+// Plus grosses catégories de dépense sur une période (dépenses négatives : tri ASC) ; `toExclusive` = lendemain de `to`.
+export const topCategories = async (userID: number, compteIds: number[], from: string, toExclusive: string, limit: number) => {
   if (!compteIds.length) return []
   return rawQuery(
-    'SELECT o.IDcat AS IDcat, c.Nom AS libelle, ROUND(SUM(o.MontantOp), 2) AS total ' +
+    `SELECT ${EXPENSE_CAT} AS IDcat, c.Nom AS libelle, ROUND(SUM(o.MontantOp), 2) AS total ` +
     'FROM Operation o ' +
-    'INNER JOIN Categorie c ON c.IDcat = o.IDcat ' +
+    EXPENSE_JOIN +
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
-    'AND o.DateOp >= ? AND o.DateOp <= ? ' +
-    "AND c.Type = 'depense' AND c.IDuser IN (0, ?) " +
-    'GROUP BY o.IDcat, c.Nom ' +
+    'AND o.DateOp >= ? AND o.DateOp < ? ' +
+    `AND ${EXPENSE_WHERE} ` +
+    `GROUP BY ${EXPENSE_CAT}, c.Nom ` +
     'ORDER BY total ASC ' +
     'LIMIT ?',
-    [...compteIds, from, to, userID, limit]
+    [userID, ...compteIds, from, toExclusive, limit]
   )
 }
 
@@ -99,14 +125,14 @@ export const incomeVsExpense = async (userID: number, compteIds: number[], yearN
   const rows = await rawQuery<{ m: number | string; income: number | string; expense: number | string }>(
     'SELECT MONTH(o.DateOp) AS m, ' +
     "ROUND(SUM(CASE WHEN c.Type = 'revenu' THEN o.MontantOp ELSE 0 END), 2) AS income, " +
-    "ROUND(SUM(CASE WHEN c.Type = 'depense' THEN o.MontantOp ELSE 0 END), 2) AS expense " +
+    `ROUND(SUM(CASE WHEN ${EXPENSE_WHERE} THEN o.MontantOp ELSE 0 END), 2) AS expense ` +
     'FROM Operation o ' +
-    'INNER JOIN Categorie c ON c.IDcat = o.IDcat ' +
+    EXPENSE_JOIN +
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
     'AND YEAR(o.DateOp) = ? ' +
-    "AND c.Type IN ('depense','revenu') AND c.IDuser IN (0, ?) " +
+    `AND (c.Type = 'revenu' OR ${EXPENSE_WHERE}) ` +
     'GROUP BY MONTH(o.DateOp)',
-    [...compteIds, yearNumber, userID]
+    [userID, ...compteIds, yearNumber]
   )
   const income: number[] = new Array(12).fill(0)
   const expense: number[] = new Array(12).fill(0)
@@ -118,19 +144,19 @@ export const incomeVsExpense = async (userID: number, compteIds: number[], yearN
   return { income, expense }
 }
 
-// Plus grosses opérations (valeur absolue) ; les transferts sont exclus.
-export const topOperations = async (userID: number, compteIds: number[], from: string, to: string, limit: number) => {
+// Plus grosses opérations (valeur absolue) : revenus et dépenses ; les transferts sont exclus.
+export const topOperations = async (userID: number, compteIds: number[], from: string, toExclusive: string, limit: number) => {
   if (!compteIds.length) return []
   return rawQuery(
-    'SELECT o.IDop, o.NomOp, o.MontantOp, o.DateOp, o.IDcat, o.IDcompte ' +
+    `SELECT o.IDop, o.NomOp, o.MontantOp, o.DateOp, ${EXPENSE_CAT} AS IDcat, o.IDcompte ` +
     'FROM Operation o ' +
-    'INNER JOIN Categorie c ON c.IDcat = o.IDcat ' +
+    EXPENSE_JOIN +
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
-    'AND o.DateOp >= ? AND o.DateOp <= ? ' +
-    "AND c.Type IN ('depense','revenu') AND c.IDuser IN (0, ?) " +
+    'AND o.DateOp >= ? AND o.DateOp < ? ' +
+    `AND (c.Type = 'revenu' OR ${EXPENSE_WHERE}) ` +
     'ORDER BY ABS(o.MontantOp) DESC ' +
     'LIMIT ?',
-    [...compteIds, from, to, userID, limit]
+    [userID, ...compteIds, from, toExclusive, limit]
   )
 }
 
@@ -138,14 +164,14 @@ export const topOperations = async (userID: number, compteIds: number[], from: s
 export const categoryHeatmap = async (userID: number, compteIds: number[], yearNumber: number) => {
   if (!compteIds.length) return { categories: [], data: [] }
   const rows = await rawQuery<{ m: number | string; IDcat: number | string; libelle: string; total: number | string }>(
-    'SELECT MONTH(o.DateOp) AS m, o.IDcat AS IDcat, c.Nom AS libelle, ROUND(SUM(o.MontantOp), 2) AS total ' +
+    `SELECT MONTH(o.DateOp) AS m, ${EXPENSE_CAT} AS IDcat, c.Nom AS libelle, ROUND(SUM(o.MontantOp), 2) AS total ` +
     'FROM Operation o ' +
-    'INNER JOIN Categorie c ON c.IDcat = o.IDcat ' +
+    EXPENSE_JOIN +
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
     'AND YEAR(o.DateOp) = ? ' +
-    "AND c.Type = 'depense' AND c.IDuser IN (0, ?) " +
-    'GROUP BY MONTH(o.DateOp), o.IDcat, c.Nom',
-    [...compteIds, yearNumber, userID]
+    `AND ${EXPENSE_WHERE} ` +
+    `GROUP BY MONTH(o.DateOp), ${EXPENSE_CAT}, c.Nom`,
+    [userID, ...compteIds, yearNumber]
   )
   const totalsByCat = new Map<number, { libelle: string; total: number }>()
   for (const row of rows) {
