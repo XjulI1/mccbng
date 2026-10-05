@@ -16,6 +16,7 @@
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
   import { useOperationStore } from '@/stores/operation'
+  import { dateOpWithin, dayRange } from '@/utils/dates'
   import Highcharts from 'highcharts'
   import OperationList from '../OperationList.vue'
   import OperationRenderer from '../Home/Operation.vue'
@@ -75,10 +76,7 @@
     if (!selectedCatId.value) return
     operationStore.fetchOperations({
       IDcat: selectedCatId.value,
-      and: [
-        { DateOp: { gte: new Date(props.from + ' 00:00:00Z') } },
-        { DateOp: { lte: new Date(props.to + ' 23:59:59Z') } }
-      ]
+      and: dateOpWithin(dayRange(props.from, props.to))
     })
   })
 

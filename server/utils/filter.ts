@@ -1,5 +1,5 @@
 import {
-  and, asc, between, desc, eq, getTableColumns, gt, gte, inArray, isNull, like, lt, lte, ne, not, notInArray, or, sql,
+  and, asc, between, desc, eq, getTableColumns, gt, gte, inArray, isNull, lt, lte, ne, not, notInArray, or, sql,
   type AnyColumn, type SQL
 } from 'drizzle-orm'
 import type { MySqlTable } from 'drizzle-orm/mysql-core'
@@ -56,6 +56,17 @@ const asArray = (value: unknown, op: string): unknown[] => {
   return value
 }
 
+// `\` échappe `%`, `_` et `\` dans le motif (l'appelant échappe le terme saisi avant d'ajouter ses jokers).
+// Suppose le mode SQL NO_BACKSLASH_ESCAPES désactivé, comme l'interpolation des paramètres de mysql2.
+const ESCAPE = sql.raw(String.raw`ESCAPE '\\'`)
+
+const likePattern = (col: AnyColumn, operand: unknown, negate: boolean): SQL => {
+  if (col.dataType !== 'string') throw badRequest(`Invalid filter: "${negate ? 'nlike' : 'like'}" requires a text property`)
+  return negate
+    ? sql`${col} NOT LIKE ${String(operand)} ${ESCAPE}`
+    : sql`${col} LIKE ${String(operand)} ${ESCAPE}`
+}
+
 const condition = (col: AnyColumn, spec: unknown): SQL => {
   if (spec === null) return isNull(col)
   if (!isPlainObject(spec)) return eq(col, coerce(col, spec) as never)
@@ -68,8 +79,8 @@ const condition = (col: AnyColumn, spec: unknown): SQL => {
       case 'gte': parts.push(gte(col, coerce(col, operand) as never)); break
       case 'lt': parts.push(lt(col, coerce(col, operand) as never)); break
       case 'lte': parts.push(lte(col, coerce(col, operand) as never)); break
-      case 'like': parts.push(like(col, String(operand))); break
-      case 'nlike': parts.push(sql`${col} NOT LIKE ${String(operand)}`); break
+      case 'like': parts.push(likePattern(col, operand, false)); break
+      case 'nlike': parts.push(likePattern(col, operand, true)); break
       case 'inq': {
         const list = asArray(operand, op).map(v => coerce(col, v))
         // inq [] : aucune ligne (équivalent LoopBack)
@@ -109,15 +120,19 @@ const buildWhere = (cols: Columns, where: unknown, depth = 0): SQL | undefined =
   return parts.length ? and(...parts) : undefined
 }
 
-const buildOrder = (cols: Columns, order: unknown): SQL[] => {
-  if (order === undefined || order === null) return []
-  const items = (Array.isArray(order) ? order : [order]).flatMap(o => String(o).split(','))
-  return items.map(item => item.trim()).filter(Boolean).map((item) => {
+// La clé primaire `pk`, si fournie, départage les ex aequo (pagination déterministe) : même sens que le dernier
+// critère demandé, ASC sans tri demandé.
+const buildOrder = (cols: Columns, order: unknown, pk?: string): SQL[] => {
+  const items = order === undefined || order === null
+    ? []
+    : (Array.isArray(order) ? order : [order]).flatMap(o => String(o).split(',')).map(item => item.trim()).filter(Boolean)
+  const criteria = items.map((item) => {
     const [name, dir = 'ASC', ...rest] = item.split(/\s+/)
     if (rest.length || !/^(asc|desc)$/i.test(dir)) throw badRequest(`Invalid filter: bad order "${item}"`)
-    const col = column(cols, name!)
-    return dir.toUpperCase() === 'DESC' ? desc(col) : asc(col)
+    return { name: name!, col: column(cols, name!), desc: dir.toUpperCase() === 'DESC' }
   })
+  if (pk && !criteria.some(c => c.name === pk)) criteria.push({ name: pk, col: column(cols, pk), desc: criteria.at(-1)?.desc ?? false })
+  return criteria.map(c => (c.desc ? desc(c.col) : asc(c.col)))
 }
 
 const toInt = (value: unknown, name: string): number | undefined => {
@@ -128,10 +143,15 @@ const toInt = (value: unknown, name: string): number | undefined => {
 }
 
 // Interprète le paramètre `filter` de style LoopBack (where/order/limit/skip/offset/include) avec liste blanche de colonnes.
-export const parseFilter = (raw: unknown, table: MySqlTable, options: { maxLimit?: number; relations?: string[] } = {}): ParsedFilter => {
+// `pk` : clé primaire ajoutée en dernier critère de tri.
+export const parseFilter = (
+  raw: unknown,
+  table: MySqlTable,
+  options: { maxLimit?: number; relations?: string[]; pk?: string } = {}
+): ParsedFilter => {
   const cols = getTableColumns(table) as Columns
   const filter = parseJson(raw, 'filter')
-  if (filter === undefined) return { orderBy: [], include: [] }
+  if (filter === undefined) return { orderBy: buildOrder(cols, undefined, options.pk), include: [] }
   if (!isPlainObject(filter)) throw badRequest('Invalid filter: must be an object')
 
   const include: string[] = []
@@ -147,7 +167,7 @@ export const parseFilter = (raw: unknown, table: MySqlTable, options: { maxLimit
   const limit = toInt(filter.limit, 'limit')
   return {
     where: buildWhere(cols, filter.where),
-    orderBy: buildOrder(cols, filter.order),
+    orderBy: buildOrder(cols, filter.order, options.pk),
     limit: limit === undefined ? undefined : Math.min(limit, options.maxLimit ?? DEFAULT_MAX_LIMIT),
     offset: toInt(filter.skip ?? filter.offset, 'skip'),
     include

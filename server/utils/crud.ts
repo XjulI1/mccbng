@@ -4,7 +4,7 @@ import { getQuery, getRouterParam, setResponseStatus, type H3Event } from 'h3'
 import type { ZodType } from 'zod'
 import { getDb, type Db } from '../db/client'
 import { methodNotAllowed, notFound } from './errors'
-import { parseFilter, parseWhere } from './filter'
+import { DEFAULT_MAX_LIMIT, parseFilter, parseWhere } from './filter'
 import { idParam, parseBody } from './validate'
 
 type Row = Record<string, any>
@@ -95,14 +95,15 @@ const clean = (data: Row): Row => Object.fromEntries(Object.entries(data).filter
 
 export const crudHandlers = {
   async list(resource: CrudResource, event: H3Event) {
-    const filter = parseFilter(getQuery(event).filter, resource.table, { relations: Object.keys(resource.relations ?? {}) })
+    const filter = parseFilter(getQuery(event).filter, resource.table, {
+      relations: Object.keys(resource.relations ?? {}),
+      pk: resource.pk
+    })
     const where = combine(filter.where, await scopeOf(resource, event, false))
-    let query = getDb().select().from(resource.table).where(where).orderBy(...filter.orderBy).$dynamic()
-    if (filter.limit !== undefined) query = query.limit(filter.limit)
-    if (filter.offset !== undefined) {
-      if (filter.limit === undefined) query = query.limit(Number.MAX_SAFE_INTEGER)
-      query = query.offset(filter.offset)
-    }
+    // Toute liste est bornée : sans `limit` (même avec un `skip` seul), la limite par défaut s'applique.
+    let query = getDb().select().from(resource.table).where(where).orderBy(...filter.orderBy)
+      .limit(filter.limit ?? DEFAULT_MAX_LIMIT).$dynamic()
+    if (filter.offset !== undefined) query = query.offset(filter.offset)
     return withRelations(resource, (await query) as Row[], filter.include)
   },
 

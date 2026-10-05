@@ -1,4 +1,26 @@
 import { apiDelete, apiGet, apiPost, apiPut } from './http'
+import { escapeLike } from '../utils/like'
+
+// Plafond des listes côté serveur (DEFAULT_MAX_LIMIT) : limite explicite des listes non paginées
+export const MAX_LIST_LIMIT = 1000
+
+const AMOUNT_TERM = /^-?\d+([.,]\d{1,2})?$/
+
+// Recherche transverse : libellé contenant le terme (jokers saisis cherchés littéralement) et, si le terme est un
+// nombre, montant en valeur absolue : plage [x ; x+1[ pour un entier (« 12 » → 12,00 à 12,99), égalité pour un décimal.
+export const searchOperationsWhere = (searchTerms: string, compteIds: number[]) => {
+  const or: Record<string, unknown>[] = [{ NomOp: { like: `%${escapeLike(searchTerms)}%` } }]
+  const term = searchTerms.trim()
+  if (AMOUNT_TERM.test(term)) {
+    const x = Math.abs(Number(term.replace(',', '.')))
+    if (/[.,]/.test(term)) {
+      or.push({ MontantOp: { inq: [x, -x] } })
+    } else {
+      or.push({ MontantOp: { gte: x, lt: x + 1 } }, { MontantOp: { gt: -(x + 1), lte: -x } })
+    }
+  }
+  return { IDcompte: { inq: compteIds }, or }
+}
 
 export const fetchOperationsForAccount = (
   IDcompte,
@@ -52,13 +74,7 @@ export const fetchSearchOperations = (
   limit = 35
 ) => {
   const filter = {
-    where: {
-      IDcompte: { inq: accountList.map((account) => account.IDcompte) },
-      or: [
-        { NomOp: { like: `%${searchTerms}%` } },
-        { MontantOp: { like: `%${searchTerms}%` } }
-      ]
-    },
+    where: searchOperationsWhere(searchTerms, accountList.map((account) => account.IDcompte)),
     order: 'DateOp DESC',
     limit,
     skip
@@ -108,10 +124,11 @@ export const deleteRecurringOperation = (IDopRecu, userToken, APIURL) =>
     token: userToken
   })
 
-export const fetchOperations = (where, userToken, APIURL) => {
+export const fetchOperations = (where, limit, userToken, APIURL) => {
   const filter = {
     where,
-    order: 'DateOp DESC'
+    order: 'DateOp DESC',
+    limit
   }
 
   return apiGet(APIURL + '/api/operations', {

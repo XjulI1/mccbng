@@ -16,6 +16,7 @@
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
   import { useOperationStore } from '@/stores/operation'
+  import { dateOpWithin, monthRange } from '@/utils/dates'
   import Highcharts from 'highcharts'
   import 'highcharts/modules/heatmap'
   import OperationList from '../OperationList.vue'
@@ -37,9 +38,6 @@
   const selectedCellOp = ref<{ month: number; cat: number } | null>(null)
 
   const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-
-  const lastDayOfMonth = (year: number, month: number) =>
-    new Date(year, month, 0).getDate()
 
   const buildChart = () => {
     if (!chartEl.value) return
@@ -102,14 +100,9 @@
                 const IDcat = cats[catIdx]?.IDcat
                 if (typeof IDcat !== 'number') return
                 selectedCellOp.value = { month: monthIdx, cat: IDcat }
-                const year = props.year
-                const month = monthIdx + 1
                 operationStore.fetchOperations({
                   IDcat,
-                  and: [
-                    { DateOp: { gte: new Date(`${year}-${month}-01 00:00:00Z`) } },
-                    { DateOp: { lte: new Date(`${year}-${month}-${lastDayOfMonth(year, month)} 23:59:59Z`) } }
-                  ]
+                  and: dateOpWithin(monthRange(props.year, monthIdx + 1))
                 })
               }
             }

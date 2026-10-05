@@ -24,12 +24,36 @@ describe('parseFilter (filtre de style LoopBack)', () => {
 
   it('and / or / inq / like', () => {
     const f = parseFilter({
-      where: { IDcompte: { inq: [1, 2] }, or: [{ NomOp: { like: '%x%' } }, { MontantOp: { like: '%x%' } }] }
+      where: { IDcompte: { inq: [1, 2] }, or: [{ NomOp: { like: '%x%' } }, { MontantOp: { inq: [12.5, -12.5] } }] }
     }, operations)
     const q = render(f.where!)
     expect(q.sql).toMatch(/IDcompte.* in \(\?, \?\)/i)
     expect(q.sql).toMatch(/NomOp.* like \?/i)
-    expect(q.params).toEqual([1, 2, '%x%', '%x%'])
+    expect(q.params).toEqual([1, 2, '%x%', '12.5', '-12.5']) // decimal sérialisé en chaîne par Drizzle
+  })
+
+  it('like / nlike : caractère d\'échappement explicite, motif transmis tel quel', () => {
+    const q = render(parseFilter({ where: { NomOp: { like: '%100\\%%' } } }, operations).where!)
+    expect(q.sql).toBe("`Operation`.`NomOp` LIKE ? ESCAPE '\\\\'")
+    expect(q.params).toEqual(['%100\\%%'])
+    const n = render(parseFilter({ where: { NomOp: { nlike: 'a\\_b' } } }, operations).where!)
+    expect(n.sql).toBe("`Operation`.`NomOp` NOT LIKE ? ESCAPE '\\\\'")
+  })
+
+  it('like / nlike refusés sur une colonne non textuelle', () => {
+    expect(() => parseFilter({ where: { MontantOp: { like: '%12%' } } }, operations)).toThrowError(/requires a text property/)
+    expect(() => parseFilter({ where: { DateOp: { nlike: '2024%' } } }, operations)).toThrowError(/requires a text property/)
+    expect(() => parseFilter({ where: { CheckOp: { like: '1' } } }, operations)).toThrowError(/requires a text property/)
+  })
+
+  it('clé primaire en dernier critère de tri, dans le sens du dernier critère demandé', () => {
+    const order = (filter: unknown) =>
+      parseFilter(filter, operations, { pk: 'IDop' }).orderBy.map(o => render(o).sql).join(', ')
+    expect(order({ order: 'CheckOp ASC, DateOp DESC' })).toBe('`Operation`.`CheckOp` asc, `Operation`.`DateOp` desc, `Operation`.`IDop` desc')
+    expect(order({ order: 'DateOp ASC' })).toBe('`Operation`.`DateOp` asc, `Operation`.`IDop` asc')
+    expect(order({ where: { IDcompte: 1 } })).toBe('`Operation`.`IDop` asc')
+    expect(order(undefined)).toBe('`Operation`.`IDop` asc')
+    expect(order({ order: 'IDop DESC, DateOp ASC' })).toBe('`Operation`.`IDop` desc, `Operation`.`DateOp` asc')
   })
 
   it('inq vide : aucune ligne', () => {

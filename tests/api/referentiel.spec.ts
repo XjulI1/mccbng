@@ -69,6 +69,24 @@ describe('comptes', () => {
     expect(info.every((i: any) => typeof i.IDcompte === 'number')).toBe(true)
   })
 
+  it('management-info : requêtes groupées, comptes triés par IDcompte, références par récurrente', async () => {
+    const user = await createUser()
+    const comptes = [await createCompte(user), await createCompte(user), await createCompte(user)]
+    await createOperation(user, comptes[0].IDcompte, { DateOp: '2024-05-02T00:00:00.000Z' })
+    await createOperation(user, comptes[0].IDcompte, { DateOp: '2024-07-09T00:00:00.000Z' })
+    await sql(
+      'INSERT INTO OperationRecurrente (NomOpRecu, MontantOpRecu, JourOpRecu, DernierDateOpRecu, IDcompte) VALUES (?, ?, ?, ?, ?)',
+      ['Loyer', -500, 1, new Date('2024-01-01T00:00:00.000Z'), comptes[2].IDcompte]
+    )
+    const info = (await get('/api/comptes/management-info', user.token)).body
+    expect(info).toEqual([
+      { IDcompte: comptes[0].IDcompte, lastOpDate: '2024-07-09T00:00:00.000Z', hasReferences: true },
+      { IDcompte: comptes[1].IDcompte, lastOpDate: null, hasReferences: false },
+      { IDcompte: comptes[2].IDcompte, lastOpDate: null, hasReferences: true }
+    ])
+    expect((await get('/api/comptes/management-info', (await createUser()).token)).body).toEqual([])
+  })
+
   it('/comptes/{id}/banque', async () => {
     const banque = await createBanque(alice.token, 'LCL')
     const compte = await createCompte(alice, { IDbanque: banque.IDbanque })

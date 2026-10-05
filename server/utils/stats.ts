@@ -25,6 +25,25 @@ export const parseRange = (from?: string, to?: string): { from: string; toExclus
   return { from, toExclusive: end.toISOString().slice(0, 10) }
 }
 
+const firstOfMonth = (year: number, monthIndex: number) => new Date(Date.UTC(year, monthIndex, 1)).toISOString().slice(0, 10)
+
+const assertYear = (year: number) => {
+  if (!Number.isInteger(year) || year < 1000 || year > 9999) throw badRequest('year must be an integer between 1000 and 9999')
+}
+
+// Mois `month` (1-12) en UTC : [1er du mois ; 1er du mois suivant[, pour un filtre DateOp indexable.
+export const monthRange = (year: number, month: number): { from: string; toExclusive: string } => {
+  assertYear(year)
+  if (!Number.isInteger(month) || month < 1 || month > 12) throw badRequest('month must be an integer between 1 and 12')
+  return { from: firstOfMonth(year, month - 1), toExclusive: firstOfMonth(year, month) }
+}
+
+// Année civile en UTC : [1er janvier ; 1er janvier suivant[.
+export const yearRange = (year: number): { from: string; toExclusive: string } => {
+  assertYear(year)
+  return { from: firstOfMonth(year, 0), toExclusive: firstOfMonth(year + 1, 0) }
+}
+
 // Règle commune à tous les totaux de dépense : une opération compte selon le Type de sa catégorie (partagée ou
 // de l'utilisateur), entrées comme sorties. Il n'y a pas d'opération sans catégorie : IDcat = 0 est la catégorie
 // partagée « Aucune » (Type 'depense'), comptée comme les autres. Les transferts sont exclus.
@@ -51,17 +70,17 @@ export const evolutionSolde = async (userID: number) => {
     rawQuery(`SELECT ROUND(SUM(solde), 2) AS sum FROM Compte WHERE IDuser = ? AND ${DISPO}`, [userID]),
     rawQuery(
       `SELECT ROUND(SUM(MontantOp),2) AS montant, ${dates}` +
-      `FROM Operation NATURAL JOIN Compte WHERE IDuser = ? AND ${GLOBAL} GROUP BY date ORDER BY date ASC`,
+      `FROM Operation JOIN Compte USING (IDcompte) WHERE IDuser = ? AND ${GLOBAL} GROUP BY date ORDER BY date ASC`,
       [userID]
     ),
     rawQuery(
       `SELECT ROUND(SUM(MontantOp),2) AS montant, ${dates}` +
-      `FROM Operation NATURAL JOIN Compte WHERE IDuser = ? AND ${RETRAITE} GROUP BY date ORDER BY date ASC`,
+      `FROM Operation JOIN Compte USING (IDcompte) WHERE IDuser = ? AND ${RETRAITE} GROUP BY date ORDER BY date ASC`,
       [userID]
     ),
     rawQuery(
       `SELECT ROUND(SUM(MontantOp),2) AS montant, ${dates}` +
-      `FROM Operation NATURAL JOIN Compte WHERE IDuser = ? AND ${DISPO} GROUP BY date ORDER BY date ASC`,
+      `FROM Operation JOIN Compte USING (IDcompte) WHERE IDuser = ? AND ${DISPO} GROUP BY date ORDER BY date ASC`,
       [userID]
     )
   ])
@@ -78,6 +97,8 @@ export const evolutionSolde = async (userID: number) => {
 // Dépense nette par mois sur deux années (catégories Type='depense' ; un remboursement rangé dans une catégorie
 // de dépense vient en déduction). Tableaux de 12 mois + écart en % de yearB vs yearA.
 export const yearComparison = async (userID: number, compteIds: number[], yearA: number, yearB: number) => {
+  const a = yearRange(yearA)
+  const b = yearRange(yearB)
   if (!compteIds.length) {
     return { yearA: new Array(12).fill(0), yearB: new Array(12).fill(0), deltaPct: new Array(12).fill(null) }
   }
@@ -86,10 +107,10 @@ export const yearComparison = async (userID: number, compteIds: number[], yearA:
     'FROM Operation o ' +
     EXPENSE_JOIN +
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
-    'AND YEAR(o.DateOp) IN (?, ?) ' +
+    'AND ((o.DateOp >= ? AND o.DateOp < ?) OR (o.DateOp >= ? AND o.DateOp < ?)) ' +
     `AND ${EXPENSE_WHERE} ` +
     'GROUP BY YEAR(o.DateOp), MONTH(o.DateOp)',
-    [userID, ...compteIds, yearA, yearB]
+    [userID, ...compteIds, a.from, a.toExclusive, b.from, b.toExclusive]
   )
   const seriesA: number[] = new Array(12).fill(0)
   const seriesB: number[] = new Array(12).fill(0)
@@ -121,6 +142,7 @@ export const topCategories = async (userID: number, compteIds: number[], from: s
 
 // Regroupe par Type de catégorie (et non par signe) : un remboursement rangé en dépense n'est pas un revenu.
 export const incomeVsExpense = async (userID: number, compteIds: number[], yearNumber: number) => {
+  const year = yearRange(yearNumber)
   if (!compteIds.length) return { income: new Array(12).fill(0), expense: new Array(12).fill(0) }
   const rows = await rawQuery<{ m: number | string; income: number | string; expense: number | string }>(
     'SELECT MONTH(o.DateOp) AS m, ' +
@@ -129,10 +151,10 @@ export const incomeVsExpense = async (userID: number, compteIds: number[], yearN
     'FROM Operation o ' +
     EXPENSE_JOIN +
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
-    'AND YEAR(o.DateOp) = ? ' +
+    'AND o.DateOp >= ? AND o.DateOp < ? ' +
     `AND (c.Type = 'revenu' OR ${EXPENSE_WHERE}) ` +
     'GROUP BY MONTH(o.DateOp)',
-    [userID, ...compteIds, yearNumber]
+    [userID, ...compteIds, year.from, year.toExclusive]
   )
   const income: number[] = new Array(12).fill(0)
   const expense: number[] = new Array(12).fill(0)
@@ -154,7 +176,7 @@ export const topOperations = async (userID: number, compteIds: number[], from: s
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
     'AND o.DateOp >= ? AND o.DateOp < ? ' +
     `AND (c.Type = 'revenu' OR ${EXPENSE_WHERE}) ` +
-    'ORDER BY ABS(o.MontantOp) DESC ' +
+    'ORDER BY ABS(o.MontantOp) DESC, o.IDop DESC ' +
     'LIMIT ?',
     [userID, ...compteIds, from, toExclusive, limit]
   )
@@ -162,16 +184,17 @@ export const topOperations = async (userID: number, compteIds: number[], from: s
 
 // Matrice mois (0-11) × catégorie, au format d'entrée d'une heatmap Highcharts.
 export const categoryHeatmap = async (userID: number, compteIds: number[], yearNumber: number) => {
+  const year = yearRange(yearNumber)
   if (!compteIds.length) return { categories: [], data: [] }
   const rows = await rawQuery<{ m: number | string; IDcat: number | string; libelle: string; total: number | string }>(
     `SELECT MONTH(o.DateOp) AS m, ${EXPENSE_CAT} AS IDcat, c.Nom AS libelle, ROUND(SUM(o.MontantOp), 2) AS total ` +
     'FROM Operation o ' +
     EXPENSE_JOIN +
     `WHERE o.IDcompte IN (${placeholders(compteIds)}) ` +
-    'AND YEAR(o.DateOp) = ? ' +
+    'AND o.DateOp >= ? AND o.DateOp < ? ' +
     `AND ${EXPENSE_WHERE} ` +
     `GROUP BY MONTH(o.DateOp), ${EXPENSE_CAT}, c.Nom`,
-    [userID, ...compteIds, yearNumber]
+    [userID, ...compteIds, year.from, year.toExclusive]
   )
   const totalsByCat = new Map<number, { libelle: string; total: number }>()
   for (const row of rows) {

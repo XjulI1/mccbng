@@ -12,3 +12,7 @@ export const rawExecute = async (sql: string, params: unknown[] = []): Promise<{
   const [result] = await getPool().query<ResultSetHeader>(sql, params)
   return { affectedRows: result.affectedRows, insertId: result.insertId }
 }
+
+// Échappe un terme brut pour un motif LIKE (caractère d'échappement `\`, déclaré par `ESCAPE '\\'`) : `%` et `_`
+// sont cherchés littéralement. Suppose le mode SQL NO_BACKSLASH_ESCAPES désactivé, comme mysql2.
+export const escapeLike = (term: string): string => term.replace(/[\\%_]/g, char => `\\${char}`)

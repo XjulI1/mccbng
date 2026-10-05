@@ -8,6 +8,7 @@ import {
   fetchSearchOperations,
   updateOperation as updateOperationService,
   fetchOperations as fetchOperationsService,
+  MAX_LIST_LIMIT,
   updateRecurringOperation as updateRecurringOperationService,
   deleteRecurringOperation as deleteRecurringOperationService
 } from '@/services/operation'
@@ -205,11 +206,12 @@ export const useOperationStore = defineStore('operation', () => {
     })
   }
 
-  function fetchOperations (where) {
+  // Liste non paginée (amortissement, détail d'une catégorie des stats) : volume bien inférieur au plafond
+  function fetchOperations (where, limit = MAX_LIST_LIMIT) {
     resetOperationsPagination()
     isLoadingOperations.value = true
 
-    fetchOperationsService(where, useUserStore().token, API_URL)
+    fetchOperationsService(where, limit, useUserStore().token, API_URL)
       .then((operations) => {
         setOperationsOfActiveAccount(operations)
         hasMoreOperations.value = false

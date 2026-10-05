@@ -9,6 +9,7 @@ vi.mock('@/services/operation', () => ({
   deleteOperation: vi.fn(),
   fetchRecurrOperation: vi.fn(),
   fetchOperations: vi.fn(),
+  MAX_LIST_LIMIT: 1000,
   updateRecurringOperation: vi.fn(),
   deleteRecurringOperation: vi.fn()
 }))

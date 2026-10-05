@@ -160,6 +160,52 @@ describe('stats', () => {
     expect(res.body.every((o: any) => o.IDcompte === compte.IDcompte)).toBe(true)
   })
 
+  it('topOperations : ex aequo départagés par IDop décroissant', async () => {
+    const user = await createUser()
+    const c = await createCompte(user)
+    const dep = await createCategorie(user, 'Dép', 'depense')
+    const rev = await createCategorie(user, 'Rev', 'revenu')
+    const ids: number[] = []
+    for (const [MontantOp, IDcat] of [[-50, dep.IDcat], [50, rev.IDcat], [-50, dep.IDcat]]) {
+      ids.push((await createOperation(user, c.IDcompte, { MontantOp, IDcat, DateOp: '2024-06-01' })).IDop)
+    }
+    const res = await get('/api/stats/topOperations', user.token, { from: '2024-06-01', to: '2024-06-30' })
+    expect(res.body.map((o: any) => o.IDop)).toEqual([...ids].reverse())
+  })
+
+  it('bornes d\'année : premier et dernier instant inclus, années voisines exclues ; année invalide → 400', async () => {
+    const user = await createUser()
+    const c = await createCompte(user)
+    const dep = await createCategorie(user, 'Dép', 'depense')
+    const rev = await createCategorie(user, 'Rev', 'revenu')
+    const ops = [
+      ['2024-01-01T00:00:00.000Z', -1, dep], ['2024-12-31T23:59:59.000Z', -2, dep], ['2024-12-31T23:59:59.000Z', 5, rev],
+      ['2023-12-31T23:59:59.000Z', -1000, dep], ['2025-01-01T00:00:00.000Z', -3000, dep]
+    ] as const
+    for (const [DateOp, MontantOp, cat] of ops) await createOperation(user, c.IDcompte, { DateOp, MontantOp, IDcat: cat.IDcat })
+
+    const ive = (await get('/api/stats/incomeVsExpense', user.token, { yearNumber: 2024 })).body
+    expect(ive.expense[0]).toBe(-1)
+    expect(ive.expense[11]).toBe(-2)
+    expect(ive.income[11]).toBe(5)
+    expect(ive.expense.reduce((s: number, v: number) => s + v, 0)).toBe(-3)
+
+    const heat = (await get('/api/stats/categoryHeatmap', user.token, { yearNumber: 2024 })).body
+    expect(heat.data).toEqual(expect.arrayContaining([[0, 0, -1], [11, 0, -2]]))
+    expect(heat.data).toHaveLength(2)
+
+    const cmp = (await get('/api/stats/yearComparison', user.token, { yearA: 2023, yearB: 2025 })).body
+    expect(cmp.yearA[11]).toBe(-1000)
+    expect(cmp.yearB[0]).toBe(-3000)
+    expect([...cmp.yearA, ...cmp.yearB].filter((v: number) => v !== 0)).toHaveLength(2) // 2024 exclu
+    const cmp2 = (await get('/api/stats/yearComparison', user.token, { yearA: 2024, yearB: 2023 })).body
+    expect(cmp2.yearA[0]).toBe(-1)
+    expect(cmp2.yearA[11]).toBe(-2)
+
+    expect((await get('/api/stats/incomeVsExpense', user.token, { yearNumber: 2024.5 })).status).toBe(400)
+    expect((await get('/api/stats/categoryHeatmap', user.token, { yearNumber: 99999 })).status).toBe(400)
+  })
+
   it('categoryHeatmap : matrice mois × catégorie', async () => {
     const res = await get('/api/stats/categoryHeatmap', alice.token, { yearNumber: 2024 })
     expect(res.body.categories.map((c: any) => c.libelle)).toEqual(['Courses', 'Santé'])

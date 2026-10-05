@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import {
   createCategorie, createCompte, createOperation, createUser, del, get, patch, post, put, sql, type TestUser
 } from './helpers'
+import { searchOperationsWhere } from '../../app/services/operation'
 import {
   addDays, firstDueOnOrAfter, initialLastDate, prevDueDate, startOfUtcDay, type RecurrenceRule
 } from '../../server/utils/schedule'
@@ -27,6 +28,13 @@ const createRecurrente = async (user: TestUser, IDcompte: number, rule: Recurren
   if (res.status !== 200) throw new Error(`createRecurrente: ${res.status} ${JSON.stringify(res.body)}`)
   await sql('UPDATE OperationRecurrente SET DernierDateOpRecu = ? WHERE IDopRecu = ?', [last, res.body.IDopRecu])
   return res.body.IDopRecu as number
+}
+
+// Insertion directe d'opérations en nombre (non pointées, catégorie « Aucune »)
+const insertOperations = async (IDcompte: number, rows: { NomOp: string; MontantOp: number; DateOp?: string }[]) => {
+  await sql('INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, CheckOp, IDcat, amortissement) VALUES ?', [
+    rows.map(r => [r.NomOp, r.MontantOp, new Date(r.DateOp ?? '2024-05-10T00:00:00.000Z'), IDcompte, 0, 0, 0])
+  ])
 }
 
 const generatedDates = async (IDcompte: number) =>
@@ -95,7 +103,7 @@ describe('opérations', () => {
 
     const search = await get('/api/operations', carol.token, {
       filter: {
-        where: { IDcompte: { inq: [c1.IDcompte, c2.IDcompte] }, or: [{ NomOp: { like: '%loyer%' } }, { MontantOp: { like: '%loyer%' } }] },
+        where: searchOperationsWhere('loyer', [c1.IDcompte, c2.IDcompte]),
         order: 'DateOp DESC'
       }
     })
@@ -107,6 +115,65 @@ describe('opérations', () => {
     expect(leak.body).toEqual([])
     const count = await get('/api/operations/count', carol.token, { where: { IDcompte: c1.IDcompte } })
     expect(count.body).toEqual({ count: 5 })
+  })
+
+  it('pagination : 40 opérations à la même date, deux pages de 35 sans doublon ni trou', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    await insertOperations(compte.IDcompte, Array.from({ length: 40 }, (_, i) => ({ NomOp: `Op ${i}`, MontantOp: -1 })))
+    const page = async (skip: number) => (await get('/api/operations', user.token, {
+      filter: { where: { IDcompte: compte.IDcompte }, order: 'CheckOp ASC, DateOp DESC', limit: 35, skip }
+    })).body.map((o: any) => o.IDop as number)
+    const ids = [...await page(0), ...await page(35)]
+    expect(ids).toHaveLength(40)
+    expect(new Set(ids).size).toBe(40)
+    expect(ids).toEqual([...ids].sort((a, b) => b - a)) // départage par IDop, dans le sens du dernier critère
+  })
+
+  it('liste bornée : limite par défaut sans limit, avec un skip seul, et plafond d\'un limit explicite', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    await insertOperations(compte.IDcompte, Array.from({ length: 1005 }, (_, i) => ({ NomOp: `Op ${i}`, MontantOp: -1 })))
+    const where = { IDcompte: compte.IDcompte }
+    const list = async (filter: Record<string, unknown>) => {
+      const res = await get('/api/operations', user.token, { filter: { where, ...filter } })
+      expect(res.status).toBe(200)
+      expect(res.headers.get('X-Result-Truncated')).toBeNull()
+      return res.body as any[]
+    }
+    expect(await list({})).toHaveLength(1000)
+    expect(await list({ skip: 3 })).toHaveLength(1000)
+    expect(await list({ skip: 1000 })).toHaveLength(5)
+    expect(await list({ limit: 5000 })).toHaveLength(1000)
+  })
+
+  it('like : refusé sur une colonne non textuelle, avant toute requête', async () => {
+    for (const where of [{ MontantOp: { like: '%12%' } }, { DateOp: { like: '2024%' } }, { CheckOp: { nlike: '1' } }]) {
+      const res = await get('/api/operations', alice.token, { filter: { where } })
+      expect(res.status).toBe(400)
+    }
+  })
+
+  it('recherche transverse : montant en valeur absolue (entier = plage d\'un euro, décimal = exact), jokers littéraux', async () => {
+    const user = await createUser()
+    const c1 = await createCompte(user)
+    const c2 = await createCompte(user)
+    await insertOperations(c1.IDcompte, [
+      { NomOp: 'A', MontantOp: -12.5 }, { NomOp: 'B', MontantOp: 12.5 }, { NomOp: 'C', MontantOp: 112.5 },
+      { NomOp: 'D', MontantOp: 12.55 }, { NomOp: 'E', MontantOp: -12.99 }, { NomOp: 'F', MontantOp: 12 },
+      { NomOp: 'G', MontantOp: 12.49 }, { NomOp: 'H', MontantOp: 13 }, { NomOp: 'I', MontantOp: 1200 }
+    ])
+    await insertOperations(c2.IDcompte, [
+      { NomOp: 'Remise 100%', MontantOp: -1 }, { NomOp: 'Remise 1000', MontantOp: -1 }, { NomOp: 'Remise 10_0', MontantOp: -1 }
+    ])
+    const search = async (term: string) => (await get('/api/operations', user.token, {
+      filter: { where: searchOperationsWhere(term, [c1.IDcompte, c2.IDcompte]), order: 'NomOp ASC' }
+    })).body.map((o: any) => o.NomOp)
+    expect(await search('12,5')).toEqual(['A', 'B'])
+    expect(await search('-12.50')).toEqual(['A', 'B'])
+    expect(await search('12')).toEqual(['A', 'B', 'D', 'E', 'F', 'G'])
+    expect(await search('100%')).toEqual(['Remise 100%'])
+    expect(await search('10_0')).toEqual(['Remise 10_0'])
   })
 })
 
@@ -167,6 +234,20 @@ describe('agrégats', () => {
     await createOperation(erin, compte.IDcompte, { MontantOp: 2000, IDcat: rev.IDcat, DateOp: '2024-03-25' })
     await createOperation(erin, compte.IDcompte, { MontantOp: -70, IDcat: dep.IDcat, DateOp: '2024-04-01' })
 
+    // bornes du mois : premier et dernier instant de mars, puis les instants voisins de février et d'avril
+    const boundaries = [
+      ['2024-03-01T00:00:00.000Z', -0.25], ['2024-03-31T23:59:59.000Z', -0.25],
+      ['2024-02-29T23:59:59.000Z', -1000], ['2024-04-01T00:00:00.000Z', -1000]
+    ] as const
+    const bornes = await createCompte(erin)
+    for (const [DateOp, MontantOp] of boundaries) await createOperation(erin, bornes.IDcompte, { MontantOp, IDcat: dep.IDcat, DateOp })
+    const marchBornes = await get('/api/operations/sumByUserByMonth', erin.token, { monthNumber: 3, yearNumber: 2024, IDCompte: bornes.IDcompte })
+    expect(marchBornes.body[0].MonthNegative).toBe(-0.5)
+    expect((await get('/api/operations/sumCategoriesByUserByMonth', erin.token, { monthNumber: 3, yearNumber: 2024 })).body)
+      .toEqual([{ TotalMonth: -51, IDcat: dep.IDcat }])
+    expect((await get('/api/operations/sumByUserByMonth', erin.token, { monthNumber: 13, yearNumber: 2024 })).status).toBe(400)
+    await sql('DELETE FROM Operation WHERE IDcompte = ?', [bornes.IDcompte])
+
     const month = await get('/api/operations/sumByUserByMonth', erin.token, { monthNumber: 3, yearNumber: 2024 })
     expect(month.body[0].MonthNegative).toBe(-50.5)
     const withCompte = await get('/api/operations/sumByUserByMonth', erin.token, { monthNumber: 3, yearNumber: 2024, IDCompte: compte.IDcompte })
@@ -192,6 +273,18 @@ describe('agrégats', () => {
     expect((await get('/api/operations/suggestCategories', fay.token, { operationName: 'boulang', limit: 500 })).status).toBe(200)
     // jamais les opérations d'autrui
     expect((await get('/api/operations/suggestCategories', bob.token, { operationName: 'boulang' })).body).toEqual([])
+  })
+
+  it('suggestCategories : jokers saisis cherchés littéralement', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const a = await createCategorie(user, 'A')
+    const b = await createCategorie(user, 'B')
+    await createOperation(user, compte.IDcompte, { NomOp: 'Remise 100%', IDcat: a.IDcat })
+    await createOperation(user, compte.IDcompte, { NomOp: 'Remise 1000', IDcat: b.IDcat })
+    const res = (await get('/api/operations/suggestCategories', user.token, { operationName: '100%' })).body
+    expect(res.map((r: any) => r.IDcat)).toEqual([a.IDcat])
+    expect((await get('/api/operations/suggestCategories', user.token, { operationName: 'REMISE' })).body).toHaveLength(2)
   })
 })
 

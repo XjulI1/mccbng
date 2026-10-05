@@ -15,6 +15,7 @@
   import { useOperationStore } from '@/stores/operation'
   import { useStatsStore } from '@/stores/stats'
   import { useUserStore } from '@/stores/user'
+  import { dateOpWithin, monthRange } from '@/utils/dates'
   import Highcharts from 'highcharts'
   import OperationList from '../OperationList.vue'
   import OperationRenderer from '../Home/Operation.vue'
@@ -32,10 +33,6 @@
   const userID = computed(() => userStore.id)
   const storeCurrentYear = computed(() => statsStore.currentYear)
   const storeCurrentMonth = computed(() => statsStore.currentMonth)
-  function lastDayOfMonth (year, month) {
-    const lastDay = new Date(year, month, 0)
-    return lastDay.getDate()
-  }
 
   const buildChart = () => {
     Highcharts.chart(chartEl.value! as HTMLElement, {
@@ -99,30 +96,7 @@
   watch(selectedCatId, () => {
     operationStore.fetchOperations({
       IDcat: selectedCatId.value,
-      and: [
-        {
-          DateOp: {
-            gte: new Date(
-              storeCurrentYear.value +
-                '-' +
-                storeCurrentMonth.value +
-                '-01 00:00:00Z'
-            )
-          }
-        },
-        {
-          DateOp: {
-            lte: new Date(
-              storeCurrentYear.value +
-                '-' +
-                storeCurrentMonth.value +
-                '-' +
-                lastDayOfMonth(storeCurrentYear.value, storeCurrentMonth.value) +
-                ' 23:59:59Z'
-            )
-          }
-        }
-      ]
+      and: dateOpWithin(monthRange(storeCurrentYear.value, storeCurrentMonth.value))
     })
   })
 
