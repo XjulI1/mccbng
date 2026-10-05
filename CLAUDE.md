@@ -52,7 +52,7 @@ pnpm hash-code <code>   # bcrypt hash (cost 12) of a login code, to paste into U
 5. Users are always looked up by `IDuser` (primary key). The legacy `id` column (not unique) is no longer read or written.
 6. `JWT_SECRET` must stay fixed: changing it invalidates every session.
 7. There is no signup route: users are created in phpMyAdmin with a `secret_key` produced by `pnpm hash-code <code>` (see `docs/exploitation.md`).
-8. The login rate-limit (5 / 15 min / IP) reads the IP from `X-Real-IP`, set by the reverse proxy (Synology DSM), with the socket address as fallback (`server/plugins/client-ip.ts`); `X-Forwarded-For` is never trusted.
+8. The login rate-limit (5 / 15 min / IP) reads the IP from `X-Real-IP`, set by the Synology DSM reverse proxy from Cloudflare's `CF-Connecting-IP` (chain: client → Cloudflare → DSM → container; the NAS must only be reachable through Cloudflare), with the socket address as fallback; IPv6 addresses are counted by their `/64` prefix (`server/plugins/client-ip.ts`, `rateLimitKey`); `X-Forwarded-For` is never trusted.
 
 ### Domain Model
 

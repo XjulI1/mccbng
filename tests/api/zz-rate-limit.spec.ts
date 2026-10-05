@@ -31,6 +31,17 @@ describe('rate-limit du login (nuxt-security)', () => {
     expect(statuses[5]).toBe(429)
   })
 
+  it('IPv6 : les adresses d\'un même /64 partagent le compteur, un autre /64 n\'est pas limité', async () => {
+    const statuses: number[] = []
+    for (let i = 1; i <= 6; i++) {
+      statuses.push((await login({ 'X-Real-IP': `2001:db8:a:b::${i.toString(16)}` }, wrong('nobody-v6@example.test'))).status)
+    }
+    expect(statuses.slice(0, 5)).toEqual([401, 401, 401, 401, 401])
+    expect(statuses[5]).toBe(429)
+
+    expect((await login({ 'X-Real-IP': '2001:db8:a:c::1' }, wrong('nobody-v6@example.test'))).status).toBe(401)
+  })
+
   it('les autres routes ne sont pas limitées', async () => {
     const user = await createUser()
     for (let i = 0; i < 12; i++) expect((await get('/api/comptes', user.token)).status).toBe(200)

@@ -35,7 +35,7 @@ L'audit de code du 2026-10-05 a mis en évidence deux failles exploitables par u
 - **Code front** : `app/services/{auth,http}.ts`, `app/stores/user.ts`, `app/middleware/auth.global.ts`, `app/pages/config.vue`, `app/pages/login.vue`.
 - **Scripts** : `scripts/hash-code.mjs` (`pnpm hash-code <code>`), `scripts/hash-legacy-secrets.mjs` (one-shot).
 - **Données** : migration SQL ajoutant `failedLoginCount`, `lockedUntil` et `tokenVersion` sur `User`. Le `DROP` de `User.id` et de `UserCredentials` est fait par `harden-db-schema-and-cleanup`.
-- **Configuration** : aucune nouvelle variable ; `JWT_TTL_SECONDS` passe à 21600 par défaut ; le reverse proxy DSM doit poser `X-Real-IP` (à vérifier en staging, à documenter dans `README.md`/`CLAUDE.md`).
+- **Configuration** : aucune nouvelle variable ; `JWT_TTL_SECONDS` passe à 21600 par défaut ; le reverse proxy DSM doit poser `X-Real-IP` = `$http_cf_connecting_ip` (Cloudflare est devant DSM) et le NAS ne doit être joignable que par Cloudflare.
 - **Exploitation** : procédure phpMyAdmin documentée pour créer un utilisateur, modifier une banque et déverrouiller un compte.
 - **Utilisateurs** : une reconnexion est nécessaire au déploiement (changement de support de session) ; un logout déconnecte tous les appareils.
 - **Dépendance** : aucune (la création d'utilisateur ayant disparu, l'atomicité InnoDB n'est plus requise ici).

@@ -2,7 +2,7 @@
 
 L'API Nitro (`server/`) authentifie chaque route `/api/**` (sauf `GET /api/ping` et `POST /api/users/login`) par un JWT en `Authorization: Bearer`. Le front stocke ce JWT dans le cookie non-HttpOnly `userToken` (`app/services/auth.ts`). Le serveur pose en parallèle un cookie `HttpOnly` `mccbngAuth` qui n'est lu nulle part. Le login est un email + un code de 6 chiffres (bcrypt coût 12), limité à 5 essais / 15 min / IP par `nuxt-security`, qui lit l'IP via `getRequestIP(event, { xForwardedFor: true })`, c'est-à-dire la **première** valeur de `X-Forwarded-For`.
 
-L'application est servie derrière le reverse proxy Synology DSM. Les utilisateurs, peu nombreux, sont créés et administrés par l'exploitant directement dans phpMyAdmin ; aucun écran du front n'appelle `POST /api/signup` ni ne modifie de banque.
+L'application est servie derrière Cloudflare (proxy) puis le reverse proxy Synology DSM. Les utilisateurs, peu nombreux, sont créés et administrés par l'exploitant directement dans phpMyAdmin ; aucun écran du front n'appelle `POST /api/signup` ni ne modifie de banque.
 
 Constats de l'audit du 2026-10-05 traités ici :
 
@@ -43,7 +43,8 @@ La route `server/api/signup.post.ts` et ses tests sont supprimés ; `UserCredent
 - *Alternatives écartées* : signup réservé à une liste `ADMIN_IDUSERS` avec `IDuser` attribué par le serveur (`MAX+1`, garde-fou orphelins, retente) ; script CLI de création. Les deux ajoutent du code pour un besoin rare que phpMyAdmin couvre déjà.
 
 ### D2. IP de confiance pour le rate-limit
-On configure `security.rateLimiter.ipHeader = 'x-real-ip'` (option de `nuxt-security`). Le reverse proxy Synology DSM pose `X-Real-IP $remote_addr` dans son modèle nginx par défaut ; c'est à **vérifier en staging** (en loguant l'IP vue par le serveur), et à ajouter comme en-tête personnalisé dans « Proxy inversé » si absent. En production, si l'en-tête est absent, on se replie sur l'adresse de la socket, jamais sur XFF.
+On configure `security.rateLimiter.ipHeader = 'x-real-ip'` (option de `nuxt-security`). La vérification en staging a montré que Cloudflare est devant DSM : `$remote_addr` y est l'IP d'un serveur Cloudflare (`104.23.x`), pas celle du client. DSM pose donc `X-Real-IP` = `$http_cf_connecting_ip` (en-tête que Cloudflare écrase toujours), à condition que le NAS ne soit joignable que par Cloudflare (pare-feu limité aux plages Cloudflare, ou Cloudflare Tunnel) ; sinon `CF-Connecting-IP` serait forgeable. L'application ne lit que `X-Real-IP` : le choix de la source reste dans la configuration du proxy, sans code spécifique à Cloudflare. En production, si l'en-tête est absent, on se replie sur l'adresse de la socket, jamais sur XFF.
+- En IPv6, un fournisseur d'accès attribue à chaque client au moins un `/64` (un `/56` chez Orange) : compter par adresse exacte laisserait un attaquant obtenir un compteur neuf à chaque tentative (constaté en staging, le client arrive en IPv6). Le plugin `server/plugins/client-ip.ts` remplace donc `X-Real-IP` par une clé de rate-limit : l'IPv4 telle quelle, l'IPv6 réduite à son préfixe `/64` (pratique courante ; un `/56` regrouperait des clients distincts chez certains fournisseurs). L'adresse complète est conservée dans `event.context.clientIp` pour le journal.
 - Le compteur reste en mémoire tant qu'il n'y a qu'une instance. On passe à un driver `unstorage` partagé (Redis) si l'application est un jour répliquée : exigence notée dans la spec, implémentation conditionnelle.
 - Le test `tests/api/zz-rate-limit.spec.ts`, qui fait tourner les IP via XFF, est réécrit pour utiliser l'en-tête de confiance.
 
@@ -99,6 +100,8 @@ Sinon, la réponse est 404, comme pour `IDcompte`. Les routes `credits/[id]/paym
 ## Risks / Trade-offs
 
 - [Reconnexion forcée de tous les utilisateurs au déploiement] → Bascule directe assumée : peu d'utilisateurs, TTL court ; communiquer la date.
+- [`X-Real-IP` = `$remote_addr` derrière Cloudflare] → Les clients d'un même serveur Cloudflare partagent un compteur et un attaquant change de compteur en changeant de serveur : constaté en staging, corrigé par `$http_cf_connecting_ip`.
+- [NAS joignable sans passer par Cloudflare] → `CF-Connecting-IP` forgeable : restreindre le port 443 aux plages Cloudflare.
 - [Proxy mal configuré (`X-Real-IP` absent)] → Repli sur l'IP de socket en production. Toutes les requêtes partagent alors l'IP du proxy DSM, d'où un 429 global possible. On l'accepte, car c'est plus sûr qu'un contournement, et on vérifie le comportement en staging avant la production.
 - [Lockout utilisé pour bloquer la victime (déni de service ciblé) ou auto-blocage jusqu'à 24 h] → Le rate-limit IP freine l'attaquant ; l'exploitant peut déverrouiller à la main dans phpMyAdmin (procédure documentée).
 - [Logout = déconnexion de tous les appareils] → Choix assumé ; une déconnexion ponctuelle sur un appareil impose une reconnexion sur les autres.
@@ -112,7 +115,7 @@ Sinon, la réponse est 404, comme pour `IDcompte`. Les routes `credits/[id]/paym
 Une seule livraison.
 
 1. **Avant le déploiement** :
-   - en staging, vérifier que DSM pose `X-Real-IP` (sinon l'ajouter dans « Proxy inversé ») ;
+   - dans DSM (staging et production), `X-Real-IP` = `$http_cf_connecting_ip`, puis vérifier que l'IP du log de login est celle du client ;
    - en production, exécuter les requêtes d'audit (aucun `User.IDuser ≤ 0`, références `IDcredit`/`IDcat` croisées) et corriger à la main ;
    - exécuter `scripts/hash-legacy-secrets.mjs` (dry-run, puis réel).
 2. Appliquer la migration SQL (`failedLoginCount`, `lockedUntil`, `tokenVersion`) via `pnpm db:migrate`.

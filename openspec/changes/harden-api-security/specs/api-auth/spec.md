@@ -62,7 +62,7 @@ Le login SHALL poser `mccbngAuth=<jwt>; HttpOnly; SameSite=Strict; Path=/; Max-A
 - **THEN** le JWT de l'autre appareil est refusé (401) à sa requête suivante
 
 ### Requirement: Rate-limiting du login
-`POST /api/users/login` SHALL être limité à 5 tentatives par IP et par fenêtre de 15 minutes via la configuration de `nuxt-security`, sans middleware de rate-limit maison. L'IP MUST être lue depuis l'en-tête posé par le reverse proxy de confiance (`X-Real-IP`, posé par le proxy inversé Synology DSM), avec repli sur l'adresse de la socket ; la valeur de `X-Forwarded-For` fournie par le client MUST NOT être utilisée. Si l'application est déployée sur plusieurs instances, le compteur MUST utiliser un stockage partagé. Au-delà de la limite, la réponse MUST être 429 (corps par défaut de `nuxt-security`). Aucune autre route ne MUST être limitée par cette règle.
+`POST /api/users/login` SHALL être limité à 5 tentatives par IP et par fenêtre de 15 minutes via la configuration de `nuxt-security`, sans middleware de rate-limit maison. L'IP MUST être lue depuis l'en-tête posé par le reverse proxy de confiance (`X-Real-IP`, posé par le proxy inversé Synology DSM à partir du `CF-Connecting-IP` de Cloudflare), avec repli sur l'adresse de la socket ; la valeur de `X-Forwarded-For` fournie par le client MUST NOT être utilisée. Une adresse IPv6 MUST être comptée par son préfixe `/64` (toutes les adresses d'un même `/64` partagent le compteur), une IPv4 mappée (`::ffff:a.b.c.d`) comme l'IPv4 correspondante ; le journal des tentatives MUST conserver l'adresse complète. Si l'application est déployée sur plusieurs instances, le compteur MUST utiliser un stockage partagé. Au-delà de la limite, la réponse MUST être 429 (corps par défaut de `nuxt-security`). Aucune autre route ne MUST être limitée par cette règle.
 
 #### Scenario: Sixième échec
 - **WHEN** une même IP enchaîne 6 logins invalides en 15 minutes
@@ -71,6 +71,10 @@ Le login SHALL poser `mccbngAuth=<jwt>; HttpOnly; SameSite=Strict; Path=/; Max-A
 #### Scenario: Rotation de X-Forwarded-For
 - **WHEN** un client envoie 6 logins invalides en 15 minutes en changeant la valeur de `X-Forwarded-For` à chaque requête
 - **THEN** le sixième reçoit 429
+
+#### Scenario: Rotation d'adresses IPv6 dans un même /64
+- **WHEN** un client envoie 6 logins invalides en 15 minutes depuis 6 adresses IPv6 différentes du même préfixe `/64`
+- **THEN** le sixième reçoit 429, et une adresse d'un autre `/64` n'est pas limitée
 
 #### Scenario: Autres routes non limitées
 - **WHEN** une IP appelle massivement `GET /api/comptes`

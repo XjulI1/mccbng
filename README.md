@@ -174,7 +174,7 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 3. Un JWT `{ name, email, IDuser, tv }` est signé en HS256 (`JWT_SECRET`, émetteur et audience `mccbng`, durée `JWT_TTL_SECONDS`, 6 h par défaut) et posé uniquement dans le cookie `mccbngAuth` (`HttpOnly`, `SameSite=Strict`, `Secure` en production) ; la réponse contient `{ userId: <IDuser> }`.
 4. Le front ne conserve que `IDuser`, dans le cookie `userID`.
 5. Le navigateur renvoie le cookie à chaque requête ; le front ajoute `X-Requested-With: mccbng`, exigé sur toute méthode non sûre (protection CSRF, 403 sinon). Le middleware `server/middleware/auth.ts` vérifie le JWT et la `tokenVersion` de l'utilisateur (incrémentée au logout, ce qui révoque toutes ses sessions), et `getCurrentUserId` scope chaque requête à l'utilisateur. Un header `Authorization: Bearer` est refusé.
-6. Le login est limité à 5 essais par IP et par fenêtre de 15 minutes (`nuxt-security`). L'IP est lue dans `X-Real-IP`, posé par le reverse proxy (Synology DSM), à défaut l'adresse de la socket ; `X-Forwarded-For` n'est jamais pris en compte. Les en-têtes de sécurité et la CSP sont appliqués à toutes les réponses.
+6. Le login est limité à 5 essais par IP et par fenêtre de 15 minutes (`nuxt-security`). L'IP est lue dans `X-Real-IP`, posé par le reverse proxy (Synology DSM, à partir du `CF-Connecting-IP` de Cloudflare), à défaut l'adresse de la socket ; une IPv6 est comptée par son préfixe `/64`, et `X-Forwarded-For` n'est jamais pris en compte. Les en-têtes de sécurité et la CSP sont appliqués à toutes les réponses.
 
 ---
 
@@ -280,7 +280,7 @@ Toute la configuration serveur passe par des variables d'environnement, lues à 
 
 En développement, `JWT_SECRET` peut être omis (un secret éphémère est généré, avec un avertissement). Le front appelle toujours l'API en chemin relatif (`/api`).
 
-**Reverse proxy** : le proxy (Synology DSM) doit poser `X-Real-IP` avec l'IP du client (en-tête personnalisé `X-Real-IP` = `$remote_addr` s'il n'est pas déjà posé), et le conteneur ne doit pas être joignable sans passer par lui. Le compteur du rate-limit est en mémoire : un stockage partagé serait nécessaire si l'application était répliquée. Procédures d'administration (création d'utilisateur, déverrouillage, banques) : `docs/exploitation.md`.
+**Reverse proxy** : la chaîne est client → Cloudflare → proxy inversé Synology DSM → conteneur. DSM doit poser `X-Real-IP` avec l'IP du client fournie par Cloudflare (en-tête personnalisé `X-Real-IP` = `$http_cf_connecting_ip`), et le NAS ne doit être joignable que par Cloudflare (sinon `CF-Connecting-IP` peut être forgé). Le compteur du rate-limit est en mémoire : un stockage partagé serait nécessaire si l'application était répliquée. Procédures d'administration (création d'utilisateur, déverrouillage, banques) : `docs/exploitation.md`.
 
 ---
 

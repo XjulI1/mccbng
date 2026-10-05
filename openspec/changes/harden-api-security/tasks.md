@@ -7,8 +7,10 @@
 
 ## 2. Rate-limit et verrouillage (S-H2, roadmap §1-§2)
 
-- [x] 2.1 Configurer `security.rateLimiter.ipHeader` sur `x-real-ip` pour `/api/users/login`, avec repli sur l'IP de socket ; documenter la configuration du reverse proxy Synology DSM (« Proxy inversé » → en-tête `X-Real-IP $remote_addr`) dans `README.md` et `CLAUDE.md`
-- [ ] 2.2 Vérifier en staging que l'IP vue par le serveur est bien celle du client (et non celle du NAS) — procédure dans `docs/exploitation.md` (à faire en staging)
+- [x] 2.1 Configurer `security.rateLimiter.ipHeader` sur `x-real-ip` pour `/api/users/login`, avec repli sur l'IP de socket ; documenter la configuration du reverse proxy Synology DSM (« Proxy inversé » → en-tête `X-Real-IP $http_cf_connecting_ip`, Cloudflare étant devant DSM) dans `README.md` et `CLAUDE.md`
+- [x] 2.2 Vérifier en staging que l'IP vue par le serveur est bien celle du client (et non celle du NAS) — validé le 2026-10-05 après passage de DSM à `$http_cf_connecting_ip` (IP Cloudflare `104.23.229.94` avant, IP client ensuite)
+- [ ] 2.9 Vérifier que le NAS n'est joignable que par Cloudflare (port 443 limité aux plages Cloudflare, ou Cloudflare Tunnel), sans quoi `CF-Connecting-IP` est forgeable
+- [x] 2.10 Rate-limit IPv6 par préfixe `/64` (`rateLimitKey` dans `server/utils/client-ip.ts`), IP complète conservée pour le journal ; tests unitaires et test d'API (6 adresses d'un même `/64` → 429)
 - [x] 2.3 Réécrire `tests/api/zz-rate-limit.spec.ts` : la rotation de `X-Forwarded-For` ne contourne plus la limite
 - [x] 2.4 Migration SQL : `User.failedLoginCount INT NOT NULL DEFAULT 0`, `User.lockedUntil DATETIME NULL` ; mettre à jour `server/db/schema.ts`
 - [x] 2.5 `verifyCredentials` (`server/utils/users.ts`) : refuser sans bcrypt tant que `lockedUntil > now`, incrémenter et poser le palier (5 échecs → 5 min, puis 30 min, 2 h, 24 h max), remettre à zéro sur succès
