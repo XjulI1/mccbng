@@ -141,7 +141,7 @@ Les valeurs MUST être validées : `Frequence` ∈ {3, 7}, `JourNumOpRecu` entie
 - `fromCompte ≠ toCompte` ;
 - `IDcat` obligatoire, appliqué aux deux opérations.
 
-Le serveur MUST vérifier que les deux comptes appartiennent à l'utilisateur et que la catégorie lui est accessible (catégorie de l'utilisateur ou partagée, `IDuser = 0`), avec 404 sinon. Il crée ensuite une opération de `-montant` sur `fromCompte` et une opération de `+montant` sur `toCompte`, puis renvoie les deux. Si la seconde création échoue, la première MUST être supprimée, de sorte qu'aucun virement à moitié enregistré ne subsiste.
+Le serveur MUST vérifier que les deux comptes appartiennent à l'utilisateur et que la catégorie lui est accessible (catégorie de l'utilisateur ou partagée, `IDuser = 0`), avec 404 sinon. Il crée ensuite, dans une même transaction, une opération de `-montant` sur `fromCompte` et une opération de `+montant` sur `toCompte`, puis renvoie les deux. Si l'une des créations échoue, la transaction MUST être annulée, de sorte qu'aucun virement à moitié enregistré ne subsiste.
 
 #### Scenario: Virement valide
 - **WHEN** l'utilisateur vire 100 € de son compte A vers son compte B avec la catégorie 25
@@ -157,5 +157,5 @@ Le serveur MUST vérifier que les deux comptes appartiennent à l'utilisateur et
 
 #### Scenario: Échec du crédit
 - **WHEN** la création de l'opération créditrice échoue
-- **THEN** l'opération débitrice est supprimée et la réponse est une erreur
+- **THEN** la transaction est annulée, aucune opération n'est persistée et la réponse est une erreur
 
