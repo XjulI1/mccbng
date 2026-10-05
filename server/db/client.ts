@@ -22,7 +22,9 @@ export const getPool = (): Pool => {
       connectionLimit: 10,
       // Dates lues/écrites en UTC (équivalent du comportement de juggler sur l'image Docker, TZ=UTC)
       timezone: 'Z',
-      charset: 'utf8mb4'
+      charset: 'utf8mb4',
+      // DECIMAL (montants, taux, surface) lus comme des nombres JSON, pas des chaînes
+      decimalNumbers: true
     })
   }
   return holder.pool

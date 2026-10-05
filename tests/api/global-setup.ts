@@ -11,6 +11,8 @@ export interface ApiTestContext {
   baseUrl: string
   jwtSecret: string
   db: { host: string; port: number; user: string; password: string; database: string }
+  // Compte administrateur du serveur de test (création de bases jetables pour les tests du runner de migrations)
+  admin: { host: string; port: number; user: string; password: string }
 }
 
 declare module 'vitest' {
@@ -75,7 +77,7 @@ export default async function setup(project: TestProject) {
   const baseUrl = `http://127.0.0.1:${port}`
   await waitFor(`${baseUrl}/api/ping`)
 
-  project.provide('api', { baseUrl, jwtSecret, db: database.db })
+  project.provide('api', { baseUrl, jwtSecret, db: database.db, admin: database.admin })
 
   return async () => {
     server.kill('SIGTERM')

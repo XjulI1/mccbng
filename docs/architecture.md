@@ -4,7 +4,7 @@
 
 Single Page Application for the mccbng personal finance app. Built with **Nuxt 4 (`ssr: false`, `future.compatibilityVersion: 5`) + Vue 3.5 + TypeScript + Pinia**, with **auto-imports disabled**, light/dark theme support, touch gestures, and PWA packaging. Covers banks, accounts, operations, recurring operations, categories, statistics, **loans (Credit)** and **real-estate assets (Bien)**.
 
-Nitro (Nuxt's server) serves the SPA **and hosts the REST API** (`server/`, MySQL + JWT): one process and one Docker image serve both. The API is described in the *Server (Nitro API)* section below.
+Nitro (Nuxt's server) serves the SPA **and hosts the REST API** (`server/`, MariaDB + JWT): one process and one Docker image serve both. The API is described in the *Server (Nitro API)* section below.
 
 ## Commands
 
@@ -15,7 +15,7 @@ pnpm build:staging      # Staging build (--envName test)
 pnpm preview            # Serve the production build locally
 pnpm test               # Vitest (unit + integration, Nuxt environment)
 pnpm test:watch         # Vitest in watch mode
-pnpm test:api           # API integration tests on a disposable MySQL (Docker / Testcontainers)
+pnpm test:api           # API integration tests on a disposable MariaDB 10.11 (Docker / Testcontainers)
 pnpm test:coverage      # Tests with coverage report
 pnpm db:migrate         # Apply SQL migrations (add `-- --baseline` on an existing production database)
 pnpm type-check         # nuxt typecheck (vue-tsc)
@@ -264,9 +264,9 @@ server/
 - **Filter**: lists accept a LoopBack-style `filter` JSON (`where` with `and`/`or`/`inq`/`like`/`gt`…, `order`, `limit`, `skip`, `include`), parsed by `utils/filter.ts` with a column/operator whitelist. The user scope is always combined with `and` after the client's `where`.
 - **Scope**: `utils/scope.ts` — `getCurrentUserId(event)`, `compteScope` (inherited scoping on `IDcompte`), `assertCompteOwned` (404). Users are looked up by `IDuser`, never by the non-unique `id` column.
 - **SQL**: `rawQuery(sql, params)` / `rawExecute(sql, params)` (`utils/sql.ts`) for analytics (`utils/stats.ts`, aggregates, auto-generation); always parameterised. Dates are read/written in UTC (`timezone: 'Z'`). Amounts are rounded with `round2` (`utils/money.ts`).
-- **Recurring operations** (`utils/schedule.ts`, `operation-recurrentes/auto-generation.post.ts`): pure UTC functions `nextDueDate` (next month, or next year at `MoisOpRecu`, day `JourNumOpRecu` clamped to the month's last day), `prevDueDate`, `firstDueOnOrAfter` and `initialLastDate` (initial `DernierDateOpRecu`, so that the first upcoming due date is generated). Without transactions (MyISAM), each due date is reserved by `UPDATE … WHERE DernierDateOpRecu = :last` before the `Operation` is inserted (compensated on failure); at most 24 per recurring operation and per call, 15 days (monthly) / 30 days (yearly) ahead. A credit's recurring operation is skipped when the credit is missing, not `actif`, or past `DateFin`, and is read-only through `/api/operation-recurrentes` (409).
+- **Recurring operations** (`utils/schedule.ts`, `operation-recurrentes/auto-generation.post.ts`): pure UTC functions `nextDueDate` (next month, or next year at `MoisOpRecu`, day `JourNumOpRecu` clamped to the month's last day), `prevDueDate`, `firstDueOnOrAfter` and `initialLastDate` (initial `DernierDateOpRecu`, so that the first upcoming due date is generated). Without a transaction, each due date is reserved by `UPDATE … WHERE DernierDateOpRecu = :last` before the `Operation` is inserted (compensated on failure); at most 24 per recurring operation and per call, 15 days (monthly) / 30 days (yearly) ahead. A credit's recurring operation is skipped when the credit is missing, not `actif`, or past `DateFin`, and is read-only through `/api/operation-recurrentes` (409).
 - **Expenses** (`utils/stats.ts`: `EXPENSE_JOIN`, `EXPENSE_WHERE`): one rule for every expense total and chart: the category `Type` (`depense`, inflows and outflows alike; `revenu` for income; `transfert` excluded). There is no uncategorized operation: `IDcat = 0` is the shared default category « Aucune » (`Type = 'depense'`), counted like any other. Account flags are read with `COALESCE`; `dispo` = neither retraite nor children nor bloque. Date ranges are `YYYY-MM-DD` and `to` covers the whole day (`parseRange`).
-- **Transactions**: cascades use `db.transaction`, but most production tables are MyISAM, which ignores transactions (`docs/db-migrations.md`).
+- **Transactions**: every table is InnoDB (migration `0002`); cascades, account-to-account transfers and credit creation run in `db.transaction`, so a failure rolls everything back.
 - **Security**: `nuxt-security` adds the security headers and an enforced CSP; only `POST /api/users/login` is rate-limited (5 attempts per IP per 15 min, in memory). The IP is read from `X-Real-IP`, set by the Synology DSM reverse proxy from Cloudflare's `CF-Connecting-IP` (client → Cloudflare → DSM → container), with the socket address as fallback; IPv6 addresses are counted by their `/64` prefix (`plugins/client-ip.ts`, `rateLimitKey`); `X-Forwarded-For` is never trusted.
 - **Session** (`utils/auth.ts`): JWT `{ name, email, IDuser, tv }` signed HS256 with `iss`/`aud` `mccbng`, carried only by the `HttpOnly` `mccbngAuth` cookie (a Bearer header is refused). `authenticate` re-reads `User.tokenVersion` and refuses a stale `tv` or a deleted user with a generic 401 `Invalid or expired token` (the detailed reason is only logged). `POST /api/users/logout` increments `tokenVersion`.
 - **Login** (`utils/users.ts`): bcrypt only (a plaintext `secret_key` is refused), dummy comparison at the same cost (12) for unknown emails, lockout after 5 consecutive failures (5 min → 30 min → 2 h → 24 h, no bcrypt while locked), one JSON log line per attempt (`event: 'login'`, result, `IDuser`, trusted IP, User-Agent, never the code).
@@ -277,7 +277,7 @@ server/
 
 - **Framework**: Vitest with `@nuxt/test-utils` (`environment: 'nuxt'`, see `vitest.config.ts`); `h3-next` is required as an optional peer.
 - **Tests**: `tests/unit/` (stores, server filter parser), `tests/integration/` (route table, auth service + middleware), `tests/fixtures/routes.ts` (route contract).
-- **API tests** (`tests/api/`, run with `pnpm test:api`, config `vitest.api.config.ts`): a global setup starts a disposable MySQL (Testcontainers, or an external one through `TEST_DB_*`), applies the migrations, builds Nuxt and starts the built server; specs call the API over HTTP with two users to cover multi-user isolation. `vitest.config.ts` excludes `tests/api/**`, so `pnpm test` does not need Docker.
+- **API tests** (`tests/api/`, run with `pnpm test:api`, config `vitest.api.config.ts`): a global setup starts a disposable MariaDB 10.11 (Testcontainers, or an external one through `TEST_DB_*`), applies the migrations, builds Nuxt and starts the built server; specs call the API over HTTP with two users to cover multi-user isolation. `vitest.config.ts` excludes `tests/api/**`, so `pnpm test` does not need Docker.
 - `useRouter()` and other Nuxt composables need the Nuxt context: call them inside tests, not at collection time.
 
 ## Dependencies
@@ -320,7 +320,7 @@ Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps
 │   ├── stores/                       # user, compte, operation, category, stats, display, credit, bien, banque
 │   └── assets/styles/                # variables.scss, theme.css, main.css
 ├── server/                           # REST API hosted by Nitro (api/, middleware/, plugins/, db/, utils/)
-├── scripts/                         # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs, diagnose-recurrentes.mjs
+├── scripts/                         # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs, diagnose-recurrentes.mjs, check-amounts.mjs
 ├── public/                           # icons, favicon
 ├── tests/{unit,integration,api,support,fixtures}/
 ├── vitest.config.ts / vitest.api.config.ts

@@ -168,8 +168,8 @@ export const creditResource: CrudResource = {
     { NomCredit: str, MontantInitial: numeric, MontantMensuel: numeric, DateDebut: date, DateFin: date, IDcompte: numeric },
     { NomPreteur: str.nullable(), TauxInteret: numeric.nullable(), Statut: str, IDcat: numeric }
   ),
-  // Création du crédit + de sa récurrente mensuelle. Credit est en InnoDB mais OperationRecurrente peut être
-  // en MyISAM (non transactionnelle) : en cas d'échec, la récurrente est supprimée explicitement.
+  // Création du crédit + de sa récurrente mensuelle, dans la transaction ouverte par crud.ts (tables InnoDB) :
+  // un échec annule le tout.
   onCreate: async (_event, data, tx) => {
     const [created] = await tx.insert(credits).values(data as never)
     const creditId = (created as unknown as { insertId: number }).insertId
@@ -187,14 +187,9 @@ export const creditResource: CrudResource = {
       IDcredit: creditId
     })
     const recuId = (recu as unknown as { insertId: number }).insertId
-    try {
-      await tx.update(credits).set({ IDopRecu: recuId }).where(eq(credits.IDcredit, creditId))
-      const [row] = await tx.select().from(credits).where(eq(credits.IDcredit, creditId)).limit(1)
-      return row as Record<string, any>
-    } catch (error) {
-      await tx.delete(operationRecurrentes).where(eq(operationRecurrentes.IDopRecu, recuId))
-      throw error
-    }
+    await tx.update(credits).set({ IDopRecu: recuId }).where(eq(credits.IDcredit, creditId))
+    const [row] = await tx.select().from(credits).where(eq(credits.IDcredit, creditId)).limit(1)
+    return row as Record<string, any>
   },
   // Propagation vers la récurrente de mensualité (les opérations déjà générées ne changent pas)
   // Seuls les champs modifiés sont propagés : la mensualité peut tomber un autre jour que DateDebut

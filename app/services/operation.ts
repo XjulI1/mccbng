@@ -36,7 +36,7 @@ export const updateOperation = (operation, userToken, APIURL) => {
   )
 }
 
-// Virement : le serveur crée le débit et le crédit en une requête (avec compensation en cas d'échec)
+// Virement : le serveur crée le débit et le crédit en une requête, dans une même transaction
 export const createTransfert = (transfert, userToken, APIURL) =>
   apiPost(APIURL + '/api/operations/transfert', transfert, { token: userToken })
 

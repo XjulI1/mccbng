@@ -2,7 +2,7 @@
 
 **mccbng** (mCloud Compte and Budget Next Generation) est une application web de gestion de finances personnelles : suivi multi-banques et multi-comptes, opérations bancaires, opérations récurrentes, budget par catégorie, statistiques, suivi de crédits et de biens immobiliers.
 
-L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA Nuxt 4 (Vue 3, TypeScript, Pinia, PWA ; SSR désactivé, mode sombre, gestes tactiles) dont le serveur Nitro héberge aussi l'**API REST** (`server/`), sur MySQL, avec authentification JWT. Un seul processus et une seule image Docker servent donc le front et l'API.
+L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA Nuxt 4 (Vue 3, TypeScript, Pinia, PWA ; SSR désactivé, mode sombre, gestes tactiles) dont le serveur Nitro héberge aussi l'**API REST** (`server/`), sur MariaDB, avec authentification JWT. Un seul processus et une seule image Docker servent donc le front et l'API.
 
 ---
 
@@ -90,7 +90,7 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 |--------------|--------------|
 | Frontend     | Nuxt 4 (SPA, `ssr: false`, `compatibilityVersion: 5`, auto-imports désactivés), Vue 3.5, Pinia, TypeScript 5, SCSS, Highcharts 12, FontAwesome, `vue3-touch-events`, `@vite-pwa/nuxt`, Vitest |
 | API          | Serveur Nitro de Nuxt (Node.js ≥ 26, TypeScript 5), Drizzle ORM + `mysql2`, Zod, `jsonwebtoken`, `bcryptjs`, `nuxt-security` |
-| Base données | MySQL / MariaDB (schéma de production : MyISAM et InnoDB, voir `docs/db-migrations.md`) |
+| Base données | MariaDB 10.11 (InnoDB, utf8mb4, migrations SQL versionnées : voir `docs/db-migrations.md`) |
 | Build / déploiement | Docker (multi-stage), Node/Nitro, `pnpm` |
 
 ### Vue d'ensemble
@@ -111,7 +111,7 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
    └──────────────────────────────┬───────────────────┘
                                   ▼
                         ┌──────────────────┐
-                        │  MySQL / MariaDB │
+                        │  MariaDB 10.11   │
                         └──────────────────┘
 ```
 
@@ -183,18 +183,16 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 
 | Entité | Clé primaire | Champs principaux | Liens |
 |--------|--------------|-------------------|-------|
-| **User** | `IDuser` (non auto-incrémenté) | `email` (unique), `username`, `secret_key` (bcrypt), `favoris`, `warningTotal`, `warningCompte`, `failedLoginCount`, `lockedUntil`, `tokenVersion` ; `id` historique non unique, inutilisé | — |
-| **UserCredentials** | `id` (UUID) | `password`, `userId` | `belongsTo User` |
+| **User** | `IDuser` (non auto-incrémenté) | `email` (unique), `username`, `secret_key` (bcrypt), `favoris`, `warningTotal`, `warningCompte`, `failedLoginCount`, `lockedUntil`, `tokenVersion` | — |
 | **Banque** | `IDbanque` | `NomBanque` | `hasMany Compte` |
-| **Compte** | `IDcompte` | `NomCompte`, `solde` (FLOAT), `IDuser`, `IDbanque`, `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible` | `belongsTo Banque` |
-| **Operation** | `IDop` | `NomOp`, `MontantOp` (FLOAT), `DateOp`, `CheckOp`, `IDcompte`, `IDcat`, `amortissement`, `IDcredit?` | scopée via `Compte` |
-| **OperationRecurrente** | `IDopRecu` | `NomOpRecu`, `MontantOpRecu` (FLOAT), `JourOpRecu`, `JourNumOpRecu`, `MoisOpRecu`, `Frequence` (3=mensuel, 7=annuel), `DernierDateOpRecu`, `IDcompte`, `IDcat`, `IDcredit?` | scopée via `Compte` |
+| **Compte** | `IDcompte` | `NomCompte`, `solde` (DECIMAL), `IDuser`, `IDbanque`, `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible` | `belongsTo Banque` |
+| **Operation** | `IDop` | `NomOp`, `MontantOp` (DECIMAL), `DateOp`, `CheckOp`, `IDcompte`, `IDcat`, `amortissement`, `IDcredit?` | scopée via `Compte` |
+| **OperationRecurrente** | `IDopRecu` | `NomOpRecu`, `MontantOpRecu` (DECIMAL), `JourOpRecu`, `JourNumOpRecu`, `MoisOpRecu`, `Frequence` (3=mensuel, 7=annuel), `DernierDateOpRecu`, `IDcompte`, `IDcat`, `IDcredit?` | scopée via `Compte` |
 | **Categorie** | `IDcat` | `Nom`, `IDuser` (0 = catégorie partagée), `Type` (`depense` / `revenu` / `transfert`) | — |
-| **Credit** | `IDcredit` | `NomCredit`, `NomPreteur?`, `MontantInitial` (FLOAT), `MontantMensuel`, `TauxInteret?`, `DateDebut`, `DateFin`, `IDcompte`, `IDopRecu?`, `IDuser`, `Statut` (def `actif`), `IDcat` | — |
+| **Credit** | `IDcredit` | `NomCredit`, `NomPreteur?`, `MontantInitial` (DECIMAL), `MontantMensuel`, `TauxInteret?`, `DateDebut`, `DateFin`, `IDcompte`, `IDopRecu?`, `IDuser`, `Statut` (def `actif`), `IDcat` | — |
 | **Bien** | `IDbien` | `NomBien`, `Ville`, `TypeBien`, `Surface?`, `Usage` (def `principale`), `DateAchat`, `PrixBienNu`, `FraisNotaire`, `FraisAgence`, `ApportCash`, `ValeurActuelle?`, `IDcredit?`, `IDuser` | — |
-| **Stats** | `userID` | (entité support pour les agrégations) | — |
 
-> Les montants financiers utilisent le type SQL `FLOAT`, avec arrondi manuel à 2 décimales côté applicatif.
+> Les montants financiers utilisent le type SQL `DECIMAL(12,2)` (exact au centime), lus comme des nombres JSON ; les sommes calculées côté applicatif sont arrondies à 2 décimales.
 
 ### Endpoints REST principaux
 
@@ -233,8 +231,8 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 ### Pré-requis
 - Node.js ≥ 26 (cf. `.nvmrc`)
 - pnpm ≥ 10 (cf. `packageManager` dans `package.json`)
-- MySQL ou MariaDB (en local ou via Docker)
-- Docker pour les tests d'API (MySQL jetable via Testcontainers)
+- MariaDB 10.11 (en local ou via Docker)
+- Docker pour les tests d'API (MariaDB jetable via Testcontainers)
 
 ### Installation
 
@@ -263,7 +261,7 @@ pnpm dev
 
 ```bash
 pnpm test        # unitaires + intégration front (Vitest, environnement Nuxt)
-pnpm test:api    # tests d'intégration de l'API sur un MySQL jetable (Docker requis)
+pnpm test:api    # tests d'intégration de l'API sur un MariaDB 10.11 jetable (Docker requis)
 pnpm lint
 pnpm type-check
 ```
@@ -276,7 +274,7 @@ Toute la configuration serveur passe par des variables d'environnement, lues à 
 
 | Variable | Obligatoire | Rôle |
 |----------|-------------|------|
-| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | oui | connexion MySQL |
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | oui | connexion MariaDB |
 | `JWT_SECRET` | oui en production | secret de signature des sessions (le garder fixe : un changement déconnecte tout le monde) |
 | `JWT_TTL_SECONDS` | non | durée de vie du JWT en secondes (21600, soit 6 h, par défaut) |
 

@@ -21,3 +21,5 @@
 - [ ] 3.4 `server/api/comptes/management-info.get.ts` : 3 requêtes groupées (`MAX(DateOp)`, deux `COUNT … GROUP BY IDcompte`)
 - [ ] 3.5 `suggestCategories` : `LIMIT ?` paramétré, `LOWER` et `toLowerCase` supprimés, terme échappé (`escapeLike` serveur dans `server/utils/sql.ts`)
 - [ ] 3.6 Tests API : résultats des stats et des totaux mensuels inchangés (y compris opérations au premier et au dernier instant du mois), `management-info` inchangé fonctionnellement
+- [ ] 3.7 Ordre déterministe hors CRUD générique : `topOperations` (`ORDER BY ABS(MontantOp) DESC, IDop DESC`), `management-info` (`ORDER BY IDcompte`). Constat de la répétition du 2026-10-05 : après passage en InnoDB, les ex aequo de `topOperations` et l'ordre des comptes de `management-info` changent
+- [ ] 3.8 Liste paginée : la répétition montre `Using filesort` (tri mixte `CheckOp ASC, DateOp DESC, IDop DESC`, environ 2 400 lignes pour le plus gros compte). Mesurer, et n'ajouter un index descendant `(IDcompte, CheckOp, DateOp DESC, IDop DESC)` (MariaDB ≥ 10.8) que si le gain est réel

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-// Tests d'intégration de l'API : MySQL jetable + serveur Nitro construit (voir tests/api/global-setup.ts).
+// Tests d'intégration de l'API : MariaDB jetable + serveur Nitro construit (voir tests/api/global-setup.ts).
 export default defineConfig({
   test: {
     name: 'api',

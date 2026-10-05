@@ -14,7 +14,7 @@ const log = (level: 'warn' | 'error', data: Record<string, unknown>) =>
   console[level](JSON.stringify({ event: 'recurring-generation', ...data }))
 
 // Génère toutes les échéances dues de chaque récurrente de l'utilisateur.
-// Sans transaction (tables MyISAM) : chaque échéance est d'abord réservée par un UPDATE conditionnel
+// Sans transaction : chaque échéance est d'abord réservée par un UPDATE conditionnel
 // sur DernierDateOpRecu (verrou optimiste), puis l'opération est insérée. Deux appels concurrents
 // ne peuvent donc pas générer la même échéance ; l'appel perdant s'arrête pour cette récurrente.
 export default defineApiHandler(async (event) => {

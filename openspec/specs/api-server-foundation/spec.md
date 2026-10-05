@@ -26,11 +26,15 @@ Le serveur SHALL se connecter à MySQL via `mysql2` et Drizzle avec un pool conf
 - **THEN** il s'arrête avec un message d'erreur explicite nommant la variable manquante
 
 ### Requirement: Schéma Drizzle fidèle à la base existante
-Les tables `User`, `UserCredentials`, `Banque`, `Compte`, `Operation`, `OperationRecurrente`, `Categorie`, `Credit` et `Bien` SHALL être décrites en TypeScript avec exactement les noms de tables, colonnes, types (`FLOAT` pour les montants, `ENUM` pour `Categorie.Type`) et valeurs par défaut de la base de production actuelle. Les montants renvoyés MUST être arrondis à 2 décimales aux endroits où LoopBack le faisait.
+Les tables `User`, `Banque`, `Compte`, `Operation`, `OperationRecurrente`, `Categorie`, `Credit` et `Bien` SHALL être décrites en TypeScript avec exactement les noms de tables, colonnes, types, nullabilités et index du schéma obtenu après application de toutes les migrations versionnées (`DECIMAL` pour les montants, le taux et la surface, `ENUM` pour `Categorie.Type`, drapeaux de compte `NOT NULL`, colonnes et tables legacy absentes). Les `.default()` du schéma Drizzle sont des défauts applicatifs, appliqués par l'API à l'insertion, et peuvent différer des défauts SQL. Les valeurs `DECIMAL` MUST être lues comme des nombres, et les montants renvoyés arrondis à 2 décimales aux endroits où LoopBack le faisait.
 
 #### Scenario: Lecture d'une opération
 - **WHEN** une opération existante est lue via `GET /api/operations/{id}`
 - **THEN** ses champs (`IDop`, `NomOp`, `MontantOp`, `DateOp`, `CheckOp`, `IDcompte`, `IDcat`, `amortissement`, `IDcredit`) ont les mêmes noms et types JSON qu'avant
+
+#### Scenario: Schéma aligné sur les migrations
+- **WHEN** les migrations sont appliquées sur une base vide et le schéma Drizzle est comparé à `information_schema`
+- **THEN** les tables, colonnes, types, nullabilités et index correspondent
 
 ### Requirement: Isolation par utilisateur
 Chaque route protégée SHALL résoudre l'utilisateur courant depuis le JWT (`IDuser` numérique) et appliquer le scoping : **direct** (`IDuser`) pour `Compte`, `Categorie`, `Credit`, `Bien` ; **hérité** (liste des `IDcompte` de l'utilisateur, filtre `inq`) pour `Operation` et `OperationRecurrente`. Une ressource appartenant à un autre utilisateur MUST produire un 404, jamais son contenu. Les écritures (création, remplacement, mise à jour unitaire et en masse) MUST contrôler la propriété des références fournies : `IDcompte` (compte de l'utilisateur), `IDcredit` (null ou crédit de l'utilisateur) et `IDcat` (0, catégorie partagée `IDuser = 0` ou catégorie de l'utilisateur) ; une référence non autorisée MUST produire 404 sans écriture.

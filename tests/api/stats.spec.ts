@@ -124,18 +124,18 @@ describe('stats', () => {
     expect(topOps.body.map((o: any) => o.MontantOp)).toEqual([-900, 400, -50, -30])
   })
 
-  it('regroupements : drapeaux NULL lus comme valeur par défaut, comptes enfant et retraite hors dispo', async () => {
+  it('regroupements : drapeaux non fournis lus comme leur défaut SQL, comptes enfant et retraite hors dispo', async () => {
     const user = await createUser()
-    const insert = async (NomCompte: string, solde: number, flags: Record<string, number | null>) => {
-      const cols = Object.keys(flags)
+    const insert = async (NomCompte: string, solde: number, flags: Record<string, number>) => {
+      const cols = ['NomCompte', 'solde', 'IDuser', ...Object.keys(flags)]
       const res = await sql(
-        `INSERT INTO Compte (NomCompte, solde, IDuser, ${cols.join(', ')}) VALUES (?, ?, ?, ${cols.map(() => '?').join(', ')})`,
+        `INSERT INTO Compte (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
         [NomCompte, solde, user.IDuser, ...Object.values(flags)]
       ) as unknown as { insertId: number }
       return res.insertId
     }
-    // children est NOT NULL DEFAULT 0 en production ; bloque, retraite, porte_feuille et visible peuvent valoir NULL
-    const ancien = await insert('Ancien', 100, { bloque: null, retraite: null, porte_feuille: null, visible: null })
+    // Drapeaux NOT NULL depuis 0002 : un compte inséré sans drapeau prend les défauts SQL (0, et 1 pour visible)
+    const ancien = await insert('Ancien', 100, {})
     await insert('Retraite libre', 1000, { bloque: 0, retraite: 1, children: 0 })
     await insert('Enfant', 10000, { bloque: 0, retraite: 0, children: 1 })
     await insert('Bloqué', 100000, { bloque: 1, retraite: 0, children: 0 })
@@ -149,7 +149,7 @@ describe('stats', () => {
     expect(res.dispo).toEqual([{ montant: -10, date: '2025-01-01T00:00:00.000Z' }])
 
     const all = (await get('/api/operations/sumAllCompteForUser', user.token)).body
-    expect(all).toEqual([{ IDCompte: ancien, TotalNotChecked: -10 }]) // visible NULL = visible
+    expect(all).toEqual([{ IDCompte: ancien, TotalNotChecked: -10 }]) // visible par défaut
   })
 
   it('topOperations : transferts exclus, tri par valeur absolue', async () => {

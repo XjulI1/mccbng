@@ -11,7 +11,7 @@ Les routes `/api/credits` SHALL fournir le CRUD standard de `Credit` scopé par 
 - **THEN** la réponse est 404 `Compte <id> not found`
 
 ### Requirement: Création d'un crédit et de sa récurrente
-À la création d'un crédit, le serveur SHALL créer une `OperationRecurrente` mensuelle nommée `Mensualité <NomCredit>` (`MontantOpRecu = MontantMensuel`, `JourOpRecu=1`, `JourNumOpRecu` = jour de `DateDebut`, `MoisOpRecu` = mois de `DateDebut` (indexé 0), `Frequence=3`, `IDcompte`, `IDcat`, `IDcredit`), puis renseigner `Credit.IDopRecu` avec son identifiant. `DernierDateOpRecu` MUST être initialisé à l'échéance théorique qui précède la première échéance postérieure ou égale à `max(aujourd'hui, DateDebut)`. Ainsi, la première mensualité d'un crédit futur est celle de `DateDebut`, et aucune mensualité passée n'est générée rétroactivement. Tout échec après la création de la récurrente MUST laisser la base sans crédit ni récurrente, y compris lorsque les tables ne sont pas transactionnelles (suppression compensatoire).
+À la création d'un crédit, le serveur SHALL créer une `OperationRecurrente` mensuelle nommée `Mensualité <NomCredit>` (`MontantOpRecu = MontantMensuel`, `JourOpRecu=1`, `JourNumOpRecu` = jour de `DateDebut`, `MoisOpRecu` = mois de `DateDebut` (indexé 0), `Frequence=3`, `IDcompte`, `IDcat`, `IDcredit`), puis renseigner `Credit.IDopRecu` avec son identifiant. `DernierDateOpRecu` MUST être initialisé à l'échéance théorique qui précède la première échéance postérieure ou égale à `max(aujourd'hui, DateDebut)`. Ainsi, la première mensualité d'un crédit futur est celle de `DateDebut`, et aucune mensualité passée n'est générée rétroactivement. Ces écritures MUST s'exécuter dans une même transaction : tout échec MUST laisser la base sans crédit ni récurrente.
 
 #### Scenario: Création d'un crédit futur
 - **WHEN** un crédit de 1 000 € / mois démarrant le 15 mars de l'année suivante est créé
@@ -23,7 +23,7 @@ Les routes `/api/credits` SHALL fournir le CRUD standard de `Credit` scopé par 
 
 #### Scenario: Échec partiel
 - **WHEN** la mise à jour de `Credit.IDopRecu` échoue après la création de la récurrente
-- **THEN** ni le crédit ni la récurrente ne sont persistés
+- **THEN** la transaction est annulée : ni le crédit ni la récurrente ne sont persistés
 
 ### Requirement: Suppression en cascade d'un crédit
 À la suppression d'un crédit, le serveur SHALL supprimer l'`OperationRecurrente` associée si elle existe (son absence n'étant pas une erreur), mettre `IDcredit` à `NULL` sur les `Operation` qui le référençaient, puis supprimer le crédit. La récurrente MUST être supprimée avant le crédit, de sorte qu'un échec intermédiaire ne laisse jamais une récurrente active rattachée à un crédit supprimé.
