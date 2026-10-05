@@ -102,8 +102,9 @@
   })
 
   // immediate : la liste des comptes est déjà chargée (hydrateSession) quand la page s'affiche
+  // Un pseudo-compte (« Coûts d'usage », « Search »…) a un NomCompte sans IDcompte : ses opérations sont déjà chargées par la page.
   watch(() => accountList.value, (list) => {
-    if (list?.length && !activeAccount.value?.IDcompte) {
+    if (list?.length && !activeAccount.value?.IDcompte && !activeAccount.value?.NomCompte) {
       compteStore.fetchActiveAccount(userFavoris.value)
     }
   }, { immediate: true })
