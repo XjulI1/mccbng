@@ -74,6 +74,16 @@ export default defineNuxtConfig({
     xssValidator: false
   },
 
+  // En dev, le serveur est en HTTP : sans ça, la CSP (`upgrade-insecure-requests`) et HSTS forcent https://localhost et cassent le chargement.
+  $development: {
+    security: {
+      headers: {
+        contentSecurityPolicy: { 'upgrade-insecure-requests': false },
+        strictTransportSecurity: false
+      }
+    }
+  },
+
   routeRules: {
     // 5 tentatives / 15 min / IP (nuxt-security compte toutes les requêtes, y compris réussies).
     // Le module ne décompte pas la 1re requête de la fenêtre : tokensPerInterval = 4 donne 5 essais, la 6e reçoit 429.
