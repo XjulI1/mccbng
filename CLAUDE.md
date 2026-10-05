@@ -103,7 +103,7 @@ User scoping uses two patterns:
 | `JWT_SECRET` | yes in production | JWT signing secret (an ephemeral one is generated in dev, with a warning) |
 | `JWT_TTL_SECONDS` | no | JWT lifetime, default 21600 (6 h) |
 
-In development they can live in `.env`. The scripts that modify the database (`scripts/db-migrate.mjs`, `scripts/hash-legacy-secrets.mjs`) also load the root `.env` through `scripts/load-env.mjs` (or the file named by `ENV_FILE`); variables already set in the environment take precedence. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
+In development they can live in `.env`. The scripts that modify the database (`scripts/db-migrate.mjs`, `scripts/hash-legacy-secrets.mjs`, `scripts/diagnose-recurrentes.mjs`) also load the root `.env` through `scripts/load-env.mjs` (or the file named by `ENV_FILE`); variables already set in the environment take precedence. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
 
 ## Docker Deployment
 
@@ -135,12 +135,12 @@ Registry: `dockregistry.xju.fr/mccbng/front` with `staging` and `latest` tags. T
 mccbng/
 ├── app/                 # Nuxt SPA (pages, components, stores, services…)
 ├── server/              # Nitro API (api/, middleware/, plugins/, db/, utils/)
-├── scripts/             # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs (one-shot)
+├── scripts/             # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs (one-shot), diagnose-recurrentes.mjs (recurring operations / credits diagnostic and fixes)
 ├── public/              # icons, favicon
 ├── tests/               # unit, integration, api
 ├── nuxt.config.ts, vitest*.config.ts, eslint.config.mjs, tsconfig.json
 ├── Dockerfile, docker-entrypoint.sh
-├── docs/                # architecture.md (detailed architecture), exploitation.md (phpMyAdmin procedures), recette-non-regression-multiuser.md, db-migrations.md, security-roadmap.md)
+├── docs/                # architecture.md (detailed architecture), exploitation.md (phpMyAdmin and script procedures), recette-non-regression-multiuser.md, db-migrations.md, security-roadmap.md)
 ├── mockups/             # Standalone HTML UI mockups
 ├── openspec/            # OpenSpec specs and changes
 ├── package.json         # Scripts, dependencies, packageManager

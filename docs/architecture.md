@@ -320,7 +320,7 @@ Registry: `dockregistry.xju.fr/mccbng/front:{staging,latest}`. `docker:run` maps
 │   ├── stores/                       # user, compte, operation, category, stats, display, credit, bien, banque
 │   └── assets/styles/                # variables.scss, theme.css, main.css
 ├── server/                           # REST API hosted by Nitro (api/, middleware/, plugins/, db/, utils/)
-├── scripts/                         # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs
+├── scripts/                         # db-migrate.mjs (SQL migration runner), hash-code.mjs, hash-legacy-secrets.mjs, diagnose-recurrentes.mjs
 ├── public/                           # icons, favicon
 ├── tests/{unit,integration,api,support,fixtures}/
 ├── vitest.config.ts / vitest.api.config.ts
