@@ -20,3 +20,6 @@ export const updateBien = (bien, userToken, APIURL) => {
 
 export const deleteBien = (IDbien, userToken, APIURL) =>
   apiDelete(APIURL + '/api/biens/' + IDbien, { token: userToken })
+
+export const fetchBienRentabilite = (IDbien, userToken, APIURL) =>
+  apiGet(APIURL + '/api/biens/' + IDbien + '/rentabilite', { token: userToken })

@@ -12,11 +12,11 @@
       </div>
       <div class="summary-card">
         <span class="summary-label">Investissement total</span>
-        <span class="summary-value">{{ formatAmount(totalInvestissement) }}</span>
+        <span class="summary-value">{{ formatEuros(totalInvestissement) }}</span>
       </div>
       <div class="summary-card">
         <span class="summary-label">Valeur estimée</span>
-        <span class="summary-value">{{ formatAmount(totalValeurActuelle) }}</span>
+        <span class="summary-value">{{ formatEuros(totalValeurActuelle) }}</span>
       </div>
     </div>
 
@@ -31,6 +31,7 @@
   import { useBienStore } from '@/stores/bien'
   import { useCompteStore } from '@/stores/compte'
   import { useCreditStore } from '@/stores/credit'
+  import { formatEuros } from '@/utils/money'
   import BienList from '@/components/BienList.vue'
 
   const bienStore = useBienStore()
@@ -57,16 +58,8 @@
     }, 0)
   })
 
-  const formatAmount = (amount) => {
-    if (amount === undefined || amount === null) return '0,00 €'
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount)
-  }
-
   onMounted(() => {
-    bienStore.fetchBiens()
+    bienStore.fetchBiens().then(() => bienStore.fetchBienRentabilites())
     creditStore.fetchCredits()
     compteStore.setActiveAccount({ NomCompte: 'Mes biens' })
   })

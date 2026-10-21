@@ -194,6 +194,33 @@
         </select>
       </div>
 
+      <div
+        v-if="bienList.length > 0"
+        class="form-group"
+      >
+        <label
+          for="operation-bien"
+          class="form-label"
+        >Bien (loyers et charges courantes)</label>
+        <select
+          id="operation-bien"
+          v-model="operationRecurrente.IDbien"
+          class="form-select"
+          :disabled="isManagedByCredit"
+        >
+          <option :value="null">
+            Aucun
+          </option>
+          <option
+            v-for="bien in bienList"
+            :key="'bien-' + bien.IDbien"
+            :value="bien.IDbien"
+          >
+            {{ bien.NomBien }}
+          </option>
+        </select>
+      </div>
+
       <div class="form-group">
         <label class="form-label">Type d'opération</label>
         <div class="toggle-group">
@@ -252,12 +279,14 @@
 
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
+  import { useBienStore } from '@/stores/bien'
   import { useCategoryStore } from '@/stores/category'
   import { useCompteStore } from '@/stores/compte'
   import { useOperationStore } from '@/stores/operation'
   import { useRoute, useRouter } from '#imports'
   import { NuxtLink } from '#components'
 
+  const bienStore = useBienStore()
   const categoryStore = useCategoryStore()
   const compteStore = useCompteStore()
   const operationStore = useOperationStore()
@@ -278,13 +307,15 @@
     Frequence: 3,
     // DernierDateOpRecu n'est pas envoyé à la création : le serveur le fixe pour que la première échéance soit générée
     IDcompte: undefined,
-    IDcat: 0
+    IDcat: 0,
+    IDbien: null as number | null
   })
 
   const accountList = computed(() =>
     compteStore.accountList.filter((account) => account.visible)
   )
   const categoryList = computed(() => categoryStore.list)
+  const bienList = computed(() => bienStore.bienList)
   const activeAccountID = computed(
     () => compteStore.activeAccount.IDcompte
   )
@@ -347,6 +378,7 @@
     operationRecurrente.value.MontantOpRecu = 0
     operationRecurrente.value.JourOpRecu = 1
     operationRecurrente.value.Frequence = 3
+    operationRecurrente.value.IDbien = null
     montantOpIsPositive.value = false
   }
 
@@ -361,6 +393,7 @@
     if (!operationRecurrente.value.IDopRecu) {
       operationRecurrente.value.IDcompte = activeAccountID.value
     }
+    if (!bienStore.biensLoaded) bienStore.fetchBiens()
   })
 
   // Equivalent to created

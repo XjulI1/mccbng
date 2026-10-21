@@ -59,16 +59,35 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 ### Crédits (emprunts)
 - Modèle **Credit** : nom, prêteur, montant initial, mensualité, taux d'intérêt, date début / fin, compte associé, statut (`actif` par défaut), catégorie.
 - À la création d'un crédit, une **opération récurrente mensuelle est générée automatiquement** (`Frequence = 3`) et liée via `IDopRecu`.
-- À la suppression, l'opération récurrente associée est supprimée et les opérations passées dissociées (`IDcredit` mis à `null`).
+- À la suppression, l'opération récurrente associée est supprimée, et les opérations passées comme le bien financé sont dissociés (`IDcredit` mis à `null`).
 - Endpoints spécifiques :
   - `GET /api/credits/{id}/remaining-balance` — capital restant dû, principal et intérêts payés (sorties passées seulement, intérêts par mois civil).
   - `GET /api/credits/{id}/payments` — historique des prélèvements liés.
-- Vue `/credits` : `CreditList` + `CreditCard` (avec barre de progression) + `CreditForm`.
+  - `GET /api/credits/{id}/rentabilite` — loyers du bien financé par le crédit, mensualités, effort mensuel et taux de couverture, sans les charges du bien (voir « Loyers et rentabilité »).
+- Vue `/credits` : `CreditList` + `CreditCard` (avec barre de progression et, pour un crédit qui finance un bien loué, la ligne « Loyers · couverture · effort ») + `CreditForm`.
 
 ### Biens immobiliers
-- Modèle **Bien** : nom, ville, type, surface, usage (`principale` par défaut), date d'achat, prix nu, frais de notaire, frais d'agence, apport cash, valeur actuelle estimée, lien optionnel vers un crédit (`IDcredit`).
-- CRUD scopé utilisateur ; vérification que le crédit lié appartient bien à l'utilisateur.
-- Vue `/biens` : `BienList` + `BienCard` (résumé investissement / valorisation) + `BienForm`.
+- Modèle **Bien** : nom, ville, type, surface, usage (`principale` par défaut), date d'achat, prix nu, frais de notaire, frais d'agence, apport cash, valeur actuelle estimée, loyer mensuel attendu (`LoyerMensuel`, biens locatifs), lien optionnel vers un crédit (`IDcredit`).
+- CRUD scopé utilisateur ; vérification que le crédit lié appartient bien à l'utilisateur. **Un crédit finance un seul bien** : un crédit déjà affecté à un autre bien est refusé (409), et le formulaire ne le propose pas. La suppression d'un bien dissocie ses opérations et récurrentes (`IDbien` mis à `null`).
+- Vue `/biens` : `BienList` + `BienCard` (résumé investissement / valorisation, loyer moyen et bilan d'un bien locatif) + `BienForm`.
+
+### Loyers et rentabilité
+- **Saisie** : dans le formulaire d'une opération ou d'une opération récurrente, le champ « Bien » rattache l'opération à un bien (`IDbien`). Lier la récurrente « Loyer » existante pour que les loyers générés ensuite portent le bien, **et lier aussi les loyers déjà encaissés** depuis le début de la location (la recherche par nom les retrouve) : les indicateurs sont des moyennes sur toute la durée de la location, et un mois sans loyer lié compte comme un mois sans loyer. Une opération positive liée au bien est un **loyer**, une opération négative une **charge** (taxe foncière, copropriété, assurance…). Ne lier que les loyers et charges courantes : ni l'achat, ni l'apport, ni le dépôt de garantie.
+- Une opération liée à un crédit (mensualité, déblocage) n'est jamais comptée comme loyer ou charge, même si elle porte aussi le bien.
+- **Loyer attendu** : le champ « Loyer mensuel attendu » d'un bien locatif sert aux valeurs prévisionnelles tant que la location n'a pas commencé : ni date de mise en location ni loyer lié, ou une location qui démarre au mois en cours ou plus tard. Dès qu'un mois complet de location est écoulé, les cartes affichent les loyers réellement liés, même nuls.
+- **Part des charges dans le loyer perçu** : les loyers se saisissent tels que perçus, charges comprises (loyer + provision). Ce pourcentage, à calculer depuis le bail (par exemple 70 € de provision sur 720 € perçus, soit 9,7 %), est retiré des loyers pour obtenir le **loyer hors charges** : loyer moyen affiché et couverture du crédit (750 € perçus avec 10 % donnent 675 €). Les loyers et dépenses et le gain total du bilan restent calculés sur l'argent réellement encaissé et payé : la provision y compense déjà les charges de copropriété liées au bien.
+- **Date de mise en location** : à renseigner sur un bien locatif, surtout s'il a d'abord été occupé par son propriétaire. Les indicateurs ci-dessous démarrent à cette date ; sans date, ils démarrent au premier loyer lié au bien ; sans date ni loyer, les cartes affichent les valeurs prévues.
+- **Indicateurs** (sur toute la durée de la location : de la date de mise en location au dernier mois complet, mois en cours exclu ; les cartes affichent « depuis <mois année> ») :
+  - carte du crédit : loyer mensuel moyen hors charges, **mensualité moyenne** réellement payée (changement de mensualité et report d'échéances compris), **taux de couverture** de cette mensualité par les loyers hors charges, et **effort mensuel** = mensualité moyenne − loyer moyen hors charges (ou cash-flow s'il est positif). Les charges du bien n'y figurent pas : loyers + effort = mensualité ;
+  - carte du bien : loyer mensuel moyen hors charges (les rendements ne sont pas calculés pour l'instant).
+- **Bilan depuis l'achat** (carte d'un bien locatif) :
+  - **plus-value** = valeur actuelle − prix total (0 si la valeur actuelle n'est pas renseignée, ce que la carte indique) ;
+  - **loyers et dépenses** = toutes les entrées liées au bien (loyers) − toutes les sorties liées au bien (charges, taxe foncière, assurances, et aussi les dépenses de la période où tu l'occupais si tu les lies) : le bilan couvre toute la vie du bien, location et usage personnel. Les flux qui financent l'achat (apport, acompte notaire, dons pour l'achat) ne doivent **pas** être liés : le prix total est déjà retiré par la plus-value ;
+  - **intérêts d'emprunt** = intérêts versés sur le crédit lié, les mêmes que ceux de la carte du crédit ;
+  - **gain total** = plus-value + loyers et dépenses − intérêts. Le capital remboursé n'est pas compté comme une perte, car il est déjà dans la plus-value. Après la fin du crédit, chaque loyer s'ajoute au gain ;
+  - **crédit payé par les loyers** = loyers perçus après abattement pour charges ÷ mensualités payées ;
+  - ces chiffres ne sont justes que si tout l'historique est lié au bien (loyers et charges depuis le début de la location) et si toutes les mensualités du crédit sont saisies dans l'application.
+- Les loyers ne modifient ni le capital restant dû du crédit, ni les soldes, ni les statistiques (ils y figurent déjà comme opérations de catégorie `revenu`). Le loyer attendu n'entre dans aucun solde ni graphique.
 
 ### Amortissement
 - Vue `/amortissement` qui filtre les opérations marquées `amortissement = 1` (typiquement le capital remboursé sur les crédits) avec un rendu spécifique.
@@ -120,8 +139,8 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 ```
 server/
 ├── api/                    # une route par fichier (file-based routing Nitro)
-│   ├── [resource]/*.ts     #   CRUD générique : banques, categories, biens
-│   ├── comptes|operations|operation-recurrentes|credits/*.ts   # CRUD + routes spécifiques
+│   ├── [resource]/*.ts     #   CRUD générique : banques, categories
+│   ├── comptes|operations|operation-recurrentes|credits|biens/*.ts   # CRUD + routes spécifiques
 │   ├── users/*.ts, ping.get.ts
 │   ├── stats/*.ts          #   statistiques
 │   └── [...path].ts        #   404 JSON pour toute route /api inconnue
@@ -186,11 +205,11 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 | **User** | `IDuser` (non auto-incrémenté) | `email` (unique), `username`, `secret_key` (bcrypt), `favoris`, `warningTotal`, `warningCompte`, `failedLoginCount`, `lockedUntil`, `tokenVersion` | — |
 | **Banque** | `IDbanque` | `NomBanque` | `hasMany Compte` |
 | **Compte** | `IDcompte` | `NomCompte`, `solde` (DECIMAL), `IDuser`, `IDbanque`, `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible` | `belongsTo Banque` |
-| **Operation** | `IDop` | `NomOp`, `MontantOp` (DECIMAL), `DateOp`, `CheckOp`, `IDcompte`, `IDcat`, `amortissement`, `IDcredit?` | scopée via `Compte` |
-| **OperationRecurrente** | `IDopRecu` | `NomOpRecu`, `MontantOpRecu` (DECIMAL), `JourOpRecu`, `JourNumOpRecu`, `MoisOpRecu`, `Frequence` (3=mensuel, 7=annuel), `DernierDateOpRecu`, `IDcompte`, `IDcat`, `IDcredit?` | scopée via `Compte` |
+| **Operation** | `IDop` | `NomOp`, `MontantOp` (DECIMAL), `DateOp`, `CheckOp`, `IDcompte`, `IDcat`, `amortissement`, `IDcredit?`, `IDbien?` | scopée via `Compte` |
+| **OperationRecurrente** | `IDopRecu` | `NomOpRecu`, `MontantOpRecu` (DECIMAL), `JourOpRecu`, `JourNumOpRecu`, `MoisOpRecu`, `Frequence` (3=mensuel, 7=annuel), `DernierDateOpRecu`, `IDcompte`, `IDcat`, `IDcredit?`, `IDbien?` | scopée via `Compte` |
 | **Categorie** | `IDcat` | `Nom`, `IDuser` (0 = catégorie partagée), `Type` (`depense` / `revenu` / `transfert`) | — |
 | **Credit** | `IDcredit` | `NomCredit`, `NomPreteur?`, `MontantInitial` (DECIMAL), `MontantMensuel`, `TauxInteret?`, `DateDebut`, `DateFin`, `IDcompte`, `IDopRecu?`, `IDuser`, `Statut` (def `actif`), `IDcat` | — |
-| **Bien** | `IDbien` | `NomBien`, `Ville`, `TypeBien`, `Surface?`, `Usage` (def `principale`), `DateAchat`, `PrixBienNu`, `FraisNotaire`, `FraisAgence`, `ApportCash`, `ValeurActuelle?`, `IDcredit?`, `IDuser` | — |
+| **Bien** | `IDbien` | `NomBien`, `Ville`, `TypeBien`, `Surface?`, `Usage` (def `principale`), `DateAchat`, `PrixBienNu`, `FraisNotaire`, `FraisAgence`, `ApportCash`, `ValeurActuelle?`, `LoyerMensuel?`, `AbattementCharges?`, `DateMiseEnLocation?`, `IDcredit?`, `IDuser` | — |
 
 > Les montants financiers utilisent le type SQL `DECIMAL(12,2)` (exact au centime), lus comme des nombres JSON ; les sommes calculées côté applicatif sont arrondies à 2 décimales.
 
@@ -218,7 +237,9 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 | `*`     | `/api/credits` | CRUD crédits (création auto d'une op. récurrente) |
 | `GET`   | `/api/credits/{id}/remaining-balance` | Capital restant dû / payé |
 | `GET`   | `/api/credits/{id}/payments` | Historique de prélèvement |
+| `GET`   | `/api/credits/{id}/rentabilite` | Loyers, mensualités, effort et couverture du crédit (sans les charges du bien) |
 | `*`     | `/api/biens` | CRUD biens immobiliers |
+| `GET`   | `/api/biens/{id}/rentabilite` | Loyers, charges, loyer moyen et bilan du bien |
 | `GET`   | `/api/stats/evolutionSolde` | Time series `global`, `retraite`, `dispo` |
 | `GET`   | `/api/stats/yearComparison`, `topCategories`, `incomeVsExpense`, `topOperations`, `categoryHeatmap` | Statistiques annuelles et par catégorie |
 

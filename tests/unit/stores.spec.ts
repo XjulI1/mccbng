@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 vi.mock('@/services/operation', () => ({
@@ -14,9 +14,28 @@ vi.mock('@/services/operation', () => ({
   deleteRecurringOperation: vi.fn()
 }))
 vi.mock('@/services/category', () => ({ fetchCategoryList: vi.fn() }))
+vi.mock('@/services/credit', () => ({
+  fetchCredits: vi.fn(),
+  fetchCreditById: vi.fn(),
+  updateCredit: vi.fn(),
+  deleteCredit: vi.fn(),
+  fetchCreditRemainingBalance: vi.fn(),
+  fetchCreditRentabilite: vi.fn()
+}))
+vi.mock('@/services/bien', () => ({
+  fetchBiens: vi.fn(),
+  fetchBienById: vi.fn(),
+  updateBien: vi.fn(),
+  deleteBien: vi.fn(),
+  fetchBienRentabilite: vi.fn()
+}))
 
 const { fetchOperationsForAccount } = await import('@/services/operation')
 const { fetchCategoryList } = await import('@/services/category')
+const { fetchCredits, fetchCreditRemainingBalance, fetchCreditRentabilite } = await import('@/services/credit')
+const { fetchBiens, fetchBienRentabilite } = await import('@/services/bien')
+const { useCreditStore } = await import('@/stores/credit')
+const { useBienStore } = await import('@/stores/bien')
 const { useCompteStore } = await import('@/stores/compte')
 const { useOperationStore } = await import('@/stores/operation')
 const { useCategoryStore } = await import('@/stores/category')
@@ -133,5 +152,49 @@ describe('store category', () => {
     useCategoryStore().fetchCategoryList()
 
     expect(fetchCategoryList).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('rentabilités', () => {
+  it('store credit : rentabilité chargée pour chaque crédit, un échec n\'empêche pas les suivants', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    onTestFinished(() => consoleError.mockRestore())
+    vi.mocked(fetchCredits).mockResolvedValue([{ IDcredit: 1 }, { IDcredit: 2 }, { IDcredit: 3 }])
+    vi.mocked(fetchCreditRemainingBalance).mockResolvedValue({ solde: 0, paye: 0, interets: 0 })
+    vi.mocked(fetchCreditRentabilite)
+      .mockResolvedValueOnce({ bien: 10 })
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce({ bien: null })
+
+    const credit = useCreditStore()
+    await credit.fetchCredits()
+
+    expect(credit.creditRentabilites).toEqual({ 1: { bien: 10 }, 3: { bien: null } })
+    expect(consoleError).toHaveBeenCalledTimes(1)
+    expect(credit.creditBalances[2]).toEqual({ solde: 0, paye: 0, interets: 0 })
+  })
+
+  it('store bien : rentabilité chargée pour les seuls biens locatifs', async () => {
+    vi.mocked(fetchBiens).mockResolvedValue([{ IDbien: 1, Usage: 'locatif' }, { IDbien: 2, Usage: 'principale' }])
+    vi.mocked(fetchBienRentabilite).mockResolvedValue({ periode: { mois: 12 } })
+
+    const bien = useBienStore()
+    await bien.fetchBiens()
+    await bien.fetchBienRentabilites()
+
+    expect(fetchBienRentabilite).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(fetchBienRentabilite).mock.calls[0]![0]).toBe(1)
+    expect(bien.bienRentabilites).toEqual({ 1: { periode: { mois: 12 } } })
+  })
+
+  it('store bien : biensLoaded passe à vrai après un premier chargement, même sans bien', async () => {
+    vi.mocked(fetchBiens).mockResolvedValue([])
+
+    const bien = useBienStore()
+    expect(bien.biensLoaded).toBe(false)
+    await bien.fetchBiens()
+
+    expect(bien.biensLoaded).toBe(true)
+    expect(bien.bienList).toEqual([])
   })
 })

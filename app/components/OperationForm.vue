@@ -107,6 +107,32 @@
         </select>
       </div>
 
+      <div
+        v-if="bienList.length > 0"
+        class="form-group"
+      >
+        <label
+          for="operation-bien"
+          class="form-label"
+        >Bien (loyers et charges courantes)</label>
+        <select
+          id="operation-bien"
+          v-model="operation.IDbien"
+          class="form-select"
+        >
+          <option :value="null">
+            Aucun
+          </option>
+          <option
+            v-for="bien in bienList"
+            :key="'bien-' + bien.IDbien"
+            :value="bien.IDbien"
+          >
+            {{ bien.NomBien }}
+          </option>
+        </select>
+      </div>
+
       <div class="form-group">
         <div class="checkbox-group">
           <div class="checkbox-item">
@@ -200,6 +226,7 @@
 <script setup lang="ts">
   import { API_URL } from '@/services/config'
   import { ref, computed, watch, onMounted } from 'vue'
+  import { useBienStore } from '@/stores/bien'
   import { useCategoryStore } from '@/stores/category'
   import { useCompteStore } from '@/stores/compte'
   import { useOperationStore } from '@/stores/operation'
@@ -207,6 +234,7 @@
   import { useRoute, useRouter } from '#imports'
   import { suggestCategories } from '@/services/operation'
 
+  const bienStore = useBienStore()
   const categoryStore = useCategoryStore()
   const compteStore = useCompteStore()
   const operationStore = useOperationStore()
@@ -225,7 +253,8 @@
     CheckOp: false,
     IDcompte: undefined,
     IDcat: 0,
-    amortissement: false
+    amortissement: false,
+    IDbien: null as number | null
   })
 
   const suggestedCategoriesData = ref([])
@@ -234,6 +263,7 @@
     () => compteStore.activeAccount.IDcompte
   )
   const categoryList = computed(() => categoryStore.list)
+  const bienList = computed(() => bienStore.bienList)
 
   const suggestedCategories = computed(() => {
     if (suggestedCategoriesData.value.length === 0) return []
@@ -342,6 +372,7 @@
     operation.value.MontantOp = 0
     operation.value.CheckOp = false
     operation.value.amortissement = false
+    operation.value.IDbien = null
     montantOpIsPositive.value = false
   }
 
@@ -356,6 +387,7 @@
     if (!operation.value.IDop) {
       operation.value.IDcompte = activeAccountID.value
     }
+    if (!bienStore.biensLoaded) bienStore.fetchBiens()
   })
 
   // Equivalent to created
