@@ -12,7 +12,7 @@ Un middleware de route global SHALL rediriger vers `/login` toute navigation ver
 - **THEN** la session locale est supprimée et l'utilisateur est redirigé vers `/login`
 
 #### Scenario: Expiration en cours d'utilisation
-- **WHEN** la PWA est restée ouverte au-delà du TTL du JWT et l'utilisateur change de compte
+- **WHEN** la PWA est restée ouverte au-delà de la durée de la session et l'utilisateur change de compte
 - **THEN** la réponse 401 redirige vers `/login` au lieu d'afficher une liste vide
 
 #### Scenario: Requêtes parallèles en 401

@@ -1,14 +1,18 @@
 ## ADDED Requirements
 
 ### Requirement: Erreurs HTTP typées
-Le client HTTP (`services/http.ts`) SHALL lever, pour toute réponse non 2xx, une erreur exposant le code HTTP et le corps JSON de l'erreur (`{ error: { statusCode, name, message } }`). Les actions des stores MUST propager l'erreur à l'appelant après avoir remis leurs indicateurs de chargement dans un état cohérent, au lieu de l'ignorer.
+Le client HTTP (`services/http.ts`) SHALL lever, pour toute réponse non 2xx, une erreur exposant le code HTTP et le corps JSON de l'erreur (`{ error: { statusCode, name, message } }`). Une erreur réseau MUST rester distinguable d'une réponse HTTP. Les actions des stores MUST propager l'erreur à l'appelant après avoir remis leurs indicateurs de chargement dans un état cohérent, au lieu de l'ignorer.
 
 #### Scenario: Corps d'erreur disponible
 - **WHEN** l'API répond 409 avec `{ error: { message: "A user with this email already exists" } }`
 - **THEN** l'erreur levée expose `status = 409` et ce message
 
+#### Scenario: Chargement en échec
+- **WHEN** le chargement des opérations du compte actif échoue
+- **THEN** l'indicateur de chargement est relâché et l'erreur est remontée
+
 ### Requirement: Cohérence du compte actif
-Le store des opérations SHALL n'appliquer une réponse de chargement ou de pagination que si elle correspond au dernier compte demandé et à la dernière requête émise. Les soldes MUST être appliqués au compte pour lequel ils ont été demandés. Les opérations ajoutées par pagination MUST être dédupliquées par `IDop`.
+Le store des opérations SHALL n'appliquer une réponse de chargement ou de pagination que si elle correspond au dernier compte demandé et à la dernière requête émise. Les soldes MUST être appliqués au compte pour lequel ils ont été demandés.
 
 #### Scenario: Changement rapide de compte
 - **WHEN** l'utilisateur sélectionne le compte A puis immédiatement le compte B, et la réponse de A arrive après celle de B
@@ -22,6 +26,17 @@ Le store des opérations SHALL n'appliquer une réponse de chargement ou de pagi
 - **WHEN** les soldes du compte A arrivent après que l'utilisateur est passé au compte B
 - **THEN** l'en-tête de B n'affiche pas les soldes de A
 
+### Requirement: Pagination par curseur
+La liste des opérations d'un compte et la recherche transverse SHALL demander la page suivante à partir de la dernière opération reçue du serveur (`CheckOp`, `DateOp`, `IDop` pour un compte ; `DateOp`, `IDop` pour la recherche), et non par décalage. Les opérations ajoutées MUST être dédupliquées par `IDop`.
+
+#### Scenario: Pointage puis page suivante
+- **WHEN** l'utilisateur a chargé 35 opérations, pointe l'une d'elles, puis charge la page suivante
+- **THEN** aucune opération du compte n'est sautée ni affichée deux fois
+
+#### Scenario: Opération créée entre deux pages
+- **WHEN** une opération est créée pendant que l'utilisateur fait défiler la liste
+- **THEN** aucune opération n'apparaît deux fois
+
 ### Requirement: Repli du compte actif
 Lorsque le compte favori est absent, supprimé ou invisible, l'application SHALL sélectionner le premier compte visible de l'utilisateur ; sans aucun compte, elle MUST afficher un état vide sans erreur de rendu.
 
@@ -34,7 +49,7 @@ Lorsque le compte favori est absent, supprimé ou invisible, l'application SHALL
 - **THEN** la page s'affiche avec un état vide et aucune erreur n'est levée
 
 ### Requirement: Pseudo-comptes isolés
-Les vues sans compte réel (amortissement, récurrentes, statistiques, configuration…) SHALL afficher leur libellé sans remplacer le compte actif ni la liste de ses opérations. Les opérations récurrentes MUST être stockées séparément des opérations du compte actif. En revenant sur `/`, la liste du compte actif MUST être affichée.
+Les vues sans compte réel (amortissement, récurrentes, biens, crédits, statistiques, gestion, comptes, configuration, profil) SHALL afficher leur libellé sans remplacer le compte actif ni la liste de ses opérations. Les opérations récurrentes et celles de l'amortissement MUST être stockées séparément des opérations du compte actif. En revenant sur `/`, la liste du compte actif MUST être affichée.
 
 #### Scenario: Retour depuis les récurrentes
 - **WHEN** l'utilisateur ouvre la page des récurrentes puis revient sur `/`
@@ -49,4 +64,4 @@ Pointer ou dépointer une opération SHALL mettre à jour l'opération concerné
 
 #### Scenario: Échec du pointage
 - **WHEN** l'API refuse le pointage
-- **THEN** la case revient à son état précédent
+- **THEN** la case revient à son état précédent et un message s'affiche

@@ -19,6 +19,13 @@ Chaque formulaire de saisie (opération, virement, récurrente, crédit, bien, c
 - **WHEN** l'utilisateur modifie son email pour une adresse déjà utilisée et l'API répond 409
 - **THEN** le message « Cet email est déjà utilisé » s'affiche
 
+### Requirement: Brouillon conservé à l'expiration de session
+Lorsqu'une soumission reçoit une réponse 401, le formulaire (hors profil) SHALL sauvegarder sa saisie pour sa route dans le stockage de session du navigateur avant la redirection vers `/login`. Après reconnexion, l'utilisateur MUST revenir sur ce formulaire, la saisie MUST être restaurée puis supprimée du stockage, et un message MUST l'indiquer. Si le stockage est indisponible, un message MUST signaler que la saisie n'a pas été enregistrée.
+
+#### Scenario: Session expirée pendant une création
+- **WHEN** l'utilisateur crée une opération alors que sa session a expiré, puis se reconnecte
+- **THEN** il revient sur le formulaire d'opération, prérempli avec sa saisie, et un message indique que la saisie a été restaurée
+
 ### Requirement: Confirmation des suppressions
 Toute suppression déclenchée depuis un formulaire ou une liste SHALL demander une confirmation explicite avant l'appel à l'API.
 
@@ -38,11 +45,11 @@ Les commandes « Débit » et « Crédit » SHALL forcer respectivement un monta
 - **THEN** le montant vaut 0
 
 ### Requirement: Fréquence et mois des récurrentes
-Le formulaire de récurrente SHALL traiter `Frequence` comme un nombre, afficher le sélecteur de mois dès que la fréquence annuelle (7) est choisie, et envoyer `MoisOpRecu` indexé à partir de 0.
+Le formulaire de récurrente SHALL envoyer `Frequence` et `MoisOpRecu` comme des nombres, afficher le sélecteur de mois dès que la fréquence annuelle (7) est choisie, et envoyer `MoisOpRecu` indexé à partir de 0.
 
 #### Scenario: Création annuelle
 - **WHEN** l'utilisateur crée une récurrente, choisit « annuelle » puis « Mars »
-- **THEN** le sélecteur de mois est visible et la récurrente est envoyée avec `Frequence = 7` et `MoisOpRecu = 2`
+- **THEN** le sélecteur de mois est visible et la récurrente est envoyée avec `Frequence = 7` et `MoisOpRecu = 2` (nombres)
 
 ### Requirement: Édition chargée par identifiant
 Un formulaire d'édition (opération, récurrente, crédit, bien, compte) ouvert par lien direct ou après rechargement SHALL charger l'entité par son identifiant lorsqu'elle est absente du store, MUST désactiver l'enregistrement pendant le chargement et MUST NOT basculer en mode création. Une entité introuvable (404) MUST fermer le formulaire avec un message.
@@ -56,15 +63,11 @@ Un formulaire d'édition (opération, récurrente, crédit, bien, compte) ouvert
 - **THEN** l'opération 12 est chargée et affichée
 
 ### Requirement: Dates par défaut locales
-Les dates par défaut des formulaires et les bornes des préréglages de statistiques SHALL être calculées dans le fuseau local de l'appareil. Les dates construites pour les filtres des graphiques MUST l'être par `Date.UTC` ou au format ISO 8601 strict.
+Les dates proposées par défaut dans les formulaires SHALL être celles du jour dans le fuseau local de l'appareil.
 
 #### Scenario: Saisie après minuit
 - **WHEN** l'utilisateur, en France, ouvre le formulaire d'opération le 6 octobre à 0 h 30
 - **THEN** la date proposée est le 6 octobre
-
-#### Scenario: Préréglage Année
-- **WHEN** l'utilisateur choisit le préréglage « Année » pour 2026
-- **THEN** la plage envoyée commence le 2026-01-01 et se termine le 2026-12-31
 
 ### Requirement: Suggestion de catégorie non intrusive
 La suggestion automatique de catégorie SHALL ne présélectionner une catégorie que pour une nouvelle opération dont la catégorie n'a pas été choisie. Elle MUST ignorer les réponses arrivées après une saisie plus récente.
