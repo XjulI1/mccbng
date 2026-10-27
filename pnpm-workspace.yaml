@@ -25,3 +25,8 @@ allowBuilds:
   'protobufjs': false
   'ssh2': false
   'unrs-resolver': false
+
+# Dépréciations transitives sans correctif amont (dernières versions stables) :
+# glob@10 via archiver-utils (nitropack, testcontainers), glob@11 via workbox-build (@vite-pwa/nuxt)
+allowedDeprecatedVersions:
+  glob: '10 || 11'
