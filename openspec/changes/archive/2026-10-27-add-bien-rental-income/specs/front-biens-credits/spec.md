@@ -70,6 +70,21 @@ La carte d'un crédit SHALL afficher une ligne « Loyers · mensualités · couv
 - **WHEN** aucun bien n'est lié au crédit
 - **THEN** la carte n'affiche pas la ligne
 
+### Requirement: Part des loyers dans la barre de remboursement d'un crédit
+Lorsque la rentabilité d'un crédit a un bien lié et un `partCreditLoyers` non nul et non zéro, la carte du crédit SHALL dessiner cette part en bleu à l'intérieur de la barre verte « remboursé », en pourcentage de la partie verte, plafonné à 100 %, et afficher la légende « X% des mensualités payées par les loyers » (arrondi à l'unité). Sinon, la barre et la légende MUST rester celles d'un crédit sans loyers.
+
+#### Scenario: Crédit d'un bien loué
+- **WHEN** la rentabilité du crédit renvoie `bien = 12` et `partCreditLoyers = 78.31`
+- **THEN** 78,31 % de la barre verte sont en bleu et la carte affiche « 78% des mensualités payées par les loyers »
+
+#### Scenario: Loyers supérieurs aux mensualités
+- **WHEN** `partCreditLoyers = 112.5`
+- **THEN** toute la barre verte est en bleu et la légende indique « 100% des mensualités payées par les loyers »
+
+#### Scenario: Crédit sans loyer
+- **WHEN** `bien` vaut `null` ou `partCreditLoyers` vaut `null` ou 0
+- **THEN** la barre reste entièrement verte, sans légende
+
 ### Requirement: Rentabilité sur la carte d'un bien
 La carte d'un bien dont l'usage est « Locatif » SHALL afficher un bloc « Rentabilité » avec le loyer moyen hors charges sur la durée de la location et le début de la location (« Loyer moyen depuis août 2021 »), lorsque `periode.mois > 0`. Sinon, si un loyer est attendu, le bloc MUST afficher le loyer attendu, signalé comme prévisionnel. Le bloc MUST être absent lorsqu'aucune de ces valeurs n'est disponible. Aucun rendement n'est affiché.
 

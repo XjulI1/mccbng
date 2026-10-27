@@ -96,5 +96,5 @@
 
 ## 16. Vérification d'intégration
 
-- [ ] 16.1 Lancer `pnpm lint:check`, `pnpm type-check`, `pnpm test` et `pnpm test:api`, tous au vert
-- [ ] 16.2 Recette sur une copie de la base : `pnpm db:migrate` deux fois (rejouable), lier la récurrente « Loyer » existante au bien du crédit, lancer l'auto-génération, puis contrôler la carte du crédit (couverture, effort) et la carte du bien (rendements) au regard des opérations réelles
+- [x] 16.1 Lancer `pnpm lint:check`, `pnpm type-check`, `pnpm test` et `pnpm test:api`, tous au vert
+- [x] 16.2 Recette sur une copie de la base : `pnpm db:migrate` deux fois (rejouable), lier la récurrente « Loyer » existante au bien du crédit, lancer l'auto-génération, puis contrôler la carte du crédit (couverture, effort) et la carte du bien (rendements) au regard des opérations réelles

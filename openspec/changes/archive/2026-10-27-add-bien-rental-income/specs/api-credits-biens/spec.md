@@ -189,7 +189,8 @@ Un `IDcredit` qui ne désigne pas un crédit de l'utilisateur est traité comme 
   loyers, mensualites,
   loyerMensuelMoyen, mensualiteMoyenne, cashFlowMensuel, tauxCouverture,
   attendu: { loyerMensuel, mensualite, cashFlowMensuel, tauxCouverture },
-  cumul: { loyers, mensualites }
+  cumul: { loyers, mensualites },
+  partCreditLoyers
 }
 ```
 
@@ -200,6 +201,7 @@ Un `IDcredit` qui ne désigne pas un crédit de l'utilisateur est traité comme 
 - `tauxCouverture` = `loyersCouverts / mensualites × 100` ;
 - `loyers` et `cumul.loyers` sont les loyers perçus, charges comprises, sans abattement ;
 - `attendu.loyerMensuel` = `LoyerMensuel` du bien (`null` s'il n'est pas renseigné ou sans bien) ; `attendu.mensualite` = valeur absolue de `MontantMensuel` (le formulaire de crédit l'enregistre en négatif) si le crédit est `actif` et que `DateFin` n'est pas passée, 0 sinon ; `attendu.cashFlowMensuel` = `loyerMensuel − mensualite` et `attendu.tauxCouverture` = `loyerMensuel / mensualite × 100`, `null` si `loyerMensuel` est nul ;
+- `partCreditLoyers` = `cumul.loyers × (1 − AbattementCharges / 100) / cumul.mensualites × 100` : la part de toutes les mensualités payées depuis le début du crédit couverte par tous les loyers perçus, hors période de location ; `null` sans bien lié ou sans mensualité payée ;
 
 Une opération qui est à la fois une mensualité et liée à un bien MUST n'être comptée qu'une fois, comme mensualité. Un crédit sans bien renvoie `bien: null` et des loyers nuls. Les loyers MUST NOT modifier `remaining-balance` ni `payments`. La route MUST répondre 404 pour un crédit d'un autre utilisateur ou inexistant.
 
@@ -233,7 +235,11 @@ Une opération qui est à la fois une mensualité et liée à un bien MUST n'êt
 
 #### Scenario: Crédit sans bien
 - **WHEN** aucun bien n'est lié au crédit
-- **THEN** `bien` vaut `null`, `loyers` vaut 0 et `attendu.loyerMensuel` vaut `null`
+- **THEN** `bien` vaut `null`, `loyers` vaut 0, `attendu.loyerMensuel` vaut `null` et `partCreditLoyers` vaut `null`
+
+#### Scenario: Part du crédit payée par les loyers
+- **WHEN** depuis le début du crédit, 72 mensualités de 830 € ont été payées (`cumul.mensualites = 59760`) et le bien, avec `AbattementCharges = 10`, a perçu 52 000 € de loyers, dont une partie avant `DateMiseEnLocation`
+- **THEN** `partCreditLoyers` vaut `52000 × 0,9 / 59760 × 100 = 78.31`, calculé sur les cumuls et non sur la période de location
 
 #### Scenario: Crédit d'autrui
 - **WHEN** A appelle `GET /api/credits/{id}/rentabilite` sur un crédit de B
