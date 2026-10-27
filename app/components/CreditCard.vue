@@ -50,7 +50,13 @@
           <div
             class="progress-bar"
             :style="{ width: progressPercent + '%' }"
-          />
+          >
+            <div
+              v-if="partLoyers"
+              class="progress-bar-loyers"
+              :style="{ width: partLoyers + '%' }"
+            />
+          </div>
         </div>
         <div class="progress-details">
           <span>{{ progressPercent.toFixed(1) }}% remboursé</span>
@@ -61,6 +67,12 @@
           class="progress-details"
         >
           <span>dont {{ formatEuros(balance.interets) }} d'intérêts versés</span>
+        </div>
+        <div
+          v-if="partLoyers"
+          class="progress-details"
+        >
+          <span class="legend-loyers">{{ partLoyers.toFixed(0) }}% des mensualités payées par les loyers</span>
         </div>
       </div>
 
@@ -108,7 +120,7 @@
   import { computed } from 'vue'
   import { useRouter } from '#imports'
   import { useCreditStore } from '@/stores/credit'
-  import { creditRentalLine } from '@/utils/rentabilite'
+  import { creditPartLoyers, creditRentalLine } from '@/utils/rentabilite'
   import { formatEuros } from '@/utils/money'
 
   const props = defineProps({
@@ -126,6 +138,8 @@
   })
 
   const rentalLine = computed(() => creditRentalLine(creditStore.creditRentabilites[props.credit.IDcredit]))
+
+  const partLoyers = computed(() => creditPartLoyers(creditStore.creditRentabilites[props.credit.IDcredit]))
 
   const progressPercent = computed(() => {
     if (!balance.value) return 0
@@ -288,7 +302,24 @@
   height: 100%;
   background: linear-gradient(90deg, #4caf50, #81c784);
   border-radius: 4px;
+  overflow: hidden;
   transition: width 0.3s ease;
+}
+
+.progress-bar-loyers {
+  height: 100%;
+  background: linear-gradient(90deg, #1976d2, #64b5f6);
+  transition: width 0.3s ease;
+}
+
+.legend-loyers::before {
+  content: '';
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-right: 0.375rem;
+  border-radius: 2px;
+  background-color: #1976d2;
 }
 
 .progress-details {

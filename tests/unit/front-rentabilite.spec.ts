@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  bienBilanBlock, bienRentalBlock, creditRentalLine, type BienBilan, type BienRentabilite, type CreditRentabilite
+  bienBilanBlock, bienRentalBlock, creditPartLoyers, creditRentalLine, type BienBilan, type BienRentabilite, type CreditRentabilite
 } from '../../app/utils/rentabilite'
 
 const spaces = (text: string) => text.replace(/\s/g, ' ').replace(/\u2212/g, '-')
@@ -19,6 +19,7 @@ const credit = (extra: Partial<CreditRentabilite> = {}): CreditRentabilite => ({
   tauxCouverture: 78.31,
   attendu: { loyerMensuel: 650, mensualite: 830, cashFlowMensuel: -180, tauxCouverture: 78.31 },
   cumul: { loyers: 7800 },
+  partCreditLoyers: 78.31,
   ...extra
 })
 
@@ -28,6 +29,20 @@ const bien = (extra: Partial<BienRentabilite> = {}): BienRentabilite => ({
   attendu: { loyerMensuel: 650 },
   bilan: { plusValue: 0, loyersNets: 6960, interets: 0, gainTotal: 6960, mensualites: null, partCreditLoyers: null },
   ...extra
+})
+
+describe('creditPartLoyers', () => {
+  it('part des mensualités payée par les loyers, bornée à 100 %', () => {
+    expect(creditPartLoyers(credit())).toBe(78.31)
+    expect(creditPartLoyers(credit({ partCreditLoyers: 112.5 }))).toBe(100)
+  })
+
+  it('aucune part sans bien lié, sans loyer ou sans mensualité', () => {
+    expect(creditPartLoyers(credit({ bien: null }))).toBeNull()
+    expect(creditPartLoyers(credit({ partCreditLoyers: 0 }))).toBeNull()
+    expect(creditPartLoyers(credit({ partCreditLoyers: null }))).toBeNull()
+    expect(creditPartLoyers(undefined)).toBeNull()
+  })
 })
 
 describe('creditRentalLine', () => {

@@ -12,6 +12,7 @@ export type CreditRentabilite = {
   tauxCouverture: number | null
   attendu: { loyerMensuel: number | null; mensualite: number; cashFlowMensuel: number | null; tauxCouverture: number | null }
   cumul: { loyers: number }
+  partCreditLoyers: number | null
 }
 
 export type BienBilan = {
@@ -71,6 +72,12 @@ export const creditRentalLine = (rentabilite: CreditRentabilite | null | undefin
   if (tauxCouverture !== null) parts.push(`couverture ${percent(tauxCouverture, 0)}`)
   if (cashFlow !== null) parts.push(flowPart(cashFlow))
   return { parts, prevu, depuis: prevu ? null : monthYear(periode.debut) }
+}
+
+/** Share (0-100) of the credit payments made so far covered by the rents, or null when the credit finances no rented bien. */
+export const creditPartLoyers = (rentabilite: CreditRentabilite | null | undefined): number | null => {
+  const part = rentabilite?.bien ? rentabilite.partCreditLoyers : null
+  return part ? Math.min(100, part) : null
 }
 
 /** Average rent shown on a rented bien card, or null when neither real nor expected rent is known. */

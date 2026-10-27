@@ -496,7 +496,8 @@ describe('rentabilité', () => {
       cashFlowMensuel: -180,
       tauxCouverture: 78.31,
       attendu: { loyerMensuel: 650, mensualite: 830, cashFlowMensuel: -180, tauxCouverture: 78.31 },
-      cumul: { loyers: 7800, mensualites: 9960 }
+      cumul: { loyers: 7800, mensualites: 9960 },
+      partCreditLoyers: 78.31
     })
     expect(res.body).not.toHaveProperty('charges')
     expect((await get(`/api/credits/${pret.IDcredit}/remaining-balance`, user.token)).body).toEqual(balanceBefore)
@@ -540,7 +541,7 @@ describe('rentabilité', () => {
     await addRents(user, compte.IDcompte, bien.IDbien, 750)
 
     expect((await get(`/api/credits/${pret.IDcredit}/rentabilite`, user.token)).body).toMatchObject({
-      loyers: 9000, mensualites: 9960, loyerMensuelMoyen: 675, tauxCouverture: 81.33, cashFlowMensuel: -155
+      loyers: 9000, mensualites: 9960, loyerMensuelMoyen: 675, tauxCouverture: 81.33, cashFlowMensuel: -155, partCreditLoyers: 81.33
     })
     expect((await get(`/api/biens/${bien.IDbien}/rentabilite`, user.token)).body.loyerMensuelMoyen).toBe(675)
     expect((await get(`/api/biens/${bien.IDbien}/rentabilite`, user.token)).body.bilan).toMatchObject({

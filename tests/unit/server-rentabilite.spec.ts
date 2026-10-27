@@ -148,7 +148,8 @@ describe('creditRentabilite', () => {
       cashFlowMensuel: -180,
       tauxCouverture: 78.31,
       attendu: { loyerMensuel: 650, mensualite: 830, cashFlowMensuel: -180, tauxCouverture: 78.31 },
-      cumul: { loyers: 7800, mensualites: 9960 }
+      cumul: { loyers: 7800, mensualites: 9960 },
+      partCreditLoyers: 78.31
     })
   })
 
@@ -178,6 +179,7 @@ describe('creditRentabilite', () => {
     expect(result.periode).toEqual({ debut: '2021-08', fin: '2026-09', mois: 62 })
     expect(result).toMatchObject({ loyers: 62 * 650, mensualites: 62 * 830, mensualiteMoyenne: 830, cashFlowMensuel: -180, tauxCouverture: 78.31 })
     expect(result.cumul).toEqual({ loyers: 62 * 650, mensualites: 81 * 830 })
+    expect(result.partCreditLoyers).toBe(59.94)
     expect(result).not.toHaveProperty('charges')
   })
 
@@ -188,7 +190,7 @@ describe('creditRentabilite', () => {
 
   it('crédit sans bien : loyers nuls, pas de loyer attendu', () => {
     const result = creditRentabilite(credit(), null, lastMonths(12, 10).map(date => mensualite(date)), TODAY)
-    expect(result).toMatchObject({ bien: null, periode: { mois: 0 }, loyers: 0, mensualites: 0, tauxCouverture: null, cumul: { mensualites: 9960 } })
+    expect(result).toMatchObject({ bien: null, periode: { mois: 0 }, loyers: 0, mensualites: 0, tauxCouverture: null, cumul: { mensualites: 9960 }, partCreditLoyers: null })
     expect(result.attendu).toEqual({ loyerMensuel: null, mensualite: 830, cashFlowMensuel: null, tauxCouverture: null })
   })
 
@@ -253,6 +255,7 @@ describe('abattement pour charges', () => {
       tauxCouverture: 81.33,
       cashFlowMensuel: -155,
       cumul: { loyers: 9000, mensualites: 9960 },
+      partCreditLoyers: 81.33,
       attendu: { tauxCouverture: 78.31 }
     })
   })

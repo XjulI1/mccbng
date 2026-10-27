@@ -125,7 +125,8 @@ const isRunning = (credit: CreditInput, today: Date) =>
 export const creditRentabilite = (credit: CreditInput, bien: LinkedBien | null, flows: Flow[], today: Date) => {
   const classified = classify(flows, today, credit.IDcredit).filter(flow => flow.kind !== 'charge')
   const { periode, totals } = periodTotals(classified, today, rentalStart(bien?.DateMiseEnLocation ?? null, classified))
-  const loyersCouverts = totals.loyers * abatementFactor(bien?.AbattementCharges)
+  const abatement = abatementFactor(bien?.AbattementCharges)
+  const loyersCouverts = totals.loyers * abatement
   const cumul = totalsOf(classified)
   const loyerMensuel = bien?.LoyerMensuel ?? null
   const mensualite = isRunning(credit, today) ? Math.abs(credit.MontantMensuel) : 0
@@ -144,6 +145,7 @@ export const creditRentabilite = (credit: CreditInput, bien: LinkedBien | null, 
       cashFlowMensuel: loyerMensuel === null ? null : round2(loyerMensuel - mensualite),
       tauxCouverture: loyerMensuel === null ? null : percent(loyerMensuel, mensualite)
     },
-    cumul: { loyers: round2(cumul.loyers), mensualites: round2(cumul.mensualites) }
+    cumul: { loyers: round2(cumul.loyers), mensualites: round2(cumul.mensualites) },
+    partCreditLoyers: bien ? percent(cumul.loyers * abatement, cumul.mensualites) : null
   }
 }
