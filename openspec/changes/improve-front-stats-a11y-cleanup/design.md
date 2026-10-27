@@ -33,6 +33,8 @@ Chaque composant conserve l'instance renvoyée par `Highcharts.chart(...)`, la d
 ### D5. Overlay accessible
 `RouteOverTheContent.vue` porte `role="dialog"`, `aria-modal="true"` et `aria-labelledby` (titre de la page). À l'ouverture, le focus va au premier champ ; Échap ferme l'overlay (retour à la route parente) ; à la fermeture, le focus revient à l'élément qui l'a ouvert.
 
+Un bouton de fermeture visible (`<button type="button" aria-label="Fermer">`, icône `times`) est placé en haut à droite du contenu de l'overlay, avec une zone tactile d'au moins 44 × 44 px : sur mobile, il n'y a ni touche Échap ni fond visible quand le formulaire est long. Il est rendu par `RouteOverTheContent` (pas par chaque formulaire) et réutilise la même fonction de fermeture que le clic sur le fond et Échap (retour à la route parente).
+
 ### D6. Éléments cliquables
 Les cartes et lignes cliquables (`CompteList/Compte.vue`, `CreditCard.vue`, `BienCard.vue`, `OperationRecurrente.vue`) deviennent des `<button>` lorsque leur contenu le permet, sinon reçoivent `role="button"`, `tabindex="0"` et la gestion d'Entrée et d'Espace.
 

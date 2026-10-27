@@ -15,6 +15,7 @@
 - [ ] 3.1 Éléments cliquables en `<button>` ou avec `role="button"`, `tabindex="0"` et Entrée/Espace (`CompteList/Compte.vue`, `CreditCard.vue`, `BienCard.vue`, `OperationRecurrente.vue`)
 - [ ] 3.2 `alt` sur les images (`Compte.vue`) ; `<label for>` associés aux `<select>` de `TransfertForm`
 - [ ] 3.3 `RouteOverTheContent.vue` : `role="dialog"`, `aria-modal`, `aria-labelledby`, fermeture par Échap, focus initial et retour du focus
+- [ ] 3.4 `RouteOverTheContent.vue` : bouton de fermeture visible (× en haut à droite, `aria-label="Fermer"`, zone tactile ≥ 44 px), même fermeture que le fond et Échap
 
 ## 4. Nettoyage
 
@@ -27,4 +28,4 @@
 ## 5. Vérification
 
 - [ ] 5.1 `pnpm test`, `pnpm type-check`, `pnpm lint:check` verts (aucun nouveau warning)
-- [ ] 5.2 Recette manuelle : préréglages de période autour de minuit, changement rapide d'année dans les stats, navigation au clavier (listes, overlay, Échap), lecteur d'écran sur l'overlay
+- [ ] 5.2 Recette manuelle : préréglages de période autour de minuit, changement rapide d'année dans les stats, navigation au clavier (listes, overlay, Échap), fermeture d'un formulaire long par le bouton × sur mobile, lecteur d'écran sur l'overlay

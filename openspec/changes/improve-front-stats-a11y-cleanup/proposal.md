@@ -20,7 +20,7 @@ C'est le troisième des trois changes issus du découpage d'`improve-front-relia
   - libellés de catégorie échappés dans les formateurs HTML (`CategoryHeatmap`, `PieByCategorie`).
 - **Crédits** : `balance?.solde ?? credit.MontantInitial ?? 0`.
 - **Recherche** : recherche vide ignorée, déclenchement sur les seules modifications de la saisie (`@input`), timer nettoyé au démontage.
-- **Accessibilité** : éléments cliquables en `<button>` ou avec `role="button"` et clavier, `alt` sur les images, `<label for>` sur les `<select>` du virement, `RouteOverTheContent` en `role="dialog"` avec `aria-modal`, Échap et gestion du focus.
+- **Accessibilité** : éléments cliquables en `<button>` ou avec `role="button"` et clavier, `alt` sur les images, `<label for>` sur les `<select>` du virement, `RouteOverTheContent` en `role="dialog"` avec `aria-modal`, Échap, gestion du focus et bouton de fermeture visible (indispensable sur mobile, sans touche Échap).
 - **Nettoyage** : code mort supprimé, appels HTTP des stats regroupés dans `services/stats.ts`, `lang="ts"` et typage des fichiers touchés, mention du swipe-to-delete retirée de `CLAUDE.md` et `README.md`.
 
 ## Capabilities
@@ -29,7 +29,7 @@ C'est le troisième des trois changes issus du découpage d'`improve-front-relia
 - `front-stats` : fiabilité des écrans de statistiques (périodes en dates locales, réponses hors d'ordre ignorées, graphiques détruits au démontage, libellés échappés).
 
 ### Modified Capabilities
-- `front-routing` : l'overlay des formulaires est un dialogue accessible (rôle, fermeture par Échap, focus).
+- `front-routing` : l'overlay des formulaires est un dialogue accessible (rôle, fermeture par Échap ou par un bouton visible, focus).
 
 ## Impact
 

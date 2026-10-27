@@ -44,6 +44,11 @@ Pendant une soumission, le formulaire s'abonne à `onSessionExpired` : sur un 40
 
 Mutualisé entre `OperationForm`, `OperationRecurrenteForm` et `TransfertForm`.
 
+Ordre et clavier :
+- dans `OperationForm` et `OperationRecurrenteForm`, le groupe « Débit / Crédit » passe avant le champ montant : l'utilisateur choisit le sens, puis tape un nombre positif ; le champ affiche la valeur absolue et `useMoneySign` applique le signe ;
+- les champs montant de ces deux formulaires et de `TransfertForm` portent `inputmode="decimal"` : sur iOS et Android, le pavé numérique avec séparateur décimal s'ouvre. Ce pavé n'a pas de touche « − », d'où l'affichage en valeur absolue ;
+- la saisie avec une virgule (`12,50`, séparateur du pavé en français) est acceptée et convertie en `12.5`. Le champ passe donc en `type="text"` avec `inputmode="decimal"` (un `type="number"` rejette la virgule selon les navigateurs), et la conversion est faite par `useMoneySign` (vide ou invalide → 0).
+
 ### D4. Édition par identifiant
 Quand une route d'édition (`editOperation`, `editOperationRecurrente`, `editCredit`, `editBien`) s'ouvre et que l'entité est absente du store, le formulaire appelle `GET /api/<ressource>/{id}` (ajout de `fetchOperationById` et `fetchRecurrenteById`, réutilisation de `fetchCreditById` et `fetchBienById`). Pendant le chargement, l'enregistrement est désactivé ; un 404 ferme l'overlay avec un message. C'est le comportement actuel de `CompteForm`, généralisé.
 

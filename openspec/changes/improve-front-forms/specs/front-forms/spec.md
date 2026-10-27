@@ -44,6 +44,17 @@ Les commandes « Débit » et « Crédit » SHALL forcer respectivement un monta
 - **WHEN** l'utilisateur vide le champ montant et quitte le champ
 - **THEN** le montant vaut 0
 
+### Requirement: Saisie du montant adaptée au mobile
+Dans les formulaires d'opération et de récurrente, le choix « Débit / Crédit » SHALL précéder le champ montant, et le montant MUST se saisir et s'afficher en valeur absolue, le signe étant donné par ce choix. Les champs montant des formulaires d'opération, de récurrente et de virement MUST ouvrir le clavier numérique décimal (`inputmode="decimal"`) et MUST accepter la virgule comme séparateur décimal.
+
+#### Scenario: Saisie d'une dépense sur mobile
+- **WHEN** l'utilisateur, sur mobile, choisit « Débit » puis touche le champ montant et tape « 12,50 »
+- **THEN** le pavé numérique décimal s'affiche, le champ montre 12,50 et l'opération est enregistrée avec le montant -12.5
+
+#### Scenario: Édition d'un débit
+- **WHEN** l'utilisateur ouvre une opération de -40 €
+- **THEN** « Débit » est sélectionné et le champ montant affiche 40
+
 ### Requirement: Fréquence et mois des récurrentes
 Le formulaire de récurrente SHALL envoyer `Frequence` et `MoisOpRecu` comme des nombres, afficher le sélecteur de mois dès que la fréquence annuelle (7) est choisie, et envoyer `MoisOpRecu` indexé à partir de 0.
 

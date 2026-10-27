@@ -18,6 +18,7 @@ C'est le deuxième des trois changes issus du découpage d'`improve-front-reliab
 - **Brouillon en cas d'expiration** : sur un 401 pendant une soumission, la saisie est sauvegardée par route en `sessionStorage`, puis restaurée après reconnexion avec un message.
 - **Confirmation avant suppression** (`confirm()` natif dans un helper unique).
 - **Montants** (`useMoneySign`) : « Débit » et « Crédit » forcent le signe ; un champ vide vaut 0, jamais `NaN` ; arrondi à 2 décimales avant l'envoi. `v-model.number` sur `Frequence` des récurrentes.
+- **Saisie du montant sur mobile** : le choix Débit/Crédit est placé avant le champ montant (opération et récurrente), le montant se saisit en valeur positive, et les champs montant des formulaires d'opération, de récurrente et de virement portent `inputmode="decimal"` (pavé numérique avec séparateur décimal).
 - **Édition par identifiant** : un accès direct ou un rechargement charge l'entité (`GET /api/<ressource>/{id}`) au lieu de passer en création.
 - **Dates par défaut locales** : `todayLocal()` dans `app/utils/dates.ts` remplace `toISOString().split('T')[0]` dans les formulaires.
 - **Suggestion de catégorie non intrusive** : seulement pour une nouvelle opération sans catégorie choisie, réponses périmées ignorées, timer nettoyé.

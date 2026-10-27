@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Pattern overlay conservé
-Les routes enfants de formulaire SHALL rendre la vue `RouteOverTheContent` avec un `componentName` (déclaré dans la meta de la page) conservant les valeurs actuelles (`operation-form`, `transfert-form`, `search`, `operation-recurrente-form`, `compte-form`, `credit-form`, `bien-form`) par-dessus le contenu de la page parente, via `<NuxtPage />`. L'overlay MUST être exposé comme un dialogue modal (`role="dialog"`, `aria-modal="true"`, titre associé), MUST se fermer par la touche Échap, MUST placer le focus dans le formulaire à l'ouverture et MUST le rendre à l'élément déclencheur à la fermeture.
+Les routes enfants de formulaire SHALL rendre la vue `RouteOverTheContent` avec un `componentName` (déclaré dans la meta de la page) conservant les valeurs actuelles (`operation-form`, `transfert-form`, `search`, `operation-recurrente-form`, `compte-form`, `credit-form`, `bien-form`) par-dessus le contenu de la page parente, via `<NuxtPage />`. L'overlay MUST être exposé comme un dialogue modal (`role="dialog"`, `aria-modal="true"`, titre associé), MUST se fermer par la touche Échap et par un bouton de fermeture visible (libellé accessible « Fermer », zone tactile d'au moins 44 × 44 px), MUST placer le focus dans le formulaire à l'ouverture et MUST le rendre à l'élément déclencheur à la fermeture.
 
 #### Scenario: Ouverture d'un formulaire
 - **WHEN** l'utilisateur navigue vers `/newOperation`
@@ -14,3 +14,7 @@ Les routes enfants de formulaire SHALL rendre la vue `RouteOverTheContent` avec 
 #### Scenario: Fermeture au clavier
 - **WHEN** l'utilisateur appuie sur Échap dans l'overlay ouvert depuis le bouton « Nouvelle opération »
 - **THEN** il revient à la route parente et le focus est rendu au bouton « Nouvelle opération »
+
+#### Scenario: Fermeture par le bouton sur mobile
+- **WHEN** l'utilisateur, sur mobile, touche le bouton « Fermer » d'un formulaire de crédit qui occupe tout l'écran
+- **THEN** il revient à la route parente (`/credits`) sans enregistrer la saisie
