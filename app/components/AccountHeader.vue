@@ -3,15 +3,15 @@
     <div class="account-info">
       <div>
         {{ activeAccount.NomCompte }}
+        <span
+          v-if="jauge && !disabledTotal"
+          class="plafond-percent"
+        >{{ Math.floor(jauge.percent) }} %</span>
       </div>
       <div :class="{ 'no-total': disabledTotal }">
         <Currency :amount="activeAccount.soldeNotChecked || 0" /> - [<Currency
           :amount="activeAccount.soldeChecked || 0"
         />]
-        <span
-          v-if="jauge"
-          class="plafond-percent"
-        >{{ Math.floor(jauge.percent) }} %</span>
       </div>
     </div>
     <div
@@ -116,8 +116,10 @@
   display: none;
 }
 
+// Sur la ligne du nom : la ligne du solde occupe déjà toute la largeur sur mobile
 .plafond-percent {
   margin-left: 6px;
+  white-space: nowrap;
   font-size: 0.8rem;
   opacity: 0.8;
 }
