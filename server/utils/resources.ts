@@ -37,11 +37,13 @@ export const compteResource: CrudResource = {
   readScope: event => eq(comptes.IDuser, userId(event)),
   forced: event => ({ IDuser: userId(event) }),
   defaults: { bloque: false, joint: false, children: false, retraite: false, porte_feuille: false, visible: true },
+  // Plafond (livret réglementé…) : affichage seul ; un PUT d'une ancienne PWA qui l'omet le conserve
+  preserve: ['Plafond'],
   ...shape(
     { NomCompte: str, solde: numeric },
     {
       bloque: boolish, joint: boolish, children: boolish, retraite: boolish, porte_feuille: boolish, visible: boolish,
-      IDbanque: numeric.nullable()
+      IDbanque: numeric.nullable(), Plafond: numericMin(0).nullable()
     }
   ),
   relations: {

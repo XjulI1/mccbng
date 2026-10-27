@@ -92,7 +92,7 @@ export default defineNuxtConfig({
     '/api/users/login': { security: { rateLimiter: { tokensPerInterval: 4, interval: 15 * 60 * 1000, ipHeader: 'x-real-ip' } } }
   },
 
-  devServer: { port: 8080, host: '0.0.0.0' },
+  devServer: { port: 8080, host: 'localhost' },
 
   vite: {
     css: {

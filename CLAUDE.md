@@ -60,7 +60,7 @@ pnpm hash-code <code>   # bcrypt hash (cost 12) of a login code, to paste into U
 |--------|-----|-------|
 | **User** | `IDuser` (not auto-incremented) | `email` is unique, `secret_key` is the bcrypt-hashed login code. `failedLoginCount`/`lockedUntil` drive the lockout, `tokenVersion` the session revocation. |
 | **Banque** | `IDbanque` | Bank — groups accounts. Shared (no user scope): read and create only through the API (no `PATCH`/`PUT`/`DELETE`, 405). |
-| **Compte** | `IDcompte` | Bank account. Type flags: `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible`. |
+| **Compte** | `IDcompte` | Bank account. Type flags: `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible`. Optional `Plafond` (e.g. livret A cap, display only): a gauge in `AccountHeader` (`app/utils/plafond.ts`); a `PUT` omitting it keeps it. |
 | **Operation** | `IDop` | Single transaction. Belongs to a `Compte`, optionally tied to a `Categorie`, a `Credit` and a `Bien` (`IDbien`: rent when positive, charge when negative, unless `IDcredit` is set). `CheckOp` = pointed/checked status, `amortissement` flag. |
 | **OperationRecurrente** | `IDopRecu` | Recurring template. `Frequence`: 3 = monthly, 7 = yearly. Due dates fall on `JourNumOpRecu` (and `MoisOpRecu`, 0-indexed, for yearly), clamped to the month's last day; `DernierDateOpRecu` is the last generated due date (set by the server on creation). A credit's recurring operation (`IDcredit` set) is read-only (409): it is managed through its `Credit`. Optional `IDbien`, copied onto generated operations. |
 | **Categorie** | `IDcat` | `Type` ENUM (`depense` / `revenu` / `transfert`) drives how the category is counted in each graph. `IDuser = 0` marks shared categories (readable by all, not editable). |

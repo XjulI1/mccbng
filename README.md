@@ -30,6 +30,7 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 ### Comptes et banques
 - Gestion de plusieurs **banques** et plusieurs **comptes** par banque.
 - Chaque compte porte des indicateurs typés : `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible`.
+- **Plafond** facultatif par compte (`Plafond`, ex. 22 950 € pour un livret A) : une jauge sous le solde du compte ouvert indique la part utilisée (pourcentage au-delà de 100 % si le plafond est dépassé), le reste disponible au survol. Affichage seul : le plafond ne bloque aucune opération.
 - Liste latérale des comptes regroupée par type (disponibles, joints, enfants, retraite, portefeuille, bloqués).
 - Calcul automatique des **soldes pointés / non pointés** par compte et des **totaux globaux** par catégorie de comptes.
 - Masquage des montants à la volée (`maskAmount` dans le module `user`).
@@ -204,7 +205,7 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 |--------|--------------|-------------------|-------|
 | **User** | `IDuser` (non auto-incrémenté) | `email` (unique), `username`, `secret_key` (bcrypt), `favoris`, `warningTotal`, `warningCompte`, `failedLoginCount`, `lockedUntil`, `tokenVersion` | — |
 | **Banque** | `IDbanque` | `NomBanque` | `hasMany Compte` |
-| **Compte** | `IDcompte` | `NomCompte`, `solde` (DECIMAL), `IDuser`, `IDbanque`, `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible` | `belongsTo Banque` |
+| **Compte** | `IDcompte` | `NomCompte`, `solde` (DECIMAL), `IDuser`, `IDbanque`, `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible`, `Plafond?` | `belongsTo Banque` |
 | **Operation** | `IDop` | `NomOp`, `MontantOp` (DECIMAL), `DateOp`, `CheckOp`, `IDcompte`, `IDcat`, `amortissement`, `IDcredit?`, `IDbien?` | scopée via `Compte` |
 | **OperationRecurrente** | `IDopRecu` | `NomOpRecu`, `MontantOpRecu` (DECIMAL), `JourOpRecu`, `JourNumOpRecu`, `MoisOpRecu`, `Frequence` (3=mensuel, 7=annuel), `DernierDateOpRecu`, `IDcompte`, `IDcat`, `IDcredit?`, `IDbien?` | scopée via `Compte` |
 | **Categorie** | `IDcat` | `Nom`, `IDuser` (0 = catégorie partagée), `Type` (`depense` / `revenu` / `transfert`) | — |

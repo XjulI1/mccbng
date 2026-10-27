@@ -1,0 +1,2 @@
+ALTER TABLE `Compte`
+  ADD COLUMN IF NOT EXISTS `Plafond` decimal(12,2) DEFAULT NULL;

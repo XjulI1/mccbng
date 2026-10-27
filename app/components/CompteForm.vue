@@ -135,6 +135,23 @@
       </div>
 
       <div class="form-group">
+        <label
+          for="compte-plafond"
+          class="form-label"
+        >Plafond (optionnel, ex : 22 950 € pour un livret A)</label>
+        <input
+          id="compte-plafond"
+          v-model.number="compte.Plafond"
+          type="number"
+          class="form-input"
+          placeholder="Aucun plafond"
+          step="0.01"
+          min="0"
+          @blur="roundPlafond"
+        >
+      </div>
+
+      <div class="form-group">
         <label class="form-label">Visibilité</label>
         <div class="toggle-group">
           <button
@@ -220,7 +237,8 @@
     retraite: false,
     // eslint-disable-next-line @typescript-eslint/naming-convention
     porte_feuille: false,
-    visible: true
+    visible: true,
+    Plafond: null as number | null | ''
   })
 
   const isFormValid = computed(() => {
@@ -237,6 +255,17 @@
     )
     return info?.hasReferences ?? false
   })
+
+  // Champ vidé : v-model.number renvoie '' ; 0 ou vide = pas de plafond
+  const plafondValue = () => {
+    const value = compte.value.Plafond
+    return typeof value === 'number' && value > 0 ? value : null
+  }
+
+  const roundPlafond = () => {
+    const value = plafondValue()
+    compte.value.Plafond = value === null ? null : Math.round(value * 100) / 100
+  }
 
   const openNewBanque = async () => {
     showNewBanque.value = true
@@ -285,9 +314,10 @@
       return
     }
 
-    const request = compte.value.IDcompte
-      ? compteStore.updateCompte({ ...compte.value })
-      : compteStore.createCompte({ ...compte.value })
+    const payload = { ...compte.value, Plafond: plafondValue() }
+    const request = payload.IDcompte
+      ? compteStore.updateCompte(payload)
+      : compteStore.createCompte(payload)
     request
       .then(() => {
         returnToList()
@@ -335,7 +365,8 @@
           retraite: !!existing.retraite,
           // eslint-disable-next-line @typescript-eslint/naming-convention
           porte_feuille: !!existing.porte_feuille,
-          visible: existing.visible !== false
+          visible: existing.visible !== false,
+          Plafond: existing.Plafond ?? null
         }
       }
     }

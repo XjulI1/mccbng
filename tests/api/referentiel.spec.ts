@@ -51,6 +51,20 @@ describe('comptes', () => {
     expect((await get(`/api/comptes/${compte.IDcompte}`, alice.token)).status).toBe(404)
   })
 
+  it('plafond : facultatif, positif, conservé par un PUT qui l\'omet, effacé par null', async () => {
+    const compte = await createCompte(alice, { NomCompte: 'Livret A' })
+    expect((await get(`/api/comptes/${compte.IDcompte}`, alice.token)).body.Plafond).toBeNull()
+    expect((await patch(`/api/comptes/${compte.IDcompte}`, alice.token, { Plafond: '22950' })).status).toBe(204)
+    expect((await get(`/api/comptes/${compte.IDcompte}`, alice.token)).body.Plafond).toBe(22950)
+    expect((await patch(`/api/comptes/${compte.IDcompte}`, alice.token, { Plafond: -1 })).status).toBe(422)
+    expect((await post('/api/comptes', alice.token, { NomCompte: 'LDDS', solde: 0, Plafond: -1 })).status).toBe(422)
+
+    expect((await put(`/api/comptes/${compte.IDcompte}`, alice.token, { NomCompte: 'Livret A (ancienne appli)', solde: 0 })).status).toBe(204)
+    expect((await get(`/api/comptes/${compte.IDcompte}`, alice.token)).body).toMatchObject({ NomCompte: 'Livret A (ancienne appli)', Plafond: 22950 })
+    expect((await put(`/api/comptes/${compte.IDcompte}`, alice.token, { NomCompte: 'Livret A', solde: 0, Plafond: null })).status).toBe(204)
+    expect((await get(`/api/comptes/${compte.IDcompte}`, alice.token)).body.Plafond).toBeNull()
+  })
+
   it('suppression refusée (409) si le compte est référencé', async () => {
     const compte = await createCompte(alice, { NomCompte: 'Référencé' })
     await createOperation(alice, compte.IDcompte)

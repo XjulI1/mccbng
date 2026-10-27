@@ -41,7 +41,8 @@ export const comptes = mysqlTable('Compte', {
   retraite: boolean('retraite').notNull().default(false),
   porte_feuille: boolean('porte_feuille').notNull().default(false),
   visible: boolean('visible').notNull().default(true),
-  IDbanque: int('IDbanque')
+  IDbanque: int('IDbanque'),
+  Plafond: money('Plafond')
 }, t => [index('idx_compte_iduser').on(t.IDuser)])
 
 export const operations = mysqlTable('Operation', {

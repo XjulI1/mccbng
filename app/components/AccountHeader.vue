@@ -8,7 +8,26 @@
         <Currency :amount="activeAccount.soldeNotChecked || 0" /> - [<Currency
           :amount="activeAccount.soldeChecked || 0"
         />]
+        <span
+          v-if="jauge"
+          class="plafond-percent"
+        >{{ Math.floor(jauge.percent) }} %</span>
       </div>
+    </div>
+    <div
+      v-if="jauge && !disabledTotal"
+      class="plafond-gauge"
+      role="meter"
+      aria-valuemin="0"
+      :aria-valuemax="plafond"
+      :aria-valuenow="activeAccount.soldeNotChecked || 0"
+      :aria-label="plafondLabel"
+      :title="plafondLabel"
+    >
+      <div
+        class="plafond-gauge-bar"
+        :style="{ width: jauge.largeur + '%' }"
+      />
     </div>
   </div>
 </template>
@@ -17,12 +36,27 @@
   import { computed } from 'vue'
   import { useRoute } from '#imports'
   import { useCompteStore } from '@/stores/compte'
+  import { formatEuros } from '@/utils/money'
+  import { plafondJauge } from '@/utils/plafond'
   import Currency from './Currency.vue'
 
   const route = useRoute()
   const compteStore = useCompteStore()
 
   const activeAccount = computed(() => compteStore.activeAccount)
+
+  // Plafond lu dans la liste des comptes : à jour dès la modification du compte
+  const plafond = computed(() => compteStore.getAccount(activeAccount.value.IDcompte)?.Plafond ?? activeAccount.value.Plafond)
+
+  const jauge = computed(() => plafondJauge(activeAccount.value.soldeNotChecked, plafond.value))
+
+  const plafondLabel = computed(() => {
+    if (!jauge.value) return ''
+    const reste = jauge.value.reste >= 0
+      ? `reste ${formatEuros(jauge.value.reste)}`
+      : `dépassé de ${formatEuros(-jauge.value.reste)}`
+    return `Plafond ${formatEuros(plafond.value)} : ${reste}`
+  })
 
   const disabledTotal = computed(() => {
     return route.meta.disabledTotalHeader === undefined
@@ -80,5 +114,30 @@
 
 .no-total {
   display: none;
+}
+
+.plafond-percent {
+  margin-left: 6px;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+// Jauge en bas du cartouche, dans le padding : la hauteur de l'en-tête ne change pas
+.plafond-gauge {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 5px;
+  height: 4px;
+  background-color: var(--bg-secondary, #f5f5f5);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.plafond-gauge-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #81c784);
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 </style>
