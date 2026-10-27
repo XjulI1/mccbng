@@ -23,6 +23,7 @@ describe('schéma normalisé (0002)', () => {
       'Operation.idx_operation_compte_date': 'IDcompte,DateOp',
       'Operation.idx_operation_idcredit': 'IDcredit',
       'Operation.idx_operation_idcat': 'IDcat',
+      'Operation.idx_operation_idbien': 'IDbien',
       'Compte.idx_compte_iduser': 'IDuser',
       'OperationRecurrente.idx_operationrecurrente_idcompte': 'IDcompte',
       'Categorie.idx_categorie_iduser': 'IDuser',

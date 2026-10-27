@@ -58,8 +58,8 @@ export default defineApiHandler(async (event) => {
 
       try {
         await rawExecute(
-          'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, CheckOp, IDcredit) VALUES (?, ?, ?, ?, ?, 0, ?)',
-          [rec.NomOpRecu, rec.MontantOpRecu, next, rec.IDcompte, rec.IDcat ?? 0, rec.IDcredit ?? null]
+          'INSERT INTO Operation (NomOp, MontantOp, DateOp, IDcompte, IDcat, CheckOp, IDcredit, IDbien) VALUES (?, ?, ?, ?, ?, 0, ?, ?)',
+          [rec.NomOpRecu, rec.MontantOpRecu, next, rec.IDcompte, rec.IDcat ?? 0, rec.IDcredit || null, rec.IDbien || null]
         )
       } catch (error) {
         // Compensation, conditionnée à notre propre réservation pour ne pas écraser celle d'un autre appel

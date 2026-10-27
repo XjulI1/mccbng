@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { createCategorie, createCompte, createOperation, createUser, get, sql, type TestUser } from './helpers'
+import { createBien, createCategorie, createCompte, createOperation, createUser, get, patch, sql, type TestUser } from './helpers'
 
 let alice: TestUser
 let bob: TestUser
@@ -218,6 +218,23 @@ describe('stats', () => {
     expect((await get('/api/stats/incomeVsExpense', nobody.token, { yearNumber: 2024 })).body.income).toEqual(new Array(12).fill(0))
     const bobTop = await get('/api/stats/topOperations', bob.token, { from: '2024-01-01', to: '2024-12-31' })
     expect(bobTop.body.map((o: any) => o.MontantOp)).toEqual([-777])
+  })
+
+  it('lier un loyer à un bien ne change ni les soldes ni les statistiques', async () => {
+    const user = await createUser()
+    const c = await createCompte(user)
+    const loyers = await createCategorie(user, 'Loyers', 'revenu')
+    const bien = await createBien(user)
+    const op = await createOperation(user, c.IDcompte, { NomOp: 'Loyer', MontantOp: 650, IDcat: loyers.IDcat, DateOp: '2024-03-05' })
+    const snapshot = async () => ({
+      solde: (await get('/api/operations/sumForACompte', user.token, { id: c.IDcompte })).body,
+      ive: (await get('/api/stats/incomeVsExpense', user.token, { yearNumber: 2024 })).body
+    })
+
+    const before = await snapshot()
+    expect(before.ive.income[2]).toBe(650)
+    expect((await patch(`/api/operations/${op.IDop}`, user.token, { IDbien: bien.IDbien })).status).toBe(204)
+    expect(await snapshot()).toEqual(before)
   })
 
   it('sans JWT : 401', async () => {

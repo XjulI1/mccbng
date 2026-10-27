@@ -1,14 +1,16 @@
-import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNull, ne, or, sql } from 'drizzle-orm'
+import { getRouterParam } from 'h3'
 import { z } from 'zod'
 import {
   banques, biens, categories, comptes, credits, operationRecurrentes, operations
 } from '../db/schema'
 import { getDb } from '../db/client'
-import type { CrudResource } from './crud'
+import { findOwned, type CrudResource } from './crud'
+import { findOwnedCredit } from './credits'
 import { conflict, notFound } from './errors'
 import { initialLastDate, MONTHLY, toRule } from './schedule'
 import { assertCompteOwned, compteScope, getCurrentUserId } from './scope'
-import { boolish, numeric, numericInt, numericOneOf } from './validate'
+import { boolish, numeric, numericBetween, numericInt, numericMin, numericOneOf, optionalId } from './validate'
 
 const str = z.string()
 const date = z.coerce.date()
@@ -81,11 +83,12 @@ const assertCompteInBody = async (event: ApiEvent, data: Record<string, any>) =>
 }
 
 // IDcredit : null/absent, ou un crédit de l'utilisateur.
-const assertCreditInBody = async (event: ApiEvent, data: Record<string, any>) => {
-  if (!data.IDcredit) return
-  const [credit] = await getDb().select({ id: credits.IDcredit }).from(credits)
-    .where(and(eq(credits.IDcredit, data.IDcredit), eq(credits.IDuser, userId(event)))).limit(1)
-  if (!credit) throw notFound(`Credit ${data.IDcredit} not found`)
+const assertCreditInBody = async (event: ApiEvent, data: { IDcredit?: number | null }) => {
+  if (data.IDcredit) await findOwnedCredit(event, data.IDcredit)
+}
+
+const assertBienInBody = async (event: ApiEvent, data: { IDbien?: number | null }) => {
+  if (data.IDbien) await findOwned(bienResource, event, data.IDbien, false)
 }
 
 // IDcat : 0 (sans catégorie), une catégorie partagée (IDuser = 0) ou une catégorie de l'utilisateur.
@@ -105,10 +108,11 @@ export const operationResource: CrudResource = {
   path: 'operations', label: 'Operation', table: operations, pk: 'IDop',
   readScope: event => compteScope(event, operations.IDcompte),
   defaults: { CheckOp: false, IDcat: 0, amortissement: false },
-  validate: assertReferencesOwned(assertCompteInBody, assertCreditInBody, assertCategorieInBody),
+  preserve: ['IDbien'],
+  validate: assertReferencesOwned(assertCompteInBody, assertCreditInBody, assertCategorieInBody, assertBienInBody),
   ...shape(
     { NomOp: str, MontantOp: numeric, DateOp: date, IDcompte: numeric },
-    { CheckOp: boolish, IDcat: numeric, amortissement: boolish, IDcredit: numeric.nullable() }
+    { CheckOp: boolish, IDcat: numeric, amortissement: boolish, IDcredit: optionalId, IDbien: optionalId }
   )
 }
 
@@ -117,14 +121,15 @@ export const operationRecurrenteResource: CrudResource = {
   readScope: event => compteScope(event, operationRecurrentes.IDcompte),
   // MoisOpRecu est indexé à partir de 0 (janvier)
   defaults: { JourNumOpRecu: 1, MoisOpRecu: 0, Frequence: MONTHLY, IDcat: 0 },
-  validate: assertReferencesOwned(assertCompteInBody, assertCategorieInBody),
+  preserve: ['IDbien'],
+  validate: assertReferencesOwned(assertCompteInBody, assertCategorieInBody, assertBienInBody),
   // IDcredit n'est posé que par le serveur (création d'un crédit) : seul null est accepté dans le corps.
   // DernierDateOpRecu est ignoré à la création (fixé par le serveur) et conservé par un PUT qui l'omet.
   ...shape(
     { NomOpRecu: str, MontantOpRecu: numeric, JourOpRecu: numeric, IDcompte: numeric },
     {
       DernierDateOpRecu: date, JourNumOpRecu: numericInt(1, 31), MoisOpRecu: numericInt(0, 11),
-      Frequence: numericOneOf(3, 7), IDcat: numeric, IDcredit: z.null()
+      Frequence: numericOneOf(3, 7), IDcat: numeric, IDcredit: z.null(), IDbien: optionalId
     }
   ),
   // La première échéance à venir doit être générée : DernierDateOpRecu = échéance qui la précède
@@ -226,22 +231,41 @@ export const creditResource: CrudResource = {
       existing.IDopRecu ? eq(operationRecurrentes.IDopRecu, existing.IDopRecu) : undefined
     ))
     await tx.update(operations).set({ IDcredit: null }).where(eq(operations.IDcredit, existing.IDcredit))
+    await tx.update(biens).set({ IDcredit: null }).where(eq(biens.IDcredit, existing.IDcredit))
   }
+}
+
+const assertCreditFree = async (event: ApiEvent, data: { IDcredit?: number | null }) => {
+  if (!data.IDcredit) return
+  const [other] = await getDb().select({ id: biens.IDbien }).from(biens)
+    .where(and(
+      eq(biens.IDcredit, data.IDcredit),
+      eq(biens.IDuser, userId(event)),
+      ne(biens.IDbien, Number(getRouterParam(event, 'id')) || 0)
+    )).limit(1)
+  if (other) throw conflict(`Credit ${data.IDcredit} already finances bien ${other.id}`)
 }
 
 export const bienResource: CrudResource = {
   path: 'biens', label: 'Bien', table: biens, pk: 'IDbien',
+  actions: ['list', 'count', 'get', 'create', 'patchById', 'replaceById', 'deleteById'],
   readScope: event => eq(biens.IDuser, userId(event)),
   forced: event => ({ IDuser: userId(event) }),
   defaults: { Usage: 'principale', FraisAgence: 0, ApportCash: 0 },
-  validate: assertCreditInBody,
+  preserve: ['LoyerMensuel', 'AbattementCharges', 'DateMiseEnLocation'],
+  validate: assertReferencesOwned(assertCreditInBody, assertCreditFree),
   ...shape(
     { NomBien: str, Ville: str, TypeBien: str, DateAchat: date, PrixBienNu: numeric, FraisNotaire: numeric },
     {
       Surface: numeric.nullable(), Usage: str, FraisAgence: numeric.nullable(), ApportCash: numeric.nullable(),
-      ValeurActuelle: numeric.nullable(), IDcredit: numeric.nullable()
+      ValeurActuelle: numeric.nullable(), LoyerMensuel: numericMin(0).nullable(),
+      AbattementCharges: numericBetween(0, 100).nullable(), DateMiseEnLocation: date.nullable(), IDcredit: optionalId
     }
-  )
+  ),
+  onDelete: async (_event, existing, tx) => {
+    await tx.update(operations).set({ IDbien: null }).where(eq(operations.IDbien, existing.IDbien))
+    await tx.update(operationRecurrentes).set({ IDbien: null }).where(eq(operationRecurrentes.IDbien, existing.IDbien))
+  }
 }
 
 export const crudResources: Record<string, CrudResource> = Object.fromEntries(

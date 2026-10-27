@@ -59,7 +59,7 @@ const withRelations = async (resource: CrudResource, rows: Row[], include: strin
   return rows
 }
 
-const findOwned = async (resource: CrudResource, event: H3Event, id: number, write: boolean): Promise<Row> => {
+export const findOwned = async (resource: CrudResource, event: H3Event, id: number, write: boolean): Promise<Row> => {
   const where = combine(eq(col(resource, resource.pk), id), await scopeOf(resource, event, write))
   const [row] = await getDb().select().from(resource.table).where(where).limit(1)
   if (!row) throw notFound(`${resource.label} ${id} not found`)

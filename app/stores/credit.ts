@@ -5,15 +5,18 @@ import {
   fetchCreditById,
   updateCredit as updateCreditService,
   deleteCredit as deleteCreditService,
-  fetchCreditRemainingBalance
+  fetchCreditRemainingBalance,
+  fetchCreditRentabilite
 } from '@/services/credit'
 import { API_URL } from '@/services/config'
 import { useUserStore } from '@/stores/user'
+import type { CreditRentabilite } from '@/utils/rentabilite'
 
 export const useCreditStore = defineStore('credit', () => {
   const creditList = ref<any[]>([])
   const activeCredit = ref<any>(null)
   const creditBalances = ref<Record<string, any>>({})
+  const creditRentabilites = ref<Record<string, CreditRentabilite>>({})
   const isLoadingCredits = ref(false)
 
   function creditFromList (creditID) {
@@ -38,6 +41,11 @@ export const useCreditStore = defineStore('credit', () => {
           setCreditBalance({ IDcredit: credit.IDcredit, balance })
         } catch (error) {
           console.error('Error fetching balance for credit:', credit.IDcredit, error)
+        }
+        try {
+          creditRentabilites.value[credit.IDcredit] = await fetchCreditRentabilite(credit.IDcredit, token, API_URL)
+        } catch (error) {
+          console.error('Error fetching rentabilite for credit:', credit.IDcredit, error)
         }
       }
     } catch (error) {
@@ -85,6 +93,7 @@ export const useCreditStore = defineStore('credit', () => {
     creditList,
     activeCredit,
     creditBalances,
+    creditRentabilites,
     isLoadingCredits,
     creditFromList,
     setCreditBalance,

@@ -30,11 +30,11 @@
       <div class="credit-amount">
         <div class="amount-item">
           <span class="label">Montant initial</span>
-          <span class="value">{{ formatAmount(credit.MontantInitial) }}</span>
+          <span class="value">{{ formatEuros(credit.MontantInitial) }}</span>
         </div>
         <div class="amount-item">
           <span class="label">Mensualité</span>
-          <span class="value montant-negatif">{{ formatAmount(credit.MontantMensuel) }}</span>
+          <span class="value montant-negatif">{{ formatEuros(credit.MontantMensuel) }}</span>
         </div>
       </div>
 
@@ -44,7 +44,7 @@
       >
         <div class="progress-info">
           <span class="label">Solde restant</span>
-          <span class="value">{{ formatAmount(balance.solde) }}</span>
+          <span class="value">{{ formatEuros(balance.solde) }}</span>
         </div>
         <div class="progress-bar-container">
           <div
@@ -54,14 +54,29 @@
         </div>
         <div class="progress-details">
           <span>{{ progressPercent.toFixed(1) }}% remboursé</span>
-          <span>{{ formatAmount(balance.paye) }} de capital payé</span>
+          <span>{{ formatEuros(balance.paye) }} de capital payé</span>
         </div>
         <div
           v-if="balance.interets"
           class="progress-details"
         >
-          <span>dont {{ formatAmount(balance.interets) }} d'intérêts versés</span>
+          <span>dont {{ formatEuros(balance.interets) }} d'intérêts versés</span>
         </div>
+      </div>
+
+      <div
+        v-if="rentalLine"
+        class="credit-rental"
+      >
+        <font-awesome-icon
+          icon="home"
+          class="icon"
+        />
+        <span>
+          {{ rentalLine.parts.join(' · ') }}
+          <em v-if="rentalLine.prevu">(prévu)</em>
+          <em v-if="rentalLine.depuis">depuis {{ rentalLine.depuis }}</em>
+        </span>
       </div>
 
       <div
@@ -93,6 +108,8 @@
   import { computed } from 'vue'
   import { useRouter } from '#imports'
   import { useCreditStore } from '@/stores/credit'
+  import { creditRentalLine } from '@/utils/rentabilite'
+  import { formatEuros } from '@/utils/money'
 
   const props = defineProps({
     credit: {
@@ -108,6 +125,8 @@
     return creditStore.creditBalances[props.credit.IDcredit]
   })
 
+  const rentalLine = computed(() => creditRentalLine(creditStore.creditRentabilites[props.credit.IDcredit]))
+
   const progressPercent = computed(() => {
     if (!balance.value) return 0
     const percent = (balance.value.paye / props.credit.MontantInitial) * 100
@@ -122,14 +141,6 @@
     }
     return labels[props.credit.Statut] || props.credit.Statut
   })
-
-  const formatAmount = (amount) => {
-    if (amount === undefined || amount === null) return '0,00 €'
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount)
-  }
 
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -207,7 +218,8 @@
   gap: 1rem;
 }
 
-.credit-lender {
+.credit-lender,
+.credit-rental {
   display: flex;
   align-items: center;
   gap: 0.5rem;

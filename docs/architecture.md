@@ -129,11 +129,11 @@ Nine **setup stores** (`defineStore('x', () => { … })`); state is `ref`, gette
 - **State**: `account_list` (left panel visibility on mobile) — **Action**: `toggleAccountList(force?)`
 
 #### `credit`
-- **State**: `creditList`, `activeCredit`, `creditBalances` (dict by `IDcredit`), `isLoadingCredits`
-- **Actions**: `fetchCredits()` (also fetches remaining balances), `updateCredit`, `deleteCredit`, `fetchCreditDetails(IDcredit)`, `creditFromList(id)`, `setCreditBalance`
+- **State**: `creditList`, `activeCredit`, `creditBalances` and `creditRentabilites` (dicts by `IDcredit`), `isLoadingCredits`
+- **Actions**: `fetchCredits()` (also fetches remaining balances and rental income), `updateCredit`, `deleteCredit`, `fetchCreditDetails(IDcredit)`, `creditFromList(id)`, `setCreditBalance`
 
 #### `bien`
-- **State**: `bienList`, `activeBien`, `isLoadingBiens` — **Actions**: `fetchBiens()`, `updateBien`, `deleteBien`, `fetchBienDetails(IDbien)`, `bienFromList(id)`
+- **State**: `bienList`, `activeBien`, `bienRentabilites` (dict by `IDbien`, rented biens only), `isLoadingBiens` — **Actions**: `fetchBiens()`, `fetchBienRentabilites()` (called by `biens.vue` and after `updateBien`), `updateBien`, `deleteBien`, `fetchBienDetails(IDbien)`, `bienFromList(id)`
 
 #### `banque`
 - **State**: `banqueList` — **Actions**: `setBanqueList`, `addBanque`, `fetchBanques()`, `createBanque(banque)` (used by `CompteForm`)
@@ -150,8 +150,8 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 | **operation.ts** | `fetchOperationsForAccount()`, `updateOperation()`, `deleteOperation()`, `createTransfert()`, `fetchRecurrOperation()`, `updateRecurringOperation()`, `deleteRecurringOperation()`, `generateRecurringOperations()`, `fetchSearchOperations()`, `fetchOperations(where)` | various `/api/operations` and `/api/operation-recurrentes` endpoints |
 | **category.ts** | `fetchCategoryList()` | `GET /api/categories` |
 | **stats.ts** | `fetchEvolutionSolde()`, `fetchSumByUserByMonth()`, `fetchSumCategoriesByUserByMonth()` | `GET /api/stats/evolutionSolde`, `/api/operations/sumByUserByMonth`, `/api/operations/sumCategoriesByUserByMonth` |
-| **credit.ts** | `fetchCredits()`, `fetchCreditById()`, `updateCredit()`, `deleteCredit()`, `fetchCreditRemainingBalance()`, `fetchCreditPayments()` | `GET/POST /api/credits`, `GET/PUT/DEL /api/credits/:id`, `GET /api/credits/:id/remaining-balance`, `GET /api/credits/:id/payments` |
-| **bien.ts** | `fetchBiens()`, `fetchBienById()`, `updateBien()`, `deleteBien()` | `GET/POST /api/biens`, `GET/PUT/DEL /api/biens/:id` |
+| **credit.ts** | `fetchCredits()`, `fetchCreditById()`, `updateCredit()`, `deleteCredit()`, `fetchCreditRemainingBalance()`, `fetchCreditPayments()`, `fetchCreditRentabilite()` | `GET/POST /api/credits`, `GET/PUT/DEL /api/credits/:id`, `GET /api/credits/:id/remaining-balance`, `GET /api/credits/:id/payments`, `GET /api/credits/:id/rentabilite` |
+| **bien.ts** | `fetchBiens()`, `fetchBienById()`, `updateBien()`, `deleteBien()`, `fetchBienRentabilite()` | `GET/POST /api/biens`, `GET/PUT/DEL /api/biens/:id`, `GET /api/biens/:id/rentabilite` |
 
 **Authentication**: see the Authentication section above. The API base URL is the empty string (`app/services/config.ts` → `API_URL`) so every call is relative to `/api/**`, served by the same Nitro server.
 
@@ -173,7 +173,7 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 | **OperationList.vue** | Scrollable list with infinite scroll, loading and empty states |
 | **Home/Operation.vue** | Single operation row — swipe-to-delete, click-to-edit, check/uncheck toggle |
 | **Amortissement/Operation.vue** | Operation row with amortization-specific rendering |
-| **OperationForm.vue** | Create/edit form, includes category suggestion via `suggestCategories` |
+| **OperationForm.vue** | Create/edit form, includes category suggestion via `suggestCategories` and an optional « Bien » select (`IDbien`, shown when the user has a bien) |
 | **TransfertForm.vue** | Account-to-account transfer (the server creates the debit + credit pair) |
 | **Search.vue** | Cross-account search by operation name |
 
@@ -183,14 +183,14 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 |-----------|-------------|
 | **OperationRecurrenteList.vue** | List container |
 | **OperationRecurrente.vue** | Single recurring-operation row |
-| **OperationRecurrenteForm.vue** | Create/edit form |
+| **OperationRecurrenteForm.vue** | Create/edit form, with the same optional « Bien » select |
 
 #### Credits (loans)
 
 | Component | Description |
 |-----------|-------------|
 | **CreditList.vue** | List container with loading / empty states |
-| **CreditCard.vue** | Card showing name, lender, initial / monthly amount, remaining balance with progress bar, interest rate |
+| **CreditCard.vue** | Card showing name, lender, initial / monthly amount, remaining balance with progress bar, rental line (rents · coverage · effort, `creditRentalLine` in `app/utils/rentabilite.ts`) when the credit finances a rented bien, interest rate |
 | **CreditForm.vue** | Form with name, lender, initial amount, interest rate, monthly payment, status, dates, linked account |
 
 #### Biens (real-estate assets)
@@ -198,8 +198,8 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 | Component | Description |
 |-----------|-------------|
 | **BienList.vue** | List container |
-| **BienCard.vue** | Card showing name, type, city, surface, purchase date, total invested, current valuation |
-| **BienForm.vue** | Form with name, city, type, usage, surface, purchase date, prices and fees, current value, optional credit link |
+| **BienCard.vue** | Card showing name, type, city, surface, purchase date, total invested, current valuation, average rent excluding charges for a rented bien (`bienRentalBlock`), and its « Bilan depuis l'achat » (plus-value, net rents, loan interest, total gain, share of the loan paid by rents, `bienBilanBlock`) |
+| **BienForm.vue** | Form with name, city, type, usage, expected monthly rent (rented biens), surface, purchase date, prices and fees, current value, optional credit link |
 
 #### Stats / utilities
 
@@ -247,15 +247,15 @@ Configured under `pwa` in `nuxt.config.ts`: manifest `mCloud Compte and Budget` 
 ```
 server/
 ├── api/                      # one route per file (Nitro file-based routing)
-│   ├── [resource]/*.ts       #   generic CRUD for banques (read + create only), categories, biens
-│   ├── comptes|operations|operation-recurrentes|credits/*.ts   # explicit CRUD files + specific routes
+│   ├── [resource]/*.ts       #   generic CRUD for banques (read + create only), categories
+│   ├── comptes|operations|operation-recurrentes|credits|biens/*.ts   # explicit CRUD files + specific routes
 │   ├── users/*.ts, ping.get.ts  #   no signup route: users are created in phpMyAdmin (docs/exploitation.md)
 │   ├── stats/*.ts
 │   └── [...path].ts          #   JSON 404 for any unknown /api route
 ├── middleware/auth.ts        # CSRF check on unsafe methods, then cookie JWT check on /api/** (public: GET /api/ping, POST /api/users/login)
 ├── plugins/                  # config check at startup, MySQL pool shutdown
 ├── db/                       # schema.ts (Drizzle, mirrors the production DDL), client.ts, migrations/*.sql
-└── utils/                    # config, auth, scope, crud, resources, crud-routes, filter, validate, errors, sql, stats, users, credits, schedule, money, totals, transfer
+└── utils/                    # config, auth, scope, crud, resources, crud-routes, filter, validate, errors, sql, stats, users, credits, schedule, money, totals, transfer, rentabilite, amortization
 ```
 
 - **Configuration** (`utils/config.ts`): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET` (required in production), `JWT_TTL_SECONDS` (default 21600, 6 h), read from `process.env` at runtime. In dev they can live in `.env`.
@@ -264,13 +264,14 @@ server/
 - **Filter**: lists accept a LoopBack-style `filter` JSON (`where` with `and`/`or`/`inq`/`like`/`gt`…, `order`, `limit`, `skip`, `include`), parsed by `utils/filter.ts` with a column/operator whitelist. The user scope is always combined with `and` after the client's `where`. The primary key is appended as the last sort criterion (same direction as the last requested one, `ASC` otherwise) so `limit`/`skip` pagination is deterministic. Every list is bounded: without `limit` (even with `skip` alone) `DEFAULT_MAX_LIMIT` (1000) applies, and an explicit `limit` is capped to it, with no truncation signal. `like`/`nlike` are generated with `ESCAPE '\\'` (the caller escapes `\`, `%` and `_` in the typed term, `app/utils/like.ts` / `escapeLike` in `utils/sql.ts`; assumes `NO_BACKSLASH_ESCAPES` is off) and refused (400) on a non-text column. The cross-account search (`searchOperationsWhere`, `app/services/operation.ts`) matches `NomOp` and, for a numeric term, `|MontantOp|` (an integer term covers `[x ; x+1[`, a decimal term is exact).
 - **Scope**: `utils/scope.ts` — `getCurrentUserId(event)`, `compteScope` (inherited scoping on `IDcompte`), `assertCompteOwned` (404). Users are looked up by `IDuser`, never by the non-unique `id` column.
 - **SQL**: `rawQuery(sql, params)` / `rawExecute(sql, params)` (`utils/sql.ts`) for analytics (`utils/stats.ts`, aggregates, auto-generation); always parameterised. Dates are read/written in UTC (`timezone: 'Z'`). Amounts are rounded with `round2` (`utils/money.ts`).
-- **Recurring operations** (`utils/schedule.ts`, `operation-recurrentes/auto-generation.post.ts`): pure UTC functions `nextDueDate` (next month, or next year at `MoisOpRecu`, day `JourNumOpRecu` clamped to the month's last day), `prevDueDate`, `firstDueOnOrAfter` and `initialLastDate` (initial `DernierDateOpRecu`, so that the first upcoming due date is generated). Without a transaction, each due date is reserved by `UPDATE … WHERE DernierDateOpRecu = :last` before the `Operation` is inserted (compensated on failure); at most 24 per recurring operation and per call, 15 days (monthly) / 30 days (yearly) ahead. A credit's recurring operation is skipped when the credit is missing, not `actif`, or past `DateFin`, and is read-only through `/api/operation-recurrentes` (409).
+- **Recurring operations** (`utils/schedule.ts`, `operation-recurrentes/auto-generation.post.ts`): pure UTC functions `nextDueDate` (next month, or next year at `MoisOpRecu`, day `JourNumOpRecu` clamped to the month's last day), `prevDueDate`, `firstDueOnOrAfter` and `initialLastDate` (initial `DernierDateOpRecu`, so that the first upcoming due date is generated). Without a transaction, each due date is reserved by `UPDATE … WHERE DernierDateOpRecu = :last` before the `Operation` is inserted (compensated on failure); at most 24 per recurring operation and per call, 15 days (monthly) / 30 days (yearly) ahead. A credit's recurring operation is skipped when the credit is missing, not `actif`, or past `DateFin`, and is read-only through `/api/operation-recurrentes` (409). The generated operation copies `IDcat`, `IDcredit` and `IDbien`.
+- **Rental income** (`utils/rentabilite.ts`, `biens/[id]/rentabilite.get.ts`, `credits/[id]/rentabilite.get.ts`): an `Operation` linked to a `Bien` (`IDbien`) without `IDcredit` is a rent when positive and a charge when negative; an operation carrying an `IDcredit` is never a rent or a charge (a negative one linked to the credit is a monthly payment, a positive one is ignored, like in `remaining-balance`). Only the user's accounts and operations dated today or earlier count. Monthly figures cover the whole letting (`periode`): from the month of `Bien.DateMiseEnLocation` to the last full month (the current month is excluded), with no 12-month cap; without a date, the start is the first rent, for the bien and the credit alike (for a credit: the date of the bien it finances, else its first rent); charges and payments never set it, and with neither date nor rent the letting has not started (`mois = 0`, the cards show the expected values). Operations before the start (owner occupancy, purchase) stay in the all-time `cumul` only. `GET /api/biens/:id/rentabilite` returns rents, charges and average monthly rent (no yield is computed); `GET /api/credits/:id/rentabilite` uses the single bien the credit finances and returns rents and payments only (the bien's charges belong to the bien): average rent excluding charges, average payment actually made (`mensualiteMoyenne`, rate changes and payment holidays included), coverage, and monthly cash-flow = rent excluding charges − payment (negative = monthly effort, so rent + effort = payment). Rents are recorded as received, charges included: `Bien.AbattementCharges` (0-100 %, per bien) is removed from rents to get the rent excluding charges: `loyerMensuelMoyen` and the coverage ratios (`tauxCouverture`, `partCreditLoyers`); the credit cash-flow uses the rent excluding charges too; net rents and total gain use the money actually received and paid. The bien route also returns `bilan`, the summary since purchase: `plusValue` (`ValeurActuelle − prixTotal`, 0 when unset or 0, like on the bien card) + `loyersNets` (all-time rents − charges) − `interets` (interest paid on the linked credit, computed by `amortize` in `utils/amortization.ts`, the same function as `remaining-balance`) = `gainTotal`, plus `mensualites` paid and `partCreditLoyers` (rents after the bien's `AbattementCharges` % ÷ payments) (`paidOnCredit`). Both also return `attendu` values computed from `Bien.LoyerMensuel` (and `Credit.MontantMensuel` while the credit is `actif` and before `DateFin`). Rents never change `remaining-balance` nor any statistic, and `LoyerMensuel` is never used in balances or charts.
 - **Expenses** (`utils/stats.ts`: `EXPENSE_JOIN`, `EXPENSE_WHERE`): one rule for every expense total and chart: the category `Type` (`depense`, inflows and outflows alike; `revenu` for income; `transfert` excluded). There is no uncategorized operation: `IDcat = 0` is the shared default category « Aucune » (`Type = 'depense'`), counted like any other. Account flags are read with `COALESCE`; `dispo` = neither retraite nor children nor bloque. Date ranges are `YYYY-MM-DD` and `to` covers the whole day (`parseRange`); months and years are filtered as half-open UTC ranges (`monthRange`, `yearRange`: `DateOp >= ? AND DateOp < ?`, indexable), never with `MONTH()`/`YEAR()` in the `WHERE` clause (they remain in `GROUP BY`).
 - **Transactions**: every table is InnoDB (migration `0002`); cascades, account-to-account transfers and credit creation run in `db.transaction`, so a failure rolls everything back.
 - **Security**: `nuxt-security` adds the security headers and an enforced CSP; only `POST /api/users/login` is rate-limited (5 attempts per IP per 15 min, in memory). The IP is read from `X-Real-IP`, set by the Synology DSM reverse proxy from Cloudflare's `CF-Connecting-IP` (client → Cloudflare → DSM → container), with the socket address as fallback; IPv6 addresses are counted by their `/64` prefix (`plugins/client-ip.ts`, `rateLimitKey`); `X-Forwarded-For` is never trusted.
 - **Session** (`utils/auth.ts`): JWT `{ name, email, IDuser, tv }` signed HS256 with `iss`/`aud` `mccbng`, carried only by the `HttpOnly` `mccbngAuth` cookie (a Bearer header is refused). `authenticate` re-reads `User.tokenVersion` and refuses a stale `tv` or a deleted user with a generic 401 `Invalid or expired token` (the detailed reason is only logged). `POST /api/users/logout` increments `tokenVersion`.
 - **Login** (`utils/users.ts`): bcrypt only (a plaintext `secret_key` is refused), dummy comparison at the same cost (12) for unknown emails, lockout after 5 consecutive failures (5 min → 30 min → 2 h → 24 h, no bcrypt while locked), one JSON log line per attempt (`event: 'login'`, result, `IDuser`, trusted IP, User-Agent, never the code).
-- **References**: `Operation`/`OperationRecurrente`/`Credit` writes check that `IDcredit` belongs to the user and that `IDcat` is 0, shared (`IDuser = 0`) or the user's (404 otherwise). Generic resources are resolved with `Object.hasOwn` (`/api/constructor` → 404) and a resource may restrict its actions (`banques`: read + create, 405 otherwise).
+- **References**: `Operation`/`OperationRecurrente`/`Credit` writes check that `IDcredit` and `IDbien` belong to the user and that `IDcat` is 0, shared (`IDuser = 0`) or the user's (404 otherwise). A `PUT` that omits `IDbien` keeps the link (`preserve`), and `IDbien` / `IDcredit` 0 or empty is stored as `NULL` (`optionalId`, any other value must be a positive integer); a `Bien` `PUT` likewise keeps `LoyerMensuel`, `AbattementCharges` and `DateMiseEnLocation` when omitted, so an older cached PWA does not wipe them; deleting a `Bien` sets `IDbien` to `NULL` on its operations and recurring operations. A credit finances at most one bien: a `Bien` write giving an `IDcredit` already carried by another bien answers 409 (`assertCreditFree`), and `biens` has no bulk PATCH (405). Generic resources are resolved with `Object.hasOwn` (`/api/constructor` → 404) and a resource may restrict its actions (`banques`: read + create, 405 otherwise).
 - **Migrations**: SQL files in `server/db/migrations`, applied by `scripts/db-migrate.mjs` (`pnpm db:migrate`); `0000_baseline.sql` is the production DDL and is only *marked* as applied on the existing database (`--baseline`). See `../docs/db-migrations.md`.
 
 ### Testing

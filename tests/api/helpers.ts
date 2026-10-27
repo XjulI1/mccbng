@@ -90,3 +90,12 @@ export const createOperation = async (user: TestUser, IDcompte: number, override
   if (res.status !== 200) throw new Error(`createOperation: ${res.status} ${JSON.stringify(res.body)}`)
   return res.body
 }
+
+export const createBien = async (user: TestUser, overrides: Record<string, unknown> = {}) => {
+  const res = await post('/api/biens', user.token, {
+    NomBien: 'Appart', Ville: 'Lyon', TypeBien: 'appartement', Usage: 'locatif', DateAchat: '2020-06-01',
+    PrixBienNu: 150000, FraisNotaire: 10000, ...overrides
+  })
+  if (res.status !== 200) throw new Error(`createBien: ${res.status} ${JSON.stringify(res.body)}`)
+  return res.body
+}

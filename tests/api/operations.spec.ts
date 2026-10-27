@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import {
-  createCategorie, createCompte, createOperation, createUser, del, get, patch, post, put, sql, type TestUser
+  createBien, createCategorie, createCompte, createOperation, createUser, del, get, patch, post, put, sql, type TestUser
 } from './helpers'
 import { searchOperationsWhere } from '../../app/services/operation'
 import {
@@ -497,5 +497,124 @@ describe('virement', () => {
     expect((await post('/api/operations/transfert', user.token, { ...body, toCompte: bobCompte.IDcompte })).status).toBe(404)
     expect((await post('/api/operations/transfert', user.token, { ...body, IDcat: bobCat.IDcat })).status).toBe(404)
     expect((await sql('SELECT COUNT(*) AS n FROM Operation WHERE IDcompte IN (?, ?, ?)', [a.IDcompte, b.IDcompte, bobCompte.IDcompte]))[0].n).toBe(0)
+  })
+})
+
+describe('lien opération → bien', () => {
+  const loyer = (IDcompte: number, extra: Record<string, unknown> = {}) => ({
+    NomOp: 'Loyer', MontantOp: 650, DateOp: '2026-09-05T00:00:00.000Z', IDcompte, ...extra
+  })
+
+  it('opération liée, relue, déliée ; bien d\'autrui → 404 sans écriture ; PUT sans IDbien conserve le lien', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const bien = await createBien(user)
+    const bobBien = await createBien(bob)
+
+    const created = await post('/api/operations', user.token, loyer(compte.IDcompte, { IDbien: bien.IDbien }))
+    expect(created.status).toBe(200)
+    expect((await get(`/api/operations/${created.body.IDop}`, user.token)).body.IDbien).toBe(bien.IDbien)
+
+    expect((await post('/api/operations', user.token, loyer(compte.IDcompte, { IDbien: bobBien.IDbien }))).status).toBe(404)
+    expect((await patch(`/api/operations/${created.body.IDop}`, user.token, { IDbien: bobBien.IDbien })).status).toBe(404)
+    expect((await sql('SELECT COUNT(*) AS n FROM Operation WHERE IDcompte = ?', [compte.IDcompte]))[0].n).toBe(1)
+    expect((await get(`/api/operations/${created.body.IDop}`, user.token)).body.IDbien).toBe(bien.IDbien)
+
+    expect((await put(`/api/operations/${created.body.IDop}`, user.token, loyer(compte.IDcompte, { MontantOp: 700 }))).status).toBe(204)
+    expect((await get(`/api/operations/${created.body.IDop}`, user.token)).body).toMatchObject({ MontantOp: 700, IDbien: bien.IDbien })
+
+    expect((await patch(`/api/operations/${created.body.IDop}`, user.token, { IDbien: null })).status).toBe(204)
+    expect((await get(`/api/operations/${created.body.IDop}`, user.token)).body.IDbien).toBeNull()
+  })
+
+  it('IDbien à 0 ou vide enregistré comme NULL, identifiant de bien ou de crédit invalide refusé', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const bien = await createBien(user)
+    const created = await post('/api/operations', user.token, loyer(compte.IDcompte, { IDbien: 0 }))
+    expect(created.status).toBe(200)
+    expect((await get(`/api/operations/${created.body.IDop}`, user.token)).body.IDbien).toBeNull()
+
+    expect((await patch(`/api/operations/${created.body.IDop}`, user.token, { IDbien: bien.IDbien })).status).toBe(204)
+    expect((await patch(`/api/operations/${created.body.IDop}`, user.token, { IDbien: '' })).status).toBe(204)
+    expect((await get(`/api/operations/${created.body.IDop}`, user.token)).body.IDbien).toBeNull()
+
+    const recurrente = await post('/api/operation-recurrentes', user.token, {
+      NomOpRecu: 'Loyer', MontantOpRecu: 650, JourOpRecu: 1, IDcompte: compte.IDcompte, IDbien: 0
+    })
+    expect(recurrente.status).toBe(200)
+    expect((await get(`/api/operation-recurrentes/${recurrente.body.IDopRecu}`, user.token)).body.IDbien).toBeNull()
+
+    for (const invalid of [-1, 1.5]) {
+      expect((await patch(`/api/operations/${created.body.IDop}`, user.token, { IDbien: invalid })).status, String(invalid)).toBe(422)
+      expect((await patch(`/api/operations/${created.body.IDop}`, user.token, { IDcredit: invalid })).status, String(invalid)).toBe(422)
+    }
+  })
+
+  it('IDcredit à 0 ou vide enregistré comme NULL', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const created = await post('/api/operations', user.token, loyer(compte.IDcompte, { IDcredit: 0 }))
+    expect(created.status).toBe(200)
+    expect((await get(`/api/operations/${created.body.IDop}`, user.token)).body.IDcredit).toBeNull()
+    expect((await patch(`/api/operations/${created.body.IDop}`, user.token, { IDcredit: '' })).status).toBe(204)
+    expect((await get(`/api/operations/${created.body.IDop}`, user.token)).body.IDcredit).toBeNull()
+  })
+
+  it('récurrente liée : bien d\'autrui → 404, PUT sans IDbien conserve le lien, récurrente d\'un crédit en lecture seule', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const bien = await createBien(user)
+    const bobBien = await createBien(bob)
+    const recurrente = (extra: Record<string, unknown> = {}) => ({
+      NomOpRecu: 'Loyer', MontantOpRecu: 650, JourOpRecu: 1, JourNumOpRecu: 5, IDcompte: compte.IDcompte, ...extra
+    })
+
+    expect((await post('/api/operation-recurrentes', user.token, recurrente({ IDbien: bobBien.IDbien }))).status).toBe(404)
+    expect((await sql('SELECT COUNT(*) AS n FROM OperationRecurrente WHERE IDcompte = ?', [compte.IDcompte]))[0].n).toBe(0)
+
+    const created = await post('/api/operation-recurrentes', user.token, recurrente({ IDbien: bien.IDbien }))
+    expect(created.status).toBe(200)
+    expect((await put(`/api/operation-recurrentes/${created.body.IDopRecu}`, user.token, recurrente({ MontantOpRecu: 700 }))).status).toBe(204)
+    expect((await get(`/api/operation-recurrentes/${created.body.IDopRecu}`, user.token)).body).toMatchObject({ MontantOpRecu: 700, IDbien: bien.IDbien })
+
+    const credit = (await post('/api/credits', user.token, {
+      NomCredit: 'Immo', MontantInitial: 100000, MontantMensuel: 830, DateDebut: '2024-03-15', DateFin: '2099-03-15', IDcompte: compte.IDcompte
+    })).body
+    expect((await patch(`/api/operation-recurrentes/${credit.IDopRecu}`, user.token, { IDbien: bien.IDbien })).status).toBe(409)
+    expect((await get(`/api/operation-recurrentes/${credit.IDopRecu}`, user.token)).body.IDbien).toBeNull()
+  })
+
+  it('auto-génération : une ancienne récurrente à IDcredit = 0 génère une opération sans crédit, comptée comme loyer', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const bien = await createBien(user)
+    const target = addDays(today(), -3)
+    const rule: RecurrenceRule = { Frequence: 3, JourNumOpRecu: target.getUTCDate(), MoisOpRecu: 0 }
+    const created = await post('/api/operation-recurrentes', user.token, {
+      NomOpRecu: 'Loyer', MontantOpRecu: 650, JourOpRecu: 1, IDcompte: compte.IDcompte, IDbien: bien.IDbien, ...rule
+    })
+    await sql('UPDATE OperationRecurrente SET IDcredit = 0, DernierDateOpRecu = ? WHERE IDopRecu = ?', [prevDueDate(rule, target), created.body.IDopRecu])
+
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    const ops = await sql<{ IDcredit: number | null; IDbien: number | null }>('SELECT IDcredit, IDbien FROM Operation WHERE IDcompte = ?', [compte.IDcompte])
+    expect(ops).toEqual([{ IDcredit: null, IDbien: bien.IDbien }])
+    expect((await get(`/api/biens/${bien.IDbien}/rentabilite`, user.token)).body.cumul.loyers).toBe(650)
+  })
+
+  it('auto-génération : l\'opération générée reprend l\'IDbien de la récurrente', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const bien = await createBien(user)
+    const target = addDays(today(), -3)
+    const rule: RecurrenceRule = { Frequence: 3, JourNumOpRecu: target.getUTCDate(), MoisOpRecu: 0 }
+    const created = await post('/api/operation-recurrentes', user.token, {
+      NomOpRecu: 'Loyer', MontantOpRecu: 650, JourOpRecu: 1, IDcompte: compte.IDcompte, IDbien: bien.IDbien, ...rule
+    })
+    await sql('UPDATE OperationRecurrente SET DernierDateOpRecu = ? WHERE IDopRecu = ?', [prevDueDate(rule, target), created.body.IDopRecu])
+
+    await post('/api/operation-recurrentes/auto-generation', user.token, {})
+    const ops = await sql<{ DateOp: Date; MontantOp: number; IDbien: number | null }>('SELECT DateOp, MontantOp, IDbien FROM Operation WHERE IDcompte = ?', [compte.IDcompte])
+    expect(ops.map(o => ({ ...o, DateOp: iso(o.DateOp) }))).toEqual([{ DateOp: iso(target), MontantOp: 650, IDbien: bien.IDbien }])
   })
 })

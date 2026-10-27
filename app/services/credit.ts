@@ -30,3 +30,8 @@ export const fetchCreditPayments = (IDcredit, userToken, APIURL) =>
   apiGet(APIURL + '/api/credits/' + IDcredit + '/payments', {
     token: userToken
   })
+
+export const fetchCreditRentabilite = (IDcredit, userToken, APIURL) =>
+  apiGet(APIURL + '/api/credits/' + IDcredit + '/rentabilite', {
+    token: userToken
+  })

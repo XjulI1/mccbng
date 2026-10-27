@@ -8,17 +8,17 @@
     >
       <div class="summary-card">
         <span class="summary-label">Total emprunté</span>
-        <span class="summary-value">{{ formatAmount(totalInitial) }}</span>
+        <span class="summary-value">{{ formatEuros(totalInitial) }}</span>
       </div>
       <div class="summary-card">
         <span class="summary-label">Total restant</span>
         <span class="summary-value montant-negatif">{{
-          formatAmount(totalRemaining)
+          formatEuros(totalRemaining)
         }}</span>
       </div>
       <div class="summary-card">
         <span class="summary-label">Mensualités totales</span>
-        <span class="summary-value">{{ formatAmount(totalMonthly) }}</span>
+        <span class="summary-value">{{ formatEuros(totalMonthly) }}</span>
       </div>
     </div>
 
@@ -32,6 +32,7 @@
   import { computed, onMounted } from 'vue'
   import { useCompteStore } from '@/stores/compte'
   import { useCreditStore } from '@/stores/credit'
+  import { formatEuros } from '@/utils/money'
   import CreditList from '@/components/CreditList.vue'
 
   const compteStore = useCompteStore()
@@ -62,14 +63,6 @@
       )
     )
   })
-
-  const formatAmount = (amount) => {
-    if (amount === undefined || amount === null) return '0,00 €'
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount)
-  }
 
   onMounted(() => {
     creditStore.fetchCredits()

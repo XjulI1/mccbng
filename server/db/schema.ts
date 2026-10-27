@@ -53,12 +53,14 @@ export const operations = mysqlTable('Operation', {
   IDcompte: int('IDcompte').notNull(),
   IDcat: int('IDcat').default(0),
   amortissement: boolean('amortissement').notNull().default(false),
-  IDcredit: int('IDcredit')
+  IDcredit: int('IDcredit'),
+  IDbien: int('IDbien')
 }, t => [
   index('idx_operation_compte_check_date').on(t.IDcompte, t.CheckOp, t.DateOp),
   index('idx_operation_compte_date').on(t.IDcompte, t.DateOp),
   index('idx_operation_idcredit').on(t.IDcredit),
-  index('idx_operation_idcat').on(t.IDcat)
+  index('idx_operation_idcat').on(t.IDcat),
+  index('idx_operation_idbien').on(t.IDbien)
 ])
 
 export const operationRecurrentes = mysqlTable('OperationRecurrente', {
@@ -72,7 +74,8 @@ export const operationRecurrentes = mysqlTable('OperationRecurrente', {
   DernierDateOpRecu: datetime('DernierDateOpRecu', { mode: 'date' }).notNull(),
   IDcompte: int('IDcompte').notNull(),
   IDcat: int('IDcat').default(0),
-  IDcredit: int('IDcredit')
+  IDcredit: int('IDcredit'),
+  IDbien: int('IDbien')
 }, t => [index('idx_operationrecurrente_idcompte').on(t.IDcompte)])
 
 export const categories = mysqlTable('Categorie', {
@@ -113,6 +116,9 @@ export const biens = mysqlTable('Bien', {
   FraisAgence: money('FraisAgence').default(0),
   ApportCash: money('ApportCash').default(0),
   ValeurActuelle: money('ValeurActuelle'),
+  LoyerMensuel: money('LoyerMensuel'),
+  AbattementCharges: decimal('AbattementCharges', { precision: 5, scale: 2, mode: 'number' }),
+  DateMiseEnLocation: datetime('DateMiseEnLocation', { mode: 'date' }),
   IDcredit: int('IDcredit'),
   IDuser: int('IDuser').notNull()
 }, t => [

@@ -16,6 +16,9 @@ export const parseBody = async <S extends ZodType>(event: H3Event, schema: S): P
 const toNumber = (v: unknown) => (typeof v === 'string' && v.trim() !== '' ? Number(v) : v)
 export const numeric = z.preprocess(toNumber, z.number())
 export const numericInt = (min: number, max: number) => z.preprocess(toNumber, z.number().int().min(min).max(max))
+export const numericMin = (min: number) => z.preprocess(toNumber, z.number().min(min))
+export const numericBetween = (min: number, max: number) => z.preprocess(toNumber, z.number().min(min).max(max))
+export const optionalId = z.preprocess(v => (v === 0 || v === '0' || v === '' ? null : toNumber(v)), z.number().int().positive().nullable())
 export const numericOneOf = <T extends number>(...values: [T, T, ...T[]]) =>
   z.preprocess(toNumber, z.union(values.map(v => z.literal(v)) as unknown as [z.ZodLiteral<T>, z.ZodLiteral<T>]))
 export const boolish = z.union([z.boolean(), z.literal(0), z.literal(1)]).transform(v => Boolean(v))

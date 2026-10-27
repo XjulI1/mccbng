@@ -44,7 +44,7 @@
       <div class="bien-amounts">
         <div class="amount-item">
           <span class="label">Prix total</span>
-          <span class="value">{{ formatAmount(prixTotal) }}</span>
+          <span class="value">{{ formatEuros(prixTotal) }}</span>
         </div>
         <div
           v-if="bien.ValeurActuelle"
@@ -54,8 +54,41 @@
           <span
             class="value"
             :class="plusValueClass"
-          >{{ formatAmount(bien.ValeurActuelle) }}</span>
+          >{{ formatEuros(bien.ValeurActuelle) }}</span>
         </div>
+      </div>
+
+      <div
+        v-if="rentalBlock"
+        class="bien-amounts"
+      >
+        <div class="amount-item">
+          <span class="label">{{ rentalBlock.prevu ? 'Loyer prévu' : `Loyer moyen depuis ${rentalBlock.depuis}` }}</span>
+          <span class="value montant-positif">{{ rentalBlock.loyer }}</span>
+        </div>
+      </div>
+
+      <div
+        v-if="bilanBlock"
+        class="bien-bilan"
+      >
+        <span class="bien-bilan-title">Bilan depuis l'achat</span>
+        <div
+          v-for="ligne in bilanBlock.lignes"
+          :key="ligne.label"
+          class="bien-bilan-row"
+        >
+          <span class="label">{{ ligne.label }}</span>
+          <span :class="ligne.classe">{{ ligne.montant }}</span>
+        </div>
+        <div class="bien-bilan-row bien-bilan-total">
+          <span>{{ bilanBlock.gainTotal.label }}</span>
+          <span :class="bilanBlock.gainTotal.classe">{{ bilanBlock.gainTotal.montant }}</span>
+        </div>
+        <span
+          v-if="bilanBlock.partCreditLoyers"
+          class="label"
+        >{{ bilanBlock.partCreditLoyers }}</span>
       </div>
 
       <div
@@ -77,7 +110,7 @@
           icon="wallet"
           class="icon"
         />
-        <span>Apport : {{ formatAmount(bien.ApportCash) }}</span>
+        <span>Apport : {{ formatEuros(bien.ApportCash) }}</span>
       </div>
     </div>
   </div>
@@ -86,7 +119,10 @@
 <script setup>
   import { computed } from 'vue'
   import { useRouter } from '#imports'
+  import { useBienStore } from '@/stores/bien'
   import { useCreditStore } from '@/stores/credit'
+  import { bienBilanBlock, bienRentalBlock } from '@/utils/rentabilite'
+  import { formatEuros } from '@/utils/money'
 
   const props = defineProps({
     bien: {
@@ -96,6 +132,7 @@
   })
 
   const router = useRouter()
+  const bienStore = useBienStore()
   const creditStore = useCreditStore()
 
   const prixTotal = computed(() => {
@@ -105,6 +142,16 @@
       (props.bien.FraisAgence || 0)
     )
   })
+
+  const rentalBlock = computed(() =>
+    props.bien.Usage === 'locatif' ? bienRentalBlock(bienStore.bienRentabilites[props.bien.IDbien]) : null
+  )
+
+  const bilanBlock = computed(() =>
+    props.bien.Usage === 'locatif'
+      ? bienBilanBlock(bienStore.bienRentabilites[props.bien.IDbien]?.bilan, Boolean(props.bien.ValeurActuelle))
+      : null
+  )
 
   const associatedCredit = computed(() => {
     if (!props.bien.IDcredit) return null
@@ -139,14 +186,6 @@
     if (props.bien.ValeurActuelle < prixTotal.value) return 'montant-negatif'
     return ''
   })
-
-  const formatAmount = (amount) => {
-    if (amount === undefined || amount === null) return '0,00 €'
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount)
-  }
 
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -251,6 +290,37 @@
 
 .montant-positif {
   color: var(--color-success, #4caf50);
+}
+
+.bien-bilan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px dashed var(--border-color, #e0e0e0);
+}
+
+.bien-bilan-title {
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.bien-bilan-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+.bien-bilan .label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+}
+
+.bien-bilan-total {
+  padding-top: 0.375rem;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+  font-weight: 600;
+  color: var(--text-primary, #333);
 }
 
 .montant-negatif {

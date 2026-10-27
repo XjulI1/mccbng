@@ -111,6 +111,63 @@
         </div>
       </div>
 
+      <div
+        v-if="bien.Usage === 'locatif'"
+        class="form-group"
+      >
+        <label
+          for="bien-loyer"
+          class="form-label"
+        >Loyer mensuel attendu, hors charges (optionnel)</label>
+        <input
+          id="bien-loyer"
+          v-model.number="bien.LoyerMensuel"
+          type="number"
+          class="form-input"
+          placeholder="0.00"
+          step="0.01"
+          min="0"
+          @blur="roundField('LoyerMensuel')"
+        >
+      </div>
+
+      <div
+        v-if="bien.Usage === 'locatif'"
+        class="form-group"
+      >
+        <label
+          for="bien-abattement"
+          class="form-label"
+        >Part des charges dans le loyer perçu, en % (optionnel)</label>
+        <input
+          id="bien-abattement"
+          v-model.number="bien.AbattementCharges"
+          type="number"
+          class="form-input"
+          placeholder="ex. 10"
+          step="0.1"
+          min="0"
+          max="100"
+          @blur="roundField('AbattementCharges')"
+        >
+      </div>
+
+      <div
+        v-if="bien.Usage === 'locatif'"
+        class="form-group"
+      >
+        <label
+          for="bien-mise-en-location"
+          class="form-label"
+        >Date de mise en location (optionnel)</label>
+        <input
+          id="bien-mise-en-location"
+          v-model="bien.DateMiseEnLocation"
+          type="date"
+          class="form-input"
+        >
+      </div>
+
       <div class="form-group">
         <label
           for="bien-date"
@@ -182,7 +239,7 @@
 
         <div class="prix-total">
           <span class="prix-total-label">Total</span>
-          <span class="prix-total-value">{{ formatAmount(prixTotal) }}</span>
+          <span class="prix-total-value">{{ formatEuros(prixTotal) }}</span>
         </div>
       </fieldset>
 
@@ -203,7 +260,7 @@
               Aucun crédit
             </option>
             <option
-              v-for="credit in creditList"
+              v-for="credit in availableCredits"
               :key="'credit-' + credit.IDcredit"
               :value="credit.IDcredit"
             >
@@ -277,6 +334,7 @@
   import { useBienStore } from '@/stores/bien'
   import { useCreditStore } from '@/stores/credit'
   import { useRoute, useRouter } from '#imports'
+  import { formatEuros } from '@/utils/money'
 
   const bienStore = useBienStore()
   const creditStore = useCreditStore()
@@ -285,6 +343,9 @@
 
   const bienID = computed(() => Number(route.params.id))
   const creditList = computed(() => creditStore.creditList || [])
+  const availableCredits = computed(() => creditList.value.filter(credit =>
+    !bienStore.bienList.some(other => other.IDcredit === credit.IDcredit && other.IDbien !== bien.value.IDbien)
+  ))
 
   const bien = ref({
     IDbien: undefined as number | undefined,
@@ -299,6 +360,9 @@
     FraisAgence: 0,
     ApportCash: 0,
     ValeurActuelle: null as number | null,
+    LoyerMensuel: null as number | null,
+    AbattementCharges: null as number | null,
+    DateMiseEnLocation: null as string | null,
     IDcredit: null as number | null
   })
 
@@ -329,14 +393,6 @@
     }
   }
 
-  const formatAmount = (amount: number) => {
-    if (amount === undefined || amount === null) return '0,00 €'
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount)
-  }
-
   const saveBien = () => {
     if (!isFormValid.value) {
       alert('Veuillez remplir tous les champs obligatoires')
@@ -348,6 +404,9 @@
       DateAchat: new Date(bien.value.DateAchat).toISOString(),
       Surface: bien.value.Surface || undefined,
       ValeurActuelle: bien.value.ValeurActuelle || undefined,
+      LoyerMensuel: typeof bien.value.LoyerMensuel === 'number' ? bien.value.LoyerMensuel : null,
+      AbattementCharges: typeof bien.value.AbattementCharges === 'number' ? bien.value.AbattementCharges : null,
+      DateMiseEnLocation: bien.value.DateMiseEnLocation ? new Date(bien.value.DateMiseEnLocation).toISOString() : null,
       IDcredit: bien.value.IDcredit || undefined
     }
 
@@ -391,6 +450,9 @@
       if (existing) {
         bien.value = { ...existing }
         bien.value.DateAchat = new Date(existing.DateAchat).toISOString().split('T')[0]
+        bien.value.DateMiseEnLocation = existing.DateMiseEnLocation
+          ? new Date(existing.DateMiseEnLocation).toISOString().split('T')[0]
+          : null
       }
     }
   })
