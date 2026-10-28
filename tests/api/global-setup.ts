@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { createServer } from 'node:net'
 import { createConnection } from 'mysql2/promise'
+import { startAnthropicMock } from '../support/anthropic-mock'
 import { startDatabase } from '../support/database'
 import type { TestProject } from 'vitest/node'
 // @ts-expect-error module JS sans types
@@ -13,6 +14,8 @@ export interface ApiTestContext {
   db: { host: string; port: number; user: string; password: string; database: string }
   // Compte administrateur du serveur de test (création de bases jetables pour les tests du runner de migrations)
   admin: { host: string; port: number; user: string; password: string }
+  // Faux serveur Messages API (import par LLM)
+  anthropicMock: string
 }
 
 declare module 'vitest' {
@@ -43,6 +46,7 @@ const waitFor = async (url: string, timeoutMs = 60_000) => {
 
 export default async function setup(project: TestProject) {
   const database = await startDatabase()
+  const anthropic = await startAnthropicMock()
   const jwtSecret = `test-secret-${randomBytes(16).toString('hex')}`
 
   const connection = await createConnection({ ...database.db, multipleStatements: true })
@@ -61,7 +65,10 @@ export default async function setup(project: TestProject) {
     DB_PASSWORD: database.db.password,
     DB_NAME: database.db.database,
     JWT_SECRET: jwtSecret,
-    JWT_TTL_SECONDS: '3600'
+    JWT_TTL_SECONDS: '3600',
+    ANTHROPIC_API_KEY: 'sk-ant-test',
+    ANTHROPIC_BASE_URL: anthropic.url,
+    ANTHROPIC_MODEL: 'claude-opus-5-5'
   }
 
   if (!process.env.API_TEST_SKIP_BUILD) {
@@ -77,10 +84,11 @@ export default async function setup(project: TestProject) {
   const baseUrl = `http://127.0.0.1:${port}`
   await waitFor(`${baseUrl}/api/ping`)
 
-  project.provide('api', { baseUrl, jwtSecret, db: database.db, admin: database.admin })
+  project.provide('api', { baseUrl, jwtSecret, db: database.db, admin: database.admin, anthropicMock: anthropic.url })
 
   return async () => {
     server.kill('SIGTERM')
+    await anthropic.stop()
     await database.stop()
   }
 }

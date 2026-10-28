@@ -6,7 +6,7 @@ import { createCategorie, createCompte, createOperation, createUser, get, post, 
 let user: TestUser
 beforeAll(async () => { user = await createUser() })
 
-const BUSINESS_TABLES = ['Banque', 'Bien', 'Categorie', 'Compte', 'Credit', 'Operation', 'OperationRecurrente', 'User']
+const BUSINESS_TABLES = ['Banque', 'Bien', 'Categorie', 'Compte', 'Credit', 'ImportLigne', 'ImportLot', 'Operation', 'OperationRecurrente', 'User']
 
 describe('schéma normalisé (0002)', () => {
   it('tables métier en InnoDB / utf8mb4_unicode_ci', async () => {

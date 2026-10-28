@@ -3,7 +3,10 @@
     class="route-other-the-content"
     @click="returnToHome"
   >
-    <div class="component-content">
+    <div
+      class="component-content"
+      :class="{ wide: WIDE_COMPONENTS.has(componentName) }"
+    >
       <component :is="components[componentName]" />
     </div>
   </div>
@@ -19,6 +22,7 @@
   import CreditForm from '@/components/CreditForm.vue'
   import BienForm from '@/components/BienForm.vue'
   import CompteForm from '@/components/CompteForm.vue'
+  import ImportForm from '@/components/ImportForm.vue'
 
   const components = {
     'operation-form': OperationForm,
@@ -27,8 +31,12 @@
     'transfert-form': TransfertForm,
     'credit-form': CreditForm,
     'bien-form': BienForm,
-    'compte-form': CompteForm
+    'compte-form': CompteForm,
+    'import-form': ImportForm
   }
+
+  // Écrans à liste (revue d'import) : plus de largeur sur desktop / tablette
+  const WIDE_COMPONENTS = new Set(['import-form'])
 
   const route = useRoute()
   const router = useRouter()
@@ -70,5 +78,9 @@
   margin: ($header-height-and-margin + 5px) auto 20px;
   max-width: 600px;
   padding: 0 10px;
+
+  &.wide {
+    max-width: 1100px;
+  }
 }
 </style>

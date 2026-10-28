@@ -17,6 +17,7 @@ export const routesFixture: RouteFixture[] = [
   { path: '/editOperation/:id', sample: '/editOperation/12', name: 'Edition opération', parent: '/operations', componentName: 'operation-form', disabledTotalHeader: false },
   { path: '/search', sample: '/search', name: 'Search', parent: '/operations', componentName: 'search', disabledTotalHeader: false },
   { path: '/transfert', sample: '/transfert', name: 'Virement', parent: '/operations', componentName: 'transfert-form', disabledTotalHeader: false },
+  { path: '/import', sample: '/import', name: "Import d'opérations", parent: '/operations', componentName: 'import-form', disabledTotalHeader: false },
   { path: '/retrait', sample: '/retrait', name: 'Retrait', parent: '/operations', componentName: 'transfert-form', disabledTotalHeader: false },
   { path: '/recurrOperation', sample: '/recurrOperation', name: 'Opérations récurrentes', disabledTotalHeader: true },
   { path: '/newRecurrOperation', sample: '/newRecurrOperation', name: 'Nouvelle opération récurrente', parent: '/recurrOperation', componentName: 'operation-recurrente-form', disabledTotalHeader: true },

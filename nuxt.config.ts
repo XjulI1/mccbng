@@ -89,7 +89,9 @@ export default defineNuxtConfig({
     // Le module ne décompte pas la 1re requête de la fenêtre : tokensPerInterval = 4 donne 5 essais, la 6e reçoit 429.
     // IP lue dans X-Real-IP (posé par le reverse proxy, ou à défaut l'adresse de la socket : server/plugins/client-ip.ts),
     // jamais dans X-Forwarded-For. Compteur en mémoire : un stockage partagé est requis si l'app est répliquée.
-    '/api/users/login': { security: { rateLimiter: { tokensPerInterval: 4, interval: 15 * 60 * 1000, ipHeader: 'x-real-ip' } } }
+    '/api/users/login': { security: { rateLimiter: { tokensPerInterval: 4, interval: 15 * 60 * 1000, ipHeader: 'x-real-ip' } } },
+    // Import par LLM : jusqu'à 20 images JPEG en base64 dans le corps JSON (le débit est limité par utilisateur dans la route)
+    '/api/imports': { security: { requestSizeLimiter: { maxRequestSizeInBytes: 25e6, maxUploadFileRequestInBytes: 25e6 } } }
   },
 
   devServer: { port: 8080, host: 'localhost' },

@@ -15,13 +15,15 @@ export const methodNotAllowed = (message: string) => new HttpError(405, 'MethodN
 export const conflict = (message: string) => new HttpError(409, 'ConflictError', message)
 export const unprocessable = (message: string) => new HttpError(422, 'UnprocessableEntityError', message)
 export const tooManyRequests = (message: string) => new HttpError(429, 'TooManyRequestsError', message)
+export const badGateway = (message: string) => new HttpError(502, 'BadGatewayError', message)
+export const serviceUnavailable = (message: string) => new HttpError(503, 'ServiceUnavailableError', message)
 
 export interface ErrorBody { error: { statusCode: number; name: string; message: string } }
 
 const NAMES: Record<number, string> = {
   400: 'BadRequestError', 401: 'UnauthorizedError', 403: 'ForbiddenError', 404: 'NotFoundError',
   405: 'MethodNotAllowedError', 409: 'ConflictError', 413: 'PayloadTooLargeError', 422: 'UnprocessableEntityError',
-  429: 'TooManyRequestsError', 500: 'InternalServerError'
+  429: 'TooManyRequestsError', 500: 'InternalServerError', 502: 'BadGatewayError', 503: 'ServiceUnavailableError'
 }
 
 // Convertit n'importe quelle erreur en { statusCode, body } au format uniforme de l'API.

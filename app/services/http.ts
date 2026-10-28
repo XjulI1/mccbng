@@ -1,5 +1,12 @@
 type Params = Record<string, unknown>
 
+// Erreur HTTP : statut et message de l'API ({ error: { message } }) quand il est fourni
+export class ApiError extends Error {
+  constructor (public status: number, message: string, public apiMessage?: string) {
+    super(message)
+  }
+}
+
 export interface ApiOptions {
   /** @deprecated ignoré : la session est portée par le cookie HttpOnly mccbngAuth, envoyé automatiquement */
   token?: unknown
@@ -42,7 +49,11 @@ const request = async <T>(
   })
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} ${response.statusText}`)
+    let apiMessage: string | undefined
+    try {
+      apiMessage = (await response.json())?.error?.message
+    } catch { /* corps non JSON */ }
+    throw new ApiError(response.status, `HTTP ${response.status} ${response.statusText}`, apiMessage)
   }
 
   if (response.status === 204) return undefined as T

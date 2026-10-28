@@ -126,3 +126,36 @@ export const biens = mysqlTable('Bien', {
   index('idx_bien_iduser').on(t.IDuser),
   index('idx_bien_idcredit').on(t.IDcredit)
 ])
+
+// Import d'opérations par LLM : lot en brouillon rattaché à un compte, validé en une transaction.
+export const importLots = mysqlTable('ImportLot', {
+  IDimport: int('IDimport').primaryKey().autoincrement(),
+  IDuser: int('IDuser').notNull(),
+  IDcompte: int('IDcompte').notNull(),
+  Statut: mysqlEnum('Statut', ['brouillon', 'valide', 'abandonne']).notNull().default('brouillon'),
+  // texte, image, video, mixte (mcp à venir)
+  Source: varchar('Source', { length: 16 }).notNull(),
+  Modele: varchar('Modele', { length: 64 }),
+  TokensEntree: int('TokensEntree'),
+  TokensSortie: int('TokensSortie'),
+  DateCreation: datetime('DateCreation', { mode: 'date' }).notNull(),
+  DateValidation: datetime('DateValidation', { mode: 'date' })
+}, t => [index('idx_importlot_iduser_statut').on(t.IDuser, t.Statut)])
+
+// LibelleSource : libellé lu dans la source ; NomOp : libellé proposé puis retenu à la validation.
+// CleSource : LibelleSource normalisé, clé des correspondances apprises.
+export const importLignes = mysqlTable('ImportLigne', {
+  IDligne: int('IDligne').primaryKey().autoincrement(),
+  IDimport: int('IDimport').notNull(),
+  Ordre: int('Ordre').notNull().default(0),
+  DateOp: datetime('DateOp', { mode: 'date' }).notNull(),
+  LibelleSource: varchar('LibelleSource', { length: 255 }).notNull(),
+  CleSource: varchar('CleSource', { length: 255 }).notNull(),
+  NomOp: str('NomOp').notNull(),
+  MontantOp: money('MontantOp').notNull(),
+  IDcat: int('IDcat').notNull().default(0),
+  Confiance: mysqlEnum('Confiance', ['haute', 'moyenne', 'faible']).notNull().default('moyenne'),
+  IDopDoublon: int('IDopDoublon'),
+  DoublonLot: boolean('DoublonLot').notNull().default(false),
+  Selection: boolean('Selection').notNull().default(true)
+}, t => [index('idx_importligne_import_cle').on(t.IDimport, t.CleSource)])

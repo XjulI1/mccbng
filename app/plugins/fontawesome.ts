@@ -40,7 +40,10 @@ import {
   faCalendar,
   faWallet,
   faBuilding,
-  faPercent
+  faPercent,
+  faCamera,
+  faVideo,
+  faFileImport
 } from '@fortawesome/free-solid-svg-icons'
 
 const FontAwesome = {
@@ -85,7 +88,10 @@ const FontAwesome = {
       faCalendar,
       faWallet,
       faBuilding,
-      faPercent
+      faPercent,
+      faCamera,
+      faVideo,
+      faFileImport
     } as any)
   }
 }

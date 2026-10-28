@@ -46,8 +46,9 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from '#imports'
+  import { fetchImportDisponible } from '@/services/imports'
 
   type Action = {
     label: string
@@ -64,6 +65,13 @@
     { label: 'Nouvelle opération', icon: 'plus', color: 'fab-primary', path: '/newOperation' },
     { label: 'Virement', icon: 'exchange-alt', color: 'fab-warning', path: '/transfert' }
   ]
+  const importAction: Action = { label: 'Importer', icon: 'file-import', color: 'fab-info', path: '/import' }
+
+  // Import par IA proposé seulement si le serveur a une clé Anthropic
+  const importDisponible = ref(false)
+  onMounted(() => {
+    fetchImportDisponible().then((disponible) => { importDisponible.value = disponible }).catch(() => {})
+  })
 
   const gestionActions: Action[] = [
     { label: 'Nouveau compte', icon: 'wallet', color: 'fab-compte', path: '/newCompte' },
@@ -79,7 +87,8 @@
     path.startsWith('/editOperation') ||
     path === '/search' ||
     path === '/transfert' ||
-    path === '/retrait'
+    path === '/retrait' ||
+    path === '/import'
 
   const isGestionContext = (path: string) =>
     path === '/gestion' ||
@@ -98,7 +107,7 @@
     path.startsWith('/editCompte')
 
   const actions = computed<Action[]>(() => {
-    if (isHomeContext(route.path)) return homeActions
+    if (isHomeContext(route.path)) return importDisponible.value ? [...homeActions, importAction] : homeActions
     if (isGestionContext(route.path)) return gestionActions
     return []
   })
