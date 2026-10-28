@@ -305,9 +305,9 @@ describe('opérations récurrentes', () => {
     expect((await del(`/api/operation-recurrentes/${created.body.IDopRecu}`, alice.token)).status).toBe(204)
   })
 
-  it('validation : Frequence ∈ {3, 7}, JourNumOpRecu 1-31, MoisOpRecu 0-11, IDcredit refusé, sans écriture', async () => {
+  it('validation : Frequence ∈ {3, 5, 7}, JourNumOpRecu 1-31, MoisOpRecu 0-11, IDcredit refusé, sans écriture', async () => {
     const compte = await createCompte(alice)
-    for (const invalid of [{ Frequence: 5 }, { JourNumOpRecu: 0 }, { JourNumOpRecu: 32 }, { MoisOpRecu: 12 }, { MoisOpRecu: -1 }, { IDcredit: 1 }]) {
+    for (const invalid of [{ Frequence: 4 }, { JourNumOpRecu: 0 }, { JourNumOpRecu: 32 }, { MoisOpRecu: 12 }, { MoisOpRecu: -1 }, { IDcredit: 1 }]) {
       const res = await post('/api/operation-recurrentes', alice.token, recurrente(compte.IDcompte, invalid))
       expect(res.status, JSON.stringify(invalid)).toBe(422)
     }
@@ -318,6 +318,9 @@ describe('opérations récurrentes', () => {
     expect(annual.body).toMatchObject({ Frequence: 7, MoisOpRecu: 11, JourNumOpRecu: 31 })
     const patched = await patch(`/api/operation-recurrentes/${annual.body.IDopRecu}`, alice.token, { Frequence: 4 })
     expect(patched.status).toBe(422)
+    const quarterly = await patch(`/api/operation-recurrentes/${annual.body.IDopRecu}`, alice.token, { Frequence: '5' })
+    expect(quarterly.status).toBe(200)
+    expect(quarterly.body).toMatchObject({ Frequence: 5 })
   })
 
   it('création : DernierDateOpRecu reçu ignoré, la première échéance à venir est générée', async () => {
@@ -383,6 +386,18 @@ describe('opérations récurrentes', () => {
     await createRecurrente(user, compte.IDcompte, rule, prevDueDate(rule, target))
     await post('/api/operation-recurrentes/auto-generation', user.token, {})
     expect(await generatedDates(compte.IDcompte)).toEqual([iso(target)])
+  })
+
+  it('auto-génération : trimestrielle générée 20 jours à l\'avance', async () => {
+    const user = await createUser()
+    for (const [days, expected] of [[18, true], [22, false]] as const) {
+      const compte = await createCompte(user)
+      const target = addDays(today(), days)
+      const rule: RecurrenceRule = { Frequence: 5, JourNumOpRecu: target.getUTCDate(), MoisOpRecu: target.getUTCMonth() }
+      await createRecurrente(user, compte.IDcompte, rule, prevDueDate(rule, target))
+      await post('/api/operation-recurrentes/auto-generation', user.token, {})
+      expect(await generatedDates(compte.IDcompte)).toEqual(expected ? [iso(target)] : [])
+    }
   })
 
   it('auto-génération : appels concurrents sans doublon', async () => {

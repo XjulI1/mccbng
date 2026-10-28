@@ -1,12 +1,12 @@
 import { defineApiHandler } from '../../utils/errors'
 import {
-  addDays, isSupportedFrequency, MONTHLY, nextDueDate, startOfUtcDay, toRule
+  addDays, isSupportedFrequency, MONTHLY, nextDueDate, QUARTERLY, startOfUtcDay, toRule, YEARLY
 } from '../../utils/schedule'
 import { getCurrentUserId } from '../../utils/scope'
 import { rawExecute, rawQuery } from '../../utils/sql'
 
-// Fenêtre d'anticipation historique : une échéance est générée 15 jours (mensuel) ou 30 jours (annuel) à l'avance.
-const ANTICIPATION_DAYS = { monthly: 15, yearly: 30 }
+// Fenêtre d'anticipation : une échéance est générée 15 jours (mensuel), 20 jours (trimestriel) ou 30 jours (annuel) à l'avance.
+const ANTICIPATION_DAYS = { [MONTHLY]: 15, [QUARTERLY]: 20, [YEARLY]: 30 }
 // Garde-fou contre une donnée aberrante : au plus 24 échéances par récurrente et par appel.
 const MAX_PER_CALL = 24
 
@@ -40,7 +40,7 @@ export default defineApiHandler(async (event) => {
       }
       if (rec.creditStatut !== null && rec.creditStatut !== 'actif') continue
     }
-    const horizon = addDays(today, rule.Frequence === MONTHLY ? ANTICIPATION_DAYS.monthly : ANTICIPATION_DAYS.yearly)
+    const horizon = addDays(today, ANTICIPATION_DAYS[rule.Frequence])
     const dateFin: Date | null = rec.IDcredit && rec.creditDateFin ? new Date(rec.creditDateFin) : null
 
     // `last` est renvoyé tel qu'il a été lu (heure comprise) pour que la comparaison de l'UPDATE soit exacte

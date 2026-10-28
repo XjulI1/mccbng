@@ -1,9 +1,12 @@
 // Échéancier des opérations récurrentes : fonctions pures, en dates UTC à minuit.
 // Mensuel (Frequence = 3) : une échéance par mois au jour JourNumOpRecu.
+// Trimestriel (Frequence = 5) : une échéance tous les trois mois au jour JourNumOpRecu, dans les mois
+// alignés sur MoisOpRecu (0 = janvier ; MoisOpRecu = 1 → février, mai, août, novembre).
 // Annuel (Frequence = 7) : une échéance par an au mois MoisOpRecu (0 = janvier) et au jour JourNumOpRecu.
 // Le jour est toujours borné au dernier jour du mois (31 → 28/29 février, 30 avril…).
 
 export const MONTHLY = 3
+export const QUARTERLY = 5
 export const YEARLY = 7
 
 export interface RecurrenceRule {
@@ -14,8 +17,8 @@ export interface RecurrenceRule {
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-export const isSupportedFrequency = (frequence: unknown): frequence is typeof MONTHLY | typeof YEARLY =>
-  frequence === MONTHLY || frequence === YEARLY
+export const isSupportedFrequency = (frequence: unknown): frequence is typeof MONTHLY | typeof QUARTERLY | typeof YEARLY =>
+  frequence === MONTHLY || frequence === QUARTERLY || frequence === YEARLY
 
 // Valeurs historiques NULL : jour 1, janvier.
 export const toRule = (row: { Frequence?: unknown; JourNumOpRecu?: unknown; MoisOpRecu?: unknown }): RecurrenceRule => ({
@@ -43,31 +46,38 @@ export const startOfUtcDay = (date: Date): Date =>
 
 export const addDays = (date: Date, days: number): Date => new Date(date.getTime() + days * DAY_MS)
 
-/** Échéance de la période qui suit celle de `after` (mois suivant, ou année suivante au mois MoisOpRecu). */
+// Durée d'une période, en mois.
+const STEP = { [MONTHLY]: 1, [QUARTERLY]: 3, [YEARLY]: 12 } as const
+
+// Mois (relatif à l'année de `date`, éventuellement négatif) qui porte l'échéance de la période de `date` :
+// le mois même en mensuel, le mois aligné sur MoisOpRecu qui le précède ou l'égale en trimestriel,
+// le mois MoisOpRecu de l'année en annuel.
+const periodMonth = (rule: RecurrenceRule, date: Date): number => {
+  const month = date.getUTCMonth()
+  if (rule.Frequence === MONTHLY) return month
+  if (rule.Frequence === QUARTERLY) return month - (((month - rule.MoisOpRecu) % 3) + 3) % 3
+  return rule.MoisOpRecu
+}
+
+/** Échéance de la période qui suit celle de `after` (mois, trimestre ou année suivants). */
 export const nextDueDate = (rule: RecurrenceRule, after: Date): Date => {
   assertFrequency(rule)
-  if (rule.Frequence === MONTHLY) return dueInMonth(rule, after.getUTCFullYear(), after.getUTCMonth() + 1)
-  return dueInMonth(rule, after.getUTCFullYear() + 1, rule.MoisOpRecu)
+  return dueInMonth(rule, after.getUTCFullYear(), periodMonth(rule, after) + STEP[rule.Frequence])
 }
 
 /** Échéance de la période qui précède celle de `due` : nextDueDate(rule, prevDueDate(rule, due)) = due. */
 export const prevDueDate = (rule: RecurrenceRule, due: Date): Date => {
   assertFrequency(rule)
-  if (rule.Frequence === MONTHLY) return dueInMonth(rule, due.getUTCFullYear(), due.getUTCMonth() - 1)
-  return dueInMonth(rule, due.getUTCFullYear() - 1, rule.MoisOpRecu)
+  return dueInMonth(rule, due.getUTCFullYear(), periodMonth(rule, due) - STEP[rule.Frequence])
 }
 
 /** Plus petite échéance théorique postérieure ou égale au jour de `date`. */
 export const firstDueOnOrAfter = (rule: RecurrenceRule, date: Date): Date => {
   assertFrequency(rule)
   const day = startOfUtcDay(date)
-  const year = day.getUTCFullYear()
-  if (rule.Frequence === MONTHLY) {
-    const candidate = dueInMonth(rule, year, day.getUTCMonth())
-    return candidate < day ? dueInMonth(rule, year, day.getUTCMonth() + 1) : candidate
-  }
-  const candidate = dueInMonth(rule, year, rule.MoisOpRecu)
-  return candidate < day ? dueInMonth(rule, year + 1, rule.MoisOpRecu) : candidate
+  const month = periodMonth(rule, day)
+  const candidate = dueInMonth(rule, day.getUTCFullYear(), month)
+  return candidate < day ? dueInMonth(rule, day.getUTCFullYear(), month + STEP[rule.Frequence]) : candidate
 }
 
 /**

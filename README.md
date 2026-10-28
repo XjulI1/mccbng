@@ -44,8 +44,8 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 - **Suggestion intelligente de catégorie** lors de la saisie : `GET /api/operations/suggestCategories` propose les catégories les plus fréquentes pour un libellé similaire.
 
 ### Opérations récurrentes
-- Modèle de transaction récurrente avec fréquence (3 = mensuelle, 7 = annuelle), jour (borné au dernier jour du mois), mois (0 = janvier) et date de dernière échéance générée.
-- Génération automatique au chargement : `POST /api/operation-recurrentes/auto-generation` génère toutes les échéances dues jusqu'à 15 jours (mensuel) ou 30 jours (annuel) à l'avance, sans doublon même en cas d'appels simultanés.
+- Modèle de transaction récurrente avec fréquence (3 = mensuelle, 5 = trimestrielle, 7 = annuelle), jour (borné au dernier jour du mois), mois (0 = janvier) et date de dernière échéance générée.
+- Génération automatique au chargement : `POST /api/operation-recurrentes/auto-generation` génère toutes les échéances dues jusqu'à 15 jours (mensuel), 20 jours (trimestriel) ou 30 jours (annuel) à l'avance, sans doublon même en cas d'appels simultanés.
 - La mensualité d'un crédit se modifie depuis le crédit (lecture seule dans `/recurrOperation`).
 - Vue dédiée `/recurrOperation` pour la gestion (création, édition, suppression).
 
@@ -212,7 +212,7 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 | **Banque** | `IDbanque` | `NomBanque` | `hasMany Compte` |
 | **Compte** | `IDcompte` | `NomCompte`, `solde` (DECIMAL), `IDuser`, `IDbanque`, `bloque`, `joint`, `children`, `retraite`, `porte_feuille`, `visible`, `Plafond?` | `belongsTo Banque` |
 | **Operation** | `IDop` | `NomOp`, `MontantOp` (DECIMAL), `DateOp`, `CheckOp`, `IDcompte`, `IDcat`, `amortissement`, `IDcredit?`, `IDbien?` | scopée via `Compte` |
-| **OperationRecurrente** | `IDopRecu` | `NomOpRecu`, `MontantOpRecu` (DECIMAL), `JourOpRecu`, `JourNumOpRecu`, `MoisOpRecu`, `Frequence` (3=mensuel, 7=annuel), `DernierDateOpRecu`, `IDcompte`, `IDcat`, `IDcredit?`, `IDbien?` | scopée via `Compte` |
+| **OperationRecurrente** | `IDopRecu` | `NomOpRecu`, `MontantOpRecu` (DECIMAL), `JourOpRecu`, `JourNumOpRecu`, `MoisOpRecu`, `Frequence` (3=mensuel, 5=trimestriel, 7=annuel), `DernierDateOpRecu`, `IDcompte`, `IDcat`, `IDcredit?`, `IDbien?` | scopée via `Compte` |
 | **Categorie** | `IDcat` | `Nom`, `IDuser` (0 = catégorie partagée), `Type` (`depense` / `revenu` / `transfert`) | — |
 | **Credit** | `IDcredit` | `NomCredit`, `NomPreteur?`, `MontantInitial` (DECIMAL), `MontantMensuel`, `TauxInteret?`, `DateDebut`, `DateFin`, `IDcompte`, `IDopRecu?`, `IDuser`, `Statut` (def `actif`), `IDcat` | — |
 | **Bien** | `IDbien` | `NomBien`, `Ville`, `TypeBien`, `Surface?`, `Usage` (def `principale`), `DateAchat`, `PrixBienNu`, `FraisNotaire`, `FraisAgence`, `ApportCash`, `ValeurActuelle?`, `LoyerMensuel?`, `AbattementCharges?`, `DateMiseEnLocation?`, `IDcredit?`, `IDuser` | — |

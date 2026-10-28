@@ -7,6 +7,7 @@ import {
 const d = (iso: string) => new Date(`${iso}T00:00:00.000Z`)
 const iso = (date: Date) => date.toISOString().slice(0, 10)
 const monthly = (JourNumOpRecu: number): RecurrenceRule => ({ Frequence: 3, JourNumOpRecu, MoisOpRecu: 0 })
+const quarterly = (MoisOpRecu: number, JourNumOpRecu: number): RecurrenceRule => ({ Frequence: 5, JourNumOpRecu, MoisOpRecu })
 const yearly = (MoisOpRecu: number, JourNumOpRecu: number): RecurrenceRule => ({ Frequence: 7, JourNumOpRecu, MoisOpRecu })
 
 const chain = (rule: RecurrenceRule, start: Date, count: number) => {
@@ -44,12 +45,21 @@ describe('nextDueDate', () => {
     expect(iso(nextDueDate(yearly(0, 10), d('2026-06-01')))).toBe('2027-01-10')
   })
 
+  it('trimestriel : tous les trois mois, borné au dernier jour du mois, passage d\'année', () => {
+    expect(chain(quarterly(0, 31), d('2026-01-31'), 4)).toEqual(['2026-04-30', '2026-07-31', '2026-10-31', '2027-01-31'])
+    expect(chain(quarterly(1, 15), d('2026-11-15'), 2)).toEqual(['2027-02-15', '2027-05-15'])
+    // MoisOpRecu ne fixe que l'alignement : 10 (novembre) ≡ 1 (février)
+    expect(chain(quarterly(10, 15), d('2026-11-15'), 2)).toEqual(['2027-02-15', '2027-05-15'])
+    // dernière date hors des mois alignés : l'échéance suit le trimestre de cette date
+    expect(iso(nextDueDate(quarterly(0, 10), d('2026-05-20')))).toBe('2026-07-10')
+  })
+
   it('ignore l\'heure de la dernière date', () => {
     expect(iso(nextDueDate(monthly(5), new Date('2026-10-05T14:37:00.000Z')))).toBe('2026-11-05')
   })
 
   it('refuse une fréquence inconnue', () => {
-    expect(() => nextDueDate({ Frequence: 5, JourNumOpRecu: 1, MoisOpRecu: 0 }, d('2026-01-01'))).toThrow()
+    expect(() => nextDueDate({ Frequence: 4, JourNumOpRecu: 1, MoisOpRecu: 0 }, d('2026-01-01'))).toThrow()
   })
 })
 
@@ -57,7 +67,8 @@ describe('prevDueDate', () => {
   it('inverse de nextDueDate', () => {
     for (const [rule, due] of [
       [monthly(31), '2026-03-31'], [monthly(31), '2026-02-28'], [monthly(1), '2026-01-01'],
-      [yearly(1, 29), '2028-02-29'], [yearly(11, 31), '2026-12-31']
+      [yearly(1, 29), '2028-02-29'], [yearly(11, 31), '2026-12-31'],
+      [quarterly(0, 31), '2026-01-31'], [quarterly(2, 31), '2026-06-30']
     ] as const) {
       expect(iso(nextDueDate(rule, prevDueDate(rule, d(due))))).toBe(due)
     }
@@ -69,6 +80,13 @@ describe('firstDueOnOrAfter / initialLastDate', () => {
   it('échéance du jour incluse', () => {
     expect(iso(firstDueOnOrAfter(monthly(5), new Date('2026-10-05T18:00:00Z')))).toBe('2026-10-05')
     expect(iso(firstDueOnOrAfter(yearly(1, 29), d('2026-03-01')))).toBe('2027-02-28')
+  })
+
+  it('trimestriel : première échéance dans un mois aligné sur MoisOpRecu', () => {
+    expect(iso(firstDueOnOrAfter(quarterly(0, 15), d('2026-10-05')))).toBe('2026-10-15')
+    expect(iso(firstDueOnOrAfter(quarterly(0, 15), d('2026-10-20')))).toBe('2027-01-15')
+    expect(iso(firstDueOnOrAfter(quarterly(1, 15), d('2026-10-28')))).toBe('2026-11-15')
+    expect(iso(initialLastDate(quarterly(1, 15), d('2026-10-28'), d('2026-10-28')))).toBe('2026-08-15')
   })
 
   it('récurrente au 25 créée le 5 : la première échéance est le 25 du mois courant', () => {

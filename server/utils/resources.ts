@@ -8,7 +8,7 @@ import { getDb } from '../db/client'
 import { findOwned, type CrudResource } from './crud'
 import { findOwnedCredit } from './credits'
 import { conflict, notFound } from './errors'
-import { initialLastDate, MONTHLY, toRule } from './schedule'
+import { initialLastDate, MONTHLY, QUARTERLY, toRule, YEARLY } from './schedule'
 import { assertCompteOwned, compteScope, getCurrentUserId } from './scope'
 import { boolish, numeric, numericBetween, numericInt, numericMin, numericOneOf, optionalId } from './validate'
 
@@ -131,7 +131,7 @@ export const operationRecurrenteResource: CrudResource = {
     { NomOpRecu: str, MontantOpRecu: numeric, JourOpRecu: numeric, IDcompte: numeric },
     {
       DernierDateOpRecu: date, JourNumOpRecu: numericInt(1, 31), MoisOpRecu: numericInt(0, 11),
-      Frequence: numericOneOf(3, 7), IDcat: numeric, IDcredit: z.null(), IDbien: optionalId
+      Frequence: numericOneOf(MONTHLY, QUARTERLY, YEARLY), IDcat: numeric, IDcredit: z.null(), IDbien: optionalId
     }
   ),
   // La première échéance à venir doit être générée : DernierDateOpRecu = échéance qui la précède

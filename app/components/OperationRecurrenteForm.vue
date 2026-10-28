@@ -67,6 +67,9 @@
             <option value="3">
               Mensuelle
             </option>
+            <option value="5">
+              Trimestrielle
+            </option>
             <option value="7">
               Annuelle
             </option>
@@ -74,13 +77,13 @@
         </div>
 
         <div
-          v-if="isYearly"
+          v-if="hasMonth"
           class="form-group"
         >
           <label
             for="operation-month"
             class="form-label"
-          >Mois</label>
+          >{{ isQuarterly ? 'Mois d\'une échéance' : 'Mois' }}</label>
           <select
             id="operation-month"
             v-model="operationRecurrente.MoisOpRecu"
@@ -319,7 +322,9 @@
   const activeAccountID = computed(
     () => compteStore.activeAccount.IDcompte
   )
-  const isYearly = computed(() => Number(operationRecurrente.value.Frequence) === 7)
+  // Trimestriel : MoisOpRecu désigne l'un des mois d'échéance (les autres sont à ±3, 6, 9 mois)
+  const isQuarterly = computed(() => Number(operationRecurrente.value.Frequence) === 5)
+  const hasMonth = computed(() => isQuarterly.value || Number(operationRecurrente.value.Frequence) === 7)
   // Une mensualité de crédit se modifie depuis le crédit (l'API répond 409)
   const isManagedByCredit = computed(() => Boolean((operationRecurrente.value as { IDcredit?: number | null }).IDcredit))
 

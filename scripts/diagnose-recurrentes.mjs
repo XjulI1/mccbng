@@ -10,17 +10,18 @@ import { loadEnv } from './load-env.mjs'
 
 const day = date => (date ? new Date(date).toISOString().slice(0, 10) : null)
 
-// Récurrentes (mensualités de crédit comprises) dont le jour (et le mois en annuel) diffère de DernierDateOpRecu.
-// Correction proposée : aligner JourNumOpRecu (et MoisOpRecu en annuel) sur DernierDateOpRecu, qui reflète
+// Récurrentes (mensualités de crédit comprises) dont le jour (et le mois en annuel / trimestriel) diffère de DernierDateOpRecu.
+// Correction proposée : aligner JourNumOpRecu (et MoisOpRecu en annuel / trimestriel) sur DernierDateOpRecu, qui reflète
 // le calendrier réellement suivi jusqu'ici. Un jour borné en fin de mois (31 → 30 avril) n'est pas un écart.
 export async function findMisaligned(connection) {
   const [rows] = await connection.query(
     'SELECT r.IDopRecu, c.IDuser, r.NomOpRecu, r.IDcredit, r.Frequence, r.JourNumOpRecu, r.MoisOpRecu, r.DernierDateOpRecu ' +
     'FROM OperationRecurrente r LEFT JOIN Compte c ON c.IDcompte = r.IDcompte ' +
-    'WHERE r.Frequence IN (3, 7) AND (' +
+    'WHERE r.Frequence IN (3, 5, 7) AND (' +
     '  (DAY(r.DernierDateOpRecu) <> COALESCE(r.JourNumOpRecu, 1) ' +
     '    AND NOT (DAY(r.DernierDateOpRecu) = DAY(LAST_DAY(r.DernierDateOpRecu)) AND COALESCE(r.JourNumOpRecu, 1) > DAY(r.DernierDateOpRecu))) ' +
     '  OR (r.Frequence = 7 AND MONTH(r.DernierDateOpRecu) - 1 <> COALESCE(r.MoisOpRecu, 0))' +
+    '  OR (r.Frequence = 5 AND MOD(MONTH(r.DernierDateOpRecu) - 1 - COALESCE(r.MoisOpRecu, 0) + 12, 3) <> 0)' +
     ') ORDER BY r.IDopRecu'
   )
   return rows.map((row) => {
@@ -29,7 +30,7 @@ export async function findMisaligned(connection) {
       ...row,
       DernierDateOpRecu: day(last),
       proposedJourNumOpRecu: last.getUTCDate(),
-      proposedMoisOpRecu: row.Frequence === 7 ? last.getUTCMonth() : row.MoisOpRecu
+      proposedMoisOpRecu: row.Frequence === 3 ? row.MoisOpRecu : last.getUTCMonth()
     }
   })
 }
@@ -76,7 +77,7 @@ export async function diagnose(connection) {
   const misaligned = await findMisaligned(connection)
   const [invalid] = await connection.query(
     'SELECT IDopRecu, NomOpRecu, Frequence, JourNumOpRecu, MoisOpRecu FROM OperationRecurrente ' +
-    'WHERE Frequence IS NULL OR Frequence NOT IN (3, 7) ' +
+    'WHERE Frequence IS NULL OR Frequence NOT IN (3, 5, 7) ' +
     'OR (JourNumOpRecu IS NOT NULL AND JourNumOpRecu NOT BETWEEN 1 AND 31) ' +
     'OR (MoisOpRecu IS NOT NULL AND MoisOpRecu NOT BETWEEN 0 AND 11) ORDER BY IDopRecu'
   )
