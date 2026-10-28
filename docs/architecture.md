@@ -149,7 +149,7 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 | **compte.ts** | `fetchAccountList()`, `sumAllCompteForUser()`, `sumForACompte()` | `GET /api/comptes`, `GET /api/operations/sumAllCompteForUser`, `GET /api/operations/sumForACompte` |
 | **operation.ts** | `fetchOperationsForAccount()`, `updateOperation()`, `deleteOperation()`, `createTransfert()`, `fetchRecurrOperation()`, `updateRecurringOperation()`, `deleteRecurringOperation()`, `generateRecurringOperations()`, `fetchSearchOperations()`, `fetchOperations(where)` | various `/api/operations` and `/api/operation-recurrentes` endpoints |
 | **category.ts** | `fetchCategoryList()` | `GET /api/categories` |
-| **stats.ts** | `fetchEvolutionSolde()`, `fetchSumByUserByMonth()`, `fetchSumCategoriesByUserByMonth()` | `GET /api/stats/evolutionSolde`, `/api/operations/sumByUserByMonth`, `/api/operations/sumCategoriesByUserByMonth` |
+| **stats.ts** | `fetchRecap()`, `fetchEvolutionSolde()`, `fetchSumByUserByMonth()`, `fetchSumCategoriesByUserByMonth()` | `GET /api/stats/recap`, `/api/stats/evolutionSolde`, `/api/operations/sumByUserByMonth`, `/api/operations/sumCategoriesByUserByMonth` |
 | **credit.ts** | `fetchCredits()`, `fetchCreditById()`, `updateCredit()`, `deleteCredit()`, `fetchCreditRemainingBalance()`, `fetchCreditPayments()`, `fetchCreditRentabilite()` | `GET/POST /api/credits`, `GET/PUT/DEL /api/credits/:id`, `GET /api/credits/:id/remaining-balance`, `GET /api/credits/:id/payments`, `GET /api/credits/:id/rentabilite` |
 | **bien.ts** | `fetchBiens()`, `fetchBienById()`, `updateBien()`, `deleteBien()`, `fetchBienRentabilite()` | `GET/POST /api/biens`, `GET/PUT/DEL /api/biens/:id`, `GET /api/biens/:id/rentabilite` |
 
@@ -215,7 +215,8 @@ API layer built on the native `fetch` API via the small wrapper in `services/htt
 | Page | Description |
 |------|-------------|
 | **login.vue** | Email + 6-character code → `auth(...)` → save cookies, load user |
-| **index.vue** | Active account `OperationList`; child routes overlay forms |
+| **index.vue** | Home recap: global total of the account list and annual objective (`warningTotal`), then real estate, remaining loans and savings rate over 6 months / 1 / 2 / 5 years (`GET /api/stats/recap`); the « Accueil » tab of the bottom bar leads back to it (search moved to the magnifier of the account header, shown on the operation pages) |
+| **operations.vue** | Active account `OperationList` (`/operations`, opened by choosing an account); child routes overlay forms |
 | **recurrOperation.vue** | Recurring operations list and management |
 | **amortissement.vue** | Operations filtered with `amortissement: 1` (loan principal repayments) |
 | **gestion.vue**, **comptesGestion.vue** | Management hub and account management |

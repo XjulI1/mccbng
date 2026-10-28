@@ -40,7 +40,7 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 - Liste paginée par scroll infini (35 opérations par page) côté front.
 - **Swipe-to-delete** et clic pour éditer sur mobile.
 - **Virement** entre comptes (`/transfert`) : le serveur crée la paire débit + crédit en une requête (`POST /api/operations/transfert`).
-- **Recherche** d'opérations par libellé sur tous les comptes (`/search`).
+- **Recherche** d'opérations par libellé sur tous les comptes (`/search`, loupe de l'en-tête de la liste des opérations).
 - **Suggestion intelligente de catégorie** lors de la saisie : `GET /api/operations/suggestCategories` propose les catégories les plus fréquentes pour un libellé similaire.
 
 ### Opérations récurrentes
@@ -48,6 +48,11 @@ L'application est un package `pnpm` unique (à la racine du dépôt) : une SPA N
 - Génération automatique au chargement : `POST /api/operation-recurrentes/auto-generation` génère toutes les échéances dues jusqu'à 15 jours (mensuel) ou 30 jours (annuel) à l'avance, sans doublon même en cas d'appels simultanés.
 - La mensualité d'un crédit se modifie depuis le crédit (lecture seule dans `/recurrOperation`).
 - Vue dédiée `/recurrOperation` pour la gestion (création, édition, suppression).
+
+### Récap (page d'accueil)
+- Total global des comptes (affiché seulement ici) et progression vers l'objectif annuel (réglé dans le profil), mesurée depuis le 1er janvier, immobilier (valeur actuelle, à défaut prix d'achat), capital restant dû des crédits actifs et immobilier net.
+- Taux d'épargne `(revenus − dépenses) / revenus` sur les 6 derniers mois complets, 1 an, 2 ans et 5 ans (mêmes règles que les Stats : `Type` de catégorie, transferts exclus) (`GET /api/stats/recap`).
+- La liste des opérations du compte actif est sur `/operations`, ouverte en choisissant un compte.
 
 ### Catégorisation et budget
 - **Catégories** définies par utilisateur, avec un drapeau `Stats` indiquant si elles entrent dans les statistiques de dépense.
@@ -241,6 +246,7 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 | `GET`   | `/api/credits/{id}/rentabilite` | Loyers, mensualités, effort et couverture du crédit (sans les charges du bien) |
 | `*`     | `/api/biens` | CRUD biens immobiliers |
 | `GET`   | `/api/biens/{id}/rentabilite` | Loyers, charges, loyer moyen et bilan du bien |
+| `GET`   | `/api/stats/recap` | Récap de la home : immobilier, capital restant dû, taux d'épargne 6 mois / 1 / 2 / 5 ans |
 | `GET`   | `/api/stats/evolutionSolde` | Time series `global`, `retraite`, `dispo` |
 | `GET`   | `/api/stats/yearComparison`, `topCategories`, `incomeVsExpense`, `topOperations`, `categoryHeatmap` | Statistiques annuelles et par catégorie |
 

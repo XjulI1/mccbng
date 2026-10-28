@@ -51,7 +51,7 @@
             <label
               for="user-warning-total"
               class="form-label"
-            >Seuil d'alerte total</label>
+            >Objectif annuel</label>
             <input
               id="user-warning-total"
               v-model.number="form.warningTotal"

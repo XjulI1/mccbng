@@ -74,6 +74,7 @@ User scoping uses two patterns:
 
 ### Key Features
 
+- Home recap (`app/pages/index.vue`, `GET /api/stats/recap`): global total of the account list (`compteStore.totalGlobal`, the only place it is shown) with the annual objective (`User.warningTotal`; its bar measures the progress since January 1st: (total − total on January 1st) / (objective − total on January 1st), the January 1st total being derived from the per-account sums of the year's operations returned as `depuisJanvier`), real estate (`ValeurActuelle`, else `PrixBienNu`), remaining principal of active credits (same `amortize` as `remaining-balance`), and savings rate `(revenus + dépenses) / revenus` over the last 6 / 12 / 24 / 60 full months (current month excluded). The active account operation list lives on `/operations`.
 - Multi-bank, multi-account management with type flags and pointed/unpointed balance tracking.
 - Transaction CRUD with pointed status, infinite scroll pagination (35/page), swipe-to-delete on mobile.
 - Recurring operations with monthly / yearly auto-generation (`server/utils/schedule.ts`): every due occurrence up to 15 days (monthly) or 30 days (yearly) ahead is generated in one call (at most 24 per recurring operation), each reserved by an optimistic lock on `DernierDateOpRecu` so concurrent calls never duplicate it. Credits stop generating after `DateFin` or when not `actif`.

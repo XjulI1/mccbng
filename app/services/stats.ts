@@ -41,3 +41,6 @@ export default {
   fetchTopOperations,
   fetchCategoryHeatmap
 }
+
+export const fetchRecap = (userToken, APIURL) =>
+  apiGet(APIURL + '/api/stats/recap', { token: userToken })

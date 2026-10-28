@@ -6,23 +6,6 @@
     aria-label="Navigation principale"
   >
     <button
-      type="button"
-      class="tab tab-burger"
-      :class="{ active: displayAccountList }"
-      :style="{ '--tab-color': '#4a5568' }"
-      :aria-label="displayAccountList
-        ? 'Fermer la liste des comptes'
-        : 'Ouvrir la liste des comptes'"
-      :aria-pressed="displayAccountList"
-      @click="toggleCompteList"
-    >
-      <font-awesome-icon
-        class="tab-icon"
-        icon="hamburger"
-      />
-      <span class="tab-label">Comptes</span>
-    </button>
-    <button
       v-for="tab in tabs"
       :key="tab.path"
       type="button"
@@ -42,7 +25,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
   import { useRoute, useRouter } from '#imports'
   import { useDisplayStore } from '@/stores/display'
   import type { RouteLocationNormalizedLoaded } from 'vue-router'
@@ -51,7 +33,6 @@
   const router = useRouter()
   const displayStore = useDisplayStore()
 
-  const displayAccountList = computed(() => displayStore.account_list)
 
   type Tab = {
     label: string
@@ -77,11 +58,11 @@
 
   const tabs: Tab[] = [
     {
-      label: 'Recherche',
-      icon: 'search',
-      path: '/search',
-      color: '#17a2b8',
-      match: (r) => r.path === '/search'
+      label: 'Accueil',
+      icon: 'home',
+      path: '/',
+      color: '#667eea',
+      match: (r) => r.path === '/'
     },
     {
       label: 'Gestion',
@@ -113,9 +94,6 @@
     }
   }
 
-  const toggleCompteList = () => {
-    displayStore.toggleAccountList()
-  }
 </script>
 
 <style lang="scss" scoped>
@@ -185,9 +163,6 @@
   text-overflow: ellipsis;
 }
 
-.tab-burger {
-  display: none;
-}
 
 @media screen and (max-width: $mobile_BP_max_width) {
   .tab-bar {
@@ -202,10 +177,6 @@
 
   .tab-icon {
     font-size: 19px;
-  }
-
-  .tab-burger {
-    display: flex;
   }
 }
 </style>

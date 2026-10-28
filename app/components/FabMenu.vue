@@ -74,6 +74,7 @@
 
   const isHomeContext = (path: string) =>
     path === '/' ||
+    path === '/operations' ||
     path === '/newOperation' ||
     path.startsWith('/editOperation') ||
     path === '/search' ||

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 import { badRequest } from './errors'
+import { amortize } from './amortization'
+import { round2 } from './money'
 import { rawQuery } from './sql'
 
 export const MAX_LIMIT = 50
@@ -213,4 +215,80 @@ export const categoryHeatmap = async (userID: number, compteIds: number[], yearN
     if (idx !== undefined) data.push([Number(row.m) - 1, idx, n(row.total)])
   }
   return { categories, data }
+}
+
+export const SAVINGS_PERIODS = [6, 12, 24, 60] as const
+
+// Périodes de taux d'épargne : les `mois` derniers mois complets, mois en cours exclu (UTC).
+export const savingsPeriods = (today: Date) => {
+  const year = today.getUTCFullYear()
+  const month = today.getUTCMonth()
+  return SAVINGS_PERIODS.map(mois => ({ mois, from: firstOfMonth(year, month - mois), toExclusive: firstOfMonth(year, month) }))
+}
+
+// Taux d'épargne = (revenus + dépenses nettes) / revenus, en % à une décimale ; null sans revenu.
+export const savingsRate = (revenus: number, depenses: number): number | null =>
+  revenus > 0 ? Math.round(((revenus + depenses) / revenus) * 1000) / 10 : null
+
+// Récap de la home (le total global vient de la liste des comptes, côté front) : immobilier, capital restant dû des crédits actifs
+// (même calcul que remaining-balance), taux d'épargne par période (règle revenus / dépenses des Stats) et, par compte,
+// la somme des opérations datées depuis le 1er janvier (échéances futures comprises, comme les soldes) : le front en
+// déduit le total global au 1er janvier.
+export const recap = async (userID: number, compteIds: number[], today: Date) => {
+  const periods = savingsPeriods(today)
+  const tomorrow = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1))
+  const ids = compteIds.length ? compteIds : [-1]
+  const debutAnnee = firstOfMonth(today.getUTCFullYear(), 0)
+  const [biens, credits, payments, months, annee] = await Promise.all([
+    rawQuery<{ total: number | string | null }>(
+      'SELECT ROUND(SUM(COALESCE(ValeurActuelle, PrixBienNu)), 2) AS total FROM Bien WHERE IDuser = ?',
+      [userID]
+    ),
+    rawQuery<{ IDcredit: number; MontantInitial: number | string; TauxInteret: number | string | null }>(
+      "SELECT IDcredit, MontantInitial, TauxInteret FROM Credit WHERE IDuser = ? AND COALESCE(Statut, 'actif') = 'actif'",
+      [userID]
+    ),
+    rawQuery<{ IDcredit: number; MontantOp: number | string; DateOp: Date }>(
+      'SELECT o.IDcredit, o.MontantOp, o.DateOp FROM Operation o ' +
+      `WHERE o.IDcompte IN (${placeholders(ids)}) AND o.IDcredit IS NOT NULL AND o.MontantOp < 0 AND o.DateOp < ? ` +
+      'ORDER BY o.DateOp ASC',
+      [...ids, tomorrow]
+    ),
+    rawQuery<{ m: string; income: number | string; expense: number | string }>(
+      "SELECT DATE_FORMAT(o.DateOp, '%Y-%m-01') AS m, " +
+      "ROUND(SUM(CASE WHEN c.Type = 'revenu' THEN o.MontantOp ELSE 0 END), 2) AS income, " +
+      `ROUND(SUM(CASE WHEN ${EXPENSE_WHERE} THEN o.MontantOp ELSE 0 END), 2) AS expense ` +
+      'FROM Operation o ' +
+      EXPENSE_JOIN +
+      `WHERE o.IDcompte IN (${placeholders(ids)}) ` +
+      'AND o.DateOp >= ? AND o.DateOp < ? ' +
+      `AND (c.Type = 'revenu' OR ${EXPENSE_WHERE}) ` +
+      'GROUP BY m',
+      [userID, ...ids, periods.at(-1)!.from, periods[0]!.toExclusive]
+    ),
+    rawQuery<{ IDcompte: number; total: number | string }>(
+      'SELECT o.IDcompte, ROUND(SUM(o.MontantOp), 2) AS total FROM Operation o ' +
+      `WHERE o.IDcompte IN (${placeholders(ids)}) AND o.DateOp >= ? GROUP BY o.IDcompte`,
+      [...ids, debutAnnee]
+    )
+  ])
+
+  const restantCredit = round2(credits.reduce((sum, credit) => sum + amortize(
+    { MontantInitial: n(credit.MontantInitial), TauxInteret: credit.TauxInteret === null ? null : n(credit.TauxInteret) },
+    payments.filter(p => p.IDcredit === credit.IDcredit).map(p => ({ MontantOp: n(p.MontantOp), DateOp: new Date(p.DateOp) }))
+  ).solde, 0))
+  const immobilier = n(biens[0]?.total)
+
+  return {
+    immobilier,
+    restantCredit,
+    immobilierNet: round2(immobilier - restantCredit),
+    epargne: periods.map(({ mois, from, toExclusive }) => {
+      const inPeriod = months.filter(row => row.m >= from && row.m < toExclusive)
+      const revenus = round2(inPeriod.reduce((sum, row) => sum + n(row.income), 0))
+      const depenses = round2(inPeriod.reduce((sum, row) => sum + n(row.expense), 0))
+      return { mois, from, toExclusive, revenus, depenses, epargne: round2(revenus + depenses), taux: savingsRate(revenus, depenses) }
+    }),
+    depuisJanvier: { from: debutAnnee, parCompte: annee.map(row => ({ IDcompte: Number(row.IDcompte), total: n(row.total) })) }
+  }
 }

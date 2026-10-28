@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { createBien, createCategorie, createCompte, createOperation, createUser, get, patch, sql, type TestUser } from './helpers'
+import { createBien, createCategorie, createCompte, createOperation, createUser, get, patch, post, sql, type TestUser } from './helpers'
 
 let alice: TestUser
 let bob: TestUser
@@ -239,5 +239,65 @@ describe('stats', () => {
 
   it('sans JWT : 401', async () => {
     expect((await get('/api/stats/evolutionSolde')).status).toBe(401)
+  })
+})
+
+describe('récap de la home', () => {
+  it('immobilier, capital restant dû des crédits actifs et taux d\'épargne sur les mois complets', async () => {
+    const user = await createUser()
+    const courant = await createCompte(user)
+    const retraite = await createCompte(user, { NomCompte: 'PER', retraite: true })
+    const courses = await createCategorie(user, 'Courses', 'depense')
+    const paie = await createCategorie(user, 'Paie', 'revenu')
+    const virement = await createCategorie(user, 'Virement', 'transfert')
+    const now = new Date()
+    const day = (monthsAgo: number) => new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsAgo, 10)).toISOString()
+
+    await createOperation(user, courant.IDcompte, { MontantOp: 3000, IDcat: paie.IDcat, DateOp: day(1) })
+    await createOperation(user, courant.IDcompte, { MontantOp: -1000, IDcat: courses.IDcat, DateOp: day(1) })
+    await createOperation(user, courant.IDcompte, { MontantOp: -500, IDcat: virement.IDcat, DateOp: day(1) }) // transfert : ignoré
+    await createOperation(user, courant.IDcompte, { MontantOp: 1000, IDcat: paie.IDcat, DateOp: day(10) })
+    await createOperation(user, courant.IDcompte, { MontantOp: -2000, IDcat: courses.IDcat, DateOp: day(0) }) // mois en cours : exclu
+    await createOperation(user, retraite.IDcompte, { MontantOp: 5000, IDcat: virement.IDcat, DateOp: day(1) }) // hors total global
+
+    await createBien(user, { PrixBienNu: 150000, ValeurActuelle: 180000 })
+    await createBien(user, { PrixBienNu: 90000 })
+    const pret = (await post('/api/credits', user.token, {
+      NomCredit: 'Maison', MontantInitial: 1000, MontantMensuel: 100, DateDebut: '2024-03-15', DateFin: '2099-03-15', IDcompte: courant.IDcompte
+    })).body
+    await createOperation(user, courant.IDcompte, { IDcredit: pret.IDcredit, MontantOp: -300, DateOp: '2024-04-15' })
+    const termine = (await post('/api/credits', user.token, {
+      NomCredit: 'Auto', MontantInitial: 5000, MontantMensuel: 100, DateDebut: '2020-01-15', DateFin: '2024-01-15', IDcompte: courant.IDcompte
+    })).body
+    await patch(`/api/credits/${termine.IDcredit}`, user.token, { Statut: 'termine' })
+
+    const res = await get('/api/stats/recap', user.token)
+    expect(res.status).toBe(200)
+    expect(res.body.immobilier).toBe(270000)
+    expect(res.body.restantCredit).toBe(700)
+    expect(res.body.immobilierNet).toBe(269300)
+    expect(res.body.epargne.map((p: any) => p.mois)).toEqual([6, 12, 24, 60])
+    expect(res.body.epargne[0]).toMatchObject({ revenus: 3000, depenses: -1000, epargne: 2000, taux: 66.7 })
+    expect(res.body.epargne[1]).toMatchObject({ revenus: 4000, depenses: -1000, epargne: 3000, taux: 75 })
+
+    const vide = await get('/api/stats/recap', (await createUser()).token)
+    expect(vide.body).toMatchObject({ immobilier: 0, restantCredit: 0, immobilierNet: 0 })
+    expect(vide.body.epargne[0].taux).toBeNull()
+  })
+})
+
+describe('récap : mouvements depuis le 1er janvier', () => {
+  it('somme par compte des opérations de l\'année, échéances futures comprises', async () => {
+    const user = await createUser()
+    const a = await createCompte(user)
+    const b = await createCompte(user)
+    const year = new Date().getUTCFullYear()
+    await createOperation(user, a.IDcompte, { MontantOp: 1000, DateOp: `${year - 1}-12-31T23:00:00.000Z` }) // année précédente
+    await createOperation(user, a.IDcompte, { MontantOp: 200, DateOp: `${year}-01-01T00:00:00.000Z` })
+    await createOperation(user, a.IDcompte, { MontantOp: -50, DateOp: `${year}-12-31T00:00:00.000Z` })
+    await createOperation(user, b.IDcompte, { MontantOp: -30, DateOp: `${year - 1}-06-01T00:00:00.000Z` })
+
+    const res = await get('/api/stats/recap', user.token)
+    expect(res.body.depuisJanvier).toEqual({ from: `${year}-01-01`, parCompte: [{ IDcompte: a.IDcompte, total: 150 }] })
   })
 })

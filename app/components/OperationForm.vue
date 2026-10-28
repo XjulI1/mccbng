@@ -358,13 +358,13 @@
     if (operation.value.IDop === undefined) {
       resetOperationAttribut()
     } else {
-      router.push('/')
+      router.push('/operations')
     }
   }
 
   const deleteOperation = () => {
     operationStore.deleteOperation(operation.value)
-    router.push('/')
+    router.push('/operations')
   }
 
   const resetOperationAttribut = () => {

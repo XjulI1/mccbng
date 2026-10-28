@@ -48,7 +48,7 @@
     } else if (componentName.value === 'compte-form') {
       router.push('/comptesGestion')
     } else {
-      router.push('/')
+      router.push('/operations')
     }
   }
 </script>

@@ -70,25 +70,6 @@
       </div>
     </div>
 
-    <!-- Total Global -->
-    <div class="global-total">
-      <div class="global-total-content">
-        <span class="global-title">TOTAL GLOBAL</span>
-        <div
-          class="global-amount"
-          :class="{ warning: warningTotal && totalGlobal < warningTotal }"
-        >
-          <Currency :amount="totalGlobal" />
-        </div>
-        <div
-          v-if="warningTotal && totalGlobal < warningTotal"
-          class="global-warning"
-        >
-          <span>Objectif annuel: <Currency :amount="totalGlobal - warningTotal" /></span>
-        </div>
-      </div>
-    </div>
-
     <!-- Section Comptes Children -->
     <div
       v-if="childrenCompte.length > 0"
@@ -138,14 +119,11 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { useCompteStore } from '@/stores/compte'
-  import { useUserStore } from '@/stores/user'
   import Compte from './Compte.vue'
   import Currency from '../Currency.vue'
 
   const compteStore = useCompteStore()
-  const userStore = useUserStore()
 
-  const warningTotal = computed(() => userStore.warningTotal)
   const totalAvailable = computed(() => compteStore.totalAvailable)
   const totalGlobal = computed(() => compteStore.totalGlobal)
   const totalRetraite = computed(() => compteStore.totalRetraite)
@@ -234,50 +212,6 @@
   color: var(--color-warning-dark);
 }
 
-.global-total {
-  background: var(--bg-muted);
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
-  color: var(--text-primary);
-  box-shadow: var(--shadow-lg);
-  margin-bottom: 16px;
-}
-
-.global-total-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.global-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 1px;
-  opacity: 0.8;
-  margin-bottom: 8px;
-}
-
-.global-amount {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--color-success);
-}
-
-.global-amount.warning {
-  color: var(--color-warning-dark);
-}
-
-.global-warning {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 8px;
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
 @media (max-width: 768px) {
   .compte-list-compact {
     padding: 8px;
@@ -288,12 +222,5 @@
     margin-bottom: 12px;
   }
 
-  .global-total {
-    padding: 12px;
-  }
-
-  .global-amount {
-    font-size: 1.5rem;
-  }
 }
 </style>

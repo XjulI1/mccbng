@@ -82,6 +82,9 @@ export const useCompteStore = defineStore('compte', () => {
 
   const totalAvailable = computed(() => sumSoldes(availableCompte.value.concat(porteFeuilleCompte.value)))
 
+  // Comptes qui composent le total global (récap et objectif annuel)
+  const globalCompte = computed(() => availableCompte.value.concat(porteFeuilleCompte.value, bloquedCompte.value, jointCompte.value))
+
   const totalGlobal = computed(() => {
     return bloquedCompte.value.concat(jointCompte.value).reduce((acc, account: any) => {
       acc += account.soldeNotChecked
@@ -209,6 +212,7 @@ export const useCompteStore = defineStore('compte', () => {
     jointCompte,
     childrenCompte,
     totalAvailable,
+    globalCompte,
     totalGlobal,
     totalRetraite,
     totalJoint,

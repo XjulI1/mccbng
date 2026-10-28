@@ -3,13 +3,32 @@
     class="app-header"
     :class="{ 'name-only': disabledTotal }"
   >
+    <button
+      type="button"
+      class="header-accounts"
+      :class="{ active: displayAccountList }"
+      :aria-label="displayAccountList ? 'Fermer la liste des comptes' : 'Ouvrir la liste des comptes'"
+      :aria-pressed="displayAccountList"
+      @click="displayStore.toggleAccountList()"
+    >
+      <font-awesome-icon icon="hamburger" />
+    </button>
     <div class="header-top">
-      <span class="account-name">{{ activeAccount.NomCompte }}</span>
+      <span class="account-name">{{ route.meta.headerTitle ?? activeAccount.NomCompte }}</span>
       <span
         v-if="jauge && !disabledTotal"
         class="plafond-percent"
         :class="{ over: jauge.percent >= 100 }"
       >{{ Math.floor(jauge.percent) }} %</span>
+      <button
+        v-if="!disabledTotal"
+        type="button"
+        class="header-search"
+        aria-label="Rechercher une opération"
+        @click="router.push('/search')"
+      >
+        <font-awesome-icon icon="search" />
+      </button>
     </div>
     <div
       v-if="!disabledTotal"
@@ -64,13 +83,18 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { useRoute } from '#imports'
+  import { useRoute, useRouter } from '#imports'
   import { useCompteStore } from '@/stores/compte'
+  import { useDisplayStore } from '@/stores/display'
   import { formatEuros } from '@/utils/money'
   import { plafondJauge } from '@/utils/plafond'
   import Currency from './Currency.vue'
 
   const route = useRoute()
+  const router = useRouter()
+  const displayStore = useDisplayStore()
+
+  const displayAccountList = computed(() => displayStore.account_list)
   const compteStore = useCompteStore()
 
   const activeAccount = computed(() => compteStore.activeAccount)
@@ -113,7 +137,7 @@
   width: max-content;
   min-width: 300px;
   max-width: min(460px, 60%);
-  padding: 8px 20px;
+  padding: 12px 20px;
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -136,7 +160,44 @@
     width: auto;
     min-width: 0;
     max-width: none;
-    padding: 8px 14px;
+    // Place du bouton des comptes, à gauche
+    padding: 12px 14px 12px 52px;
+
+    &.name-only {
+      padding-right: 52px;
+    }
+  }
+}
+
+// Mobile seulement : sur ordinateur la liste des comptes est toujours affichée
+.header-accounts {
+  display: none;
+
+  @media screen and (max-width: $mobile_BP_max_width) {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+
+    &.active {
+      color: var(--text-primary);
+      background: var(--bg-muted);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--border-color-focus);
+    }
   }
 }
 
@@ -167,6 +228,28 @@
   .account-name {
     font-size: 1.15rem;
     color: var(--text-primary);
+  }
+}
+
+.header-search {
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: auto;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    color: #17a2b8;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--border-color-focus);
   }
 }
 

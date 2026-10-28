@@ -98,8 +98,8 @@
 
   const getAccountDetails = () => {
     if (!props.disableClick) {
-      if (route.path !== '/') {
-        router.push('/')
+      if (route.path !== '/operations') {
+        router.push('/operations')
       }
 
       compteStore.fetchActiveAccount(props.accountInformations.IDcompte)
