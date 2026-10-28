@@ -37,9 +37,6 @@ const dueInMonth = (rule: RecurrenceRule, year: number, month: number): Date => 
   return new Date(Date.UTC(y, m, Math.min(Math.max(rule.JourNumOpRecu, 1), daysInMonth(y, m))))
 }
 
-const assertFrequency = (rule: RecurrenceRule) => {
-  if (!isSupportedFrequency(rule.Frequence)) throw new Error(`Unsupported Frequence ${rule.Frequence}`)
-}
 
 export const startOfUtcDay = (date: Date): Date =>
   new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
@@ -48,6 +45,11 @@ export const addDays = (date: Date, days: number): Date => new Date(date.getTime
 
 // Durée d'une période, en mois.
 const STEP = { [MONTHLY]: 1, [QUARTERLY]: 3, [YEARLY]: 12 } as const
+
+const stepOf = (rule: RecurrenceRule): number => {
+  if (!isSupportedFrequency(rule.Frequence)) throw new Error(`Unsupported Frequence ${rule.Frequence}`)
+  return STEP[rule.Frequence]
+}
 
 // Mois (relatif à l'année de `date`, éventuellement négatif) qui porte l'échéance de la période de `date` :
 // le mois même en mensuel, le mois aligné sur MoisOpRecu qui le précède ou l'égale en trimestriel,
@@ -61,23 +63,21 @@ const periodMonth = (rule: RecurrenceRule, date: Date): number => {
 
 /** Échéance de la période qui suit celle de `after` (mois, trimestre ou année suivants). */
 export const nextDueDate = (rule: RecurrenceRule, after: Date): Date => {
-  assertFrequency(rule)
-  return dueInMonth(rule, after.getUTCFullYear(), periodMonth(rule, after) + STEP[rule.Frequence])
+  return dueInMonth(rule, after.getUTCFullYear(), periodMonth(rule, after) + stepOf(rule))
 }
 
 /** Échéance de la période qui précède celle de `due` : nextDueDate(rule, prevDueDate(rule, due)) = due. */
 export const prevDueDate = (rule: RecurrenceRule, due: Date): Date => {
-  assertFrequency(rule)
-  return dueInMonth(rule, due.getUTCFullYear(), periodMonth(rule, due) - STEP[rule.Frequence])
+  return dueInMonth(rule, due.getUTCFullYear(), periodMonth(rule, due) - stepOf(rule))
 }
 
 /** Plus petite échéance théorique postérieure ou égale au jour de `date`. */
 export const firstDueOnOrAfter = (rule: RecurrenceRule, date: Date): Date => {
-  assertFrequency(rule)
+  const step = stepOf(rule)
   const day = startOfUtcDay(date)
   const month = periodMonth(rule, day)
   const candidate = dueInMonth(rule, day.getUTCFullYear(), month)
-  return candidate < day ? dueInMonth(rule, day.getUTCFullYear(), month + STEP[rule.Frequence]) : candidate
+  return candidate < day ? dueInMonth(rule, day.getUTCFullYear(), month + step) : candidate
 }
 
 /**

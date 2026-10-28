@@ -318,9 +318,8 @@ describe('opérations récurrentes', () => {
     expect(annual.body).toMatchObject({ Frequence: 7, MoisOpRecu: 11, JourNumOpRecu: 31 })
     const patched = await patch(`/api/operation-recurrentes/${annual.body.IDopRecu}`, alice.token, { Frequence: 4 })
     expect(patched.status).toBe(422)
-    const quarterly = await patch(`/api/operation-recurrentes/${annual.body.IDopRecu}`, alice.token, { Frequence: '5' })
-    expect(quarterly.status).toBe(200)
-    expect(quarterly.body).toMatchObject({ Frequence: 5 })
+    expect((await patch(`/api/operation-recurrentes/${annual.body.IDopRecu}`, alice.token, { Frequence: '5' })).status).toBe(204)
+    expect((await get(`/api/operation-recurrentes/${annual.body.IDopRecu}`, alice.token)).body).toMatchObject({ Frequence: 5 })
   })
 
   it('création : DernierDateOpRecu reçu ignoré, la première échéance à venir est générée', async () => {
