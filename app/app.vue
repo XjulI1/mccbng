@@ -30,20 +30,21 @@
       v-if="route.name !== 'Login'"
       class="bottom-dock"
     >
-      <NavBar />
-      <FabMenu />
+      <NavBar :minimized="dockMinimized" />
+      <FabMenu :minimized="dockMinimized" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { computed, watch } from 'vue'
   import { useHead, useRoute } from '#imports'
   import { NuxtPage } from '#components'
   import { pwaInfo } from 'virtual:pwa-info'
   import { useDisplayStore } from '@/stores/display'
   import { useGlobalTheme } from '@/composables/useTheme'
   import { useGlobalDebugTools } from '@/composables/useDebugTools'
+  import { useScrollMinimize } from '@/composables/useScrollMinimize'
 
   import NavBar from '@/components/NavBar.vue'
   import FabMenu from '@/components/FabMenu.vue'
@@ -70,6 +71,10 @@
   initDebugTools()
 
   const displayAccountList = computed(() => displayStore.account_list)
+
+  // Barre d'onglets repliée en descendant dans la page, dépliée en remontant ou en changeant de page
+  const { minimized: dockMinimized, expand: expandDock } = useScrollMinimize()
+  watch(() => route.path, expandDock)
 
   const openAccountList = () => {
     displayStore.toggleAccountList(true)

@@ -32,7 +32,7 @@
     <button
       type="button"
       class="fab"
-      :class="{ expanded }"
+      :class="{ expanded, minimized }"
       :disabled="actions.length === 0"
       :aria-label="actions.length === 0
         ? 'Aucune action disponible'
@@ -40,7 +40,10 @@
       :aria-expanded="expanded"
       @click="toggle"
     >
-      <font-awesome-icon icon="plus" />
+      <font-awesome-icon
+        class="fab-icon"
+        icon="plus"
+      />
     </button>
   </div>
 </template>
@@ -56,6 +59,8 @@
     color: string
     path: string
   }
+
+  defineProps<{ minimized?: boolean }>()
 
   const route = useRoute()
   const router = useRouter()
@@ -135,8 +140,13 @@
 </script>
 
 <style lang="scss" scoped>
+// Emplacement de largeur fixe : le bouton s'y réduit centré sans élargir la tab bar voisine.
 .fab-wrapper {
   position: relative;
+  display: flex;
+  justify-content: center;
+  width: $navbar-height;
+  flex-shrink: 0;
 }
 
 .fab-backdrop {
@@ -157,37 +167,71 @@
 }
 
 .fab {
-  position: relative;
+  @include liquid-glass;
   flex-shrink: 0;
   width: $navbar-height;
   height: $navbar-height;
   border-radius: 50%;
-  background: transparent;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
   color: var(--text-primary, #2d3748);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    transform 0.3s $spring-fallback,
+    width 0.4s $spring-fallback,
+    height 0.4s $spring-fallback;
+  transition:
+    transform 0.3s $spring,
+    width 0.4s $spring,
+    height 0.4s $spring;
   font-size: 22px;
   -webkit-tap-highlight-color: transparent;
 }
 
-.fab:not(:disabled):not(.expanded):hover {
+// Repliée au défilement avec la tab bar
+.fab.minimized {
+  width: $navbar-height-minimized;
+  height: $navbar-height-minimized;
+}
+
+.fab:not(:disabled):hover {
   transform: scale(1.05);
 }
 
+.fab:not(:disabled):active {
+  transform: scale(1.1);
+}
+
+// Seule l'icône tourne : le reflet du verre reste en place.
+.fab-icon {
+  transform-origin: center;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    scale 0.4s $spring-fallback;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    scale 0.4s $spring;
+}
+
+// `scale` plutôt que `transform` : se cumule avec la rotation du menu ouvert.
+.fab.minimized .fab-icon {
+  scale: 0.82;
+}
+
 .fab.expanded {
-  transform: rotate(45deg);
   color: #667eea;
 }
 
-.fab.expanded:hover {
-  transform: rotate(45deg) scale(1.05);
+.fab.expanded .fab-icon {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fab,
+  .fab-icon {
+    transition: none;
+  }
 }
 
 .fab:disabled {
