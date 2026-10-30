@@ -7,7 +7,7 @@
   "repository": "git@github.com:XjulI1/mccbng.git",
   "author": "Xavier JULIEN <xavijulien@gmail.com>",
   "license": "MIT",
-  "packageManager": "pnpm@12.9.1",
+  "packageManager": "pnpm@12.16.1",
   "engines": {
     "node": ">=26"
   },
@@ -35,8 +35,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.3.0",
-    "@fortawesome/fontawesome-svg-core": "^6.7.2",
-    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
     "@fortawesome/vue-fontawesome": "^3.3.3",
     "@pinia/nuxt": "^1.0.3",
     "@vite-pwa/nuxt": "^1.1.1",
@@ -44,14 +44,14 @@
     "drizzle-orm": "^0.45.4",
     "eruda": "^3.4.3",
     "heic-to": "^1.6.7",
-    "highcharts": "^12.6.2",
+    "highcharts": "^13.1.1",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.24.6",
-    "nuxt": "4.5.2",
+    "nuxt": "4.6.3",
     "nuxt-security": "^2.7.0",
     "pinia": "^4.1.0",
     "vue": "^3.5.44",
-    "vue3-touch-events": "^4.2.0",
+    "vue3-touch-events": "^5.0.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -61,15 +61,15 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.6.6",
     "@vue/test-utils": "^2.5.1",
-    "eslint": "^9.39.5",
-    "h3-next": "npm:h3@2.0.1",
-    "happy-dom": "^20.14.6",
+    "eslint": "^10.13.0",
+    "h3-next": "npm:h3@2.0.8",
+    "happy-dom": "^21.0.4",
     "lint-staged": "^17.6.0",
     "sass": "^1.107.0",
     "testcontainers": "^12.2.1",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "vitest": "^5.0.5",
-    "vue-tsc": "^2.2.12"
+    "vue-tsc": "^3.3.13"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,vue}": [

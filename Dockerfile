@@ -5,7 +5,7 @@
 FROM node:26-slim AS build
 
 # Node 26 n'embarque plus corepack : pnpm est installé à la version du champ packageManager du package.json racine
-RUN npm install -g pnpm@12.9.1
+RUN npm install -g pnpm@12.16.1
 
 WORKDIR /app
 

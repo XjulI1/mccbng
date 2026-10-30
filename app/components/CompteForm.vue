@@ -218,7 +218,7 @@
   const route = useRoute()
   const router = useRouter()
 
-  const compteID = computed(() => Number(route.params.id))
+  const compteID = computed(() => Number((route.params as { id?: string }).id))
   const banqueList = computed(() => banqueStore.banqueList || [])
   const managementInfo = computed(() => compteStore.managementInfo || [])
 

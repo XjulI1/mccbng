@@ -94,7 +94,7 @@ User scoping uses two patterns:
 ## Development Setup
 
 - **Node.js**: ≥ 26 (see `.nvmrc`). Node 26 no longer ships `corepack` or `yarn`.
-- **Package Manager**: `pnpm@12.9.1` (see `packageManager` in root `package.json`).
+- **Package Manager**: `pnpm@12.16.1` (see `packageManager` in root `package.json`).
 - **App**: Nuxt/Nitro on port 8080 (dev and Docker image). API mounted at `/api`.
 - **Database**: MariaDB (production 10.11; tests run on `mariadb:10.11`). Since migration `0002` every table is InnoDB (real transactions) in `utf8mb4_unicode_ci`; migrations are replayable (`IF [NOT] EXISTS`) and run with `NO_AUTO_VALUE_ON_ZERO` (`IDcat = 0` / `IDbanque = 0` rows), see `docs/db-migrations.md`.
 
@@ -114,7 +114,7 @@ In development they can live in `.env`. The scripts that access the database (`s
 
 A single image runs the whole application (`Dockerfile`):
 
-- Multi-stage `node:26-slim` (pnpm installed with `npm install -g pnpm@12.9.1`) → `node:26-slim` running the Nitro output (`.output/server/index.mjs`) on port 8080. The build context is the **repo root** (`docker build .`) (`Dockerfile` is at the root).
+- Multi-stage `node:26-slim` (pnpm installed with `npm install -g pnpm@12.16.1`) → `node:26-slim` running the Nitro output (`.output/server/index.mjs`) on port 8080. The build context is the **repo root** (`docker build .`) (`Dockerfile` is at the root).
 - `docker-entrypoint.sh` exits with an explicit message when `DB_*` or `JWT_SECRET` is missing.
 - SQL migrations are **not** run by the image: run `scripts/db-migrate.mjs` from a workstation or CI before deploying a version that adds one.
 

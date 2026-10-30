@@ -248,7 +248,7 @@
   const route = useRoute()
   const router = useRouter()
 
-  const creditID = computed(() => Number(route.params.id))
+  const creditID = computed(() => Number((route.params as { id?: string }).id))
   const accountList = computed(() => compteStore.accountList?.filter(account => account.visible) || [])
   const categoryList = computed(() => categoryStore.list || [])
   const activeAccountID = computed(() => compteStore.activeAccount?.IDcompte)

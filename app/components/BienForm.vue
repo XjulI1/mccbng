@@ -359,7 +359,7 @@
   const route = useRoute()
   const router = useRouter()
 
-  const bienID = computed(() => Number(route.params.id))
+  const bienID = computed(() => Number((route.params as { id?: string }).id))
   const creditList = computed(() => creditStore.creditList || [])
   const availableCredits = computed(() => creditList.value.filter(credit =>
     !bienStore.bienList.some(other => other.IDcredit === credit.IDcredit && other.IDbien !== bien.value.IDbien)

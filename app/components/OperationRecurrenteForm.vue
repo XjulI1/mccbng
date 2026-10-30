@@ -296,7 +296,7 @@
   const route = useRoute()
   const router = useRouter()
 
-  const operationRecurrenteID = ref(route.params.id)
+  const operationRecurrenteID = ref((route.params as { id?: string }).id)
 
   const montantOpIsPositive = ref(false)
   const operationRecurrente = ref({
