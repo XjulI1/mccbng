@@ -148,9 +148,12 @@
   )
 
   const bilanBlock = computed(() =>
-    props.bien.Usage === 'locatif'
-      ? bienBilanBlock(bienStore.bienRentabilites[props.bien.IDbien]?.bilan, Boolean(props.bien.ValeurActuelle))
-      : null
+    bienBilanBlock(
+      bienStore.bienRentabilites[props.bien.IDbien]?.bilan,
+      Boolean(props.bien.ValeurActuelle),
+      props.bien.Usage === 'locatif',
+      bienStore.bienRentabilites[props.bien.IDbien]?.comparaisonLocation ?? null
+    )
   )
 
   const associatedCredit = computed(() => {

@@ -518,6 +518,7 @@ describe('rentabilité', () => {
       plusValue: 25000,
       loyersNets: 7800,
       interets,
+      occupation: null,
       gainTotal: Math.round((25000 + 7800 - interets) * 100) / 100,
       mensualites: 9960,
       partCreditLoyers: 78.31
@@ -528,8 +529,39 @@ describe('rentabilité', () => {
     const user = await createUser()
     const comptant = await createBien(user, { NomBien: 'Studio' })
     expect((await get(`/api/biens/${comptant.IDbien}/rentabilite`, user.token)).body.bilan).toEqual({
-      plusValue: 0, loyersNets: 0, interets: 0, gainTotal: 0, mensualites: null, partCreditLoyers: null
+      plusValue: 0, loyersNets: 0, interets: 0, occupation: null, gainTotal: 0, mensualites: null, partCreditLoyers: null
     })
+  })
+
+  it('résidence principale à crédit : comparaison avec la location (loyers évités, argent immobilisé placé)', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const pret = (await post('/api/credits', user.token, immo(compte.IDcompte, { TauxInteret: 3.2 }))).body
+    const bien = await createBien(user, {
+      Usage: 'principale', DateAchat: monthsAgo(12, 1), IDcredit: pret.IDcredit, ValeurActuelle: 170000, LoyerMensuel: 900
+    })
+    for (const DateOp of lastTwelve(10)) await createOperation(user, compte.IDcompte, { NomOp: 'Mensualité', MontantOp: -830, DateOp, IDcredit: pret.IDcredit })
+
+    const sansTaux = (await get(`/api/biens/${bien.IDbien}/rentabilite`, user.token)).body
+    expect(sansTaux.comparaisonLocation).toMatchObject({ mois: 12, loyerMensuel: 900, tauxPlacement: 3, loyersEvites: 10800 })
+
+    expect((await patch(`/api/biens/${bien.IDbien}`, user.token, { TauxPlacement: 101 })).status).toBe(422)
+    expect((await patch(`/api/biens/${bien.IDbien}`, user.token, { TauxPlacement: 2 })).status).toBe(204)
+    const { bilan, comparaisonLocation } = (await get(`/api/biens/${bien.IDbien}/rentabilite`, user.token)).body
+    // 10 000 € non empruntés placés un an à 2 %, plus le rendement du capital remboursé chaque mois
+    expect(comparaisonLocation.tauxPlacement).toBe(2)
+    expect(comparaisonLocation.coutOpportunite).toBeGreaterThan(201.84)
+    expect(comparaisonLocation.coutOpportunite).toBeLessThan(sansTaux.comparaisonLocation.coutOpportunite)
+    expect(comparaisonLocation.gain).toBeCloseTo(bilan.gainTotal + 10800 - comparaisonLocation.coutOpportunite, 2)
+  })
+
+  it('bien habité avant sa mise en location : loyers évités pendant l\'occupation dans le bilan', async () => {
+    const user = await createUser()
+    const bien = await createBien(user, { LoyerMensuel: 650, AbattementCharges: 10, DateMiseEnLocation: '2021-06-01' })
+    const { bilan, comparaisonLocation } = (await get(`/api/biens/${bien.IDbien}/rentabilite`, user.token)).body
+    expect(bilan.occupation).toEqual({ mois: 12, loyerMensuel: 722.22, loyersEvites: 8666.64 })
+    expect(bilan.gainTotal).toBe(8666.64)
+    expect(comparaisonLocation).toBeNull()
   })
 
   it('abattement pour charges : couverture, effort et part du crédit sur les loyers abattus', async () => {

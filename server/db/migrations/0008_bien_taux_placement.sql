@@ -1,0 +1,2 @@
+ALTER TABLE `Bien`
+  ADD COLUMN IF NOT EXISTS `TauxPlacement` decimal(6,3) DEFAULT NULL;

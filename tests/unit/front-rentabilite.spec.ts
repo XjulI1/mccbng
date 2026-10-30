@@ -132,6 +132,42 @@ describe('bienBilanBlock', () => {
     expect(block.partCreditLoyers).toBeNull()
   })
 
+  it('bien non locatif : « Dépenses », total « Bilan » et pas de part du crédit payée par les loyers', () => {
+    const block = bienBilanBlock(bilan({ loyersNets: -12000, gainTotal: -5000, partCreditLoyers: 0 }), true, false)!
+    expect(texts(block)).toEqual([
+      'Plus-value +25 000,00 €', 'Dépenses -12 000,00 €', 'Intérêts d\'emprunt -18 000,00 €', 'Bilan -5 000,00 €'
+    ])
+    expect(block.gainTotal.classe).toBe('montant-negatif')
+    expect(block.partCreditLoyers).toBeNull()
+  })
+
+  it('bien non locatif comparé à la location : lignes du bilan puis loyers évités et rendement, total « Gain par rapport à la location »', () => {
+    const comparaison = { mois: 63, loyerMensuel: 1350, tauxPlacement: 2.5, loyersEvites: 85050, coutOpportunite: 14736.67, gain: -13673.55 }
+    const block = bienBilanBlock(
+      bilan({ plusValue: -66644, loyersNets: 0, interets: 17342.88, gainTotal: -83986.88 }), true, false, comparaison
+    )!
+    expect([...block.lignes, block.gainTotal].map(line => spaces(`${line.label} ${line.montant}`))).toEqual([
+      'Plus-value -66 644,00 €', 'Dépenses 0,00 €', 'Intérêts d\'emprunt -17 342,88 €',
+      'Loyers évités (63 mois à 1 350,00 €) +85 050,00 €', 'Rendement si l\'argent avait été placé (2,5 %/an) -14 736,67 €',
+      'Gain par rapport à la location -13 673,55 €'
+    ])
+    expect(block.gainTotal.classe).toBe('montant-negatif')
+  })
+
+  it('comparaison avec la location : bloc affiché même sans valeur actuelle ni opération', () => {
+    const vide = bilan({ plusValue: 0, loyersNets: 0, interets: 0, gainTotal: 0, mensualites: null, partCreditLoyers: null })
+    const comparaison = { mois: 12, loyerMensuel: 900, tauxPlacement: 3, loyersEvites: 10800, coutOpportunite: 4866.55, gain: 5933.45 }
+    expect(spaces(bienBilanBlock(vide, false, false, comparaison)!.gainTotal.montant)).toBe('+5 933,45 €')
+  })
+
+  it('bien locatif occupé avant sa mise en location : ligne des loyers évités pendant l\'occupation avant le gain total', () => {
+    const block = bienBilanBlock(bilan({ occupation: { mois: 79, loyerMensuel: 722.22, loyersEvites: 57055.38 }, gainTotal: 105855.38 }), true)!
+    expect(texts(block)!.map(spaces)).toEqual([
+      'Plus-value +25 000,00 €', 'Loyers et dépenses +41 800,00 €', 'Intérêts d\'emprunt -18 000,00 €',
+      'Loyers évités pendant l\'occupation (79 mois à 722,22 €) +57 055,38 €', 'Gain total +105 855,38 €'
+    ])
+  })
+
   it('bien locatif sans historique ni valeur actuelle : aucun bloc', () => {
     const vide = bilan({ plusValue: 0, loyersNets: 0, interets: 0, gainTotal: 0, mensualites: null, partCreditLoyers: null })
     expect(bienBilanBlock(vide, false)).toBeNull()
@@ -139,3 +175,4 @@ describe('bienBilanBlock', () => {
     expect(bienBilanBlock(undefined, true)).toBeNull()
   })
 })
+

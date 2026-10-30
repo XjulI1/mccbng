@@ -3,7 +3,10 @@ export type CreditPayment = { MontantOp: number; DateOp: Date }
 
 export const monthIndex = (date: Date) => date.getUTCFullYear() * 12 + date.getUTCMonth()
 
-export const amortize = (credit: AmortizationCredit, payments: CreditPayment[]) => {
+/** `onPrincipal` receives the principal repaid by each payment, with the payment's month index. */
+export const amortize = (
+  credit: AmortizationCredit, payments: CreditPayment[], onPrincipal?: (month: number, principal: number) => void
+) => {
   const monthlyRate = (credit.TauxInteret ?? 0) / 100 / 12
   let solde = credit.MontantInitial
   let cursor = payments.length ? monthIndex(payments[0]!.DateOp) - 1 : 0
@@ -16,6 +19,7 @@ export const amortize = (credit: AmortizationCredit, payments: CreditPayment[]) 
     interets += interet
     paye += principal
     solde -= principal
+    onPrincipal?.(month, principal)
     cursor = Math.max(cursor, month)
   }
   return { solde, paye, interets }

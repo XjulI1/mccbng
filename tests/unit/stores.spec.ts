@@ -174,7 +174,7 @@ describe('rentabilités', () => {
     expect(credit.creditBalances[2]).toEqual({ solde: 0, paye: 0, interets: 0 })
   })
 
-  it('store bien : rentabilité chargée pour les seuls biens locatifs', async () => {
+  it('store bien : rentabilité chargée pour tous les biens, locatifs ou non (bilan depuis l\'achat)', async () => {
     vi.mocked(fetchBiens).mockResolvedValue([{ IDbien: 1, Usage: 'locatif' }, { IDbien: 2, Usage: 'principale' }])
     vi.mocked(fetchBienRentabilite).mockResolvedValue({ periode: { mois: 12 } })
 
@@ -182,9 +182,8 @@ describe('rentabilités', () => {
     await bien.fetchBiens()
     await bien.fetchBienRentabilites()
 
-    expect(fetchBienRentabilite).toHaveBeenCalledTimes(1)
-    expect(vi.mocked(fetchBienRentabilite).mock.calls[0]![0]).toBe(1)
-    expect(bien.bienRentabilites).toEqual({ 1: { periode: { mois: 12 } } })
+    expect(vi.mocked(fetchBienRentabilite).mock.calls.map(call => call[0])).toEqual([1, 2])
+    expect(bien.bienRentabilites).toEqual({ 1: { periode: { mois: 12 } }, 2: { periode: { mois: 12 } } })
   })
 
   it('store bien : biensLoaded passe à vrai après un premier chargement, même sans bien', async () => {

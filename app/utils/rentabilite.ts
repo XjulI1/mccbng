@@ -19,9 +19,22 @@ export type BienBilan = {
   plusValue: number
   loyersNets: number
   interets: number
+  occupation?: { mois: number; loyerMensuel: number; loyersEvites: number } | null
   gainTotal: number
   mensualites: number | null
   partCreditLoyers: number | null
+}
+
+/** Same default as the server (`server/utils/rentabilite.ts`) when `Bien.TauxPlacement` is empty. */
+export const TAUX_PLACEMENT_DEFAUT = 3
+
+export type ComparaisonLocation = {
+  mois: number
+  loyerMensuel: number
+  tauxPlacement: number
+  loyersEvites: number
+  coutOpportunite: number
+  gain: number
 }
 
 export type BienRentabilite = {
@@ -29,6 +42,7 @@ export type BienRentabilite = {
   loyerMensuelMoyen: number | null
   attendu: { loyerMensuel: number | null }
   bilan: BienBilan
+  comparaisonLocation?: ComparaisonLocation | null
 }
 
 export type CreditRentalLine = { parts: string[]; prevu: boolean; depuis: string | null }
@@ -90,20 +104,43 @@ export const bienRentalBlock = (rentabilite: BienRentabilite | null | undefined)
   return loyerMensuel === null ? null : { loyer: `${formatEuros(loyerMensuel)}/mois`, prevu: true, depuis: null }
 }
 
-/** "Bilan depuis l'achat" block of a rented bien card, or null when there is nothing to report yet. */
+const comparaisonLines = (comparaison: ComparaisonLocation) => {
+  const taux = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(comparaison.tauxPlacement)
+  return [
+    bilanLine(`Loyers évités (${comparaison.mois} mois à ${formatEuros(comparaison.loyerMensuel)})`, comparaison.loyersEvites),
+    bilanLine(`Rendement si l'argent avait été placé (${taux} %/an)`, -comparaison.coutOpportunite)
+  ]
+}
+
+/**
+ * "Bilan depuis l'achat" block of a bien card, or null when there is nothing to report yet; a bien not rented has no
+ * rents and, with a comparison with renting, ends with the rents avoided, the return if placed and the gain over renting.
+ */
 export const bienBilanBlock = (
-  bilan: BienBilan | null | undefined, valeurActuelleRenseignee: boolean
+  bilan: BienBilan | null | undefined, valeurActuelleRenseignee: boolean, locatif = true,
+  comparaison: ComparaisonLocation | null = null
 ): BienBilanBlock | null => {
   if (!bilan) return null
-  if (!valeurActuelleRenseignee && !bilan.plusValue && !bilan.loyersNets && !bilan.interets) return null
+  if (!comparaison && !bilan.occupation && !valeurActuelleRenseignee && !bilan.plusValue && !bilan.loyersNets && !bilan.interets) return null
   const lignes = [
     bilanLine(valeurActuelleRenseignee ? 'Plus-value' : 'Plus-value (valeur non renseignée)', bilan.plusValue),
-    bilanLine('Loyers et dépenses', bilan.loyersNets)
+    bilanLine(locatif ? 'Loyers et dépenses' : 'Dépenses', bilan.loyersNets)
   ]
   if (bilan.mensualites !== null) lignes.push(bilanLine('Intérêts d\'emprunt', -bilan.interets))
+  const { occupation } = bilan
+  if (occupation) {
+    lignes.push(bilanLine(
+      `Loyers évités pendant l'occupation (${occupation.mois} mois à ${formatEuros(occupation.loyerMensuel)})`, occupation.loyersEvites
+    ))
+  }
+  if (comparaison) lignes.push(...comparaisonLines(comparaison))
   return {
     lignes,
-    gainTotal: bilanLine('Gain total', bilan.gainTotal),
-    partCreditLoyers: bilan.partCreditLoyers === null ? null : `Crédit payé par les loyers : ${percent(bilan.partCreditLoyers, 0)}`
+    gainTotal: comparaison
+      ? bilanLine('Gain par rapport à la location', comparaison.gain)
+      : bilanLine(locatif ? 'Gain total' : 'Bilan', bilan.gainTotal),
+    partCreditLoyers: !locatif || bilan.partCreditLoyers === null
+      ? null
+      : `Crédit payé par les loyers : ${percent(bilan.partCreditLoyers, 0)}`
   }
 }

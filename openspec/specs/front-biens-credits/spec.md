@@ -96,7 +96,7 @@ La carte d'un bien dont l'usage est « Locatif » SHALL afficher un bloc « Rent
 - **THEN** la carte n'affiche pas le bloc « Rentabilité »
 
 ### Requirement: Bilan sur la carte d'un bien
-La carte d'un bien dont l'usage est « Locatif » SHALL afficher un bloc « Bilan depuis l'achat » avec les lignes « Plus-value », « Loyers et dépenses » (loyers moins toutes les dépenses liées au bien, y compris pendant l'usage personnel), « Intérêts d'emprunt » (présente seulement si le bien a un crédit lié) et « Gain total », chacune en montant signé, suivies de « Crédit payé par les loyers : X % » lorsque `partCreditLoyers` n'est pas nul. Lorsque la valeur actuelle du bien n'est pas renseignée, la ligne « Plus-value » MUST l'indiquer. Le bloc MUST être absent lorsque les loyers nets, les intérêts et la plus-value sont tous nuls et que la valeur actuelle n'est pas renseignée.
+La carte d'un bien, quel que soit son usage, SHALL afficher un bloc « Bilan depuis l'achat » avec les lignes « Plus-value », « Loyers et dépenses » (loyers moins toutes les dépenses liées au bien, y compris pendant l'usage personnel), « Intérêts d'emprunt » (présente seulement si le bien a un crédit lié) et « Gain total », chacune en montant signé, suivies de « Crédit payé par les loyers : X % » lorsque `partCreditLoyers` n'est pas nul. Lorsque la valeur actuelle du bien n'est pas renseignée, la ligne « Plus-value » MUST l'indiquer. Pour un bien dont l'usage n'est pas « Locatif », la ligne « Loyers et dépenses » MUST s'intituler « Dépenses », la ligne « Gain total » MUST s'intituler « Bilan » et « Crédit payé par les loyers » MUST être absent. Le bloc MUST être absent lorsque les loyers nets, les intérêts et la plus-value sont tous nuls et que la valeur actuelle n'est pas renseignée.
 
 #### Scenario: Bien loué à crédit
 - **WHEN** le bilan vaut `{ plusValue: 25000, loyersNets: 41800, interets: 18000, gainTotal: 48800, partCreditLoyers: 78.31 }`
@@ -105,6 +105,10 @@ La carte d'un bien dont l'usage est « Locatif » SHALL afficher un bloc « Bila
 #### Scenario: Valeur actuelle non renseignée
 - **WHEN** le bien n'a pas de valeur actuelle et a perçu des loyers
 - **THEN** la ligne « Plus-value » indique « valeur non renseignée »
+
+#### Scenario: Résidence principale à crédit
+- **WHEN** un bien d'usage « Résidence principale » a un bilan `{ plusValue: 25000, loyersNets: -12000, interets: 18000, gainTotal: -5000 }`
+- **THEN** la carte affiche « Plus-value +25 000,00 € », « Dépenses -12 000,00 € », « Intérêts d'emprunt -18 000,00 € », « Bilan -5 000,00 € » et aucune part du crédit payée par les loyers
 
 #### Scenario: Bien locatif sans historique
 - **WHEN** un bien locatif sans crédit ni valeur actuelle n'a aucune opération liée

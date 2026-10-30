@@ -254,14 +254,15 @@ export const bienResource: CrudResource = {
   readScope: event => eq(biens.IDuser, userId(event)),
   forced: event => ({ IDuser: userId(event) }),
   defaults: { Usage: 'principale', FraisAgence: 0, ApportCash: 0 },
-  preserve: ['LoyerMensuel', 'AbattementCharges', 'DateMiseEnLocation'],
+  preserve: ['LoyerMensuel', 'AbattementCharges', 'DateMiseEnLocation', 'TauxPlacement'],
   validate: assertReferencesOwned(assertCreditInBody, assertCreditFree),
   ...shape(
     { NomBien: str, Ville: str, TypeBien: str, DateAchat: date, PrixBienNu: numeric, FraisNotaire: numeric },
     {
       Surface: numeric.nullable(), Usage: str, FraisAgence: numeric.nullable(), ApportCash: numeric.nullable(),
       ValeurActuelle: numeric.nullable(), LoyerMensuel: numericMin(0).nullable(),
-      AbattementCharges: numericBetween(0, 100).nullable(), DateMiseEnLocation: date.nullable(), IDcredit: optionalId
+      AbattementCharges: numericBetween(0, 100).nullable(), DateMiseEnLocation: date.nullable(),
+      TauxPlacement: numericBetween(0, 100).nullable(), IDcredit: optionalId
     }
   ),
   onDelete: async (_event, existing, tx) => {

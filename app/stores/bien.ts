@@ -37,7 +37,7 @@ export const useBienStore = defineStore('bien', () => {
 
   async function fetchBienRentabilites () {
     const token = useUserStore().token
-    for (const bien of bienList.value.filter(item => item.Usage === 'locatif')) {
+    for (const bien of bienList.value) {
       try {
         bienRentabilites.value[bien.IDbien] = await fetchBienRentabilite(bien.IDbien, token, API_URL)
       } catch (error) {

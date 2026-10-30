@@ -10,8 +10,11 @@ export type Periode = { debut: string | null; fin: string | null; mois: number }
 type Totals = { loyers: number; charges: number; mensualites: number }
 type BienPrice = { PrixBienNu: number; FraisNotaire: number; FraisAgence: number | null }
 type RentalTerms = { LoyerMensuel: number | null; AbattementCharges: number | null; DateMiseEnLocation: Date | null }
-type BienInput = BienPrice & RentalTerms & { ValeurActuelle: number | null }
-export type CreditPaid = { interets: number; mensualites: number }
+type BienInput = BienPrice & RentalTerms & {
+  ValeurActuelle: number | null; Usage: string; DateAchat: Date; TauxPlacement: number | null
+}
+/** `emprunte` = amount borrowed, `capitalParMois` = principal repaid per month index. */
+export type CreditPaid = { interets: number; mensualites: number; emprunte: number; capitalParMois: Map<number, number> }
 type CreditInput = { IDcredit: number; MontantMensuel: number; Statut: string | null; DateFin: Date }
 type LinkedBien = RentalTerms & { IDbien: number }
 
@@ -82,21 +85,75 @@ const percent = (numerator: number, denominator: number) => (denominator ? round
 
 const prixTotalOf = (bien: BienPrice) => bien.PrixBienNu + bien.FraisNotaire + (bien.FraisAgence ?? 0)
 
-export const paidOnCredit = (credit: AmortizationCredit, payments: CreditPayment[]): CreditPaid => ({
-  interets: amortize(credit, payments).interets,
-  mensualites: payments.reduce((sum, payment) => sum + Math.abs(payment.MontantOp), 0)
-})
+export const paidOnCredit = (credit: AmortizationCredit, payments: CreditPayment[]): CreditPaid => {
+  const capitalParMois = new Map<number, number>()
+  const { interets } = amortize(credit, payments, (month, principal) =>
+    capitalParMois.set(month, (capitalParMois.get(month) ?? 0) + principal))
+  return {
+    interets,
+    mensualites: payments.reduce((sum, payment) => sum + Math.abs(payment.MontantOp), 0),
+    emprunte: credit.MontantInitial,
+    capitalParMois
+  }
+}
 
-const bilanOf = (bien: BienInput, cumul: Totals, prixTotal: number, paid: CreditPaid | null) => {
+export const TAUX_PLACEMENT_DEFAUT = 3
+
+/**
+ * Owning a bien that is not rented vs renting an equivalent home since the purchase month (current month excluded):
+ * rents avoided minus what the money tied in the bien (price not borrowed, then each principal repaid) would have
+ * earned if placed, compounded monthly. Null for a rented bien or without an equivalent rent (`LoyerMensuel`).
+ */
+const comparaisonLocationOf = (bien: BienInput, gainTotal: number, prixTotal: number, paid: CreditPaid | null, today: Date) => {
+  if (bien.Usage === 'locatif' || bien.LoyerMensuel === null) return null
+  const from = monthIndex(bien.DateAchat)
+  const mois = Math.max(0, monthIndex(today) - from)
+  const tauxPlacement = bien.TauxPlacement ?? TAUX_PLACEMENT_DEFAUT
+  const monthlyRate = tauxPlacement / 100 / 12
+  let placement = Math.max(0, prixTotal - (paid?.emprunte ?? 0))
+  let coutOpportunite = 0
+  for (let month = from; month < from + mois; month++) {
+    const rendement = placement * monthlyRate
+    coutOpportunite += rendement
+    placement += rendement + (paid?.capitalParMois.get(month) ?? 0)
+  }
+  const loyersEvites = bien.LoyerMensuel * mois
+  return {
+    mois,
+    loyerMensuel: bien.LoyerMensuel,
+    tauxPlacement,
+    loyersEvites: round2(loyersEvites),
+    coutOpportunite: round2(coutOpportunite),
+    gain: round2(gainTotal + loyersEvites - coutOpportunite)
+  }
+}
+
+/**
+ * Rents avoided while the owner lived in a rented bien: from the purchase month to the month of `DateMiseEnLocation`
+ * (current month at most), at the expected rent turned charges included with `AbattementCharges`, since the charges of
+ * that period are linked to the bien. Null without an expected rent or an occupation before the letting.
+ */
+const occupationOf = (bien: BienInput, today: Date) => {
+  if (bien.Usage !== 'locatif' || bien.LoyerMensuel === null || !bien.DateMiseEnLocation) return null
+  const mois = Math.min(monthIndex(bien.DateMiseEnLocation), monthIndex(today)) - monthIndex(bien.DateAchat)
+  if (mois <= 0) return null
+  const factor = abatementFactor(bien.AbattementCharges)
+  const loyerMensuel = round2(factor > 0 ? bien.LoyerMensuel / factor : bien.LoyerMensuel)
+  return { mois, loyerMensuel, loyersEvites: round2(loyerMensuel * mois) }
+}
+
+const bilanOf = (bien: BienInput, cumul: Totals, prixTotal: number, paid: CreditPaid | null, today: Date) => {
   const plusValue = bien.ValeurActuelle ? bien.ValeurActuelle - prixTotal : 0
   const loyersNets = cumul.loyers - cumul.charges
   const interets = paid ? paid.interets : 0
   const mensualites = paid ? paid.mensualites : null
+  const occupation = occupationOf(bien, today)
   return {
     plusValue: round2(plusValue),
     loyersNets: round2(loyersNets),
     interets: round2(interets),
-    gainTotal: round2(plusValue + loyersNets - interets),
+    occupation,
+    gainTotal: round2(plusValue + loyersNets - interets + (occupation?.loyersEvites ?? 0)),
     mensualites: mensualites === null ? null : round2(mensualites),
     partCreditLoyers: mensualites === null ? null : percent(cumul.loyers * abatementFactor(bien.AbattementCharges), mensualites)
   }
@@ -108,6 +165,7 @@ export const bienRentabilite = (bien: BienInput, flows: Flow[], today: Date, pai
   const cumul = totalsOf(classified)
   const prixTotal = prixTotalOf(bien)
   const loyersHorsCharges = totals.loyers * abatementFactor(bien.AbattementCharges)
+  const bilan = bilanOf(bien, cumul, prixTotal, paid, today)
   return {
     periode,
     loyers: round2(totals.loyers),
@@ -115,7 +173,8 @@ export const bienRentabilite = (bien: BienInput, flows: Flow[], today: Date, pai
     loyerMensuelMoyen: perMonth(loyersHorsCharges, periode.mois),
     attendu: { loyerMensuel: bien.LoyerMensuel },
     cumul: { loyers: round2(cumul.loyers), charges: round2(cumul.charges) },
-    bilan: bilanOf(bien, cumul, prixTotal, paid)
+    bilan,
+    comparaisonLocation: comparaisonLocationOf(bien, bilan.gainTotal, prixTotal, paid, today)
   }
 }
 

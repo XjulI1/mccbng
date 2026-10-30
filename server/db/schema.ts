@@ -120,6 +120,8 @@ export const biens = mysqlTable('Bien', {
   LoyerMensuel: money('LoyerMensuel'),
   AbattementCharges: decimal('AbattementCharges', { precision: 5, scale: 2, mode: 'number' }),
   DateMiseEnLocation: datetime('DateMiseEnLocation', { mode: 'date' }),
+  // % par an, rendement de l'argent immobilisé s'il était placé (comparaison avec la location)
+  TauxPlacement: decimal('TauxPlacement', { precision: 6, scale: 3, mode: 'number' }),
   IDcredit: int('IDcredit'),
   IDuser: int('IDuser').notNull()
 }, t => [

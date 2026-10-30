@@ -111,14 +111,13 @@
         </div>
       </div>
 
-      <div
-        v-if="bien.Usage === 'locatif'"
-        class="form-group"
-      >
+      <div class="form-group">
         <label
           for="bien-loyer"
           class="form-label"
-        >Loyer mensuel attendu, hors charges (optionnel)</label>
+        >{{ bien.Usage === 'locatif'
+          ? 'Loyer mensuel attendu, hors charges (optionnel)'
+          : 'Loyer d\'un logement équivalent, charges comprises (optionnel, pour comparer avec la location)' }}</label>
         <input
           id="bien-loyer"
           v-model.number="bien.LoyerMensuel"
@@ -128,6 +127,27 @@
           step="0.01"
           min="0"
           @blur="roundField('LoyerMensuel')"
+        >
+      </div>
+
+      <div
+        v-if="bien.Usage !== 'locatif'"
+        class="form-group"
+      >
+        <label
+          for="bien-taux-placement"
+          class="form-label"
+        >Rendement d'un placement sûr, en % par an (optionnel, {{ TAUX_PLACEMENT_DEFAUT }} par défaut)</label>
+        <input
+          id="bien-taux-placement"
+          v-model.number="bien.TauxPlacement"
+          type="number"
+          class="form-input"
+          :placeholder="`ex. ${TAUX_PLACEMENT_DEFAUT}`"
+          step="0.1"
+          min="0"
+          max="100"
+          @blur="roundField('TauxPlacement')"
         >
       </div>
 
@@ -335,6 +355,7 @@
   import { useCreditStore } from '@/stores/credit'
   import { useRoute, useRouter } from '#imports'
   import { formatEuros } from '@/utils/money'
+  import { TAUX_PLACEMENT_DEFAUT } from '@/utils/rentabilite'
 
   const bienStore = useBienStore()
   const creditStore = useCreditStore()
@@ -363,6 +384,7 @@
     LoyerMensuel: null as number | null,
     AbattementCharges: null as number | null,
     DateMiseEnLocation: null as string | null,
+    TauxPlacement: null as number | null,
     IDcredit: null as number | null
   })
 
@@ -407,6 +429,7 @@
       LoyerMensuel: typeof bien.value.LoyerMensuel === 'number' ? bien.value.LoyerMensuel : null,
       AbattementCharges: typeof bien.value.AbattementCharges === 'number' ? bien.value.AbattementCharges : null,
       DateMiseEnLocation: bien.value.DateMiseEnLocation ? new Date(bien.value.DateMiseEnLocation).toISOString() : null,
+      TauxPlacement: typeof bien.value.TauxPlacement === 'number' ? bien.value.TauxPlacement : null,
       IDcredit: bien.value.IDcredit || undefined
     }
 
