@@ -158,8 +158,9 @@
 
 .fab {
   position: relative;
-  width: 56px;
-  height: 56px;
+  flex-shrink: 0;
+  width: $navbar-height;
+  height: $navbar-height;
   border-radius: 50%;
   background: transparent;
   backdrop-filter: blur(5px);
@@ -172,7 +173,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  font-size: 20px;
+  font-size: 22px;
   -webkit-tap-highlight-color: transparent;
 }
 

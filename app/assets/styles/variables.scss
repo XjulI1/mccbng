@@ -4,5 +4,7 @@ $mobile_BP_max_width: 767px;
 $header-height: 80px;
 $header-height-and-margin: 90px;
 $left-panel-width: 33%;
-$navbar-height: 40px;
-$navbar-height-and-margin: 70px;
+// Tab bar flottante iOS 26 : 62 pt de haut, 21 pt du bord.
+$navbar-height: 62px;
+$navbar-margin: 21px;
+$navbar-height-and-margin: 90px;

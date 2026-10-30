@@ -182,16 +182,18 @@ hr {
 
 .bottom-dock {
   position: fixed;
-  bottom: 15px;
+  bottom: $navbar-margin;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   z-index: 100;
 
   @media screen and (max-width: $mobile_BP_max_width) {
-    gap: 6px;
+    left: $navbar-margin;
+    right: $navbar-margin;
+    transform: none;
   }
 }
 

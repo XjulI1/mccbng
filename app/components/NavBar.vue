@@ -97,12 +97,15 @@
 </script>
 
 <style lang="scss" scoped>
+// Proportions de la tab bar flottante d'iOS / iPadOS 26 (Liquid Glass) :
+// capsule de 62 pt, 4 pt de marge interne, pastille de sélection de 54 pt,
+// icône de ~24 pt, libellé 10 pt semibold.
 .tab-bar {
-  display: inline-flex;
+  display: flex;
   align-items: stretch;
-  gap: 4px;
-  padding: 6px 8px;
-  border-radius: 28px;
+  height: $navbar-height;
+  padding: 4px;
+  border-radius: calc($navbar-height / 2);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
@@ -115,13 +118,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  width: 64px;
-  padding: 6px 4px;
+  gap: 1px;
+  width: 76px;
+  min-width: 0;
+  padding: 0 4px;
   background: transparent;
   border: none;
   cursor: pointer;
-  border-radius: 22px;
+  border-radius: calc(($navbar-height - 8px) / 2);
   color: var(--text-primary, #2d3748);
   transition:
     background-color 0.2s ease,
@@ -138,45 +142,36 @@
   background: color-mix(in srgb, var(--tab-color) 16%, transparent);
 }
 
-.tab.active .tab-icon {
-  transform: scale(1.05);
-}
-
 .tab.active .tab-label {
   color: var(--tab-color);
-  font-weight: 700;
 }
 
 .tab-icon {
-  font-size: 20px;
+  height: 24px;
+  font-size: 22px;
   color: var(--tab-color);
-  transition: transform 0.2s ease;
 }
 
 .tab-label {
   font-size: 10px;
+  line-height: 12px;
   font-weight: 600;
-  letter-spacing: 0.2px;
   white-space: nowrap;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-
+// iPhone : la barre occupe toute la largeur disponible, onglets répartis à parts égales.
 @media screen and (max-width: $mobile_BP_max_width) {
   .tab-bar {
-    gap: 0;
-    padding: 5px 6px;
+    flex: 1;
+    min-width: 0;
   }
 
   .tab {
-    width: 56px;
-    padding: 5px 2px;
-  }
-
-  .tab-icon {
-    font-size: 19px;
+    flex: 1;
+    width: auto;
   }
 }
 </style>
