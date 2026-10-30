@@ -130,10 +130,7 @@
         >
       </div>
 
-      <div
-        v-if="bien.Usage !== 'locatif'"
-        class="form-group"
-      >
+      <div class="form-group">
         <label
           for="bien-taux-placement"
           class="form-label"

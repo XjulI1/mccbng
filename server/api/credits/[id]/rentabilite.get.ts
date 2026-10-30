@@ -16,7 +16,9 @@ export default defineApiHandler(async (event) => {
       AbattementCharges: biens.AbattementCharges, DateMiseEnLocation: biens.DateMiseEnLocation
     })
     .from(biens)
-    .where(and(eq(biens.IDcredit, id), eq(biens.IDuser, getCurrentUserId(event)))).orderBy(biens.IDbien).limit(1)
+    // Only a rented bien has rents: a refund linked to a home lived in must not show as one on its credit
+    .where(and(eq(biens.IDcredit, id), eq(biens.IDuser, getCurrentUserId(event)), eq(biens.Usage, 'locatif')))
+    .orderBy(biens.IDbien).limit(1)
   const linkedToCredit = bien ? or(eq(operations.IDcredit, id), eq(operations.IDbien, bien.IDbien)) : eq(operations.IDcredit, id)
   const flows = await getDb().select(flowColumns).from(operations)
     .where(and(linkedToCredit, await compteScope(event, operations.IDcompte)))

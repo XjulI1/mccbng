@@ -168,6 +168,18 @@ describe('bienBilanBlock', () => {
     ])
   })
 
+  it('bien locatif : rendement non perçu après l\'occupation, en négatif', () => {
+    const block = bienBilanBlock(bilan({
+      occupation: { mois: 70, loyerMensuel: 888.89, loyersEvites: 62222.3 },
+      rendementNonPercu: { tauxPlacement: 3, montant: 30000 }, gainTotal: 81022.3
+    }), true)!
+    expect(texts(block)!.map(spaces).slice(3)).toEqual([
+      'Loyers évités pendant l\'occupation (70 mois à 888,89 €) +62 222,30 €',
+      'Rendement si l\'argent avait été placé (3 %/an) -30 000,00 €',
+      'Gain total +81 022,30 €'
+    ])
+  })
+
   it('bien locatif sans historique ni valeur actuelle : aucun bloc', () => {
     const vide = bilan({ plusValue: 0, loyersNets: 0, interets: 0, gainTotal: 0, mensualites: null, partCreditLoyers: null })
     expect(bienBilanBlock(vide, false)).toBeNull()

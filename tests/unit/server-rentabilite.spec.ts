@@ -20,7 +20,7 @@ const bien = (
   DateMiseEnLocation: Date | null = null
 ) => ({
   PrixBienNu: 150000, FraisNotaire: 10000, FraisAgence: null, LoyerMensuel, ValeurActuelle, AbattementCharges, DateMiseEnLocation,
-  Usage: 'locatif', DateAchat: d('2015-01-01'), TauxPlacement: null as number | null
+  Usage: 'locatif', DateAchat: d('2015-01-01'), TauxPlacement: 0 as number | null
 })
 const paid = (interets: number, mensualites: number, emprunte = 0, capitalParMois = new Map<number, number>()) =>
   ({ interets, mensualites, emprunte, capitalParMois })
@@ -82,7 +82,7 @@ describe('bienRentabilite', () => {
       loyerMensuelMoyen: 650,
       attendu: { loyerMensuel: 650 },
       cumul: { loyers: 7800, charges: 840 },
-      bilan: { plusValue: 0, loyersNets: 6960, interets: 0, occupation: null, gainTotal: 6960, mensualites: null, partCreditLoyers: null },
+      bilan: { plusValue: 0, loyersNets: 6960, interets: 0, occupation: null, rendementNonPercu: { tauxPlacement: 0, montant: 0 }, gainTotal: 6960, mensualites: null, partCreditLoyers: null },
       comparaisonLocation: null
     })
   })
@@ -227,14 +227,14 @@ describe('bilan depuis l\'achat', () => {
     const flows = [...sixYears(72, 5).map(date => loyer(date)), charge(d('2025-09-15'), -5000)]
     const share = paid(18000, 59760)
     expect(bienRentabilite(bien(650, 185000), flows, TODAY, share).bilan).toEqual({
-      plusValue: 25000, loyersNets: 41800, interets: 18000, occupation: null, gainTotal: 48800, mensualites: 59760, partCreditLoyers: 78.31
+      plusValue: 25000, loyersNets: 41800, interets: 18000, occupation: null, rendementNonPercu: { tauxPlacement: 0, montant: 0 }, gainTotal: 48800, mensualites: 59760, partCreditLoyers: 78.31
     })
   })
 
   it('bien acheté comptant sans valeur estimée : plus-value nulle, ni intérêts ni part du crédit', () => {
     const flows = [...lastMonths(12).map(date => loyer(date)), charge(d('2026-09-15'), -840)]
     expect(bienRentabilite(bien(), flows, TODAY).bilan).toEqual({
-      plusValue: 0, loyersNets: 6960, interets: 0, occupation: null, gainTotal: 6960, mensualites: null, partCreditLoyers: null
+      plusValue: 0, loyersNets: 6960, interets: 0, occupation: null, rendementNonPercu: { tauxPlacement: 0, montant: 0 }, gainTotal: 6960, mensualites: null, partCreditLoyers: null
     })
   })
 
@@ -271,9 +271,30 @@ describe('loyers évités pendant l\'occupation d\'un bien mis en location ensui
   })
 })
 
+describe('rendement non perçu sur l\'argent immobilisé dans un bien loué', () => {
+  it('prix non emprunté placé dès le mois d\'achat, au taux par défaut, déduit du gain total', () => {
+    const result = bienRentabilite({ ...bien(), DateAchat: d('2025-10-15'), TauxPlacement: null }, [], TODAY)
+    expect(result.bilan.rendementNonPercu).toEqual({ tauxPlacement: 3, montant: 4866.55 })
+    expect(result.bilan.gainTotal).toBe(-4866.55)
+  })
+
+  it('à crédit : capital remboursé placé chaque mois, au taux saisi', () => {
+    const juillet = 2026 * 12 + 6
+    const credit = paid(0, 3000, 160000, new Map([[juillet, 1000], [juillet + 1, 1000], [juillet + 2, 1000]]))
+    const result = bienRentabilite({ ...bien(), DateAchat: d('2026-07-20'), TauxPlacement: 3 }, [], TODAY, credit)
+    expect(result.bilan.rendementNonPercu).toEqual({ tauxPlacement: 3, montant: 7.51 })
+  })
+
+  it('absent du bilan d\'un bien non loué : la comparaison avec la location le déduit déjà', () => {
+    const result = bienRentabilite({ ...bien(900), Usage: 'principale', DateAchat: d('2025-10-15'), TauxPlacement: null }, [], TODAY)
+    expect(result.bilan.rendementNonPercu).toBeNull()
+    expect(result.comparaisonLocation?.coutOpportunite).toBe(4866.55)
+  })
+})
+
 describe('comparaison avec la location (bien non loué)', () => {
   const residence = (extra: Partial<ReturnType<typeof bien>> = {}) =>
-    ({ ...bien(900, 170000), Usage: 'principale', DateAchat: d('2025-10-15'), ...extra })
+    ({ ...bien(900, 170000), Usage: 'principale', DateAchat: d('2025-10-15'), TauxPlacement: null, ...extra })
 
   it('acheté comptant : loyers évités depuis le mois d\'achat, prix total placé à 3 % composé chaque mois', () => {
     const result = bienRentabilite(residence(), [charge(d('2026-03-10'), -1500)], TODAY)
@@ -323,7 +344,7 @@ describe('abattement pour charges', () => {
     const flows = [...sixYears(72, 5).map(date => loyer(date)), charge(d('2025-09-15'), -5000)]
     const share = paid(18000, 59760)
     expect(bienRentabilite(bien(650, 185000, 10), flows, TODAY, share).bilan).toEqual({
-      plusValue: 25000, loyersNets: 41800, interets: 18000, occupation: null, gainTotal: 48800, mensualites: 59760, partCreditLoyers: 70.48
+      plusValue: 25000, loyersNets: 41800, interets: 18000, occupation: null, rendementNonPercu: { tauxPlacement: 0, montant: 0 }, gainTotal: 48800, mensualites: 59760, partCreditLoyers: 70.48
     })
   })
 })

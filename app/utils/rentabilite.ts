@@ -20,6 +20,7 @@ export type BienBilan = {
   loyersNets: number
   interets: number
   occupation?: { mois: number; loyerMensuel: number; loyersEvites: number } | null
+  rendementNonPercu?: { tauxPlacement: number; montant: number } | null
   gainTotal: number
   mensualites: number | null
   partCreditLoyers: number | null
@@ -104,13 +105,15 @@ export const bienRentalBlock = (rentabilite: BienRentabilite | null | undefined)
   return loyerMensuel === null ? null : { loyer: `${formatEuros(loyerMensuel)}/mois`, prevu: true, depuis: null }
 }
 
-const comparaisonLines = (comparaison: ComparaisonLocation) => {
-  const taux = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(comparaison.tauxPlacement)
-  return [
-    bilanLine(`Loyers évités (${comparaison.mois} mois à ${formatEuros(comparaison.loyerMensuel)})`, comparaison.loyersEvites),
-    bilanLine(`Rendement si l'argent avait été placé (${taux} %/an)`, -comparaison.coutOpportunite)
-  ]
+const rendementLine = (tauxPlacement: number, montant: number) => {
+  const taux = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(tauxPlacement)
+  return bilanLine(`Rendement si l'argent avait été placé (${taux} %/an)`, -montant)
 }
+
+const comparaisonLines = (comparaison: ComparaisonLocation) => [
+  bilanLine(`Loyers évités (${comparaison.mois} mois à ${formatEuros(comparaison.loyerMensuel)})`, comparaison.loyersEvites),
+  rendementLine(comparaison.tauxPlacement, comparaison.coutOpportunite)
+]
 
 /**
  * "Bilan depuis l'achat" block of a bien card, or null when there is nothing to report yet; a bien not rented has no
@@ -133,6 +136,7 @@ export const bienBilanBlock = (
       `Loyers évités pendant l'occupation (${occupation.mois} mois à ${formatEuros(occupation.loyerMensuel)})`, occupation.loyersEvites
     ))
   }
+  if (bilan.rendementNonPercu) lignes.push(rendementLine(bilan.rendementNonPercu.tauxPlacement, bilan.rendementNonPercu.montant))
   if (comparaison) lignes.push(...comparaisonLines(comparaison))
   return {
     lignes,

@@ -100,12 +100,10 @@ export const paidOnCredit = (credit: AmortizationCredit, payments: CreditPayment
 export const TAUX_PLACEMENT_DEFAUT = 3
 
 /**
- * Owning a bien that is not rented vs renting an equivalent home since the purchase month (current month excluded):
- * rents avoided minus what the money tied in the bien (price not borrowed, then each principal repaid) would have
- * earned if placed, compounded monthly. Null for a rented bien or without an equivalent rent (`LoyerMensuel`).
+ * What the money tied in the bien would have earned if placed at `TauxPlacement` % a year (compounded monthly) from
+ * the purchase month to the last full month: the price not borrowed from the start, then each principal repaid.
  */
-const comparaisonLocationOf = (bien: BienInput, gainTotal: number, prixTotal: number, paid: CreditPaid | null, today: Date) => {
-  if (bien.Usage === 'locatif' || bien.LoyerMensuel === null) return null
+const placementOf = (bien: BienInput, prixTotal: number, paid: CreditPaid | null, today: Date) => {
   const from = monthIndex(bien.DateAchat)
   const mois = Math.max(0, monthIndex(today) - from)
   const tauxPlacement = bien.TauxPlacement ?? TAUX_PLACEMENT_DEFAUT
@@ -117,6 +115,17 @@ const comparaisonLocationOf = (bien: BienInput, gainTotal: number, prixTotal: nu
     coutOpportunite += rendement
     placement += rendement + (paid?.capitalParMois.get(month) ?? 0)
   }
+  return { mois, tauxPlacement, coutOpportunite }
+}
+
+/**
+ * Owning a bien that is not rented vs renting an equivalent home since the purchase month (current month excluded):
+ * rents avoided minus the return not earned on the money tied in the bien (`placementOf`). Null for a rented bien
+ * (its `bilan` already deducts that return) or without an equivalent rent (`LoyerMensuel`).
+ */
+const comparaisonLocationOf = (bien: BienInput, gainTotal: number, prixTotal: number, paid: CreditPaid | null, today: Date) => {
+  if (bien.Usage === 'locatif' || bien.LoyerMensuel === null) return null
+  const { mois, tauxPlacement, coutOpportunite } = placementOf(bien, prixTotal, paid, today)
   const loyersEvites = bien.LoyerMensuel * mois
   return {
     mois,
@@ -148,12 +157,19 @@ const bilanOf = (bien: BienInput, cumul: Totals, prixTotal: number, paid: Credit
   const interets = paid ? paid.interets : 0
   const mensualites = paid ? paid.mensualites : null
   const occupation = occupationOf(bien, today)
+  const placement = bien.Usage === 'locatif' ? placementOf(bien, prixTotal, paid, today) : null
+  const rendementNonPercu = placement
+    ? { tauxPlacement: placement.tauxPlacement, montant: round2(placement.coutOpportunite) }
+    : null
   return {
     plusValue: round2(plusValue),
     loyersNets: round2(loyersNets),
     interets: round2(interets),
     occupation,
-    gainTotal: round2(plusValue + loyersNets - interets + (occupation?.loyersEvites ?? 0)),
+    rendementNonPercu,
+    gainTotal: round2(
+      plusValue + loyersNets - interets + (occupation?.loyersEvites ?? 0) - (placement?.coutOpportunite ?? 0)
+    ),
     mensualites: mensualites === null ? null : round2(mensualites),
     partCreditLoyers: mensualites === null ? null : percent(cumul.loyers * abatementFactor(bien.AbattementCharges), mensualites)
   }

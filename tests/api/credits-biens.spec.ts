@@ -507,7 +507,7 @@ describe('rentabilité', () => {
     const user = await createUser()
     const compte = await createCompte(user)
     const pret = (await post('/api/credits', user.token, immo(compte.IDcompte, { TauxInteret: 3.2 }))).body
-    const bien = await createBien(user, { IDcredit: pret.IDcredit, ValeurActuelle: 185000 })
+    const bien = await createBien(user, { IDcredit: pret.IDcredit, ValeurActuelle: 185000, TauxPlacement: 0 })
     for (const DateOp of lastTwelve(10)) await createOperation(user, compte.IDcompte, { NomOp: 'Mensualité', MontantOp: -830, DateOp, IDcredit: pret.IDcredit })
     await addRents(user, compte.IDcompte, bien.IDbien)
 
@@ -519,6 +519,7 @@ describe('rentabilité', () => {
       loyersNets: 7800,
       interets,
       occupation: null,
+      rendementNonPercu: { tauxPlacement: 0, montant: 0 },
       gainTotal: Math.round((25000 + 7800 - interets) * 100) / 100,
       mensualites: 9960,
       partCreditLoyers: 78.31
@@ -527,10 +528,16 @@ describe('rentabilité', () => {
 
   it('bien acheté comptant : bilan sans intérêts ni part du crédit', async () => {
     const user = await createUser()
-    const comptant = await createBien(user, { NomBien: 'Studio' })
+    const comptant = await createBien(user, { NomBien: 'Studio', TauxPlacement: 0 })
     expect((await get(`/api/biens/${comptant.IDbien}/rentabilite`, user.token)).body.bilan).toEqual({
-      plusValue: 0, loyersNets: 0, interets: 0, occupation: null, gainTotal: 0, mensualites: null, partCreditLoyers: null
+      plusValue: 0, loyersNets: 0, interets: 0, occupation: null, rendementNonPercu: { tauxPlacement: 0, montant: 0 },
+      gainTotal: 0, mensualites: null, partCreditLoyers: null
     })
+    // Sans taux saisi : 160 000 € placés à 3 % depuis juin 2020, déduits du gain total
+    const { bilan } = (await get(`/api/biens/${(await createBien(user)).IDbien}/rentabilite`, user.token)).body
+    expect(bilan.rendementNonPercu.tauxPlacement).toBe(3)
+    expect(bilan.rendementNonPercu.montant).toBeGreaterThan(30000)
+    expect(bilan.gainTotal).toBe(-bilan.rendementNonPercu.montant)
   })
 
   it('résidence principale à crédit : comparaison avec la location (loyers évités, argent immobilisé placé)', async () => {
@@ -557,7 +564,7 @@ describe('rentabilité', () => {
 
   it('bien habité avant sa mise en location : loyers évités pendant l\'occupation dans le bilan', async () => {
     const user = await createUser()
-    const bien = await createBien(user, { LoyerMensuel: 650, AbattementCharges: 10, DateMiseEnLocation: '2021-06-01' })
+    const bien = await createBien(user, { LoyerMensuel: 650, AbattementCharges: 10, DateMiseEnLocation: '2021-06-01', TauxPlacement: 0 })
     const { bilan, comparaisonLocation } = (await get(`/api/biens/${bien.IDbien}/rentabilite`, user.token)).body
     expect(bilan.occupation).toEqual({ mois: 12, loyerMensuel: 722.22, loyersEvites: 8666.64 })
     expect(bilan.gainTotal).toBe(8666.64)
@@ -599,6 +606,16 @@ describe('rentabilité', () => {
     expect(bienBody.cumul).toEqual({ loyers: 3900, charges: 900 })
     const creditBody = (await get(`/api/credits/${pret.IDcredit}/rentabilite`, user.token)).body
     expect(creditBody).toMatchObject({ periode: { debut, mois: 6 }, mensualites: 4980, cashFlowMensuel: -180, tauxCouverture: 78.31 })
+  })
+
+  it('crédit d\'une résidence principale : ni loyer ni bien, même avec une opération positive liée au bien', async () => {
+    const user = await createUser()
+    const compte = await createCompte(user)
+    const pret = (await post('/api/credits', user.token, immo(compte.IDcompte))).body
+    const maison = await createBien(user, { Usage: 'principale', IDcredit: pret.IDcredit, LoyerMensuel: 1350 })
+    await createOperation(user, compte.IDcompte, { NomOp: 'Remboursement assurance prêt', MontantOp: 50.67, DateOp: monthsAgo(3, 18), IDbien: maison.IDbien })
+    const res = await get(`/api/credits/${pret.IDcredit}/rentabilite`, user.token)
+    expect(res.body).toMatchObject({ bien: null, loyers: 0, cumul: { loyers: 0 }, attendu: { loyerMensuel: null }, partCreditLoyers: null })
   })
 
   it('crédit sans bien ; crédit d\'autrui → 404', async () => {
