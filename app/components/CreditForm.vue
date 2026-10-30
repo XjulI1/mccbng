@@ -337,18 +337,23 @@
     router.push('/credits')
   }
 
-  onMounted(() => {
+  const fillForm = (existingCredit) => {
+    credit.value = { ...existingCredit }
+    credit.value.DateDebut = new Date(existingCredit.DateDebut).toISOString().split('T')[0]
+    credit.value.DateFin = new Date(existingCredit.DateFin).toISOString().split('T')[0]
+    montantMensuelAbsolute.value = Math.abs(existingCredit.MontantMensuel)
+  }
+
+  onMounted(async () => {
     const nameInput = document.querySelector('#credit-name') as HTMLInputElement
     if (nameInput) nameInput.focus()
 
     if (creditID.value) {
-      const existingCredit = creditStore.creditFromList(creditID.value)
-      if (existingCredit) {
-        credit.value = { ...existingCredit }
-        credit.value.DateDebut = new Date(existingCredit.DateDebut).toISOString().split('T')[0]
-        credit.value.DateFin = new Date(existingCredit.DateFin).toISOString().split('T')[0]
-        montantMensuelAbsolute.value = Math.abs(existingCredit.MontantMensuel)
-      }
+      const cached = creditStore.creditFromList(creditID.value)
+      if (cached) fillForm(cached)
+      // The list may predate a change made elsewhere (other tab or device): saving it would write the old values back
+      await creditStore.fetchCreditDetails(creditID.value)
+      if (creditStore.activeCredit?.IDcredit === creditID.value) fillForm(creditStore.activeCredit)
     }
   })
 </script>

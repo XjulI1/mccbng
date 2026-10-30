@@ -460,7 +460,15 @@
     router.push('/biens')
   }
 
-  onMounted(() => {
+  const fillForm = (existing) => {
+    bien.value = { ...existing }
+    bien.value.DateAchat = new Date(existing.DateAchat).toISOString().split('T')[0]
+    bien.value.DateMiseEnLocation = existing.DateMiseEnLocation
+      ? new Date(existing.DateMiseEnLocation).toISOString().split('T')[0]
+      : null
+  }
+
+  onMounted(async () => {
     if (creditList.value.length === 0) {
       creditStore.fetchCredits()
     }
@@ -469,14 +477,11 @@
     if (nameInput) nameInput.focus()
 
     if (bienID.value) {
-      const existing = bienStore.bienFromList(bienID.value)
-      if (existing) {
-        bien.value = { ...existing }
-        bien.value.DateAchat = new Date(existing.DateAchat).toISOString().split('T')[0]
-        bien.value.DateMiseEnLocation = existing.DateMiseEnLocation
-          ? new Date(existing.DateMiseEnLocation).toISOString().split('T')[0]
-          : null
-      }
+      const cached = bienStore.bienFromList(bienID.value)
+      if (cached) fillForm(cached)
+      // The list may predate a change made elsewhere (other tab or device): saving it would write the old values back
+      await bienStore.fetchBienDetails(bienID.value)
+      if (bienStore.activeBien?.IDbien === bienID.value) fillForm(bienStore.activeBien)
     }
   })
 </script>
