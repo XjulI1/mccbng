@@ -3,7 +3,7 @@
 // À exécuter en production AVANT de déployer la version qui refuse les secret_key en clair.
 //   node scripts/hash-legacy-secrets.mjs            simulation : liste les utilisateurs concernés, n'écrit rien
 //   node scripts/hash-legacy-secrets.mjs --apply    hashe et enregistre
-// Configuration : DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
+// Configuration : NUXT_DB_HOST, NUXT_DB_PORT, NUXT_DB_USER, NUXT_DB_PASSWORD, NUXT_DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
 import bcrypt from 'bcryptjs'
 import { fileURLToPath } from 'node:url'
 import { createConnection } from 'mysql2/promise'
@@ -38,18 +38,18 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(error.message)
     process.exit(1)
   }
-  const missing = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'].filter(name => !process.env[name])
+  const missing = ['NUXT_DB_HOST', 'NUXT_DB_USER', 'NUXT_DB_PASSWORD', 'NUXT_DB_NAME'].filter(name => !process.env[name])
   if (missing.length) {
     console.error(`Configuration manquante : ${missing.join(', ')}`)
     process.exit(1)
   }
   const apply = process.argv.includes('--apply')
   const connection = await createConnection({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT ?? 3306),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    host: process.env.NUXT_DB_HOST,
+    port: Number(process.env.NUXT_DB_PORT ?? 3306),
+    user: process.env.NUXT_DB_USER,
+    password: process.env.NUXT_DB_PASSWORD,
+    database: process.env.NUXT_DB_NAME
   })
   try {
     const ids = await hashLegacySecrets(connection, { apply, log: console.log })

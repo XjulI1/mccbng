@@ -10,10 +10,10 @@ export const isImportDisponible = (): boolean => Boolean(override || getConfig()
 // undefined si l'import est désactivé (pas de clé Anthropic)
 export const getOperationExtractor = (): OperationExtractor | undefined => {
   if (override) return override
-  const { apiKey, model, effort } = getConfig().anthropic
+  const { apiKey, baseUrl, model, effort } = getConfig().anthropic
   if (!apiKey) return undefined
-  const key = `${model}|${effort}`
-  if (cached?.key !== key) cached = { key, extractor: new AnthropicOperationExtractor(apiKey, model, effort) }
+  const key = `${model}|${effort}|${baseUrl ?? ''}`
+  if (cached?.key !== key) cached = { key, extractor: new AnthropicOperationExtractor(apiKey, model, effort, { baseURL: baseUrl ?? null }) }
   return cached.extractor
 }
 

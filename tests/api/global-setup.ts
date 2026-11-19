@@ -59,16 +59,16 @@ export default async function setup(project: TestProject) {
     ...process.env,
     NODE_ENV: 'production',
     TZ: 'UTC',
-    DB_HOST: database.db.host,
-    DB_PORT: String(database.db.port),
-    DB_USER: database.db.user,
-    DB_PASSWORD: database.db.password,
-    DB_NAME: database.db.database,
-    JWT_SECRET: jwtSecret,
-    JWT_TTL_SECONDS: '3600',
-    ANTHROPIC_API_KEY: 'sk-ant-test',
-    ANTHROPIC_BASE_URL: anthropic.url,
-    ANTHROPIC_MODEL: 'claude-opus-5-5'
+    NUXT_DB_HOST: database.db.host,
+    NUXT_DB_PORT: String(database.db.port),
+    NUXT_DB_USER: database.db.user,
+    NUXT_DB_PASSWORD: database.db.password,
+    NUXT_DB_NAME: database.db.database,
+    NUXT_JWT_SECRET: jwtSecret,
+    NUXT_JWT_TTL_SECONDS: '3600',
+    NUXT_ANTHROPIC_API_KEY: 'sk-ant-test',
+    NUXT_ANTHROPIC_BASE_URL: anthropic.url,
+    NUXT_ANTHROPIC_MODEL: 'claude-opus-5-5'
   }
 
   if (!process.env.API_TEST_SKIP_BUILD) {

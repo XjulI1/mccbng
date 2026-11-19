@@ -1,5 +1,5 @@
 // Charge le fichier .env de la racine du dépôt (comme Nuxt en développement) pour les scripts qui accèdent à la base.
-// Les variables déjà définies dans l'environnement sont prioritaires : `DB_HOST=… node scripts/…` l'emporte sur .env.
+// Les variables déjà définies dans l'environnement sont prioritaires : `NUXT_DB_HOST=… node scripts/…` l'emporte sur .env.
 // Un autre fichier peut être choisi avec ENV_FILE (ex. ENV_FILE=.env.production).
 import { existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'

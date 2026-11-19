@@ -2,7 +2,7 @@
 // Migrations SQL versionnées : applique server/db/migrations/*.sql dans l'ordre alphabétique.
 //   node scripts/db-migrate.mjs             applique les migrations en attente
 //   node scripts/db-migrate.mjs --baseline  marque 0000_baseline comme jouée SANS l'exécuter (base de prod existante)
-// Configuration : DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
+// Configuration : NUXT_DB_HOST, NUXT_DB_PORT, NUXT_DB_USER, NUXT_DB_PASSWORD, NUXT_DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
 // Moteur cible : MariaDB. Les migrations postérieures à la baseline sont rejouables (voir docs/db-migrations.md).
 import { readdir, readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -92,17 +92,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(error.message)
     process.exit(1)
   }
-  const missing = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'].filter(name => !process.env[name])
+  const missing = ['NUXT_DB_HOST', 'NUXT_DB_USER', 'NUXT_DB_PASSWORD', 'NUXT_DB_NAME'].filter(name => !process.env[name])
   if (missing.length) {
     console.error(`Configuration manquante : ${missing.join(', ')}`)
     process.exit(1)
   }
   const connection = await createConnection({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT ?? 3306),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    host: process.env.NUXT_DB_HOST,
+    port: Number(process.env.NUXT_DB_PORT ?? 3306),
+    user: process.env.NUXT_DB_USER,
+    password: process.env.NUXT_DB_PASSWORD,
+    database: process.env.NUXT_DB_NAME,
     multipleStatements: true
   })
   try {

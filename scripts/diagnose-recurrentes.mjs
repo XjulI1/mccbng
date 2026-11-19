@@ -3,7 +3,7 @@
 //   node scripts/diagnose-recurrentes.mjs                     lecture seule : liste les anomalies et les corrections proposées
 //   node scripts/diagnose-recurrentes.mjs --apply --ids=1,2   applique la correction proposée aux seules récurrentes listées
 //   node scripts/diagnose-recurrentes.mjs --fix-credit-links  répare Credit.IDopRecu quand il ne pointe pas sur la mensualité du crédit
-// Configuration : DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
+// Configuration : NUXT_DB_HOST, NUXT_DB_PORT, NUXT_DB_USER, NUXT_DB_PASSWORD, NUXT_DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
 import { fileURLToPath } from 'node:url'
 import { createConnection } from 'mysql2/promise'
 import { loadEnv } from './load-env.mjs'
@@ -154,7 +154,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(error.message)
     process.exit(1)
   }
-  const missing = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'].filter(name => !process.env[name])
+  const missing = ['NUXT_DB_HOST', 'NUXT_DB_USER', 'NUXT_DB_PASSWORD', 'NUXT_DB_NAME'].filter(name => !process.env[name])
   if (missing.length) {
     console.error(`Configuration manquante : ${missing.join(', ')}`)
     process.exit(1)
@@ -167,11 +167,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(1)
   }
   const connection = await createConnection({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT ?? 3306),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    host: process.env.NUXT_DB_HOST,
+    port: Number(process.env.NUXT_DB_PORT ?? 3306),
+    user: process.env.NUXT_DB_USER,
+    password: process.env.NUXT_DB_PASSWORD,
+    database: process.env.NUXT_DB_NAME,
     timezone: 'Z'
   })
   try {

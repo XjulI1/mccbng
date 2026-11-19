@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'node:http'
 
-// Faux serveur Messages API pour les tests d'API : le serveur Nitro testé y est pointé par ANTHROPIC_BASE_URL.
+// Faux serveur Messages API pour les tests d'API : le serveur Nitro testé y est pointé par NUXT_ANTHROPIC_BASE_URL.
 // POST /__next empile une réponse ({ status?, body }) ; GET /__last renvoie le dernier corps de requête reçu.
 export const startAnthropicMock = async () => {
   const queue: { status: number; body: unknown }[] = []

@@ -27,7 +27,7 @@
     "docker:staging:push": "docker push dockregistry.xju.fr/mccbng/front:staging",
     "docker:latest:build": "docker buildx build --platform linux/amd64 -f Dockerfile -t dockregistry.xju.fr/mccbng/front:latest .",
     "docker:latest:push": "docker push dockregistry.xju.fr/mccbng/front:latest",
-    "docker:run": "docker run -p 8080:8080 -e DB_HOST=host.docker.internal -e DB_PORT=3306 -e DB_USER=... -e DB_PASSWORD=... -e DB_NAME=... -e JWT_SECRET=... -d front",
+    "docker:run": "docker run -p 8080:8080 -e NUXT_DB_HOST=host.docker.internal -e NUXT_DB_PORT=3306 -e NUXT_DB_USER=... -e NUXT_DB_PASSWORD=... -e NUXT_DB_NAME=... -e NUXT_JWT_SECRET=... -d front",
     "postinstall": "nuxt prepare",
     "db:migrate": "node scripts/db-migrate.mjs",
     "hash-code": "node scripts/hash-code.mjs",
