@@ -32,8 +32,9 @@ ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0
 ENV NITRO_PORT=8080
 # Configuration lue à l'exécution (aucun secret dans l'image) :
-#   DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME  (MySQL, obligatoires)
-#   JWT_SECRET (obligatoire), JWT_TTL_SECONDS (défaut 3600)
+#   NUXT_DB_HOST, NUXT_DB_USER, NUXT_DB_PASSWORD, NUXT_DB_NAME (MariaDB, obligatoires), NUXT_DB_PORT (défaut 3306)
+#   NUXT_JWT_SECRET (obligatoire), NUXT_JWT_TTL_SECONDS (défaut 21600)
+#   NUXT_ANTHROPIC_API_KEY, NUXT_ANTHROPIC_MODEL, NUXT_ANTHROPIC_EFFORT, NUXT_ANTHROPIC_BASE_URL (facultatives)
 # Les migrations SQL (scripts/db-migrate.mjs) se lancent depuis le poste / la CI, pas depuis cette image.
 
 USER node

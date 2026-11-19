@@ -1,60 +1,78 @@
 import { randomBytes } from 'node:crypto'
+import { useRuntimeConfig } from 'nitropack/runtime'
 
 export type AnthropicEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max'
 
-export interface AppConfig {
+export type AppConfig = {
   db: { host: string; port: number; user: string; password: string; database: string }
   jwt: { secret: string; ttlSeconds: number }
-  // Import d'opérations par LLM : désactivé (sans erreur) quand la clé est absente
-  anthropic: { apiKey?: string; model: string; effort: AnthropicEffort }
+  anthropic: { apiKey?: string; baseUrl?: string; model: string; effort: AnthropicEffort }
   isProduction: boolean
 }
 
+/** Server keys of the Nuxt runtime config, overridable at run time by the `NUXT_*` variables (values parsed by destr). */
+export type ServerRuntimeConfig = {
+  db?: { host?: unknown; port?: unknown; user?: unknown; password?: unknown; name?: unknown }
+  jwt?: { secret?: unknown; ttlSeconds?: unknown }
+  anthropic?: { apiKey?: unknown; baseUrl?: unknown; model?: unknown; effort?: unknown }
+}
+
+const DEFAULT_DB_PORT = 3306
 const DEFAULT_TTL_SECONDS = 6 * 60 * 60
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-sonnet-5-5'
 export const DEFAULT_ANTHROPIC_EFFORT: AnthropicEffort = 'low'
 const EFFORTS: readonly AnthropicEffort[] = ['low', 'medium', 'high', 'xhigh', 'max']
+const REQUIRED_DB_VARIABLES = [
+  ['NUXT_DB_HOST', 'host'],
+  ['NUXT_DB_USER', 'user'],
+  ['NUXT_DB_PASSWORD', 'password'],
+  ['NUXT_DB_NAME', 'database']
+] as const
 
-// Effort valide, sinon la valeur par défaut.
 export const parseEffort = (value: string | undefined, fallback: AnthropicEffort = DEFAULT_ANTHROPIC_EFFORT): AnthropicEffort =>
   value && (EFFORTS as readonly string[]).includes(value) ? (value as AnthropicEffort) : fallback
-const REQUIRED_DB_VARS = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'] as const
 
-let cached: AppConfig | undefined
+const text = (value: unknown): string => (value === undefined || value === null ? '' : String(value))
+
+const positiveInteger = (value: unknown, fallback: number): number => {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+}
+
 let ephemeralSecret: string | undefined
 
-// Lecture des variables d'environnement à l'exécution (jamais au build) : l'image Docker ne contient aucune configuration.
-export const loadConfig = (env: NodeJS.ProcessEnv = process.env): AppConfig => {
-  const isProduction = env.NODE_ENV === 'production'
-  const missing: string[] = REQUIRED_DB_VARS.filter(name => !env[name])
-  if (isProduction && !env.JWT_SECRET) missing.push('JWT_SECRET')
+/** Validates the server runtime config; throws when a required value is missing. */
+export const resolveConfig = (runtime: ServerRuntimeConfig, { production }: { production: boolean }): AppConfig => {
+  const db = {
+    host: text(runtime.db?.host),
+    port: positiveInteger(runtime.db?.port, DEFAULT_DB_PORT),
+    user: text(runtime.db?.user),
+    password: text(runtime.db?.password),
+    database: text(runtime.db?.name)
+  }
+  const configuredSecret = text(runtime.jwt?.secret)
+
+  const missing: string[] = REQUIRED_DB_VARIABLES.filter(([, key]) => !db[key]).map(([name]) => name)
+  if (production && !configuredSecret) missing.push('NUXT_JWT_SECRET')
   if (missing.length) throw new Error(`Configuration manquante : ${missing.join(', ')}`)
 
-  let secret = env.JWT_SECRET
-  if (!secret) {
-    ephemeralSecret ??= randomBytes(32).toString('hex')
-    secret = ephemeralSecret
-  }
+  const secret = configuredSecret || (ephemeralSecret ??= randomBytes(32).toString('hex'))
 
-  const ttl = parseInt(env.JWT_TTL_SECONDS ?? '', 10)
   return {
-    db: {
-      host: env.DB_HOST ?? '',
-      port: parseInt(env.DB_PORT ?? '3306', 10),
-      user: env.DB_USER ?? '',
-      password: env.DB_PASSWORD ?? '',
-      database: env.DB_NAME ?? ''
-    },
-    jwt: { secret, ttlSeconds: Number.isFinite(ttl) && ttl > 0 ? ttl : DEFAULT_TTL_SECONDS },
+    db,
+    jwt: { secret, ttlSeconds: positiveInteger(runtime.jwt?.ttlSeconds, DEFAULT_TTL_SECONDS) },
     anthropic: {
-      apiKey: env.ANTHROPIC_API_KEY?.trim() || undefined,
-      model: env.ANTHROPIC_MODEL?.trim() || DEFAULT_ANTHROPIC_MODEL,
-      effort: parseEffort(env.ANTHROPIC_EFFORT?.trim())
+      apiKey: text(runtime.anthropic?.apiKey).trim() || undefined,
+      baseUrl: text(runtime.anthropic?.baseUrl).trim() || undefined,
+      model: text(runtime.anthropic?.model).trim() || DEFAULT_ANTHROPIC_MODEL,
+      effort: parseEffort(text(runtime.anthropic?.effort).trim())
     },
-    isProduction
+    isProduction: production
   }
 }
 
-export const getConfig = (): AppConfig => (cached ??= loadConfig())
+let cached: AppConfig | undefined
+
+export const getConfig = (): AppConfig => (cached ??= resolveConfig(useRuntimeConfig(), { production: !import.meta.dev }))
 
 export const hasEphemeralJwtSecret = () => ephemeralSecret !== undefined

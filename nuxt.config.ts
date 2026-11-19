@@ -15,6 +15,12 @@ export default defineNuxtConfig({
 
   css: ['@/assets/styles/main.css'],
 
+  runtimeConfig: {
+    db: { host: '', port: 3306, user: '', password: '', name: '' },
+    jwt: { secret: '', ttlSeconds: 21600 },
+    anthropic: { apiKey: '', baseUrl: '', model: 'claude-sonnet-5-5', effort: 'low' }
+  },
+
   app: {
     head: {
       htmlAttrs: { lang: 'fr' },

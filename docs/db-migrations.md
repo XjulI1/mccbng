@@ -17,14 +17,14 @@ Le runner :
 
 ## Configuration
 
-Les scripts qui modifient la base (`db-migrate.mjs`, `hash-legacy-secrets.mjs`, `diagnose-recurrentes.mjs`) lisent `DB_HOST`, `DB_PORT`,
-`DB_USER`, `DB_PASSWORD` et `DB_NAME` dans le fichier `.env` de la racine du dépôt (le même que `pnpm dev`).
+Les scripts qui modifient la base (`db-migrate.mjs`, `hash-legacy-secrets.mjs`, `diagnose-recurrentes.mjs`) lisent `NUXT_DB_HOST`, `NUXT_DB_PORT`,
+`NUXT_DB_USER`, `NUXT_DB_PASSWORD` et `NUXT_DB_NAME` dans le fichier `.env` de la racine du dépôt (le même que `pnpm dev`).
 Les variables déjà définies dans l'environnement sont prioritaires, et `ENV_FILE` permet de viser un autre fichier :
 
 ```bash
 pnpm db:migrate                               # .env de la racine
 ENV_FILE=.env.production pnpm db:migrate      # autre fichier (chemin relatif à la racine, ou absolu)
-DB_NAME=mccbng_copie pnpm db:migrate          # une variable passée en ligne de commande l'emporte sur le fichier
+NUXT_DB_NAME=mccbng_copie pnpm db:migrate          # une variable passée en ligne de commande l'emporte sur le fichier
 ```
 
 Le script affiche le fichier chargé (`Configuration lue dans …`) : le vérifier avant toute opération sur la production.
@@ -96,7 +96,7 @@ Sur un poste de développement, avec un dump phpMyAdmin récent (il contient des
 ```bash
 docker run -d --name mccbng-copie -e MARIADB_ROOT_PASSWORD=copie -e MARIADB_DATABASE=copie -p 127.0.0.1:33061:3306 mariadb:10.11
 docker exec -i mccbng-copie mariadb -uroot -pcopie copie < dump.sql
-export DB_HOST=127.0.0.1 DB_PORT=33061 DB_USER=root DB_PASSWORD=copie DB_NAME=copie ENV_FILE=/dev/null
+export NUXT_DB_HOST=127.0.0.1 NUXT_DB_PORT=33061 NUXT_DB_USER=root NUXT_DB_PASSWORD=copie NUXT_DB_NAME=copie ENV_FILE=/dev/null
 
 # 1. Aucune collision d'email sous la nouvelle collation (attendu : 0)
 docker exec mccbng-copie mariadb -uroot -pcopie copie -e "SELECT COUNT(*) FROM (SELECT CONVERT(email USING utf8mb4) COLLATE utf8mb4_unicode_ci AS e FROM \`User\` GROUP BY e HAVING COUNT(*) > 1) t"

@@ -46,11 +46,11 @@ pnpm hash-code <code>   # bcrypt hash (cost 12) of a login code, to paste into U
 ```
 
 1. The frontend authenticates via `POST /api/users/login` with `{ email, code }` (a 6-character code compared to the bcrypt-hashed `secret_key`; a non-bcrypt key is refused). After 5 consecutive failures the account is locked (5 min → 30 min → 2 h → 24 h); every attempt is logged as one JSON line (`"event":"login"`).
-2. The API sets the session in the `HttpOnly` `mccbngAuth` cookie only: a JWT `{ name, email, IDuser, tv }` (HS256, `iss`/`aud` `mccbng`, signed with `JWT_SECRET`, TTL `JWT_TTL_SECONDS`, default 6 h). The response body is `{ userId }`, without the token.
+2. The API sets the session in the `HttpOnly` `mccbngAuth` cookie only: a JWT `{ name, email, IDuser, tv }` (HS256, `iss`/`aud` `mccbng`, signed with `NUXT_JWT_SECRET`, TTL `NUXT_JWT_TTL_SECONDS`, default 6 h). The response body is `{ userId }`, without the token.
 3. The front only keeps the non-secret `userID` cookie (`app/services/auth.ts`); `app/services/http.ts` sends requests with `credentials: 'same-origin'` and `X-Requested-With: mccbng`. There is no `Authorization` header: a Bearer token is refused.
 4. `server/middleware/auth.ts` requires `X-Requested-With: mccbng` (and a same-host `Origin` when present) on every unsafe method (CSRF, 403 otherwise), then verifies the cookie JWT on every `/api/**` route except `GET /api/ping` and `POST /api/users/login`. It re-reads `User.tokenVersion`: `POST /api/users/logout` increments it, which revokes the user's sessions on all devices.
 5. Users are always looked up by `IDuser` (primary key). The legacy LoopBack columns (`id`, `realm`, `emailVerified`, `verificationToken`) are dropped by migration `0004_drop_legacy`.
-6. `JWT_SECRET` must stay fixed: changing it invalidates every session.
+6. `NUXT_JWT_SECRET` must stay fixed: changing it invalidates every session.
 7. There is no signup route: users are created in phpMyAdmin with a `secret_key` produced by `pnpm hash-code <code>` (see `docs/exploitation.md`).
 8. The login rate-limit (5 / 15 min / IP) reads the IP from `X-Real-IP`, set by the Synology DSM reverse proxy from Cloudflare's `CF-Connecting-IP` (chain: client → Cloudflare → DSM → container; the NAS must only be reachable through Cloudflare), with the socket address as fallback; IPv6 addresses are counted by their `/64` prefix (`server/plugins/client-ip.ts`, `rateLimitKey`); `X-Forwarded-For` is never trusted.
 
@@ -87,7 +87,7 @@ User scoping uses two patterns:
 - Rental income: operations linked to a `Bien` feed `GET /api/biens/:id/rentabilite` (average rent, summary since purchase) and `GET /api/credits/:id/rentabilite` (only when the financed bien is rented; rents and payments only, without the bien's charges: average rent and payment, coverage, monthly effort = payment − rent excluding charges) over the whole letting (from `Bien.DateMiseEnLocation`, else the first rent, to the last full month), with forecast values from `LoyerMensuel` (`server/utils/rentabilite.ts`). The bien route also returns a `bilan` since purchase: plus-value + net rents − loan interest (same `amortize` as `remaining-balance`) = total gain, and the share of the payments covered by rents (for a rented bien lived in before `DateMiseEnLocation`, `bilan.occupation` adds the rents avoided over that period at `LoyerMensuel` charges included, and `bilan.rendementNonPercu` subtracts what the money tied in the bien would have earned if placed at `TauxPlacement`); for a bien not rented, `comparaisonLocation` adds the rents avoided and subtracts what the money tied in the bien would have earned if placed (gain over renting). `Bien.AbattementCharges` (%, rents being recorded charges included) is removed from rents for the average rent, the coverage ratios and the credit effort, never for net rents or gain. Rents never change `remaining-balance` nor the statistics.
 - Amortization view filtering operations flagged `amortissement = 1`.
 - Monthly and yearly statistics: total spent, pie chart by category, income vs expense, top categories / operations, heatmap, time series of balance evolution (global = neither retraite nor children / retraite / dispo = global and not bloque). Every chart uses the same expense rule (`EXPENSE_JOIN` / `EXPENSE_WHERE`): the category `Type`, inflows and outflows alike; there is no uncategorized operation, `IDcat = 0` is the shared default category « Aucune » (`depense`) and counts like any other; `NULL` account flags read as their default; operations dated in the future (generated ahead) still count in balances.
-- Batch import by LLM (`/import`, `server/utils/import/`, `server/api/imports/`): pasted text, photos or a video (cut into frames in the browser) are read by the Claude API (`@anthropic-ai/sdk`, structured output) into an `ImportLot` draft. Labels are proposed in the user's own style (frequent typed labels + correspondences learned from validated imports, also re-applied deterministically by `CleSource`), categories are restricted to the readable ones, and duplicates (same amount, ±3 days) are unchecked. Nothing is created before the human review; `POST /api/imports/:id/valider` creates the kept lines, checked (`CheckOp = true`), in one transaction. Disabled without `ANTHROPIC_API_KEY`; images and text are never stored. API tests use a fake Messages API (`tests/support/anthropic-mock.ts`).
+- Batch import by LLM (`/import`, `server/utils/import/`, `server/api/imports/`): pasted text, photos or a video (cut into frames in the browser) are read by the Claude API (`@anthropic-ai/sdk`, structured output) into an `ImportLot` draft. Labels are proposed in the user's own style (frequent typed labels + correspondences learned from validated imports, also re-applied deterministically by `CleSource`), categories are restricted to the readable ones, and duplicates (same amount, ±3 days) are unchecked. Nothing is created before the human review; `POST /api/imports/:id/valider` creates the kept lines, checked (`CheckOp = true`), in one transaction. Disabled without `NUXT_ANTHROPIC_API_KEY`; images and text are never stored. API tests use a fake Messages API (`tests/support/anthropic-mock.ts`).
 - Light / dark / system theme with persistence.
 - Mobile-responsive PWA with swipeable account panel and optional Eruda debug console.
 
@@ -98,24 +98,28 @@ User scoping uses two patterns:
 - **App**: Nuxt/Nitro on port 8080 (dev and Docker image). API mounted at `/api`.
 - **Database**: MariaDB (production 10.11; tests run on `mariadb:10.11`). Since migration `0002` every table is InnoDB (real transactions) in `utf8mb4_unicode_ci`; migrations are replayable (`IF [NOT] EXISTS`) and run with `NO_AUTO_VALUE_ON_ZERO` (`IDcat = 0` / `IDbanque = 0` rows), see `docs/db-migrations.md`.
 
-### Environment Configuration (read at runtime, from `process.env`)
+### Environment Configuration (Nuxt `runtimeConfig`, overridden at runtime by `NUXT_*` variables)
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | yes | MariaDB connection |
-| `JWT_SECRET` | yes in production | JWT signing secret (an ephemeral one is generated in dev, with a warning) |
-| `JWT_TTL_SECONDS` | no | JWT lifetime, default 21600 (6 h) |
-| `ANTHROPIC_API_KEY` | no | Enables the LLM import (hidden and 503 without it) |
-| `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT` | no | LLM import model (default `claude-opus-5-5`) and effort (default `low`) |
+| `NUXT_DB_HOST`, `NUXT_DB_USER`, `NUXT_DB_PASSWORD`, `NUXT_DB_NAME` | yes | MariaDB connection (`runtimeConfig.db`) |
+| `NUXT_DB_PORT` | no | MariaDB port, default 3306 |
+| `NUXT_JWT_SECRET` | yes in production | JWT signing secret (an ephemeral one is generated in dev, with a warning) |
+| `NUXT_JWT_TTL_SECONDS` | no | JWT lifetime, default 21600 (6 h) |
+| `NUXT_ANTHROPIC_API_KEY` | no | Enables the LLM import (hidden and 503 without it) |
+| `NUXT_ANTHROPIC_MODEL`, `NUXT_ANTHROPIC_EFFORT` | no | LLM import model (default `claude-opus-5-5`) and effort (default `low`) |
+| `NUXT_ANTHROPIC_BASE_URL` | no | Claude API base URL (the API tests point it to `tests/support/anthropic-mock.ts`) |
 
-In development they can live in `.env`. The scripts that access the database (`scripts/db-migrate.mjs`, `scripts/hash-legacy-secrets.mjs`, `scripts/diagnose-recurrentes.mjs`, `scripts/check-amounts.mjs`) also load the root `.env` through `scripts/load-env.mjs` (or the file named by `ENV_FILE`); variables already set in the environment take precedence. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
+The keys and their defaults are declared in `runtimeConfig` (`nuxt.config.ts`) and read only through `getConfig()` (`server/utils/config.ts`, `useRuntimeConfig()`), never from `process.env`: a `NUXT_*` variable overrides its key at runtime (`db.name` ← `NUXT_DB_NAME`, `jwt.ttlSeconds` ← `NUXT_JWT_TTL_SECONDS`), nothing is read at build time. Production is detected with `import.meta.dev`, not `NODE_ENV`.
+
+In development they can live in `.env`. The scripts, which run outside Nuxt, that access the database (`scripts/db-migrate.mjs`, `scripts/hash-legacy-secrets.mjs`, `scripts/diagnose-recurrentes.mjs`, `scripts/check-amounts.mjs`) also load the root `.env` through `scripts/load-env.mjs` (or the file named by `ENV_FILE`); variables already set in the environment take precedence. Nothing is baked into the Docker image, and the server refuses to start in production when a required variable is missing.
 
 ## Docker Deployment
 
 A single image runs the whole application (`Dockerfile`):
 
 - Multi-stage `node:26-slim` (pnpm installed with `npm install -g pnpm@12.16.1`) → `node:26-slim` running the Nitro output (`.output/server/index.mjs`) on port 8080. The build context is the **repo root** (`docker build .`) (`Dockerfile` is at the root).
-- `docker-entrypoint.sh` exits with an explicit message when `DB_*` or `JWT_SECRET` is missing.
+- `docker-entrypoint.sh` exits with an explicit message when `NUXT_DB_*` or `NUXT_JWT_SECRET` is missing.
 - SQL migrations are **not** run by the image: run `scripts/db-migrate.mjs` from a workstation or CI before deploying a version that adds one.
 
 Registry: `dockregistry.xju.fr/mccbng/front` with `staging` and `latest` tags. The scripts `docker:staging:build`, `docker:staging:push`, `docker:latest:build`, `docker:latest:push` live in `package.json`. A root-level `build-and-push.sh` and `docker-compose.build.yml` orchestrate builds (the build container is pinned to `docker:24-cli`, compatible with the NAS Docker API).

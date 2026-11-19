@@ -164,7 +164,7 @@ server/
 └── utils/                  # auth, config, crud, filter, resources, scope, sql, stats, errors…
 ```
 
-- **Configuration** (`utils/config.ts`) : lue dans `process.env` à l'exécution (voir [Configuration](#configuration)) ; le serveur refuse de démarrer en production si une variable obligatoire manque.
+- **Configuration** (`utils/config.ts`) : `runtimeConfig` de Nuxt, lue par `useRuntimeConfig()` et surchargée à l'exécution par les variables `NUXT_*` (voir [Configuration](#configuration)) ; le serveur refuse de démarrer en production si une variable obligatoire manque.
 - **CRUD générique** (`utils/crud.ts`, `utils/resources.ts`) : chaque ressource est décrite une fois (table, scope, schémas Zod, défauts, hooks de cascade) et expose les 8 routes standard (`POST /`, `GET /count`, `GET /`, `PATCH /`, `GET|PATCH|PUT|DELETE /{id}`).
 - **Filtre de liste** (`utils/filter.ts`) : le paramètre `filter` (`where`, `order`, `limit`, `skip`, `include`) est interprété avec une liste blanche de colonnes et d'opérateurs (jamais interpolé dans le SQL).
 - **Sécurité par scope** (`utils/scope.ts`) :
@@ -205,7 +205,7 @@ app/assets/styles/     → variables.scss + theme.css (custom properties) + main
 
 1. Le front appelle `POST /api/users/login` avec `{ email, code }` (code de 6 caractères).
 2. Le serveur retrouve l'utilisateur par email et compare le code à `secret_key` (bcrypt uniquement : une `secret_key` en clair est refusée). Une comparaison factice de même coût est faite si l'email est inconnu pour égaliser les temps de réponse. Après 5 échecs consécutifs, le compte est verrouillé (5 min, 30 min, 2 h, puis 24 h) sans le révéler. Chaque tentative produit une ligne de log JSON (`"event":"login"`), sans le code.
-3. Un JWT `{ name, email, IDuser, tv }` est signé en HS256 (`JWT_SECRET`, émetteur et audience `mccbng`, durée `JWT_TTL_SECONDS`, 6 h par défaut) et posé uniquement dans le cookie `mccbngAuth` (`HttpOnly`, `SameSite=Strict`, `Secure` en production) ; la réponse contient `{ userId: <IDuser> }`.
+3. Un JWT `{ name, email, IDuser, tv }` est signé en HS256 (`NUXT_JWT_SECRET`, émetteur et audience `mccbng`, durée `NUXT_JWT_TTL_SECONDS`, 6 h par défaut) et posé uniquement dans le cookie `mccbngAuth` (`HttpOnly`, `SameSite=Strict`, `Secure` en production) ; la réponse contient `{ userId: <IDuser> }`.
 4. Le front ne conserve que `IDuser`, dans le cookie `userID`.
 5. Le navigateur renvoie le cookie à chaque requête ; le front ajoute `X-Requested-With: mccbng`, exigé sur toute méthode non sûre (protection CSRF, 403 sinon). Le middleware `server/middleware/auth.ts` vérifie le JWT et la `tokenVersion` de l'utilisateur (incrémentée au logout, ce qui révoque toutes ses sessions), et `getCurrentUserId` scope chaque requête à l'utilisateur. Un header `Authorization: Bearer` est refusé.
 6. Le login est limité à 5 essais par IP et par fenêtre de 15 minutes (`nuxt-security`). L'IP est lue dans `X-Real-IP`, posé par le reverse proxy (Synology DSM, à partir du `CF-Connecting-IP` de Cloudflare), à défaut l'adresse de la socket ; une IPv6 est comptée par son préfixe `/64`, et `X-Forwarded-For` n'est jamais pris en compte. Les en-têtes de sécurité et la CSP sont appliqués à toutes les réponses.
@@ -279,7 +279,7 @@ pnpm install
 ### Base de données
 
 ```bash
-# DB_* lues dans .env (ou ENV_FILE=…), l'environnement restant prioritaire
+# NUXT_DB_* lues dans .env (ou ENV_FILE=…), l'environnement restant prioritaire
 pnpm db:migrate                  # base vide : crée le schéma
 pnpm db:migrate -- --baseline    # base de production existante : marque la baseline comme jouée
 ```
@@ -289,7 +289,7 @@ Voir `docs/db-migrations.md` pour la procédure complète.
 ### Lancer l'application (port 8080)
 
 ```bash
-# variables DB_* et JWT_SECRET dans l'environnement ou dans .env
+# variables NUXT_DB_* et NUXT_JWT_SECRET dans l'environnement ou dans .env
 pnpm dev
 ```
 
@@ -306,15 +306,16 @@ pnpm type-check
 
 ## Configuration
 
-Toute la configuration serveur passe par des variables d'environnement, lues à l'exécution (aucun fichier de configuration embarqué dans l'image).
+Toute la configuration serveur passe par la `runtimeConfig` de Nuxt (`nuxt.config.ts`), dont chaque clé est surchargée à l'exécution par une variable d'environnement préfixée `NUXT_` (`db.name` ← `NUXT_DB_NAME`) : aucune valeur n'est figée au build ni embarquée dans l'image.
 
 | Variable | Obligatoire | Rôle |
 |----------|-------------|------|
-| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | oui | connexion MariaDB |
-| `JWT_SECRET` | oui en production | secret de signature des sessions (le garder fixe : un changement déconnecte tout le monde) |
-| `JWT_TTL_SECONDS` | non | durée de vie du JWT en secondes (21600, soit 6 h, par défaut) |
+| `NUXT_DB_HOST`, `NUXT_DB_USER`, `NUXT_DB_PASSWORD`, `NUXT_DB_NAME` | oui | connexion MariaDB |
+| `NUXT_DB_PORT` | non | port MariaDB (3306 par défaut) |
+| `NUXT_JWT_SECRET` | oui en production | secret de signature des sessions (le garder fixe : un changement déconnecte tout le monde) |
+| `NUXT_JWT_TTL_SECONDS` | non | durée de vie du JWT en secondes (21600, soit 6 h, par défaut) |
 
-En développement, `JWT_SECRET` peut être omis (un secret éphémère est généré, avec un avertissement). Le front appelle toujours l'API en chemin relatif (`/api`).
+En développement, `NUXT_JWT_SECRET` peut être omis (un secret éphémère est généré, avec un avertissement). Le front appelle toujours l'API en chemin relatif (`/api`).
 
 **Reverse proxy** : la chaîne est client → Cloudflare → proxy inversé Synology DSM → conteneur. DSM doit poser `X-Real-IP` avec l'IP du client fournie par Cloudflare (en-tête personnalisé `X-Real-IP` = `$http_cf_connecting_ip`), et le NAS ne doit être joignable que par Cloudflare (sinon `CF-Connecting-IP` peut être forgé). Le compteur du rate-limit est en mémoire : un stockage partagé serait nécessaire si l'application était répliquée. Procédures d'administration (création d'utilisateur, déverrouillage, banques) : `docs/exploitation.md`.
 
@@ -330,7 +331,7 @@ pnpm docker:latest:build  && pnpm docker:latest:push
 ```
 
 - Multi-stage `node:26-slim` (pnpm installé avec npm, car Node 26 n'embarque plus corepack) → `node:26-slim` qui exécute `.output/server/index.mjs` sur le port 8080, avec un healthcheck. Le contexte de build est la **racine du dépôt** (`docker build .`).
-- Au démarrage, le conteneur sort avec un message explicite si `DB_*` ou `JWT_SECRET` manque.
+- Au démarrage, le conteneur sort avec un message explicite si `NUXT_DB_*` ou `NUXT_JWT_SECRET` manque.
 - Les migrations SQL ne sont pas jouées par l'image : les lancer depuis le poste ou la CI avant de déployer une version qui en apporte (`docs/db-migrations.md`).
 - Registre : `dockregistry.xju.fr/mccbng/front:{staging,latest}`.
 

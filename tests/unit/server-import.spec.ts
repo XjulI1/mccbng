@@ -1,11 +1,19 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { AnthropicOperationExtractor } from '../../server/utils/import/anthropic-extractor'
 import { detectDoublons, fenetreDoublons } from '../../server/utils/import/doublons'
 import { getOperationExtractor, isImportDisponible, setOperationExtractor } from '../../server/utils/import/extractor'
 import { applyCorrespondances, cleSource, normalizeLignes } from '../../server/utils/import/normalize'
 import { buildContextText } from '../../server/utils/import/prompt'
 import type { ExtractionInput, LigneExtraite } from '../../server/utils/import/types'
+
+vi.mock('nitropack/runtime', () => ({
+  useRuntimeConfig: () => ({
+    db: { host: 'h', port: 3306, user: 'u', password: 'p', name: 'n' },
+    jwt: { secret: 's', ttlSeconds: 3600 },
+    anthropic: { apiKey: '', baseUrl: '', model: '', effort: '' }
+  })
+}))
 
 const d = (iso: string) => new Date(`${iso}T00:00:00.000Z`)
 const iso = (date: Date) => date.toISOString().slice(0, 10)
@@ -177,8 +185,6 @@ describe('AnthropicOperationExtractor', () => {
 
 describe('disponibilité de l\x27import', () => {
   it('sans clé Anthropic : indisponible et aucun extracteur (la route répond 503)', () => {
-    Object.assign(process.env, { DB_HOST: 'h', DB_PORT: '3306', DB_USER: 'u', DB_PASSWORD: 'p', DB_NAME: 'n' })
-    delete process.env.ANTHROPIC_API_KEY
     expect(isImportDisponible()).toBe(false)
     expect(getOperationExtractor()).toBeUndefined()
   })

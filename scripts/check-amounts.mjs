@@ -3,7 +3,7 @@
 //   node scripts/check-amounts.mjs --save avant.json      avant 0003 : enregistre l'instantané
 //   node scripts/check-amounts.mjs --compare avant.json   après 0003 : affiche les écarts (au-delà d'un demi-centime)
 // Seuls des agrégats sont lus et écrits (sommes par compte, par crédit, par bien) : aucun libellé.
-// Configuration : DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
+// Configuration : NUXT_DB_HOST, NUXT_DB_PORT, NUXT_DB_USER, NUXT_DB_PASSWORD, NUXT_DB_NAME, lues dans .env (ou ENV_FILE) et l'environnement (prioritaire).
 import { readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { createConnection } from 'mysql2/promise'
@@ -67,17 +67,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error('Usage : node scripts/check-amounts.mjs --save <fichier.json> | --compare <fichier.json>')
     process.exit(1)
   }
-  const missing = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'].filter(name => !process.env[name])
+  const missing = ['NUXT_DB_HOST', 'NUXT_DB_USER', 'NUXT_DB_PASSWORD', 'NUXT_DB_NAME'].filter(name => !process.env[name])
   if (missing.length) {
     console.error(`Configuration manquante : ${missing.join(', ')}`)
     process.exit(1)
   }
   const connection = await createConnection({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT ?? 3306),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    host: process.env.NUXT_DB_HOST,
+    port: Number(process.env.NUXT_DB_PORT ?? 3306),
+    user: process.env.NUXT_DB_USER,
+    password: process.env.NUXT_DB_PASSWORD,
+    database: process.env.NUXT_DB_NAME
   })
   try {
     const current = await snapshot(connection)

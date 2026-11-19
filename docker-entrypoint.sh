@@ -1,6 +1,6 @@
 #!/bin/sh
 # Refuse de démarrer si la configuration obligatoire est absente (le serveur refait une vérification fine).
-for name in DB_HOST DB_PORT DB_USER DB_PASSWORD DB_NAME JWT_SECRET; do
+for name in NUXT_DB_HOST NUXT_DB_USER NUXT_DB_PASSWORD NUXT_DB_NAME NUXT_JWT_SECRET; do
   eval "value=\${$name}"
   if [ -z "$value" ]; then
     echo "ERREUR: la variable $name doit être définie" >&2
